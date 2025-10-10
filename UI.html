@@ -167,6 +167,10 @@
       .btn-secondary:hover {
         background-color: #0E8F6B;
       }
+      .btn-block {
+        width: 100%;
+        margin-top: 8px;
+      }
       .btn-danger {
         background-color: #EF4444;
         color: #FFFFFF;
@@ -246,7 +250,8 @@
             <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
             <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
           </div>
-          <button id="applyBtn" class="btn-primary">Aplicar formato y guardar</button>
+          <button id="applyBtn" class="btn-primary">Aplicar formato</button>
+          <button id="saveBtn" class="btn-secondary btn-block">Guardar tabla</button>
         </div>
       </div>
 
@@ -287,6 +292,7 @@
       let rangeInfo = null;
       let editingId = '';
       let currentTab = '';
+      let lastAppliedRange = null;
 
       function applyDefaultStylesToControls() {
         const colorHeader = document.getElementById('colorHeader');
@@ -304,12 +310,13 @@
       function resetCreateTabState() {
         rangeInfo = null;
         editingId = '';
+        lastAppliedRange = null;
         const label = document.getElementById('rangeLabel');
         const nameInput = document.getElementById('tableName');
         const descInput = document.getElementById('tableDesc');
         if (label) label.textContent = '-';
-        if (nameInput) nameInput.value = '-';
-        if (descInput) descInput.value = '-';
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
         currentHeaders = [];
         renderHeaders();
         applyDefaultStylesToControls();
@@ -368,12 +375,14 @@
               label.textContent = '-';
             }
             rangeInfo = null;
+            lastAppliedRange = null;
             if (info.error) {
               alert(info.error);
             }
             return;
           }
           rangeInfo = info;
+          lastAppliedRange = null;
           if (label) {
             label.textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
           }
@@ -493,22 +502,69 @@
         const rangeA1 = rangeInfo.a1Notation;
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
+            if (res.error !== 'exceeded') {
+              alert(res.error);
+            }
             return;
           }
           editingId = res.id;
-          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-          alert('Formato aplicado correctamente.');
+          lastAppliedRange = {
+            rangeA1: res.rangeA1,
+            sheetName: res.sheetName,
+            cols: res.cols,
+            rows: res.rows
+          };
+          alert('Formato aplicado correctamente. Ahora puede guardar la tabla.');
         }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style);
+      });
+
+      document.getElementById('saveBtn').addEventListener('click', function() {
+        if (!editingId) {
+          alert('Aplique el formato antes de guardar.');
+          return;
+        }
+        if (!lastAppliedRange) {
+          alert('Debe aplicar el formato al rango seleccionado antes de guardar.');
+          return;
+        }
+        const name = document.getElementById('tableName').value.trim();
+        const desc = document.getElementById('tableDesc').value.trim();
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.error) {
+            alert(res.error);
+            return;
+          }
+          alert('Tabla guardada correctamente.');
+          resetCreateTabState();
+          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+          loadActiveRange(true);
+        }).saveFormattedTable(
+          editingId,
+          name,
+          desc,
+          currentHeaders,
+          lastAppliedRange.rangeA1,
+          lastAppliedRange.sheetName,
+          lastAppliedRange.cols,
+          lastAppliedRange.rows
+        );
       });
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
         const val = this.value;
         editingId = '';
+        lastAppliedRange = null;
         if (val) {
           google.script.run.withSuccessHandler(function(meta) {
             if (meta) {
               document.getElementById('tableName').value = meta.name || '';
               document.getElementById('tableDesc').value = meta.description || '';
+              lastAppliedRange = {
+                rangeA1: meta.rangeA1,
+                sheetName: meta.sheetName,
+                cols: meta.cols,
+                rows: meta.rows
+              };
             }
           }).getTableMeta(val);
           google.script.run.withSuccessHandler(function(res) {
@@ -518,6 +574,11 @@
             }
           }).getTableHeaders(val);
           editingId = val;
+        } else {
+          document.getElementById('tableName').value = '';
+          document.getElementById('tableDesc').value = '';
+          currentHeaders = [];
+          renderHeaders();
         }
       });
 

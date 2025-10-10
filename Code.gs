@@ -156,17 +156,18 @@ function clearTable(tableId) {
 }
 
 /**
- * Aplica formato de tabla al rango seleccionado y guarda/actualiza los
- * metadatos.  Si tableId se proporciona y existe, se limpiará el rango y
- * vista previos.  Devuelve el id de la tabla aplicada.
+ * Aplica formato de tabla al rango seleccionado sin persistir metadatos.
+ * Si tableId se proporciona y existe, se limpiará el rango y vista previos
+ * antes de aplicar el nuevo formato.  Devuelve el id utilizado para el
+ * formato y la información del rango aplicado.
  *
  * @param {string} tableId ID existente o cadena vacía para nueva tabla.
  * @param {string} rangeA1 Notación A1 del rango seleccionado.
- * @param {string} name Nombre de la tabla.
- * @param {string} description Descripción de la tabla.
+ * @param {string} name Nombre de la tabla (no se utiliza en el formateo).
+ * @param {string} description Descripción de la tabla (no se utiliza en el formateo).
  * @param {Array} headers Lista de encabezados (fila 1) editados por el usuario.
  * @param {Object} style Objeto {headerColor, altColor1, altColor2, border, bold}.
- * @returns {Object} Resultado con id y mensaje, o error.
+ * @returns {Object} Resultado con id, información del rango y mensaje, o error.
  */
 function applyTableFormatting(tableId, rangeA1, name, description, headers, style) {
   // Obtener rango activo
@@ -202,6 +203,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   // Aplicar encabezados si han sido modificados
   if (headers && headers.length > 0) {
     var headerRange = range.offset(0, 0, 1, cols);
+    headerRange.clearContent();
     headerRange.setValues([headers]);
   }
   // Aplicar formato
@@ -210,9 +212,38 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var filterTitle = 'TableCrafter_' + id;
   deleteFilterViewsByTitle(sheet, filterTitle); // eliminar si existe antes de crear
   createFilterViewForRange(range, filterTitle);
-  // Guardar/actualizar metadatos
-  saveOrUpdateMeta(id, name, description, rangeA1, sheet.getName(), cols, rows);
-  return { id: id, message: 'Tabla aplicada' };
+  return {
+    id: id,
+    message: 'Tabla aplicada',
+    rangeA1: rangeA1,
+    sheetName: sheet.getName(),
+    cols: cols,
+    rows: rows
+  };
+}
+
+/**
+ * Guarda o actualiza los metadatos de una tabla previamente formateada.
+ *
+ * @param {string} tableId ID único de la tabla (obligatorio).
+ * @param {string} name Nombre de la tabla.
+ * @param {string} description Descripción de la tabla.
+ * @param {Array} headers Lista de encabezados (no se persiste; parámetro por compatibilidad).
+ * @param {string} rangeA1 Rango A1 aplicado.
+ * @param {string} sheetName Nombre de la hoja donde reside la tabla.
+ * @param {number} cols Número de columnas del rango.
+ * @param {number} rows Número de filas del rango.
+ * @returns {Object} Resultado del guardado con id o error.
+ */
+function saveFormattedTable(tableId, name, description, headers, rangeA1, sheetName, cols, rows) {
+  if (!tableId || String(tableId).trim() === '') {
+    return { error: 'No se ha aplicado un formato válido para guardar.' };
+  }
+  if (!rangeA1 || !sheetName) {
+    return { error: 'Falta información del rango a guardar.' };
+  }
+  saveOrUpdateMeta(tableId, name, description, rangeA1, sheetName, cols, rows);
+  return { id: tableId, message: 'Tabla guardada' };
 }
 
 /**
@@ -231,7 +262,8 @@ function clearRangeAndFormatting(range) {
     }
   });
   // Borrar contenido y formato
-  range.clear({ contentsOnly: true, formatOnly: true });
+  range.clearContent();
+  range.clearFormat();
   // Eliminar filtros nativos si existiesen
   if (range.getFilter()) {
     range.getFilter().remove();
