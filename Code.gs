@@ -178,6 +178,7 @@ function normalizeHeaderArray(headers) {
  * @returns {Array} Lista de objetos con los metadatos de las tablas.
  */
 function listSavedTables() {
+  SpreadsheetApp.flush();
   var meta = getMetaSheet();
   var data = meta.getDataRange().getValues();
   var result = [];

@@ -520,6 +520,141 @@
         });
       }
 
+      function normalizeStyleModel(style) {
+        const normalized = {
+          headerColor: DEFAULT_STYLE.headerColor,
+          altColor1: DEFAULT_STYLE.altColor1,
+          altColor2: DEFAULT_STYLE.altColor2,
+          border: DEFAULT_STYLE.border,
+          bold: DEFAULT_STYLE.bold
+        };
+        if (style && typeof style === 'object') {
+          if (style.headerColor && String(style.headerColor).trim()) {
+            normalized.headerColor = String(style.headerColor).trim();
+          }
+          if (style.altColor1 && String(style.altColor1).trim()) {
+            normalized.altColor1 = String(style.altColor1).trim();
+          }
+          if (style.altColor2 && String(style.altColor2).trim()) {
+            normalized.altColor2 = String(style.altColor2).trim();
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'border')) {
+            normalized.border = !!style.border;
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'bold')) {
+            normalized.bold = !!style.bold;
+          }
+        }
+        return normalized;
+      }
+
+      let savedTablesCache = [];
+      let allowSidebarUnload = false;
+      let sidebarClosePromptActive = false;
+
+      function upsertSavedTablesCache(entry) {
+        if (!entry || !entry.id) {
+          return;
+        }
+        const normalized = {
+          id: entry.id,
+          name: entry.name ? String(entry.name).trim() : '',
+          rangeA1: entry.rangeA1 ? String(entry.rangeA1).trim() : '',
+          description: entry.description ? String(entry.description).trim() : '',
+          sheetName: entry.sheetName ? String(entry.sheetName).trim() : '',
+          cols: typeof entry.cols === 'number' ? entry.cols : parseInt(entry.cols, 10) || 0,
+          rows: typeof entry.rows === 'number' ? entry.rows : parseInt(entry.rows, 10) || 0,
+          style: normalizeStyleModel(entry.style),
+          headers: cloneHeaderModels(entry.headers || [])
+        };
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalized.id;
+        });
+        if (index >= 0) {
+          savedTablesCache[index] = normalized;
+        } else {
+          savedTablesCache.push(normalized);
+        }
+      }
+
+      function buildSavedTableCacheEntry(id, values, rangeInfo, style, headers) {
+        if (!id) {
+          return null;
+        }
+        const info = rangeInfo || {};
+        const normalizedHeaders = cloneHeaderModels(headers || []);
+        const normalizedStyle = normalizeStyleModel(style || {});
+        return {
+          id: id,
+          name: values && values.name ? values.name : '',
+          description: values && values.description ? values.description : '',
+          sheetName: info.sheetName || '',
+          rangeA1: info.a1Notation || '',
+          cols: typeof info.cols === 'number' ? info.cols : normalizedHeaders.length,
+          rows: typeof info.rows === 'number' ? info.rows : 0,
+          style: normalizedStyle,
+          headers: normalizedHeaders
+        };
+      }
+
+      function updateSavedTableSelects(targetIds, list, config) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        const entries = Array.isArray(list) ? list : [];
+        const options = config || {};
+        const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+        ids.forEach(function(id) {
+          const select = document.getElementById(id);
+          if (!select) {
+            return;
+          }
+          const previousValue = select.value;
+          select.innerHTML = '';
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = '-- Seleccione --';
+          select.appendChild(defaultOption);
+          entries.forEach(function(item) {
+            if (!item || !item.id) {
+              return;
+            }
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.name || item.id;
+            select.appendChild(opt);
+          });
+          let targetValue = '';
+          if (
+            options.selectId &&
+            entries.some(function(entry) {
+              return entry && entry.id === options.selectId;
+            })
+          ) {
+            targetValue = options.selectId;
+          } else if (
+            id === 'editSavedTables' &&
+            activeEditingId &&
+            entries.some(function(entry) {
+              return entry && entry.id === activeEditingId;
+            })
+          ) {
+            targetValue = activeEditingId;
+          } else if (
+            previousValue &&
+            entries.some(function(entry) {
+              return entry && entry.id === previousValue;
+            })
+          ) {
+            targetValue = previousValue;
+          }
+          select.value = targetValue || '';
+          select.disabled = entries.length === 0;
+        });
+      }
+
+      function applySavedTablesFromCache(targetIds, config) {
+        updateSavedTableSelects(targetIds, savedTablesCache, config || {});
+      }
+
       let rangeInfo = null;
       let editRangeInfo = null;
       let editingId = '';
@@ -1255,43 +1390,34 @@
         return callServerFunction('listSavedTables')
           .then(function(tables) {
             const list = Array.isArray(tables) ? tables : [];
-            ids.forEach(function(id) {
-              const select = document.getElementById(id);
-              if (!select) {
-                return;
-              }
-              const previousValue = select.value;
-              select.innerHTML = '';
-              const defaultOption = document.createElement('option');
-              defaultOption.value = '';
-              defaultOption.textContent = '-- Seleccione --';
-              select.appendChild(defaultOption);
-              list.forEach(function(item) {
+            const previousCache = Array.isArray(savedTablesCache) ? savedTablesCache.slice() : [];
+            const normalizedList = list
+              .map(function(item) {
                 if (!item || !item.id) {
-                  return;
+                  return null;
                 }
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = item.name || item.id;
-                select.appendChild(opt);
+                return {
+                  id: item.id,
+                  name: item.name ? String(item.name).trim() : '',
+                  rangeA1: item.rangeA1 ? String(item.rangeA1).trim() : '',
+                  description: item.description ? String(item.description).trim() : '',
+                  sheetName: item.sheetName ? String(item.sheetName).trim() : '',
+                  cols: item.cols || 0,
+                  rows: item.rows || 0,
+                  style: normalizeStyleModel(item.style || {}),
+                  headers: cloneHeaderModels(item.headers || [])
+                };
+              })
+              .filter(function(entry) {
+                return !!entry;
               });
-              let targetValue = '';
-              if (id === 'editSavedTables' && editingId) {
-                targetValue = editingId;
-              } else if (
-                options.selectId &&
-                list.some(function(entry) {
-                  return entry && entry.id === options.selectId;
-                })
-              ) {
-                targetValue = options.selectId;
-              } else if (previousValue) {
-                targetValue = previousValue;
-              }
-              if (targetValue) {
-                select.value = targetValue;
-              }
-            });
+            if (normalizedList.length === 0 && previousCache.length > 0) {
+              updateSavedTableSelects(ids, previousCache, options);
+              return previousCache.slice();
+            }
+            savedTablesCache = normalizedList;
+            updateSavedTableSelects(ids, savedTablesCache, options);
+            return savedTablesCache.slice();
           })
           .catch(function(err) {
             const message = err && err.message ? err.message : err;
@@ -1359,8 +1485,10 @@
           }
         } else if (tabId === 'editTab') {
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
+          applySavedTablesFromCache('editSavedTables');
           refreshSavedTables('editSavedTables');
         } else if (tabId === 'aiTab') {
+          applySavedTablesFromCache('aiSavedTables', { selectId: lastSavedTableId });
           refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
           checkApiKey();
         }
@@ -1699,6 +1827,19 @@
 
         if (response && response.id) {
           lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            validation.values,
+            (response && response.rangeInfo) || rangeInfo,
+            style,
+            currentHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
         }
 
         editingId = '';
@@ -1849,6 +1990,19 @@
         if (response && response.id) {
           editingId = response.id;
           lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            validation.values,
+            (response && response.rangeInfo) || editRangeInfo,
+            style,
+            editHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
         }
 
         await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
@@ -1895,6 +2049,43 @@
         resetPendingFormatState();
         clearRangeUI();
         return true;
+      }
+
+      function handleSidebarBeforeUnload(event) {
+        if (allowSidebarUnload || !isFormatLockActive()) {
+          return;
+        }
+        event.preventDefault();
+        event.returnValue = '';
+        if (sidebarClosePromptActive) {
+          return '';
+        }
+        sidebarClosePromptActive = true;
+        setTimeout(function() {
+          processSidebarCloseRequest();
+        }, 0);
+        return '';
+      }
+
+      async function processSidebarCloseRequest() {
+        try {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            allowSidebarUnload = true;
+            if (
+              typeof google !== 'undefined' &&
+              google.script &&
+              google.script.host &&
+              typeof google.script.host.close === 'function'
+            ) {
+              google.script.host.close();
+            }
+          } else {
+            allowSidebarUnload = false;
+          }
+        } finally {
+          sidebarClosePromptActive = false;
+        }
       }
 
       async function resolvePendingFormatting() {
@@ -2026,6 +2217,7 @@
       });
 
       document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
         const rangeInput = document.getElementById('rangeInput');
@@ -2049,6 +2241,7 @@
           });
         }
         resetEditTabView();
+        applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
         refreshSavedTables(['editSavedTables', 'aiSavedTables']);
         setActiveTab('createTab', { force: true });
       });
