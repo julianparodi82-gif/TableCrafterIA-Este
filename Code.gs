@@ -180,6 +180,13 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     SpreadsheetApp.getUi().alert('El rango seleccionado (' + cols + ' columnas y ' + rows + ' filas) supera los límites permitidos (máx. 16 columnas y 1000 filas).');
     return { error: 'exceeded' };
   }
+  name = name ? name.trim() : '';
+  description = description ? description.trim() : '';
+  if (!name) {
+    SpreadsheetApp.getUi().alert('Debe asignar un nombre a la tabla antes de guardar.');
+    return { error: 'missingName' };
+  }
+  style = style || {};
   var id = tableId && tableId.trim() !== '' ? tableId : Utilities.getUuid();
   // Si existe, limpiar rango anterior
   if (tableId && tableId.trim() !== '') {
@@ -231,7 +238,8 @@ function clearRangeAndFormatting(range) {
     }
   });
   // Borrar contenido y formato
-  range.clear({ contentsOnly: true, formatOnly: true });
+  range.clearContent();
+  range.clearFormat();
   // Eliminar filtros nativos si existiesen
   if (range.getFilter()) {
     range.getFilter().remove();
@@ -257,19 +265,30 @@ function applyFormattingToRange(range, style) {
       b.remove();
     }
   });
+  var headerColor = style.headerColor || '#CFE8FC';
+  var altColor1 = style.altColor1 || '#FFFFFF';
+  var altColor2 = style.altColor2 || '#F3F4F6';
+  var borderEnabled = !!style.border;
+  var boldEnabled = !!style.bold;
   // Aplicar banding con colores personalizados
   var banded = range.applyRowBanding();
-  banded.setHeaderColor(style.headerColor);
-  banded.setFirstBandColor(style.altColor1);
-  banded.setSecondBandColor(style.altColor2);
+  banded.setHeaderColor(headerColor);
+  banded.setFirstBandColor(altColor1);
+  banded.setSecondBandColor(altColor2);
   // Encabezado en negrita o normal
   var headerRange = range.offset(0, 0, 1, cols);
-  headerRange.setFontWeight(style.bold ? 'bold' : 'normal');
+  var weightValue = boldEnabled ? 'bold' : 'normal';
+  headerRange.setFontWeight(weightValue);
+  var headerWeights = [];
+  for (var i = 0; i < cols; i++) {
+    headerWeights.push(weightValue);
+  }
+  headerRange.setFontWeights([headerWeights]);
   // Bordes finos negros
-  if (style.border) {
+  if (borderEnabled) {
     range.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
   } else {
-    range.setBorder(false, false, false, false, false, false);
+    range.setBorder(false, false, false, false, false, false, null, null);
   }
 }
 
@@ -406,6 +425,9 @@ function findMetaById(id) {
 function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows) {
   var sheet = getMetaSheet();
   var meta = findMetaById(id);
+  name = name || '';
+  description = description || '';
+  rangeA1 = rangeA1 || '';
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   if (meta) {
     // Actualizar

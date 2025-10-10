@@ -210,6 +210,7 @@
       let currentHeaders = [];
       let rangeInfo = null;
       let editingId = '';
+      let pendingClearBeforeRefresh = false;
 
       // Renderiza la lista de encabezados para su edición y reordenamiento
       function renderHeaders() {
@@ -305,16 +306,31 @@
 
       // Botón Actualizar rango
       document.getElementById('refreshRangeBtn').addEventListener('click', function() {
-        google.script.run.withSuccessHandler(function(info) {
-          if (info.error) {
-            document.getElementById('rangeLabel').textContent = info.error;
-            return;
-          }
-          rangeInfo = info;
-          document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
-          currentHeaders = info.headers;
-          renderHeaders();
-        }).getActiveRangeInfo();
+        function loadRangeInfo() {
+          google.script.run.withSuccessHandler(function(info) {
+            if (info.error) {
+              document.getElementById('rangeLabel').textContent = info.error;
+              return;
+            }
+            rangeInfo = info;
+            document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
+            currentHeaders = info.headers;
+            renderHeaders();
+          }).getActiveRangeInfo();
+        }
+
+        if (pendingClearBeforeRefresh && editingId) {
+          google.script.run.withSuccessHandler(function(res) {
+            if (res && res.error) {
+              alert(res.error);
+              return;
+            }
+            pendingClearBeforeRefresh = false;
+            loadRangeInfo();
+          }).clearTable(editingId);
+        } else {
+          loadRangeInfo();
+        }
       });
 
       // Botón Aplicar formato
@@ -323,7 +339,8 @@
           alert('No hay rango activo.');
           return;
         }
-        const name = document.getElementById('tableName').value.trim();
+        const nameInput = document.getElementById('tableName');
+        const name = nameInput.value.trim();
         const desc = document.getElementById('tableDesc').value.trim();
         const headerColor = document.getElementById('colorHeader').value;
         const alt1 = document.getElementById('colorAlt1').value;
@@ -334,12 +351,18 @@
         // Determine tableId: if editingId set, use it; else empty string
         const tableId = editingId;
         const rangeA1 = rangeInfo.a1Notation;
+        if (!name) {
+          alert('Ingrese un nombre para la tabla antes de guardar.');
+          nameInput.focus();
+          return;
+        }
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
             // Do nothing; error handled by server via popup
             return;
           }
           editingId = res.id;
+          pendingClearBeforeRefresh = false;
           refreshSavedTables();
           alert('Formato aplicado correctamente.');
         }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style);
@@ -349,6 +372,7 @@
       document.getElementById('savedTables').addEventListener('change', function() {
         const val = this.value;
         editingId = '';
+        pendingClearBeforeRefresh = false;
         if (val) {
           // Cargar metadatos para pre‑poblar nombre y descripción
           google.script.run.withSuccessHandler(function(meta) {
@@ -374,6 +398,7 @@
         const val = select.value;
         if (val) {
           editingId = val;
+          pendingClearBeforeRefresh = true;
           alert('Tabla seleccionada para actualizar. Seleccione un nuevo rango y aplique el formato.');
         } else {
           alert('Seleccione una tabla para editar.');
