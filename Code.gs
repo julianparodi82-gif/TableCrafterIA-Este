@@ -362,11 +362,11 @@ function applyFormattingToRange(range, style) {
       b.remove();
     }
   });
-  // Aplicar banding con colores personalizados
+  // Aplicar banding con colores personalizados y reforzar manualmente los colores
   var banded = range.applyRowBanding();
-  banded.setHeaderColor(style.headerColor);
-  banded.setFirstBandColor(style.altColor1);
-  banded.setSecondBandColor(style.altColor2);
+  banded.setHeaderRowColor(style.headerColor);
+  banded.setFirstRowColor(style.altColor1);
+  banded.setSecondRowColor(style.altColor2);
   // Encabezado en negrita o normal y centrado
   var headerRange = range.offset(0, 0, 1, cols);
   headerRange.setFontWeight(style.bold ? 'bold' : 'normal');
@@ -387,12 +387,13 @@ function applyFormattingToRange(range, style) {
       backgrounds.push(rowColors);
     }
     dataRange.setBackgrounds(backgrounds);
+    dataRange.setFontWeight('normal');
   }
   // Bordes finos negros
   if (style.border) {
     range.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
   } else {
-    range.setBorder(false, false, false, false, false, false);
+    range.setBorder(false, false, false, false, false, false, null, null);
   }
 }
 
