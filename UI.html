@@ -362,8 +362,48 @@
           <label for="editSavedTables">Tablas guardadas</label>
           <select id="editSavedTables"></select>
           <div class="toggle-group" style="margin-top:8px;">
-            <button id="editTableBtn" class="btn-secondary" title="Editar tabla seleccionada">Editar</button>
-            <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla">Limpiar rango</button>
+            <button id="editApplyFormatBtn" class="btn-secondary" title="Aplicar formato a la tabla seleccionada" disabled>Aplicar formato</button>
+            <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla" disabled>Limpiar rango</button>
+          </div>
+        </div>
+        <div id="editRangeSection" class="section" style="display:none;">
+          <div class="range-row">
+            <div>
+              <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
+            </div>
+            <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+          </div>
+          <label for="editRangeInput" style="margin-top:12px;">Rango a utilizar</label>
+          <input type="text" id="editRangeInput" placeholder="Ej: Hoja1!A1:D10" />
+          <div class="small-text" style="margin-top:4px;">
+            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+          </div>
+        </div>
+        <div id="editMetaSection" class="section" style="display:none;">
+          <label for="editTableName">Nombre de la tabla</label>
+          <input type="text" id="editTableName" placeholder="Ingrese un nombre..." />
+          <label for="editTableDesc">Descripción</label>
+          <textarea id="editTableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <label>Encabezados (puede editar y reordenar)</label>
+          <ul id="editHeadersList" class="header-list"></ul>
+          <div class="toggle-group">
+            <label for="editColorHeader">Color encabezado</label>
+            <input type="color" id="editColorHeader" />
+          </div>
+          <div class="toggle-group">
+            <label for="editColorAlt1">Color filas alternas 1</label>
+            <input type="color" id="editColorAlt1" />
+          </div>
+          <div class="toggle-group">
+            <label for="editColorAlt2">Color filas alternas 2</label>
+            <input type="color" id="editColorAlt2" />
+          </div>
+          <div class="toggle-group">
+            <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
+            <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
+          </div>
+          <div class="action-buttons">
+            <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar cambios</button>
           </div>
         </div>
       </div>
@@ -395,7 +435,9 @@
 
     <script>
       let currentHeaders = [];
+      let editHeaders = [];
       let rangeInfo = null;
+      let editRangeInfo = null;
       let editingId = '';
       let currentTab = '';
       let pendingFormatState = { applied: false, range: null };
@@ -463,12 +505,87 @@
         }
         if (!options.preserveHeaders) {
           currentHeaders = [];
-          renderHeaders();
+          renderCreateHeaders();
         }
       }
 
-      function getSanitizedHeaders() {
-        return currentHeaders.map(function(header) {
+      function setEditDefaultStyles() {
+        const colorHeader = document.getElementById('editColorHeader');
+        const colorAlt1 = document.getElementById('editColorAlt1');
+        const colorAlt2 = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        if (colorHeader) colorHeader.value = '#CFE8FC';
+        if (colorAlt1) colorAlt1.value = '#FFFFFF';
+        if (colorAlt2) colorAlt2.value = '#F3F4F6';
+        if (borderToggle) borderToggle.checked = true;
+        if (boldToggle) boldToggle.checked = true;
+      }
+
+      function resetEditTabView(options) {
+        const opts = options || {};
+        if (!opts.preserveSelection) {
+          const select = document.getElementById('editSavedTables');
+          if (select) {
+            select.value = '';
+          }
+          if (opts.clearEditingId !== false) {
+            editingId = '';
+          }
+        } else if (opts.clearEditingId) {
+          editingId = '';
+        }
+        editHeaders = [];
+        editRangeInfo = null;
+        renderEditHeaders();
+
+        const rangeSection = document.getElementById('editRangeSection');
+        const metaSection = document.getElementById('editMetaSection');
+        if (rangeSection) {
+          rangeSection.style.display = 'none';
+        }
+        if (metaSection) {
+          metaSection.style.display = 'none';
+        }
+
+        const label = document.getElementById('editRangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = '';
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = '';
+        }
+
+        setEditDefaultStyles();
+
+        const applyBtn = document.getElementById('editApplyFormatBtn');
+        if (applyBtn) {
+          applyBtn.disabled = true;
+        }
+        const clearBtn = document.getElementById('clearTableBtn');
+        if (clearBtn) {
+          clearBtn.disabled = true;
+        }
+        const saveBtn = document.getElementById('editSaveTableBtn');
+        if (saveBtn) {
+          saveBtn.disabled = true;
+        }
+      }
+
+      function getSanitizedHeaders(headersSource) {
+        const target = Array.isArray(headersSource) ? headersSource : currentHeaders;
+        return target.map(function(header) {
           if (header === null || header === undefined) {
             return '';
           }
@@ -476,12 +593,13 @@
         });
       }
 
-      function validateTableDetails() {
-        const nameInput = document.getElementById('tableName');
-        const descInput = document.getElementById('tableDesc');
+      function validateTableDetails(config) {
+        const options = config || {};
+        const nameInput = document.getElementById(options.nameInputId || 'tableName');
+        const descInput = document.getElementById(options.descInputId || 'tableDesc');
         const name = nameInput ? nameInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
-        const headers = getSanitizedHeaders();
+        const headers = getSanitizedHeaders(options.headers);
         const missingMessages = [];
         const missingHeaderIndexes = [];
 
@@ -720,10 +838,69 @@
         return '';
       }
 
-      function renderHeaders() {
-        const list = document.getElementById('headersList');
+      function clearEditRangeUI() {
+        const label = document.getElementById('editRangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+        editRangeInfo = null;
+      }
+
+      function setEditRangeUI(info, options) {
+        options = options || {};
+        if (!info || !info.sheetName || !info.a1Notation) {
+          clearEditRangeUI();
+          return;
+        }
+        const rows = typeof info.rows === 'number' ? info.rows : (info.rows || 0);
+        const cols = typeof info.cols === 'number' ? info.cols : (info.cols || 0);
+        const label = document.getElementById('editRangeLabel');
+        const input = document.getElementById('editRangeInput');
+        const fullA1 = info.sheetName + '!' + info.a1Notation;
+        if (label) {
+          const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+          label.textContent = fullA1 + dims;
+        }
+        if (input && (options.force || input.dataset.manual !== 'true')) {
+          input.value = fullA1;
+          input.dataset.manual = 'false';
+        }
+        editRangeInfo = {
+          sheetName: info.sheetName,
+          a1Notation: info.a1Notation,
+          rows: rows,
+          cols: cols,
+          headers: Array.isArray(info.headers) ? info.headers.slice() : editHeaders.slice()
+        };
+        editRangeInfo.fullA1 = fullA1;
+      }
+
+      function getEditRangeInputValue() {
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          const text = input.value.trim();
+          if (text) {
+            return text;
+          }
+        }
+        if (editRangeInfo && editRangeInfo.sheetName && editRangeInfo.a1Notation) {
+          return editRangeInfo.sheetName + '!' + editRangeInfo.a1Notation;
+        }
+        return '';
+      }
+
+      function renderHeaderList(listId, headers) {
+        const list = document.getElementById(listId);
+        if (!list) {
+          return;
+        }
         list.innerHTML = '';
-        currentHeaders.forEach((header, index) => {
+        headers.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
 
@@ -731,7 +908,7 @@
           inp.type = 'text';
           inp.value = header;
           inp.addEventListener('input', function() {
-            currentHeaders[index] = this.value;
+            headers[index] = this.value;
           });
           li.appendChild(inp);
 
@@ -740,10 +917,10 @@
           upBtn.title = 'Subir';
           upBtn.addEventListener('click', function() {
             if (index > 0) {
-              const tmp = currentHeaders[index - 1];
-              currentHeaders[index - 1] = currentHeaders[index];
-              currentHeaders[index] = tmp;
-              renderHeaders();
+              const tmp = headers[index - 1];
+              headers[index - 1] = headers[index];
+              headers[index] = tmp;
+              renderHeaderList(listId, headers);
             }
           });
           li.appendChild(upBtn);
@@ -752,17 +929,25 @@
           downBtn.textContent = '↓';
           downBtn.title = 'Bajar';
           downBtn.addEventListener('click', function() {
-            if (index < currentHeaders.length - 1) {
-              const tmp = currentHeaders[index + 1];
-              currentHeaders[index + 1] = currentHeaders[index];
-              currentHeaders[index] = tmp;
-              renderHeaders();
+            if (index < headers.length - 1) {
+              const tmp = headers[index + 1];
+              headers[index + 1] = headers[index];
+              headers[index] = tmp;
+              renderHeaderList(listId, headers);
             }
           });
           li.appendChild(downBtn);
 
           list.appendChild(li);
         });
+      }
+
+      function renderCreateHeaders() {
+        renderHeaderList('headersList', currentHeaders);
+      }
+
+      function renderEditHeaders() {
+        renderHeaderList('editHeadersList', editHeaders);
       }
 
       function setDefaultStyles() {
@@ -796,8 +981,134 @@
           if (updateHeaders) {
             currentHeaders = Array.isArray(info.headers) ? info.headers : [];
           }
-          renderHeaders();
+          renderCreateHeaders();
         }).getActiveRangeInfo();
+      }
+
+      function loadEditActiveRange(updateHeaders = true) {
+        google.script.run.withSuccessHandler(function(info) {
+          const label = document.getElementById('editRangeLabel');
+          if (info.error) {
+            clearEditRangeUI();
+            if (label) {
+              label.textContent = '—';
+            }
+            showMessageModal(info.error, {
+              title: 'Rango no disponible',
+              variant: 'error'
+            });
+            return;
+          }
+          const infoForUi = Object.assign({}, info);
+          if (!updateHeaders) {
+            infoForUi.headers = editHeaders.slice();
+          }
+          const input = document.getElementById('editRangeInput');
+          const shouldForce = !input || input.dataset.manual !== 'true';
+          setEditRangeUI(infoForUi, { force: shouldForce });
+          if (updateHeaders) {
+            editHeaders = Array.isArray(info.headers) ? info.headers : [];
+          }
+          renderEditHeaders();
+        }).getActiveRangeInfo();
+      }
+
+      function populateEditForm(meta) {
+        if (!meta) {
+          resetEditTabView({ preserveSelection: true, clearEditingId: false });
+          showMessageModal('No se encontraron metadatos para la tabla seleccionada.', {
+            title: 'Metadatos no disponibles',
+            variant: 'error'
+          });
+          return;
+        }
+
+        const rangeSection = document.getElementById('editRangeSection');
+        const metaSection = document.getElementById('editMetaSection');
+        if (rangeSection) {
+          rangeSection.style.display = 'block';
+        }
+        if (metaSection) {
+          metaSection.style.display = 'block';
+        }
+
+        const applyBtn = document.getElementById('editApplyFormatBtn');
+        if (applyBtn) {
+          applyBtn.disabled = false;
+        }
+        const clearBtn = document.getElementById('clearTableBtn');
+        if (clearBtn) {
+          clearBtn.disabled = false;
+        }
+        const saveBtn = document.getElementById('editSaveTableBtn');
+        if (saveBtn) {
+          saveBtn.disabled = false;
+        }
+
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = meta.name || '';
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = meta.description || '';
+        }
+
+        const style = meta.style || {};
+        const headerColor = typeof style.headerColor === 'string' ? style.headerColor : '#CFE8FC';
+        const alt1 = typeof style.altColor1 === 'string' ? style.altColor1 : '#FFFFFF';
+        const alt2 = typeof style.altColor2 === 'string' ? style.altColor2 : '#F3F4F6';
+        const border = Object.prototype.hasOwnProperty.call(style, 'border') ? !!style.border : true;
+        const bold = Object.prototype.hasOwnProperty.call(style, 'bold') ? !!style.bold : true;
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        if (headerColorInput) {
+          headerColorInput.value = headerColor;
+        }
+        const alt1Input = document.getElementById('editColorAlt1');
+        if (alt1Input) {
+          alt1Input.value = alt1;
+        }
+        const alt2Input = document.getElementById('editColorAlt2');
+        if (alt2Input) {
+          alt2Input.value = alt2;
+        }
+        const borderToggle = document.getElementById('editToggleBorder');
+        if (borderToggle) {
+          borderToggle.checked = border;
+        }
+        const boldToggle = document.getElementById('editToggleBold');
+        if (boldToggle) {
+          boldToggle.checked = bold;
+        }
+
+        editHeaders = Array.isArray(meta.headers) ? meta.headers.slice() : [];
+        if (editHeaders.length === 0 && meta.id) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && Array.isArray(res.headers)) {
+                editHeaders = res.headers.slice();
+                renderEditHeaders();
+              }
+            })
+            .getTableHeaders(meta.id);
+        }
+        renderEditHeaders();
+
+        if (meta.sheetName && meta.rangeA1) {
+          setEditRangeUI(
+            {
+              sheetName: meta.sheetName,
+              a1Notation: meta.rangeA1,
+              rows: meta.rows || 0,
+              cols: meta.cols || 0,
+              headers: editHeaders.slice()
+            },
+            { force: true }
+          );
+        } else {
+          clearEditRangeUI();
+        }
       }
 
       function refreshSavedTables(targetIds) {
@@ -846,6 +1157,7 @@
         if (currentTab === tabId && !options.force) {
           return;
         }
+        const previousTab = currentTab;
         currentTab = tabId;
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
           if (btn.dataset.tab === tabId) {
@@ -862,6 +1174,10 @@
           }
         });
 
+        if (previousTab === 'editTab' && tabId !== 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
+        }
+
         if (tabId === 'createTab') {
           if (!options.preserveForm) {
             const preserveHeaders = options && options.keepHeaders === true;
@@ -872,6 +1188,7 @@
             });
           }
         } else if (tabId === 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
           refreshSavedTables('editSavedTables');
         } else if (tabId === 'aiTab') {
           refreshSavedTables('aiSavedTables');
@@ -912,6 +1229,17 @@
         loadActiveRange(editingId === '');
       });
 
+      document.getElementById('editRefreshRangeBtn').addEventListener('click', async function() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla antes de actualizar el rango.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return;
+        }
+        loadEditActiveRange(true);
+      });
+
       async function handleApplyFormat() {
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
@@ -933,7 +1261,7 @@
         }
 
         currentHeaders = validation.values.headers.slice();
-        renderHeaders();
+        renderCreateHeaders();
         const nameInput = document.getElementById('tableName');
         if (nameInput) {
           nameInput.value = validation.values.name;
@@ -983,7 +1311,7 @@
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             currentHeaders = response.rangeInfo.headers.slice();
-            renderHeaders();
+            renderCreateHeaders();
           }
           setPendingFormattedRange(response.rangeInfo);
         } else {
@@ -1005,6 +1333,105 @@
       document.getElementById('applyFormatBtn').addEventListener('click', function() {
         handleApplyFormat();
       });
+
+      async function handleEditApplyFormat() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de aplicar el formato.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const rangeA1 = getEditRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de aplicar el formato.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails({
+          nameInputId: 'editTableName',
+          descInputId: 'editTableDesc',
+          headers: editHeaders
+        });
+        if (!validation.valid) {
+          const msg = buildMissingFieldsMessage(validation.missing);
+          await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+            title: 'Información incompleta',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        editHeaders = validation.values.headers.slice();
+        renderEditHeaders();
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        const alt1Input = document.getElementById('editColorAlt1');
+        const alt2Input = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        const style = {
+          headerColor: headerColorInput ? headerColorInput.value : '#CFE8FC',
+          altColor1: alt1Input ? alt1Input.value : '#FFFFFF',
+          altColor2: alt2Input ? alt2Input.value : '#F3F4F6',
+          border: borderToggle ? !!borderToggle.checked : true,
+          bold: boldToggle ? !!boldToggle.checked : true
+        };
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            editingId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            editHeaders,
+            style,
+            { skipSaving: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setEditRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            editHeaders = response.rangeInfo.headers.slice();
+            renderEditHeaders();
+          }
+        }
+
+        await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
+          title: 'Formato aplicado',
+          variant: 'success'
+        });
+        return true;
+      }
 
       async function handleSaveAction(options) {
         options = options || {};
@@ -1046,7 +1473,7 @@
         }
 
         currentHeaders = validation.values.headers.slice();
-        renderHeaders();
+        renderCreateHeaders();
         const nameInput = document.getElementById('tableName');
         if (nameInput) {
           nameInput.value = validation.values.name;
@@ -1096,7 +1523,7 @@
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             currentHeaders = response.rangeInfo.headers.slice();
-            renderHeaders();
+            renderCreateHeaders();
           }
         }
 
@@ -1104,7 +1531,7 @@
           editingId = '';
           clearRangeUI();
           currentHeaders = [];
-          renderHeaders();
+          renderCreateHeaders();
         } else if (response && response.id) {
           editingId = response.id;
         }
@@ -1122,6 +1549,141 @@
       document.getElementById('saveTableBtn').addEventListener('click', function() {
         handleSaveAction();
       });
+
+      document.getElementById('editApplyFormatBtn').addEventListener('click', function() {
+        handleEditApplyFormat();
+      });
+
+      document.getElementById('editSaveTableBtn').addEventListener('click', function() {
+        handleEditSaveAction();
+      });
+
+      async function handleEditSaveAction() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de guardar los cambios.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const rangeA1 = getEditRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de guardar la tabla.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails({
+          nameInputId: 'editTableName',
+          descInputId: 'editTableDesc',
+          headers: editHeaders
+        });
+
+        if (validation.missing.length > 0) {
+          const missingExcludingName = validation.missing.filter(function(item) {
+            return item !== 'Nombre de la tabla';
+          });
+
+          if (missingExcludingName.length > 0) {
+            const msg = buildMissingFieldsMessage(validation.missing);
+            await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+              title: 'Información incompleta',
+              variant: 'error'
+            });
+            return false;
+          }
+
+          if (validation.missing.indexOf('Nombre de la tabla') !== -1) {
+            const continueWithoutName = await showConfirmModal(
+              'Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?',
+              {
+                title: 'Guardar sin nombre',
+                variant: 'warning',
+                confirmText: 'Continuar',
+                cancelText: 'Cancelar'
+              }
+            );
+            if (!continueWithoutName) {
+              return false;
+            }
+          }
+        }
+
+        editHeaders = validation.values.headers.slice();
+        renderEditHeaders();
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        const alt1Input = document.getElementById('editColorAlt1');
+        const alt2Input = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        const style = {
+          headerColor: headerColorInput ? headerColorInput.value : '#CFE8FC',
+          altColor1: alt1Input ? alt1Input.value : '#FFFFFF',
+          altColor2: alt2Input ? alt2Input.value : '#F3F4F6',
+          border: borderToggle ? !!borderToggle.checked : true,
+          bold: boldToggle ? !!boldToggle.checked : true
+        };
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            editingId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            editHeaders,
+            style,
+            { skipFormatting: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setEditRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            editHeaders = response.rangeInfo.headers.slice();
+            renderEditHeaders();
+          }
+        }
+
+        if (response && response.id) {
+          editingId = response.id;
+        }
+
+        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+
+        await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
+          title: 'Tabla guardada',
+          variant: 'success'
+        });
+        return true;
+      }
 
       async function clearPendingFormattedRange() {
         const targetInfo = (pendingFormatState && pendingFormatState.range) || rangeInfo;
@@ -1194,54 +1756,24 @@
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
         const val = this.value;
-        editingId = '';
-        if (val) {
-          google.script.run.withSuccessHandler(function(meta) {
-            if (meta) {
-              document.getElementById('tableName').value = meta.name || '';
-              document.getElementById('tableDesc').value = meta.description || '';
-              if (meta.rangeA1 && meta.sheetName) {
-                const parts = meta.rangeA1.split('!');
-                let rangeNotation = meta.rangeA1;
-                if (parts.length === 2) {
-                  rangeNotation = parts[1];
-                }
-                setRangeUI({
-                  sheetName: meta.sheetName,
-                  a1Notation: rangeNotation,
-                  rows: meta.rows || 0,
-                  cols: meta.cols || 0,
-                  headers: currentHeaders.slice()
-                }, { force: true });
-              }
-            }
-          }).getTableMeta(val);
-          google.script.run.withSuccessHandler(function(res) {
-            if (res && res.headers) {
-              currentHeaders = res.headers;
-              renderHeaders();
-            }
-          }).getTableHeaders(val);
-          editingId = val;
+        if (!val) {
+          resetEditTabView();
+          return;
         }
-      });
-
-      document.getElementById('editTableBtn').addEventListener('click', function() {
-        const select = document.getElementById('editSavedTables');
-        const val = select.value;
-        if (val) {
-          editingId = val;
-          showMessageModal('Tabla lista para actualizar. Ajuste los datos en "Crear tabla" y aplique el formato.', {
-            title: 'Edición habilitada',
-            variant: 'info'
-          });
-          setActiveTab('createTab', { force: true, preserveForm: true });
-        } else {
-          showMessageModal('Seleccione una tabla para editar.', {
-            title: 'Seleccione una tabla',
-            variant: 'error'
-          });
-        }
+        resetEditTabView({ preserveSelection: true, clearEditingId: false });
+        editingId = val;
+        google.script.run
+          .withSuccessHandler(function(meta) {
+            populateEditForm(meta);
+          })
+          .withFailureHandler(function(err) {
+            const message = err && err.message ? err.message : err;
+            showMessageModal('No se pudo obtener la tabla seleccionada: ' + message, {
+              title: 'Error al cargar tabla',
+              variant: 'error'
+            });
+          })
+          .getTableMeta(val);
       });
 
       document.getElementById('clearTableBtn').addEventListener('click', async function() {
@@ -1315,6 +1847,7 @@
 
       document.addEventListener('DOMContentLoaded', function() {
         setDefaultStyles();
+        setEditDefaultStyles();
         const rangeInput = document.getElementById('rangeInput');
         if (rangeInput) {
           rangeInput.dataset.manual = 'false';
@@ -1325,6 +1858,17 @@
             }
           });
         }
+        const editRangeInput = document.getElementById('editRangeInput');
+        if (editRangeInput) {
+          editRangeInput.dataset.manual = 'false';
+          editRangeInput.addEventListener('input', function() {
+            this.dataset.manual = this.value.trim() ? 'true' : 'false';
+            if (this.dataset.manual === 'true') {
+              editRangeInfo = null;
+            }
+          });
+        }
+        resetEditTabView();
         setActiveTab('createTab', { force: true });
       });
     </script>

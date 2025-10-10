@@ -94,6 +94,43 @@ function getActiveRangeInfo() {
   };
 }
 
+var META_HEADERS = ['id', 'name', 'rangeA1', 'description', 'sheet', 'cols', 'rows', 'createdAt', 'updatedAt', 'style', 'headers'];
+var META_INDEX = {
+  id: 0,
+  name: 1,
+  rangeA1: 2,
+  description: 3,
+  sheet: 4,
+  cols: 5,
+  rows: 6,
+  createdAt: 7,
+  updatedAt: 8,
+  style: 9,
+  headers: 10
+};
+
+function parseJsonValue(value, fallback) {
+  if (!value) {
+    return fallback;
+  }
+  try {
+    return JSON.parse(value);
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function stringifyJsonValue(value) {
+  if (value === undefined) {
+    return '';
+  }
+  try {
+    return JSON.stringify(value);
+  } catch (err) {
+    return '';
+  }
+}
+
 /**
  * Devuelve el listado de tablas guardadas desde la hoja oculta
  * __TableCrafter_Meta.  Cada entrada contiene id, nombre y rango A1.
@@ -106,17 +143,21 @@ function listSavedTables() {
   var result = [];
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    if (row[0]) {
+    if (row[META_INDEX.id]) {
+      var style = parseJsonValue(row[META_INDEX.style], null);
+      var headers = parseJsonValue(row[META_INDEX.headers], null);
       result.push({
-        id: row[0],
-        name: row[1],
-        rangeA1: row[2],
-        description: row[3],
-        sheetName: row[4],
-        cols: row[5],
-        rows: row[6],
-        createdAt: row[7],
-        updatedAt: row[8]
+        id: row[META_INDEX.id],
+        name: row[META_INDEX.name],
+        rangeA1: row[META_INDEX.rangeA1],
+        description: row[META_INDEX.description],
+        sheetName: row[META_INDEX.sheet],
+        cols: row[META_INDEX.cols],
+        rows: row[META_INDEX.rows],
+        createdAt: row[META_INDEX.createdAt],
+        updatedAt: row[META_INDEX.updatedAt],
+        style: style,
+        headers: headers
       });
     }
   }
@@ -137,8 +178,8 @@ function clearTable(tableId) {
   }
   var row = entry.row;
   var data = entry.data;
-  var rangeA1 = data[2];
-  var sheetName = data[4];
+  var rangeA1 = data[META_INDEX.rangeA1];
+  var sheetName = data[META_INDEX.sheet];
   if (rangeA1) {
     try {
       var ss = SpreadsheetApp.getActive();
@@ -257,8 +298,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     if (id) {
       var entry = findMetaById(id);
       if (entry) {
-        var prevRangeA1 = entry.data[2];
-        var prevSheetName = entry.data[4];
+        var prevRangeA1 = entry.data[META_INDEX.rangeA1];
+        var prevSheetName = entry.data[META_INDEX.sheet];
         if (prevRangeA1) {
           var ss = SpreadsheetApp.getActive();
           var prevSheet = ss.getSheetByName(prevSheetName);
@@ -285,7 +326,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   }
 
   if (doSave) {
-    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows);
+    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows, appliedStyle, normalizedHeaders);
     if (!doFormat && id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
       createFilterViewForRange(range, 'TableCrafter_' + id);
@@ -508,11 +549,30 @@ function getMetaSheet() {
   if (!sheet) {
     sheet = ss.insertSheet('__TableCrafter_Meta');
     sheet.hideSheet();
-    // Encabezados
-    var headers = ['id', 'name', 'rangeA1', 'description', 'sheet', 'cols', 'rows', 'createdAt', 'updatedAt'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    ensureMetaSheetSchema(sheet);
+  } else {
+    ensureMetaSheetSchema(sheet);
   }
   return sheet;
+}
+
+function ensureMetaSheetSchema(sheet) {
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < META_HEADERS.length) {
+    sheet.insertColumnsAfter(maxColumns, META_HEADERS.length - maxColumns);
+  }
+  var headerRange = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), META_HEADERS.length));
+  var headerValues = headerRange.getValues()[0];
+  var needsUpdate = false;
+  for (var i = 0; i < META_HEADERS.length; i++) {
+    if (headerValues[i] !== META_HEADERS[i]) {
+      needsUpdate = true;
+      break;
+    }
+  }
+  if (needsUpdate) {
+    sheet.getRange(1, 1, 1, META_HEADERS.length).setValues([META_HEADERS]);
+  }
 }
 
 /**
@@ -543,17 +603,22 @@ function findMetaById(id) {
  * @param {number} cols Número de columnas.
  * @param {number} rows Número de filas.
  */
-function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows) {
+function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows, style, headers) {
   var sheet = getMetaSheet();
   var meta = findMetaById(id);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var styleValue = stringifyJsonValue(style || {});
+  var headersValue = stringifyJsonValue(headers || []);
   if (meta) {
     // Actualizar
     var row = meta.row;
-    sheet.getRange(row, 1, 1, 9).setValues([[id, name, rangeA1, description, sheetName, cols, rows, meta.data[7] || now, now]]);
+    var createdAt = meta.data[META_INDEX.createdAt] || now;
+    sheet
+      .getRange(row, 1, 1, META_HEADERS.length)
+      .setValues([[id, name, rangeA1, description, sheetName, cols, rows, createdAt, now, styleValue, headersValue]]);
   } else {
     // Crear nueva
-    sheet.appendRow([id, name, rangeA1, description, sheetName, cols, rows, now, now]);
+    sheet.appendRow([id, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
   }
 }
 
@@ -603,8 +668,8 @@ function askQuestion(tableId, question) {
   if (!meta) {
     return { error: 'Tabla no encontrada.' };
   }
-  var rangeA1 = meta.data[2];
-  var sheetName = meta.data[4];
+  var rangeA1 = meta.data[META_INDEX.rangeA1];
+  var sheetName = meta.data[META_INDEX.sheet];
   var ss = SpreadsheetApp.getActive();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
@@ -668,16 +733,20 @@ function getTableMeta(tableId) {
   var meta = findMetaById(tableId);
   if (!meta) return null;
   var d = meta.data;
+  var style = parseJsonValue(d[META_INDEX.style], null);
+  var headers = parseJsonValue(d[META_INDEX.headers], null);
   return {
-    id: d[0],
-    name: d[1],
-    rangeA1: d[2],
-    description: d[3],
-    sheetName: d[4],
-    cols: d[5],
-    rows: d[6],
-    createdAt: d[7],
-    updatedAt: d[8]
+    id: d[META_INDEX.id],
+    name: d[META_INDEX.name],
+    rangeA1: d[META_INDEX.rangeA1],
+    description: d[META_INDEX.description],
+    sheetName: d[META_INDEX.sheet],
+    cols: d[META_INDEX.cols],
+    rows: d[META_INDEX.rows],
+    createdAt: d[META_INDEX.createdAt],
+    updatedAt: d[META_INDEX.updatedAt],
+    style: style,
+    headers: headers
   };
 }
 
@@ -693,8 +762,12 @@ function getTableHeaders(tableId) {
   var meta = findMetaById(tableId);
   if (!meta) return { error: 'Tabla no encontrada' };
   var d = meta.data;
-  var sheetName = d[4];
-  var rangeA1 = d[2];
+  var storedHeaders = parseJsonValue(d[META_INDEX.headers], null);
+  if (storedHeaders && storedHeaders.length) {
+    return { headers: storedHeaders };
+  }
+  var sheetName = d[META_INDEX.sheet];
+  var rangeA1 = d[META_INDEX.rangeA1];
   var ss = SpreadsheetApp.getActive();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return { error: 'Hoja no encontrada' };
