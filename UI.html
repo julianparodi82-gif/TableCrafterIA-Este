@@ -99,23 +99,31 @@
         border: 1px solid #E5E7EB;
         border-radius: 4px;
         background-color: #FFFFFF;
-        max-height: 180px;
+        max-height: 240px;
         overflow-y: auto;
       }
       .header-item {
         display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
         border-bottom: 1px solid #E5E7EB;
       }
       .header-item:last-child {
         border-bottom: none;
       }
+      .header-item-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
       .header-item input[type="text"] {
-        flex-grow: 1;
-        margin-right: 4px;
+        flex: 1 1 auto;
         min-height: 32px;
+      }
+      .header-item-actions {
+        display: flex;
+        gap: 4px;
       }
       .header-item button {
         border: none;
@@ -131,6 +139,25 @@
       }
       .header-item button:hover {
         background-color: #D1D5DB;
+      }
+      .header-desc-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #4B5563;
+        cursor: pointer;
+      }
+      .header-desc-toggle input {
+        margin: 0;
+      }
+      .header-desc-field {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+      }
+      .header-desc-field.hidden {
+        display: none;
       }
       .toggle-group {
         display: flex;
@@ -444,6 +471,55 @@
         bold: true
       });
 
+      function normalizeHeaderModel(entry) {
+        const normalized = {
+          label: '',
+          description: '',
+          hasDescription: false
+        };
+        if (entry && typeof entry === 'object') {
+          const labelValue =
+            entry.label !== undefined && entry.label !== null
+              ? entry.label
+              : entry.text !== undefined && entry.text !== null
+              ? entry.text
+              : '';
+          const descriptionValue = entry.description !== undefined && entry.description !== null ? entry.description : '';
+          const trimmedLabel = String(labelValue || '').trim();
+          const trimmedDescription = String(descriptionValue || '').trim();
+          const explicitHasDescription =
+            Object.prototype.hasOwnProperty.call(entry, 'hasDescription') && entry.hasDescription === true;
+          const hasDescription = explicitHasDescription || trimmedDescription !== '';
+          normalized.label = trimmedLabel;
+          normalized.description = hasDescription ? trimmedDescription : '';
+          normalized.hasDescription = hasDescription;
+          return normalized;
+        }
+        if (entry !== undefined && entry !== null) {
+          normalized.label = String(entry).trim();
+        }
+        return normalized;
+      }
+
+      function toHeaderModelArray(source) {
+        if (!Array.isArray(source)) {
+          return [];
+        }
+        return source.map(function(entry) {
+          return normalizeHeaderModel(entry);
+        });
+      }
+
+      function cloneHeaderModels(source) {
+        return toHeaderModelArray(source).map(function(item) {
+          return {
+            label: item.label,
+            description: item.hasDescription ? item.description : '',
+            hasDescription: item.hasDescription
+          };
+        });
+      }
+
       let rangeInfo = null;
       let editRangeInfo = null;
       let editingId = '';
@@ -593,23 +669,14 @@
         }
       }
 
-      function getSanitizedHeaders(headersSource) {
-        const target = Array.isArray(headersSource) ? headersSource : currentHeaders;
-        return target.map(function(header) {
-          if (header === null || header === undefined) {
-            return '';
-          }
-          return String(header).trim();
-        });
-      }
-
       function validateTableDetails(config) {
         const options = config || {};
         const nameInput = document.getElementById(options.nameInputId || 'tableName');
         const descInput = document.getElementById(options.descInputId || 'tableDesc');
         const name = nameInput ? nameInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
-        const headers = getSanitizedHeaders(options.headers);
+        const headerSource = Array.isArray(options.headers) ? options.headers : currentHeaders;
+        const headers = cloneHeaderModels(headerSource);
         const missingMessages = [];
         const missingHeaderIndexes = [];
 
@@ -623,8 +690,8 @@
         if (headers.length === 0) {
           missingMessages.push('Al menos un título en la sección de encabezados');
         } else {
-          headers.forEach(function(value, index) {
-            if (!value) {
+          headers.forEach(function(header, index) {
+            if (!header.label) {
               missingHeaderIndexes.push(index + 1);
             }
           });
@@ -824,12 +891,13 @@
           input.value = fullA1;
           input.dataset.manual = 'false';
         }
+        const incomingHeaders = Array.isArray(info.headers) ? info.headers : currentHeaders;
         rangeInfo = {
           sheetName: info.sheetName,
           a1Notation: info.a1Notation,
           rows: rows,
           cols: cols,
-          headers: Array.isArray(info.headers) ? info.headers.slice() : currentHeaders.slice()
+          headers: cloneHeaderModels(incomingHeaders)
         };
         rangeInfo.fullA1 = fullA1;
       }
@@ -880,12 +948,13 @@
           input.value = fullA1;
           input.dataset.manual = 'false';
         }
+        const incomingEditHeaders = Array.isArray(info.headers) ? info.headers : editHeaders;
         editRangeInfo = {
           sheetName: info.sheetName,
           a1Notation: info.a1Notation,
           rows: rows,
           cols: cols,
-          headers: Array.isArray(info.headers) ? info.headers.slice() : editHeaders.slice()
+          headers: cloneHeaderModels(incomingEditHeaders)
         };
         editRangeInfo.fullA1 = fullA1;
       }
@@ -910,17 +979,30 @@
           return;
         }
         list.innerHTML = '';
+        if (!Array.isArray(headers)) {
+          return;
+        }
+        for (let i = 0; i < headers.length; i++) {
+          headers[i] = normalizeHeaderModel(headers[i]);
+        }
         headers.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
 
+          const topRow = document.createElement('div');
+          topRow.className = 'header-item-row';
+
           const inp = document.createElement('input');
           inp.type = 'text';
-          inp.value = header;
+          inp.value = header.label;
+          inp.placeholder = 'Encabezado ' + (index + 1);
           inp.addEventListener('input', function() {
-            headers[index] = this.value;
+            headers[index].label = this.value;
           });
-          li.appendChild(inp);
+          topRow.appendChild(inp);
+
+          const actions = document.createElement('div');
+          actions.className = 'header-item-actions';
 
           const upBtn = document.createElement('button');
           upBtn.textContent = '↑';
@@ -933,7 +1015,7 @@
               renderHeaderList(listId, headers);
             }
           });
-          li.appendChild(upBtn);
+          actions.appendChild(upBtn);
 
           const downBtn = document.createElement('button');
           downBtn.textContent = '↓';
@@ -946,7 +1028,47 @@
               renderHeaderList(listId, headers);
             }
           });
-          li.appendChild(downBtn);
+          actions.appendChild(downBtn);
+
+          topRow.appendChild(actions);
+          li.appendChild(topRow);
+
+          const descField = document.createElement('textarea');
+          descField.className = 'header-desc-field';
+          descField.placeholder = 'Descripción de la columna';
+          descField.rows = 2;
+          descField.value = header.hasDescription ? header.description || '' : '';
+          if (!header.hasDescription) {
+            descField.classList.add('hidden');
+            descField.disabled = true;
+          }
+          descField.addEventListener('input', function() {
+            headers[index].description = this.value;
+          });
+
+          const toggleLabel = document.createElement('label');
+          toggleLabel.className = 'header-desc-toggle';
+          const toggle = document.createElement('input');
+          toggle.type = 'checkbox';
+          toggle.checked = !!header.hasDescription;
+          toggle.addEventListener('change', function() {
+            headers[index].hasDescription = this.checked;
+            if (!this.checked) {
+              headers[index].description = '';
+              descField.value = '';
+              descField.classList.add('hidden');
+              descField.disabled = true;
+            } else {
+              descField.classList.remove('hidden');
+              descField.disabled = false;
+              descField.focus();
+            }
+          });
+          toggleLabel.appendChild(toggle);
+          toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
+
+          li.appendChild(toggleLabel);
+          li.appendChild(descField);
 
           list.appendChild(li);
         });
@@ -989,11 +1111,11 @@
           }
           const infoForUi = Object.assign({}, info);
           if (!updateHeaders) {
-            infoForUi.headers = currentHeaders.slice();
+            infoForUi.headers = cloneHeaderModels(currentHeaders);
           }
           setRangeUI(infoForUi, { force: editingId === '' || !document.getElementById('rangeInput') || document.getElementById('rangeInput').value === '' });
           if (updateHeaders) {
-            currentHeaders = Array.isArray(info.headers) ? info.headers : [];
+            currentHeaders = cloneHeaderModels(info.headers);
           }
           renderCreateHeaders();
         }).getActiveRangeInfo();
@@ -1015,13 +1137,13 @@
           }
           const infoForUi = Object.assign({}, info);
           if (!updateHeaders) {
-            infoForUi.headers = editHeaders.slice();
+            infoForUi.headers = cloneHeaderModels(editHeaders);
           }
           const input = document.getElementById('editRangeInput');
           const shouldForce = !input || input.dataset.manual !== 'true';
           setEditRangeUI(infoForUi, { force: shouldForce });
           if (updateHeaders) {
-            editHeaders = Array.isArray(info.headers) ? info.headers : [];
+            editHeaders = cloneHeaderModels(info.headers);
           }
           renderEditHeaders();
         }).getActiveRangeInfo();
@@ -1098,12 +1220,12 @@
           boldToggle.checked = bold;
         }
 
-        editHeaders = Array.isArray(meta.headers) ? meta.headers.slice() : [];
+        editHeaders = cloneHeaderModels(meta.headers);
         if (editHeaders.length === 0 && meta.id) {
           google.script.run
             .withSuccessHandler(function(res) {
               if (res && Array.isArray(res.headers)) {
-                editHeaders = res.headers.slice();
+                editHeaders = cloneHeaderModels(res.headers);
                 renderEditHeaders();
               }
             })
@@ -1118,7 +1240,7 @@
               a1Notation: meta.rangeA1,
               rows: meta.rows || 0,
               cols: meta.cols || 0,
-              headers: editHeaders.slice()
+              headers: cloneHeaderModels(editHeaders)
             },
             { force: true }
           );
@@ -1308,7 +1430,7 @@
           return false;
         }
 
-        currentHeaders = validation.values.headers.slice();
+        currentHeaders = cloneHeaderModels(validation.values.headers);
         renderCreateHeaders();
         const nameInput = document.getElementById('tableName');
         if (nameInput) {
@@ -1335,7 +1457,7 @@
             rangeA1,
             validation.values.name,
             validation.values.description,
-            currentHeaders,
+            cloneHeaderModels(currentHeaders),
             style,
             { skipSaving: true }
           );
@@ -1358,7 +1480,7 @@
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
-            currentHeaders = response.rangeInfo.headers.slice();
+            currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderCreateHeaders();
           }
           setPendingFormattedRange(response.rangeInfo);
@@ -1414,7 +1536,7 @@
           return false;
         }
 
-        editHeaders = validation.values.headers.slice();
+        editHeaders = cloneHeaderModels(validation.values.headers);
         renderEditHeaders();
         const nameInput = document.getElementById('editTableName');
         if (nameInput) {
@@ -1446,7 +1568,7 @@
             rangeA1,
             validation.values.name,
             validation.values.description,
-            editHeaders,
+            cloneHeaderModels(editHeaders),
             style,
             { skipSaving: true }
           );
@@ -1469,7 +1591,7 @@
         if (response && response.rangeInfo) {
           setEditRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
-            editHeaders = response.rangeInfo.headers.slice();
+            editHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderEditHeaders();
           }
         }
@@ -1520,7 +1642,7 @@
           }
         }
 
-        currentHeaders = validation.values.headers.slice();
+        currentHeaders = cloneHeaderModels(validation.values.headers);
         renderCreateHeaders();
         const nameInput = document.getElementById('tableName');
         if (nameInput) {
@@ -1547,7 +1669,7 @@
             rangeA1,
             validation.values.name,
             validation.values.description,
-            currentHeaders,
+            cloneHeaderModels(currentHeaders),
             style,
             { skipFormatting: true }
           );
@@ -1570,7 +1692,7 @@
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
-            currentHeaders = response.rangeInfo.headers.slice();
+            currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderCreateHeaders();
           }
         }
@@ -1664,7 +1786,7 @@
           }
         }
 
-        editHeaders = validation.values.headers.slice();
+        editHeaders = cloneHeaderModels(validation.values.headers);
         renderEditHeaders();
         const nameInput = document.getElementById('editTableName');
         if (nameInput) {
@@ -1696,7 +1818,7 @@
             rangeA1,
             validation.values.name,
             validation.values.description,
-            editHeaders,
+            cloneHeaderModels(editHeaders),
             style,
             { skipFormatting: true }
           );
@@ -1719,7 +1841,7 @@
         if (response && response.rangeInfo) {
           setEditRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
-            editHeaders = response.rangeInfo.headers.slice();
+            editHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderEditHeaders();
           }
         }

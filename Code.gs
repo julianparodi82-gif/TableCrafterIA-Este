@@ -82,7 +82,9 @@ function getActiveRangeInfo() {
   if (values.length > 0) {
     var firstRow = values[0];
     for (var i = 0; i < firstRow.length; i++) {
-      headers.push(firstRow[i] === null ? '' : String(firstRow[i]));
+      var cell = firstRow[i];
+      var headerText = cell === null || cell === undefined ? '' : String(cell);
+      headers.push(normalizeHeaderEntry(headerText));
     }
   }
   return {
@@ -131,6 +133,44 @@ function stringifyJsonValue(value) {
   }
 }
 
+function normalizeHeaderEntry(entry) {
+  var normalized = {
+    label: '',
+    description: '',
+    hasDescription: false
+  };
+  if (entry && typeof entry === 'object') {
+    var labelValue = '';
+    if (Object.prototype.hasOwnProperty.call(entry, 'label')) {
+      labelValue = entry.label;
+    } else if (Object.prototype.hasOwnProperty.call(entry, 'text')) {
+      labelValue = entry.text;
+    }
+    var descriptionValue = Object.prototype.hasOwnProperty.call(entry, 'description') ? entry.description : '';
+    var hasDescription = Object.prototype.hasOwnProperty.call(entry, 'hasDescription')
+      ? !!entry.hasDescription
+      : String(descriptionValue || '').trim() !== '';
+    normalized.label = String(labelValue === undefined || labelValue === null ? '' : labelValue).trim();
+    normalized.description = hasDescription ? String(descriptionValue || '').trim() : '';
+    normalized.hasDescription = hasDescription;
+    return normalized;
+  }
+  if (entry !== undefined && entry !== null) {
+    normalized.label = String(entry).trim();
+  }
+  return normalized;
+}
+
+function normalizeHeaderArray(headers) {
+  if (!Array.isArray(headers)) {
+    return [];
+  }
+  return headers.map(function(item) {
+    return normalizeHeaderEntry(item);
+  });
+}
+
+
 /**
  * Devuelve el listado de tablas guardadas desde la hoja oculta
  * __TableCrafter_Meta.  Cada entrada contiene id, nombre y rango A1.
@@ -145,7 +185,7 @@ function listSavedTables() {
     var row = data[i];
     if (row[META_INDEX.id]) {
       var style = parseJsonValue(row[META_INDEX.style], null);
-      var headers = parseJsonValue(row[META_INDEX.headers], null);
+      var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], null));
       result.push({
         id: row[META_INDEX.id],
         name: row[META_INDEX.name],
@@ -276,22 +316,45 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
 
   var normalizedRange = range.getA1Notation();
   var headerRange = range.offset(0, 0, 1, cols);
-  var normalizedHeaders = null;
-  if (headers && headers.length > 0) {
-    normalizedHeaders = [];
+  var headerMeta = [];
+  var shouldOverwriteHeaders = headers && headers.length > 0;
+  if (shouldOverwriteHeaders) {
+    var providedMeta = normalizeHeaderArray(headers);
     for (var i = 0; i < cols; i++) {
-      var headerValue = headers[i] !== undefined ? headers[i] : '';
-      normalizedHeaders.push(headerValue === null ? '' : String(headerValue));
+      headerMeta.push(providedMeta[i] || normalizeHeaderEntry(''));
     }
-    if (doFormat) {
-      headerRange.setValues([normalizedHeaders]);
+  } else {
+    var existingHeaders = headerRange.getValues()[0];
+    var derivedMeta = normalizeHeaderArray(existingHeaders);
+    for (var j = 0; j < cols; j++) {
+      headerMeta.push(derivedMeta[j] || normalizeHeaderEntry(''));
     }
   }
-  if (!normalizedHeaders) {
-    var existingHeaders = headerRange.getValues()[0];
-    normalizedHeaders = existingHeaders.map(function(value) {
-      return value === null ? '' : String(value);
-    });
+  headerMeta = headerMeta.map(function(entry) {
+    var labelValue = entry && entry.label !== undefined && entry.label !== null ? String(entry.label) : '';
+    var descriptionValue = entry && entry.description !== undefined && entry.description !== null ? String(entry.description) : '';
+    var trimmedLabel = labelValue.trim();
+    var trimmedDescription = descriptionValue.trim();
+    var explicitHasDescription = entry && Object.prototype.hasOwnProperty.call(entry, 'hasDescription') ? !!entry.hasDescription : false;
+    var hasDescription = explicitHasDescription || trimmedDescription !== '';
+    return {
+      label: trimmedLabel,
+      description: hasDescription ? trimmedDescription : '',
+      hasDescription: hasDescription
+    };
+  });
+  var headerMetaForReturn = headerMeta.map(function(item) {
+    return {
+      label: item.label || '',
+      description: item.hasDescription ? (item.description || '') : '',
+      hasDescription: !!item.hasDescription
+    };
+  });
+  var headerValues = headerMetaForReturn.map(function(item) {
+    return item.label || '';
+  });
+  if (doFormat && shouldOverwriteHeaders) {
+    headerRange.setValues([headerValues]);
   }
 
   if (doFormat) {
@@ -326,7 +389,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   }
 
   if (doSave) {
-    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows, appliedStyle, normalizedHeaders);
+    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows, appliedStyle, headerMetaForReturn);
     if (!doFormat && id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
       createFilterViewForRange(range, 'TableCrafter_' + id);
@@ -351,7 +414,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       a1Notation: normalizedRange,
       rows: rows,
       cols: cols,
-      headers: normalizedHeaders
+      headers: headerMetaForReturn
     },
     message: message
   };
@@ -608,7 +671,8 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
   var meta = findMetaById(id);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var styleValue = stringifyJsonValue(style || {});
-  var headersValue = stringifyJsonValue(headers || []);
+  var normalizedHeaders = normalizeHeaderArray(headers);
+  var headersValue = stringifyJsonValue(normalizedHeaders);
   if (meta) {
     // Actualizar
     var row = meta.row;
@@ -736,7 +800,7 @@ function getTableMeta(tableId) {
   if (!meta) return null;
   var d = meta.data;
   var style = parseJsonValue(d[META_INDEX.style], null);
-  var headers = parseJsonValue(d[META_INDEX.headers], null);
+  var headers = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
   return {
     id: d[META_INDEX.id],
     name: d[META_INDEX.name],
@@ -764,7 +828,7 @@ function getTableHeaders(tableId) {
   var meta = findMetaById(tableId);
   if (!meta) return { error: 'Tabla no encontrada' };
   var d = meta.data;
-  var storedHeaders = parseJsonValue(d[META_INDEX.headers], null);
+  var storedHeaders = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
   if (storedHeaders && storedHeaders.length) {
     return { headers: storedHeaders };
   }
@@ -776,6 +840,8 @@ function getTableHeaders(tableId) {
   var range = sheet.getRange(rangeA1);
   var values = range.getValues();
   if (!values || values.length === 0) return { error: 'Rango vacío' };
-  var headers = values[0].map(function(v) { return v === null ? '' : String(v); });
+  var headers = values[0].map(function(v) {
+    return normalizeHeaderEntry(v === null ? '' : String(v));
+  });
   return { headers: headers };
 }
