@@ -1579,20 +1579,17 @@
           lastSavedTableId = response.id;
         }
 
-        if (response && response.isNew) {
-          editingId = '';
-          clearRangeUI();
-          currentHeaders = [];
-          renderCreateHeaders();
-          setDefaultStyles();
-        } else if (response && response.id) {
-          editingId = response.id;
-        }
+        editingId = '';
 
         await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
           selectId: lastSavedTableId
         });
-        resetPendingFormatState();
+
+        resetCreateTabView({
+          preserveRange: false,
+          preserveFields: false,
+          preserveHeaders: false
+        });
 
         await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
           title: 'Tabla guardada',

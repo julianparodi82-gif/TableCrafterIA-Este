@@ -620,6 +620,8 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     // Crear nueva
     sheet.appendRow([id, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
   }
+
+  SpreadsheetApp.flush();
 }
 
 /**
