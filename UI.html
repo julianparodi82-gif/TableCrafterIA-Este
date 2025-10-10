@@ -19,6 +19,41 @@
         font-weight: 600;
         color: #2563EB;
       }
+      .container {
+        background: transparent;
+      }
+      .tab-nav {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .tab-btn {
+        flex: 1;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        color: #111827;
+        padding: 10px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      }
+      .tab-btn:hover {
+        background-color: #EFF6FF;
+        border-color: #2563EB;
+        color: #1E40AF;
+      }
+      .tab-btn.active {
+        background-color: #2563EB;
+        border-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
       .section {
         margin-bottom: 20px;
         padding-bottom: 12px;
@@ -26,6 +61,7 @@
       }
       .section:last-child {
         border-bottom: none;
+        margin-bottom: 0;
       }
       label {
         display: block;
@@ -144,6 +180,16 @@
       .btn-danger:hover {
         background-color: #DC2626;
       }
+      .range-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .range-row strong {
+        flex-grow: 1;
+      }
       pre.answer-box {
         background-color: #FFFFFF;
         border: 1px solid #E5E7EB;
@@ -162,63 +208,85 @@
   <body>
     <div class="container">
       <h2>TableCrafter AI</h2>
-      <div class="section">
-        <div>
-          <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
-          <button id="refreshRangeBtn" class="btn-secondary" style="float:right;" title="Actualizar rango activo">Actualizar</button>
-        </div>
-        <label for="tableName">Nombre de la tabla</label>
-        <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
-        <label for="tableDesc">Descripción</label>
-        <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
-        <label>Encabezados (puede editar y reordenar)</label>
-        <ul id="headersList" class="header-list"></ul>
-        <div class="toggle-group">
-          <label for="colorHeader">Color encabezado</label>
-          <input type="color" id="colorHeader" />
-        </div>
-        <div class="toggle-group">
-          <label for="colorAlt1">Color filas alternas 1</label>
-          <input type="color" id="colorAlt1" />
-        </div>
-        <div class="toggle-group">
-          <label for="colorAlt2">Color filas alternas 2</label>
-          <input type="color" id="colorAlt2" />
-        </div>
-        <div class="toggle-group">
-          <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
-          <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
-        </div>
-        <button id="applyBtn" class="btn-primary">Aplicar formato y guardar</button>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="createTab">Crear tabla</button>
+        <button class="tab-btn" data-tab="editTab">Editar tabla</button>
+        <button class="tab-btn" data-tab="aiTab">Consultas IA</button>
       </div>
-      <div class="section">
-        <label for="savedTables">Tablas guardadas</label>
-        <select id="savedTables"></select>
-        <div class="toggle-group" style="margin-top:8px;">
-          <button id="editTableBtn" class="btn-secondary" title="Editar tabla seleccionada">Editar</button>
-          <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla">Limpiar rango</button>
+
+      <div id="createTab" class="tab-content active">
+        <div class="section">
+          <div class="range-row">
+            <div>
+              <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+            </div>
+            <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+          </div>
         </div>
-        <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
-        <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
-        <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
-        <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
-        <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+        <div class="section">
+          <label for="tableName">Nombre de la tabla</label>
+          <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
+          <label for="tableDesc">Descripción</label>
+          <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <label>Encabezados (puede editar y reordenar)</label>
+          <ul id="headersList" class="header-list"></ul>
+          <div class="toggle-group">
+            <label for="colorHeader">Color encabezado</label>
+            <input type="color" id="colorHeader" />
+          </div>
+          <div class="toggle-group">
+            <label for="colorAlt1">Color filas alternas 1</label>
+            <input type="color" id="colorAlt1" />
+          </div>
+          <div class="toggle-group">
+            <label for="colorAlt2">Color filas alternas 2</label>
+            <input type="color" id="colorAlt2" />
+          </div>
+          <div class="toggle-group">
+            <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
+            <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
+          </div>
+          <button id="applyBtn" class="btn-primary">Aplicar formato y guardar</button>
+        </div>
+      </div>
+
+      <div id="editTab" class="tab-content">
+        <div class="section">
+          <label for="editSavedTables">Tablas guardadas</label>
+          <select id="editSavedTables"></select>
+          <div class="toggle-group" style="margin-top:8px;">
+            <button id="editTableBtn" class="btn-secondary" title="Editar tabla seleccionada">Editar</button>
+            <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla">Limpiar rango</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="aiTab" class="tab-content">
+        <div class="section">
+          <label for="aiSavedTables">Tablas disponibles</label>
+          <select id="aiSavedTables"></select>
+          <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
+          <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
+          <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
+          <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
+          <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+        </div>
       </div>
     </div>
+
     <script>
-      // Variables globales
       let currentHeaders = [];
       let rangeInfo = null;
       let editingId = '';
+      let currentTab = '';
 
-      // Renderiza la lista de encabezados para su edición y reordenamiento
       function renderHeaders() {
         const list = document.getElementById('headersList');
         list.innerHTML = '';
         currentHeaders.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
-          // input
+
           const inp = document.createElement('input');
           inp.type = 'text';
           inp.value = header;
@@ -226,7 +294,7 @@
             currentHeaders[index] = this.value;
           });
           li.appendChild(inp);
-          // up button
+
           const upBtn = document.createElement('button');
           upBtn.textContent = '↑';
           upBtn.title = 'Subir';
@@ -239,7 +307,7 @@
             }
           });
           li.appendChild(upBtn);
-          // down button
+
           const downBtn = document.createElement('button');
           downBtn.textContent = '↓';
           downBtn.title = 'Bajar';
@@ -252,31 +320,74 @@
             }
           });
           li.appendChild(downBtn);
+
           list.appendChild(li);
         });
       }
 
-      // Cargar rango activo y tablas guardadas
-      function initialize() {
+      function setDefaultStyles() {
+        const colorHeader = document.getElementById('colorHeader');
+        const colorAlt1 = document.getElementById('colorAlt1');
+        const colorAlt2 = document.getElementById('colorAlt2');
+        if (colorHeader) colorHeader.value = '#CFE8FC';
+        if (colorAlt1) colorAlt1.value = '#FFFFFF';
+        if (colorAlt2) colorAlt2.value = '#F3F4F6';
+      }
+
+      function loadActiveRange(updateHeaders = true) {
         google.script.run.withSuccessHandler(function(info) {
+          const label = document.getElementById('rangeLabel');
           if (info.error) {
-            document.getElementById('rangeLabel').textContent = info.error;
+            if (label) {
+              label.textContent = info.error;
+            }
+            rangeInfo = null;
             return;
           }
           rangeInfo = info;
-          document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
-          currentHeaders = info.headers;
+          if (label) {
+            label.textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
+          }
+          if (updateHeaders) {
+            currentHeaders = info.headers;
+          }
           renderHeaders();
         }).getActiveRangeInfo();
-        // Colores por defecto
-        document.getElementById('colorHeader').value = '#CFE8FC';
-        document.getElementById('colorAlt1').value = '#FFFFFF';
-        document.getElementById('colorAlt2').value = '#F3F4F6';
-        // Listado de tablas
-        refreshSavedTables();
-        // Comprobar API Key
+      }
+
+      function refreshSavedTables(targetIds) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        google.script.run.withSuccessHandler(function(tables) {
+          ids.forEach(function(id) {
+            const select = document.getElementById(id);
+            if (!select) {
+              return;
+            }
+            const previousValue = select.value;
+            select.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Seleccione --';
+            select.appendChild(defaultOption);
+            tables.forEach(function(t) {
+              const opt = document.createElement('option');
+              opt.value = t.id;
+              opt.textContent = t.name || t.id;
+              select.appendChild(opt);
+            });
+            if (id === 'editSavedTables' && editingId) {
+              select.value = editingId;
+            } else if (previousValue) {
+              select.value = previousValue;
+            }
+          });
+        }).listSavedTables();
+      }
+
+      function checkApiKey() {
         google.script.run.withSuccessHandler(function(res) {
           const warn = document.getElementById('apiWarning');
+          if (!warn) return;
           if (!res || !res.key) {
             warn.innerHTML = 'Configure su API Key para usar la IA (menú Configurar API).';
           } else {
@@ -285,39 +396,46 @@
         }).getApiKey();
       }
 
-      // Actualiza el listado de tablas guardadas
-      function refreshSavedTables() {
-        google.script.run.withSuccessHandler(function(tables) {
-          const select = document.getElementById('savedTables');
-          select.innerHTML = '';
-          const defaultOption = document.createElement('option');
-          defaultOption.value = '';
-          defaultOption.textContent = '-- Seleccione --';
-          select.appendChild(defaultOption);
-          tables.forEach(function(t) {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.name || t.id;
-            select.appendChild(opt);
-          });
-        }).listSavedTables();
+      function showTab(tabId) {
+        if (currentTab === tabId) {
+          return;
+        }
+        currentTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+          if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+          if (content.id === tabId) {
+            content.classList.add('active');
+          } else {
+            content.classList.remove('active');
+          }
+        });
+
+        if (tabId === 'createTab') {
+          loadActiveRange(editingId === '');
+        } else if (tabId === 'editTab') {
+          refreshSavedTables('editSavedTables');
+        } else if (tabId === 'aiTab') {
+          refreshSavedTables('aiSavedTables');
+          checkApiKey();
+        }
       }
 
-      // Botón Actualizar rango
-      document.getElementById('refreshRangeBtn').addEventListener('click', function() {
-        google.script.run.withSuccessHandler(function(info) {
-          if (info.error) {
-            document.getElementById('rangeLabel').textContent = info.error;
-            return;
-          }
-          rangeInfo = info;
-          document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
-          currentHeaders = info.headers;
-          renderHeaders();
-        }).getActiveRangeInfo();
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          showTab(btn.dataset.tab);
+        });
       });
 
-      // Botón Aplicar formato
+      document.getElementById('refreshRangeBtn').addEventListener('click', function() {
+        loadActiveRange(editingId === '');
+      });
+
       document.getElementById('applyBtn').addEventListener('click', function() {
         if (!rangeInfo) {
           alert('No hay rango activo.');
@@ -331,33 +449,28 @@
         const border = document.getElementById('toggleBorder').checked;
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
-        // Determine tableId: if editingId set, use it; else empty string
         const tableId = editingId;
         const rangeA1 = rangeInfo.a1Notation;
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
-            // Do nothing; error handled by server via popup
             return;
           }
           editingId = res.id;
-          refreshSavedTables();
+          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
           alert('Formato aplicado correctamente.');
         }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style);
       });
 
-      // Al seleccionar una tabla del desplegable
-      document.getElementById('savedTables').addEventListener('change', function() {
+      document.getElementById('editSavedTables').addEventListener('change', function() {
         const val = this.value;
         editingId = '';
         if (val) {
-          // Cargar metadatos para pre‑poblar nombre y descripción
           google.script.run.withSuccessHandler(function(meta) {
             if (meta) {
               document.getElementById('tableName').value = meta.name || '';
               document.getElementById('tableDesc').value = meta.description || '';
             }
           }).getTableMeta(val);
-          // Cargar encabezados de la tabla
           google.script.run.withSuccessHandler(function(res) {
             if (res && res.headers) {
               currentHeaders = res.headers;
@@ -368,21 +481,20 @@
         }
       });
 
-      // Botón Editar: asigna editingId sin cambiar campos
       document.getElementById('editTableBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
+        const select = document.getElementById('editSavedTables');
         const val = select.value;
         if (val) {
           editingId = val;
-          alert('Tabla seleccionada para actualizar. Seleccione un nuevo rango y aplique el formato.');
+          alert('Tabla lista para actualizar. Ajuste los datos en "Crear tabla" y aplique el formato.');
+          showTab('createTab');
         } else {
           alert('Seleccione una tabla para editar.');
         }
       });
 
-      // Botón Limpiar rango
       document.getElementById('clearTableBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
+        const select = document.getElementById('editSavedTables');
         const val = select.value;
         if (!val) {
           alert('Seleccione una tabla para limpiar.');
@@ -395,14 +507,13 @@
             } else {
               alert('Rango limpiado.');
             }
-            refreshSavedTables();
+            refreshSavedTables(['editSavedTables', 'aiSavedTables']);
           }).clearTable(val);
         }
       });
 
-      // Botón Preguntar a IA
       document.getElementById('askBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
+        const select = document.getElementById('aiSavedTables');
         const val = select.value;
         const question = document.getElementById('questionInput').value.trim();
         if (!val) {
@@ -426,8 +537,10 @@
         }).askQuestion(val, question);
       });
 
-      // Inicializar al cargar
-      document.addEventListener('DOMContentLoaded', initialize);
+      document.addEventListener('DOMContentLoaded', function() {
+        setDefaultStyles();
+        showTab('createTab');
+      });
     </script>
   </body>
 </html>
