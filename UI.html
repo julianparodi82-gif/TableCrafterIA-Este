@@ -436,11 +436,20 @@
     <script>
       let currentHeaders = [];
       let editHeaders = [];
+      const DEFAULT_STYLE = Object.freeze({
+        headerColor: '#CFE8FC',
+        altColor1: '#FFFFFF',
+        altColor2: '#F3F4F6',
+        border: true,
+        bold: true
+      });
+
       let rangeInfo = null;
       let editRangeInfo = null;
       let editingId = '';
       let currentTab = '';
       let pendingFormatState = { applied: false, range: null };
+      let lastSavedTableId = '';
 
       function resetPendingFormatState() {
         pendingFormatState = { applied: false, range: null };
@@ -502,6 +511,7 @@
           if (descInput) {
             descInput.value = '';
           }
+          setDefaultStyles();
         }
         if (!options.preserveHeaders) {
           currentHeaders = [];
@@ -515,11 +525,11 @@
         const colorAlt2 = document.getElementById('editColorAlt2');
         const borderToggle = document.getElementById('editToggleBorder');
         const boldToggle = document.getElementById('editToggleBold');
-        if (colorHeader) colorHeader.value = '#CFE8FC';
-        if (colorAlt1) colorAlt1.value = '#FFFFFF';
-        if (colorAlt2) colorAlt2.value = '#F3F4F6';
-        if (borderToggle) borderToggle.checked = true;
-        if (boldToggle) boldToggle.checked = true;
+        if (colorHeader) colorHeader.value = DEFAULT_STYLE.headerColor;
+        if (colorAlt1) colorAlt1.value = DEFAULT_STYLE.altColor1;
+        if (colorAlt2) colorAlt2.value = DEFAULT_STYLE.altColor2;
+        if (borderToggle) borderToggle.checked = DEFAULT_STYLE.border;
+        if (boldToggle) boldToggle.checked = DEFAULT_STYLE.bold;
       }
 
       function resetEditTabView(options) {
@@ -954,9 +964,13 @@
         const colorHeader = document.getElementById('colorHeader');
         const colorAlt1 = document.getElementById('colorAlt1');
         const colorAlt2 = document.getElementById('colorAlt2');
-        if (colorHeader) colorHeader.value = '#CFE8FC';
-        if (colorAlt1) colorAlt1.value = '#FFFFFF';
-        if (colorAlt2) colorAlt2.value = '#F3F4F6';
+        const borderToggle = document.getElementById('toggleBorder');
+        const boldToggle = document.getElementById('toggleBold');
+        if (colorHeader) colorHeader.value = DEFAULT_STYLE.headerColor;
+        if (colorAlt1) colorAlt1.value = DEFAULT_STYLE.altColor1;
+        if (colorAlt2) colorAlt2.value = DEFAULT_STYLE.altColor2;
+        if (borderToggle) borderToggle.checked = DEFAULT_STYLE.border;
+        if (boldToggle) boldToggle.checked = DEFAULT_STYLE.bold;
       }
 
       function loadActiveRange(updateHeaders = true) {
@@ -1055,11 +1069,13 @@
         }
 
         const style = meta.style || {};
-        const headerColor = typeof style.headerColor === 'string' ? style.headerColor : '#CFE8FC';
-        const alt1 = typeof style.altColor1 === 'string' ? style.altColor1 : '#FFFFFF';
-        const alt2 = typeof style.altColor2 === 'string' ? style.altColor2 : '#F3F4F6';
-        const border = Object.prototype.hasOwnProperty.call(style, 'border') ? !!style.border : true;
-        const bold = Object.prototype.hasOwnProperty.call(style, 'bold') ? !!style.bold : true;
+        const headerColor = typeof style.headerColor === 'string' ? style.headerColor : DEFAULT_STYLE.headerColor;
+        const alt1 = typeof style.altColor1 === 'string' ? style.altColor1 : DEFAULT_STYLE.altColor1;
+        const alt2 = typeof style.altColor2 === 'string' ? style.altColor2 : DEFAULT_STYLE.altColor2;
+        const border = Object.prototype.hasOwnProperty.call(style, 'border')
+          ? !!style.border
+          : DEFAULT_STYLE.border;
+        const bold = Object.prototype.hasOwnProperty.call(style, 'bold') ? !!style.bold : DEFAULT_STYLE.bold;
 
         const headerColorInput = document.getElementById('editColorHeader');
         if (headerColorInput) {
@@ -1111,33 +1127,57 @@
         }
       }
 
-      function refreshSavedTables(targetIds) {
+      function refreshSavedTables(targetIds, config) {
         const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
-        google.script.run.withSuccessHandler(function(tables) {
-          ids.forEach(function(id) {
-            const select = document.getElementById(id);
-            if (!select) {
-              return;
-            }
-            const previousValue = select.value;
-            select.innerHTML = '';
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = '-- Seleccione --';
-            select.appendChild(defaultOption);
-            tables.forEach(function(t) {
-              const opt = document.createElement('option');
-              opt.value = t.id;
-              opt.textContent = t.name || t.id;
-              select.appendChild(opt);
+        const options = config || {};
+        return callServerFunction('listSavedTables')
+          .then(function(tables) {
+            const list = Array.isArray(tables) ? tables : [];
+            ids.forEach(function(id) {
+              const select = document.getElementById(id);
+              if (!select) {
+                return;
+              }
+              const previousValue = select.value;
+              select.innerHTML = '';
+              const defaultOption = document.createElement('option');
+              defaultOption.value = '';
+              defaultOption.textContent = '-- Seleccione --';
+              select.appendChild(defaultOption);
+              list.forEach(function(item) {
+                if (!item || !item.id) {
+                  return;
+                }
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.name || item.id;
+                select.appendChild(opt);
+              });
+              let targetValue = '';
+              if (id === 'editSavedTables' && editingId) {
+                targetValue = editingId;
+              } else if (
+                options.selectId &&
+                list.some(function(entry) {
+                  return entry && entry.id === options.selectId;
+                })
+              ) {
+                targetValue = options.selectId;
+              } else if (previousValue) {
+                targetValue = previousValue;
+              }
+              if (targetValue) {
+                select.value = targetValue;
+              }
             });
-            if (id === 'editSavedTables' && editingId) {
-              select.value = editingId;
-            } else if (previousValue) {
-              select.value = previousValue;
-            }
+          })
+          .catch(function(err) {
+            const message = err && err.message ? err.message : err;
+            showMessageModal('No se pudieron obtener las tablas guardadas: ' + message, {
+              title: 'No se pudo cargar',
+              variant: 'error'
+            });
           });
-        }).listSavedTables();
       }
 
       function checkApiKey() {
@@ -1178,6 +1218,14 @@
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
         }
 
+        if (previousTab === 'createTab' && tabId !== 'createTab') {
+          resetCreateTabView({
+            preserveRange: false,
+            preserveFields: false,
+            preserveHeaders: false
+          });
+        }
+
         if (tabId === 'createTab') {
           if (!options.preserveForm) {
             const preserveHeaders = options && options.keepHeaders === true;
@@ -1191,7 +1239,7 @@
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
           refreshSavedTables('editSavedTables');
         } else if (tabId === 'aiTab') {
-          refreshSavedTables('aiSavedTables');
+          refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
           checkApiKey();
         }
       }
@@ -1383,11 +1431,11 @@
         const borderToggle = document.getElementById('editToggleBorder');
         const boldToggle = document.getElementById('editToggleBold');
         const style = {
-          headerColor: headerColorInput ? headerColorInput.value : '#CFE8FC',
-          altColor1: alt1Input ? alt1Input.value : '#FFFFFF',
-          altColor2: alt2Input ? alt2Input.value : '#F3F4F6',
-          border: borderToggle ? !!borderToggle.checked : true,
-          bold: boldToggle ? !!boldToggle.checked : true
+          headerColor: headerColorInput ? headerColorInput.value : DEFAULT_STYLE.headerColor,
+          altColor1: alt1Input ? alt1Input.value : DEFAULT_STYLE.altColor1,
+          altColor2: alt2Input ? alt2Input.value : DEFAULT_STYLE.altColor2,
+          border: borderToggle ? !!borderToggle.checked : DEFAULT_STYLE.border,
+          bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
         };
 
         let response;
@@ -1527,16 +1575,23 @@
           }
         }
 
+        if (response && response.id) {
+          lastSavedTableId = response.id;
+        }
+
         if (response && response.isNew) {
           editingId = '';
           clearRangeUI();
           currentHeaders = [];
           renderCreateHeaders();
+          setDefaultStyles();
         } else if (response && response.id) {
           editingId = response.id;
         }
 
-        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: lastSavedTableId
+        });
         resetPendingFormatState();
 
         await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
@@ -1629,11 +1684,11 @@
         const borderToggle = document.getElementById('editToggleBorder');
         const boldToggle = document.getElementById('editToggleBold');
         const style = {
-          headerColor: headerColorInput ? headerColorInput.value : '#CFE8FC',
-          altColor1: alt1Input ? alt1Input.value : '#FFFFFF',
-          altColor2: alt2Input ? alt2Input.value : '#F3F4F6',
-          border: borderToggle ? !!borderToggle.checked : true,
-          bold: boldToggle ? !!boldToggle.checked : true
+          headerColor: headerColorInput ? headerColorInput.value : DEFAULT_STYLE.headerColor,
+          altColor1: alt1Input ? alt1Input.value : DEFAULT_STYLE.altColor1,
+          altColor2: alt2Input ? alt2Input.value : DEFAULT_STYLE.altColor2,
+          border: borderToggle ? !!borderToggle.checked : DEFAULT_STYLE.border,
+          bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
         };
 
         let response;
@@ -1674,9 +1729,12 @@
 
         if (response && response.id) {
           editingId = response.id;
+          lastSavedTableId = response.id;
         }
 
-        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: editingId
+        });
 
         await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
           title: 'Tabla guardada',
@@ -1807,6 +1865,9 @@
               variant: 'success'
             });
           }
+          if (val && val === lastSavedTableId) {
+            lastSavedTableId = '';
+          }
           refreshSavedTables(['editSavedTables', 'aiSavedTables']);
         }).clearTable(val);
       });
@@ -1869,6 +1930,7 @@
           });
         }
         resetEditTabView();
+        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
         setActiveTab('createTab', { force: true });
       });
     </script>
