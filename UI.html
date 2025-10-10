@@ -552,6 +552,33 @@
       let allowSidebarUnload = false;
       let sidebarClosePromptActive = false;
 
+      function normalizeMetaForPopulate(meta) {
+        if (!meta || typeof meta !== 'object') {
+          return null;
+        }
+        const id = meta.id ? String(meta.id).trim() : '';
+        if (!id) {
+          return null;
+        }
+        const headers = cloneHeaderModels(meta.headers || []);
+        const style = normalizeStyleModel(meta.style || {});
+        const cols = typeof meta.cols === 'number' ? meta.cols : parseInt(meta.cols, 10) || headers.length;
+        const rows = typeof meta.rows === 'number' ? meta.rows : parseInt(meta.rows, 10) || 0;
+        return {
+          id: id,
+          name: meta.name ? String(meta.name).trim() : '',
+          description: meta.description ? String(meta.description).trim() : '',
+          sheetName: meta.sheetName ? String(meta.sheetName).trim() : '',
+          rangeA1: meta.rangeA1 ? String(meta.rangeA1).trim() : '',
+          cols: cols,
+          rows: rows,
+          createdAt: meta.createdAt || '',
+          updatedAt: meta.updatedAt || '',
+          style: style,
+          headers: headers
+        };
+      }
+
       function upsertSavedTablesCache(entry) {
         if (!entry || !entry.id) {
           return;
@@ -595,6 +622,23 @@
           style: normalizedStyle,
           headers: normalizedHeaders
         };
+      }
+
+      function getSavedTableFromCache(id) {
+        if (!id) {
+          return null;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return null;
+        }
+        const found = savedTablesCache.find(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (!found) {
+          return null;
+        }
+        return normalizeMetaForPopulate(found);
       }
 
       function updateSavedTableSelects(targetIds, list, config) {
@@ -1285,7 +1329,8 @@
       }
 
       function populateEditForm(meta) {
-        if (!meta) {
+        const normalizedMeta = normalizeMetaForPopulate(meta);
+        if (!normalizedMeta) {
           resetEditTabView({ preserveSelection: true, clearEditingId: false });
           showMessageModal('No se encontraron metadatos para la tabla seleccionada.', {
             title: 'Metadatos no disponibles',
@@ -1293,6 +1338,9 @@
           });
           return;
         }
+
+        upsertSavedTablesCache(normalizedMeta);
+        lastSavedTableId = normalizedMeta.id;
 
         const rangeSection = document.getElementById('editRangeSection');
         const metaSection = document.getElementById('editMetaSection');
@@ -1318,14 +1366,14 @@
 
         const nameInput = document.getElementById('editTableName');
         if (nameInput) {
-          nameInput.value = meta.name || '';
+          nameInput.value = normalizedMeta.name || '';
         }
         const descInput = document.getElementById('editTableDesc');
         if (descInput) {
-          descInput.value = meta.description || '';
+          descInput.value = normalizedMeta.description || '';
         }
 
-        const style = meta.style || {};
+        const style = normalizedMeta.style || {};
         const headerColor = typeof style.headerColor === 'string' ? style.headerColor : DEFAULT_STYLE.headerColor;
         const alt1 = typeof style.altColor1 === 'string' ? style.altColor1 : DEFAULT_STYLE.altColor1;
         const alt2 = typeof style.altColor2 === 'string' ? style.altColor2 : DEFAULT_STYLE.altColor2;
@@ -1355,8 +1403,8 @@
           boldToggle.checked = bold;
         }
 
-        editHeaders = cloneHeaderModels(meta.headers);
-        if (editHeaders.length === 0 && meta.id) {
+        editHeaders = cloneHeaderModels(normalizedMeta.headers);
+        if (editHeaders.length === 0 && normalizedMeta.id) {
           google.script.run
             .withSuccessHandler(function(res) {
               if (res && Array.isArray(res.headers)) {
@@ -1364,17 +1412,17 @@
                 renderEditHeaders();
               }
             })
-            .getTableHeaders(meta.id);
+            .getTableHeaders(normalizedMeta.id);
         }
         renderEditHeaders();
 
-        if (meta.sheetName && meta.rangeA1) {
+        if (normalizedMeta.sheetName && normalizedMeta.rangeA1) {
           setEditRangeUI(
             {
-              sheetName: meta.sheetName,
-              a1Notation: meta.rangeA1,
-              rows: meta.rows || 0,
-              cols: meta.cols || 0,
+              sheetName: normalizedMeta.sheetName,
+              a1Notation: normalizedMeta.rangeA1,
+              rows: normalizedMeta.rows || 0,
+              cols: normalizedMeta.cols || 0,
               headers: cloneHeaderModels(editHeaders)
             },
             { force: true }
@@ -1697,8 +1745,7 @@
             validation.values.name,
             validation.values.description,
             cloneHeaderModels(editHeaders),
-            style,
-            { skipSaving: true }
+            style
           );
         } catch (err) {
           await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
@@ -1723,6 +1770,28 @@
             renderEditHeaders();
           }
         }
+
+        if (response && response.id) {
+          editingId = response.id;
+          lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            validation.values,
+            (response && response.rangeInfo) || editRangeInfo,
+            style,
+            editHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
+        }
+
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: editingId
+        });
 
         await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
           title: 'Formato aplicado',
@@ -2130,8 +2199,18 @@
         }
         resetEditTabView({ preserveSelection: true, clearEditingId: false });
         editingId = val;
+        const cachedMeta = getSavedTableFromCache(val);
+        if (cachedMeta) {
+          populateEditForm(cachedMeta);
+        }
         google.script.run
           .withSuccessHandler(function(meta) {
+            if (!meta) {
+              if (!cachedMeta) {
+                populateEditForm(meta);
+              }
+              return;
+            }
             populateEditForm(meta);
           })
           .withFailureHandler(function(err) {

@@ -111,6 +111,13 @@ var META_INDEX = {
   headers: 10
 };
 
+function normalizeMetaId(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+}
+
 function parseJsonValue(value, fallback) {
   if (!value) {
     return fallback;
@@ -184,11 +191,12 @@ function listSavedTables() {
   var result = [];
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    if (row[META_INDEX.id]) {
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (entryId) {
       var style = parseJsonValue(row[META_INDEX.style], null);
       var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], null));
       result.push({
-        id: row[META_INDEX.id],
+        id: entryId,
         name: row[META_INDEX.name],
         rangeA1: row[META_INDEX.rangeA1],
         description: row[META_INDEX.description],
@@ -646,10 +654,14 @@ function ensureMetaSheetSchema(sheet) {
  * @returns {Object|null} Objeto con {row, data} o null si no existe.
  */
 function findMetaById(id) {
+  var targetId = normalizeMetaId(id);
+  if (!targetId) {
+    return null;
+  }
   var sheet = getMetaSheet();
   var data = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === id) {
+    if (normalizeMetaId(data[i][0]) === targetId) {
       return { row: i + 1, data: data[i] };
     }
   }
@@ -668,8 +680,12 @@ function findMetaById(id) {
  * @param {number} rows Número de filas.
  */
 function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows, style, headers) {
+  var normalizedId = normalizeMetaId(id);
+  if (!normalizedId) {
+    throw new Error('No se pudo determinar el identificador de la tabla.');
+  }
   var sheet = getMetaSheet();
-  var meta = findMetaById(id);
+  var meta = findMetaById(normalizedId);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var styleValue = stringifyJsonValue(style || {});
   var normalizedHeaders = normalizeHeaderArray(headers);
@@ -680,10 +696,10 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     var createdAt = meta.data[META_INDEX.createdAt] || now;
     sheet
       .getRange(row, 1, 1, META_HEADERS.length)
-      .setValues([[id, name, rangeA1, description, sheetName, cols, rows, createdAt, now, styleValue, headersValue]]);
+      .setValues([[normalizedId, name, rangeA1, description, sheetName, cols, rows, createdAt, now, styleValue, headersValue]]);
   } else {
     // Crear nueva
-    sheet.appendRow([id, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
+    sheet.appendRow([normalizedId, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
   }
 
   SpreadsheetApp.flush();
@@ -797,13 +813,14 @@ function askQuestion(tableId, question) {
  * @returns {Object|null} Objeto con metadatos o null si no existe.
  */
 function getTableMeta(tableId) {
+  SpreadsheetApp.flush();
   var meta = findMetaById(tableId);
   if (!meta) return null;
   var d = meta.data;
   var style = parseJsonValue(d[META_INDEX.style], null);
   var headers = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
   return {
-    id: d[META_INDEX.id],
+    id: normalizeMetaId(d[META_INDEX.id]),
     name: d[META_INDEX.name],
     rangeA1: d[META_INDEX.rangeA1],
     description: d[META_INDEX.description],
