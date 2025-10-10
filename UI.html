@@ -212,6 +212,96 @@
         font-size: 12px;
         color: #6B7280;
       }
+      .tc-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 9999;
+      }
+      .tc-modal-overlay.show {
+        display: flex;
+      }
+      .tc-modal {
+        background: #FFFFFF;
+        border-radius: 16px;
+        padding: 24px;
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+      }
+      .tc-modal-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .tc-modal-title {
+        margin: 0 0 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+      }
+      .tc-modal-message {
+        margin: 0 0 24px;
+        color: #4B5563;
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+      .tc-modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .tc-modal-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        min-width: 120px;
+        font-size: 14px;
+      }
+      .tc-modal-btn.primary {
+        background-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .tc-modal-btn.primary:hover {
+        background-color: #1E4DB7;
+      }
+      .tc-modal-btn.secondary {
+        background-color: #E5E7EB;
+        color: #111827;
+      }
+      .tc-modal-btn.secondary:hover {
+        background-color: #D1D5DB;
+      }
+      .tc-modal-overlay[data-variant="info"] .tc-modal-icon {
+        background: #DBEAFE;
+        color: #1D4ED8;
+      }
+      .tc-modal-overlay[data-variant="success"] .tc-modal-icon {
+        background: #DCFCE7;
+        color: #15803D;
+      }
+      .tc-modal-overlay[data-variant="error"] .tc-modal-icon {
+        background: #FEE2E2;
+        color: #B91C1C;
+      }
+      .tc-modal-overlay[data-variant="warning"] .tc-modal-icon {
+        background: #FEF3C7;
+        color: #B45309;
+      }
     </style>
   </head>
   <body>
@@ -291,11 +381,149 @@
       </div>
     </div>
 
+    <div id="tcModalOverlay" class="tc-modal-overlay" aria-hidden="true" data-variant="info">
+      <div class="tc-modal" role="dialog" aria-modal="true" aria-labelledby="tcModalTitle" aria-describedby="tcModalMessage">
+        <div id="tcModalIcon" class="tc-modal-icon">ℹ️</div>
+        <h3 id="tcModalTitle" class="tc-modal-title">Aviso</h3>
+        <p id="tcModalMessage" class="tc-modal-message"></p>
+        <div class="tc-modal-actions">
+          <button type="button" id="tcModalSecondary" class="tc-modal-btn secondary">Cancelar</button>
+          <button type="button" id="tcModalPrimary" class="tc-modal-btn primary">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let currentHeaders = [];
       let rangeInfo = null;
       let editingId = '';
       let currentTab = '';
+
+      function defaultTitleForVariant(variant) {
+        switch (variant) {
+          case 'error':
+            return 'Ocurrió un problema';
+          case 'success':
+            return 'Operación completada';
+          case 'warning':
+            return 'Atención';
+          default:
+            return 'Aviso';
+        }
+      }
+
+      function openModal(options) {
+        const overlay = document.getElementById('tcModalOverlay');
+        const icon = document.getElementById('tcModalIcon');
+        const titleEl = document.getElementById('tcModalTitle');
+        const messageEl = document.getElementById('tcModalMessage');
+        const primaryBtn = document.getElementById('tcModalPrimary');
+        const secondaryBtn = document.getElementById('tcModalSecondary');
+        const variant = options.variant || 'info';
+        const allowEscape = options.allowEscape !== false;
+
+        if (!overlay || !icon || !titleEl || !messageEl || !primaryBtn || !secondaryBtn) {
+          return Promise.resolve('dismissed');
+        }
+
+        overlay.dataset.variant = variant;
+        icon.textContent = options.icon || (variant === 'error' ? '⚠️' : variant === 'success' ? '✅' : variant === 'warning' ? '⚠️' : 'ℹ️');
+        titleEl.textContent = options.title || defaultTitleForVariant(variant);
+        messageEl.textContent = options.message || '';
+
+        primaryBtn.textContent = options.primaryText || 'Aceptar';
+        secondaryBtn.textContent = options.secondaryText || 'Cancelar';
+
+        if (options.secondaryText) {
+          secondaryBtn.style.display = 'inline-flex';
+        } else {
+          secondaryBtn.style.display = 'none';
+        }
+
+        const previouslyFocused = document.activeElement;
+
+        return new Promise(function(resolve) {
+          function cleanup(result) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', keyListener, true);
+            primaryBtn.removeEventListener('click', primaryHandler);
+            secondaryBtn.removeEventListener('click', secondaryHandler);
+            if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+              previouslyFocused.focus();
+            }
+            resolve(result);
+          }
+
+          function primaryHandler() {
+            cleanup('primary');
+          }
+
+          function secondaryHandler() {
+            cleanup('secondary');
+          }
+
+          function keyListener(evt) {
+            if (evt.key === 'Escape' && allowEscape) {
+              evt.preventDefault();
+              cleanup('escape');
+            } else if (evt.key === 'Tab') {
+              const focusables = Array.prototype.filter.call(overlay.querySelectorAll('button'), function(btn) {
+                return btn.offsetParent !== null;
+              });
+              if (focusables.length === 0) {
+                return;
+              }
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              if (evt.shiftKey) {
+                if (document.activeElement === first) {
+                  evt.preventDefault();
+                  last.focus();
+                }
+              } else if (document.activeElement === last) {
+                evt.preventDefault();
+                first.focus();
+              }
+            }
+          }
+
+          overlay.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('show');
+
+          document.addEventListener('keydown', keyListener, true);
+          primaryBtn.addEventListener('click', primaryHandler);
+          secondaryBtn.addEventListener('click', secondaryHandler);
+
+          requestAnimationFrame(function() {
+            primaryBtn.focus();
+          });
+        });
+      }
+
+      function showMessageModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant || 'info');
+        }
+        options.primaryText = options.primaryText || 'Aceptar';
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options);
+      }
+
+      function showConfirmModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        options.primaryText = options.confirmText || 'Aceptar';
+        options.secondaryText = options.cancelText || 'Cancelar';
+        options.variant = options.variant || 'warning';
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant);
+        }
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options).then(function(result) {
+          return result === 'primary';
+        });
+      }
 
       function clearRangeUI() {
         const label = document.getElementById('rangeLabel');
@@ -413,8 +641,12 @@
           if (info.error) {
             clearRangeUI();
             if (label) {
-              label.textContent = info.error;
+              label.textContent = '—';
             }
+            showMessageModal(info.error, {
+              title: 'Rango no disponible',
+              variant: 'error'
+            });
             return;
           }
           const infoForUi = Object.assign({}, info);
@@ -517,7 +749,10 @@
       document.getElementById('applyFormatBtn').addEventListener('click', function() {
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
-          alert('Indique un rango válido antes de aplicar el formato.');
+          showMessageModal('Indique un rango válido antes de aplicar el formato.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
           return;
         }
         const headerColor = document.getElementById('colorHeader').value;
@@ -529,7 +764,10 @@
         const tableId = editingId;
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
-            alert(res.error);
+            showMessageModal(res.error, {
+              title: 'No se pudo aplicar',
+              variant: 'error'
+            });
             return;
           }
           if (res && res.rangeInfo) {
@@ -539,19 +777,31 @@
               renderHeaders();
             }
           }
-          alert((res && res.message) || 'Formato aplicado correctamente.');
+          showMessageModal((res && res.message) || 'Formato aplicado correctamente.', {
+            title: 'Formato aplicado',
+            variant: 'success'
+          });
         }).applyTableFormatting(tableId, rangeA1, document.getElementById('tableName').value.trim(), document.getElementById('tableDesc').value.trim(), currentHeaders, style, { skipSaving: true });
       });
 
-      document.getElementById('saveTableBtn').addEventListener('click', function() {
+      document.getElementById('saveTableBtn').addEventListener('click', async function() {
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
-          alert('Indique un rango válido antes de guardar la tabla.');
+          showMessageModal('Indique un rango válido antes de guardar la tabla.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
           return;
         }
         const name = document.getElementById('tableName').value.trim();
         if (!name) {
-          if (!confirm('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?')) {
+          const continueWithoutName = await showConfirmModal('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?', {
+            title: 'Guardar sin nombre',
+            variant: 'warning',
+            confirmText: 'Continuar',
+            cancelText: 'Cancelar'
+          });
+          if (!continueWithoutName) {
             return;
           }
         }
@@ -565,7 +815,10 @@
         const tableId = editingId;
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
-            alert(res.error);
+            showMessageModal(res.error, {
+              title: 'No se pudo guardar',
+              variant: 'error'
+            });
             return;
           }
           if (res && res.rangeInfo) {
@@ -584,7 +837,10 @@
             editingId = res.id;
           }
           refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-          alert((res && res.message) || 'Tabla guardada correctamente.');
+          showMessageModal((res && res.message) || 'Tabla guardada correctamente.', {
+            title: 'Tabla guardada',
+            variant: 'success'
+          });
         }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style, { skipFormatting: true });
       });
 
@@ -627,30 +883,52 @@
         const val = select.value;
         if (val) {
           editingId = val;
-          alert('Tabla lista para actualizar. Ajuste los datos en "Crear tabla" y aplique el formato.');
+          showMessageModal('Tabla lista para actualizar. Ajuste los datos en "Crear tabla" y aplique el formato.', {
+            title: 'Edición habilitada',
+            variant: 'info'
+          });
           showTab('createTab');
         } else {
-          alert('Seleccione una tabla para editar.');
+          showMessageModal('Seleccione una tabla para editar.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
         }
       });
 
-      document.getElementById('clearTableBtn').addEventListener('click', function() {
+      document.getElementById('clearTableBtn').addEventListener('click', async function() {
         const select = document.getElementById('editSavedTables');
         const val = select.value;
         if (!val) {
-          alert('Seleccione una tabla para limpiar.');
+          showMessageModal('Seleccione una tabla para limpiar.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
           return;
         }
-        if (confirm('¿Seguro que desea limpiar el rango y formato de la tabla seleccionada?')) {
-          google.script.run.withSuccessHandler(function(res) {
-            if (res && res.error) {
-              alert(res.error);
-            } else {
-              alert('Rango limpiado.');
-            }
-            refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-          }).clearTable(val);
+        const confirmed = await showConfirmModal('¿Seguro que desea limpiar el rango y formato de la tabla seleccionada?', {
+          title: 'Confirmar limpieza',
+          variant: 'warning',
+          confirmText: 'Sí, limpiar',
+          cancelText: 'Cancelar'
+        });
+        if (!confirmed) {
+          return;
         }
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showMessageModal(res.error, {
+              title: 'No se pudo limpiar',
+              variant: 'error'
+            });
+          } else {
+            showMessageModal('Rango limpiado.', {
+              title: 'Limpieza completada',
+              variant: 'success'
+            });
+          }
+          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+        }).clearTable(val);
       });
 
       document.getElementById('askBtn').addEventListener('click', function() {
@@ -658,11 +936,17 @@
         const val = select.value;
         const question = document.getElementById('questionInput').value.trim();
         if (!val) {
-          alert('Seleccione una tabla para realizar la consulta.');
+          showMessageModal('Seleccione una tabla para realizar la consulta.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
           return;
         }
         if (!question) {
-          alert('Escriba una pregunta.');
+          showMessageModal('Escriba una pregunta.', {
+            title: 'Pregunta requerida',
+            variant: 'error'
+          });
           return;
         }
         const pre = document.getElementById('answerBox');
@@ -670,7 +954,10 @@
         pre.textContent = '';
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
-            alert(res.error);
+            showMessageModal(res.error, {
+              title: 'Consulta no disponible',
+              variant: 'error'
+            });
           } else {
             pre.textContent = res.answer || '';
             pre.style.display = 'block';
