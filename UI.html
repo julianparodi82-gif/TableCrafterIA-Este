@@ -398,6 +398,145 @@
       let rangeInfo = null;
       let editingId = '';
       let currentTab = '';
+      let pendingFormatState = { applied: false, range: null };
+
+      function resetPendingFormatState() {
+        pendingFormatState = { applied: false, range: null };
+      }
+
+      function setPendingFormattedRange(info) {
+        if (info && info.sheetName && info.a1Notation) {
+          pendingFormatState = {
+            applied: true,
+            range: {
+              sheetName: info.sheetName,
+              a1Notation: info.a1Notation
+            }
+          };
+        } else {
+          resetPendingFormatState();
+        }
+      }
+
+      function getFullRangeNotation(info) {
+        if (!info || !info.sheetName || !info.a1Notation) {
+          return '';
+        }
+        return info.sheetName + '!' + info.a1Notation;
+      }
+
+      function isFormatLockActive() {
+        return !!(pendingFormatState && pendingFormatState.applied);
+      }
+
+      function callServerFunction(functionName) {
+        const args = Array.prototype.slice.call(arguments, 1);
+        return new Promise(function(resolve, reject) {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(function(err) {
+              reject(err);
+            });
+          if (typeof runner[functionName] === 'function') {
+            runner[functionName].apply(runner, args);
+          } else {
+            reject(new Error('Función no disponible: ' + functionName));
+          }
+        });
+      }
+
+      function resetCreateTabView(options) {
+        options = options || {};
+        if (!options.preserveRange) {
+          resetPendingFormatState();
+          clearRangeUI();
+        }
+        if (!options.preserveFields) {
+          const nameInput = document.getElementById('tableName');
+          if (nameInput) {
+            nameInput.value = '';
+          }
+          const descInput = document.getElementById('tableDesc');
+          if (descInput) {
+            descInput.value = '';
+          }
+        }
+        if (!options.preserveHeaders) {
+          currentHeaders = [];
+          renderHeaders();
+        }
+      }
+
+      function getSanitizedHeaders() {
+        return currentHeaders.map(function(header) {
+          if (header === null || header === undefined) {
+            return '';
+          }
+          return String(header).trim();
+        });
+      }
+
+      function validateTableDetails() {
+        const nameInput = document.getElementById('tableName');
+        const descInput = document.getElementById('tableDesc');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const description = descInput ? descInput.value.trim() : '';
+        const headers = getSanitizedHeaders();
+        const missingMessages = [];
+        const missingHeaderIndexes = [];
+
+        if (!name) {
+          missingMessages.push('Nombre de la tabla');
+        }
+        if (!description) {
+          missingMessages.push('Descripción');
+        }
+
+        if (headers.length === 0) {
+          missingMessages.push('Al menos un título en la sección de encabezados');
+        } else {
+          headers.forEach(function(value, index) {
+            if (!value) {
+              missingHeaderIndexes.push(index + 1);
+            }
+          });
+        }
+
+        if (missingHeaderIndexes.length > 0) {
+          missingMessages.push(
+            'Títulos sin completar: ' +
+              missingHeaderIndexes
+                .map(function(idx) {
+                  return 'Encabezado ' + idx;
+                })
+                .join(', ')
+          );
+        }
+
+        return {
+          valid: missingMessages.length === 0,
+          missing: missingMessages,
+          values: {
+            name: name,
+            description: description,
+            headers: headers
+          }
+        };
+      }
+
+      function buildMissingFieldsMessage(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+          return '';
+        }
+        return (
+          'Complete los siguientes campos antes de continuar:\n' +
+          items
+            .map(function(item) {
+              return '• ' + item;
+            })
+            .join('\n')
+        );
+      }
 
       function defaultTitleForVariant(variant) {
         switch (variant) {
@@ -702,8 +841,9 @@
         }).getApiKey();
       }
 
-      function showTab(tabId) {
-        if (currentTab === tabId) {
+      function setActiveTab(tabId, options) {
+        options = options || {};
+        if (currentTab === tabId && !options.force) {
           return;
         }
         currentTab = tabId;
@@ -723,7 +863,14 @@
         });
 
         if (tabId === 'createTab') {
-          loadActiveRange(editingId === '');
+          if (!options.preserveForm) {
+            const preserveHeaders = options && options.keepHeaders === true;
+            resetCreateTabView({
+              preserveRange: false,
+              preserveFields: false,
+              preserveHeaders: preserveHeaders
+            });
+          }
         } else if (tabId === 'editTab') {
           refreshSavedTables('editSavedTables');
         } else if (tabId === 'aiTab') {
@@ -732,13 +879,32 @@
         }
       }
 
+      async function attemptTabChange(tabId, options) {
+        options = options || {};
+        const leavingCreate = currentTab === 'createTab' && tabId !== 'createTab';
+        if (leavingCreate && isFormatLockActive() && !options.force) {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            setActiveTab(tabId, options);
+          }
+          return;
+        }
+        setActiveTab(tabId, options);
+      }
+
       document.querySelectorAll('.tab-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-          showTab(btn.dataset.tab);
+          attemptTabChange(btn.dataset.tab);
         });
       });
 
-      document.getElementById('refreshRangeBtn').addEventListener('click', function() {
+      document.getElementById('refreshRangeBtn').addEventListener('click', async function() {
+        if (isFormatLockActive()) {
+          const resolved = await resolvePendingFormatting();
+          if (resolved !== 'saved' && resolved !== 'cleared') {
+            return;
+          }
+        }
         const input = document.getElementById('rangeInput');
         if (input) {
           input.dataset.manual = 'false';
@@ -746,15 +912,37 @@
         loadActiveRange(editingId === '');
       });
 
-      document.getElementById('applyFormatBtn').addEventListener('click', function() {
+      async function handleApplyFormat() {
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
-          showMessageModal('Indique un rango válido antes de aplicar el formato.', {
+          await showMessageModal('Indique un rango válido antes de aplicar el formato.', {
             title: 'Rango requerido',
             variant: 'error'
           });
-          return;
+          return false;
         }
+
+        const validation = validateTableDetails();
+        if (!validation.valid) {
+          const msg = buildMissingFieldsMessage(validation.missing);
+          await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+            title: 'Información incompleta',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        currentHeaders = validation.values.headers.slice();
+        renderHeaders();
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('tableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
         const headerColor = document.getElementById('colorHeader').value;
         const alt1 = document.getElementById('colorAlt1').value;
         const alt2 = document.getElementById('colorAlt2').value;
@@ -762,50 +950,112 @@
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.error) {
-            showMessageModal(res.error, {
-              title: 'No se pudo aplicar',
-              variant: 'error'
-            });
-            return;
-          }
-          if (res && res.rangeInfo) {
-            setRangeUI(res.rangeInfo, { force: true });
-            if (Array.isArray(res.rangeInfo.headers)) {
-              currentHeaders = res.rangeInfo.headers.slice();
-              renderHeaders();
-            }
-          }
-          showMessageModal((res && res.message) || 'Formato aplicado correctamente.', {
-            title: 'Formato aplicado',
-            variant: 'success'
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            tableId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            currentHeaders,
+            style,
+            { skipSaving: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo aplicar',
+            variant: 'error'
           });
-        }).applyTableFormatting(tableId, rangeA1, document.getElementById('tableName').value.trim(), document.getElementById('tableDesc').value.trim(), currentHeaders, style, { skipSaving: true });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            currentHeaders = response.rangeInfo.headers.slice();
+            renderHeaders();
+          }
+          setPendingFormattedRange(response.rangeInfo);
+        } else {
+          const parts = rangeA1.split('!');
+          if (parts.length === 2) {
+            setPendingFormattedRange({ sheetName: parts[0], a1Notation: parts[1] });
+          } else {
+            resetPendingFormatState();
+          }
+        }
+
+        await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
+          title: 'Formato aplicado',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      document.getElementById('applyFormatBtn').addEventListener('click', function() {
+        handleApplyFormat();
       });
 
-      document.getElementById('saveTableBtn').addEventListener('click', async function() {
+      async function handleSaveAction(options) {
+        options = options || {};
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
-          showMessageModal('Indique un rango válido antes de guardar la tabla.', {
+          await showMessageModal('Indique un rango válido antes de guardar la tabla.', {
             title: 'Rango requerido',
             variant: 'error'
           });
-          return;
+          return false;
         }
-        const name = document.getElementById('tableName').value.trim();
-        if (!name) {
-          const continueWithoutName = await showConfirmModal('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?', {
-            title: 'Guardar sin nombre',
-            variant: 'warning',
-            confirmText: 'Continuar',
-            cancelText: 'Cancelar'
+
+        const validation = validateTableDetails();
+        if (validation.missing.length > 0) {
+          const missingExcludingName = validation.missing.filter(function(item) {
+            return item !== 'Nombre de la tabla';
           });
-          if (!continueWithoutName) {
-            return;
+
+          if (missingExcludingName.length > 0) {
+            const msg = buildMissingFieldsMessage(validation.missing);
+            await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+              title: 'Información incompleta',
+              variant: 'error'
+            });
+            return false;
+          }
+
+          if (validation.missing.indexOf('Nombre de la tabla') !== -1) {
+            const continueWithoutName = await showConfirmModal('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?', {
+              title: 'Guardar sin nombre',
+              variant: 'warning',
+              confirmText: 'Continuar',
+              cancelText: 'Cancelar'
+            });
+            if (!continueWithoutName) {
+              return false;
+            }
           }
         }
-        const desc = document.getElementById('tableDesc').value.trim();
+
+        currentHeaders = validation.values.headers.slice();
+        renderHeaders();
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('tableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
         const headerColor = document.getElementById('colorHeader').value;
         const alt1 = document.getElementById('colorAlt1').value;
         const alt2 = document.getElementById('colorAlt2').value;
@@ -813,36 +1063,134 @@
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.error) {
-            showMessageModal(res.error, {
-              title: 'No se pudo guardar',
-              variant: 'error'
-            });
-            return;
-          }
-          if (res && res.rangeInfo) {
-            setRangeUI(res.rangeInfo, { force: true });
-            if (Array.isArray(res.rangeInfo.headers)) {
-              currentHeaders = res.rangeInfo.headers.slice();
-              renderHeaders();
-            }
-          }
-          if (res && res.isNew) {
-            editingId = '';
-            clearRangeUI();
-            currentHeaders = [];
-            renderHeaders();
-          } else if (res && res.id) {
-            editingId = res.id;
-          }
-          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-          showMessageModal((res && res.message) || 'Tabla guardada correctamente.', {
-            title: 'Tabla guardada',
-            variant: 'success'
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            tableId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            currentHeaders,
+            style,
+            { skipFormatting: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo guardar',
+            variant: 'error'
           });
-        }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style, { skipFormatting: true });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            currentHeaders = response.rangeInfo.headers.slice();
+            renderHeaders();
+          }
+        }
+
+        if (response && response.isNew) {
+          editingId = '';
+          clearRangeUI();
+          currentHeaders = [];
+          renderHeaders();
+        } else if (response && response.id) {
+          editingId = response.id;
+        }
+
+        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+        resetPendingFormatState();
+
+        await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
+          title: 'Tabla guardada',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      document.getElementById('saveTableBtn').addEventListener('click', function() {
+        handleSaveAction();
       });
+
+      async function clearPendingFormattedRange() {
+        const targetInfo = (pendingFormatState && pendingFormatState.range) || rangeInfo;
+        const rangeNotation = getFullRangeNotation(targetInfo);
+        if (!rangeNotation) {
+          await showMessageModal('No se pudo identificar el rango a limpiar. Actualice el rango e inténtelo nuevamente.', {
+            title: 'Rango no disponible',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        let response;
+        try {
+          response = await callServerFunction('clearRangeByNotation', rangeNotation);
+        } catch (err) {
+          await showMessageModal('No se pudo borrar el rango: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo borrar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo borrar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        resetPendingFormatState();
+        clearRangeUI();
+        return true;
+      }
+
+      async function resolvePendingFormatting() {
+        if (!isFormatLockActive()) {
+          return 'none';
+        }
+        const result = await openModal({
+          title: 'Cambios pendientes',
+          message: 'Se aplicó un formato que aún no se guardó. Elija guardar la tabla o borrar el formato para continuar.',
+          variant: 'warning',
+          primaryText: 'Guardar tabla',
+          secondaryText: 'Borrar tabla',
+          allowEscape: false
+        });
+
+        if (result === 'primary') {
+          const saved = await handleSaveAction({ triggeredByGuard: true });
+          if (saved) {
+            return 'saved';
+          }
+          return 'blocked';
+        }
+        if (result === 'secondary') {
+          const cleared = await clearPendingFormattedRange();
+          if (cleared) {
+            await showMessageModal('Se borraron el contenido y formato del rango seleccionado.', {
+              title: 'Tabla borrada',
+              variant: 'success'
+            });
+            return 'cleared';
+          }
+          return 'blocked';
+        }
+        return 'blocked';
+      }
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
         const val = this.value;
@@ -887,7 +1235,7 @@
             title: 'Edición habilitada',
             variant: 'info'
           });
-          showTab('createTab');
+          setActiveTab('createTab', { force: true, preserveForm: true });
         } else {
           showMessageModal('Seleccione una tabla para editar.', {
             title: 'Seleccione una tabla',
@@ -977,7 +1325,7 @@
             }
           });
         }
-        showTab('createTab');
+        setActiveTab('createTab', { force: true });
       });
     </script>
   </body>

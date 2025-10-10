@@ -344,6 +344,22 @@ function clearRangeAndFormatting(range) {
 }
 
 /**
+ * Limpia el contenido y formato de un rango indicado por notación A1.
+ *
+ * @param {string} rangeA1 Notación A1 (puede incluir la hoja).
+ * @returns {Object} Resultado con ok=true o un mensaje de error.
+ */
+function clearRangeByNotation(rangeA1) {
+  try {
+    var range = resolveRangeFromNotation(rangeA1);
+    clearRangeAndFormatting(range);
+    return { ok: true };
+  } catch (err) {
+    return { error: 'No se pudo limpiar el rango: ' + err.message };
+  }
+}
+
+/**
  * Aplica los estilos a un rango completo: encabezado, alternancia de filas,
  * bordes y negrita opcionales.
  *
