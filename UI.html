@@ -218,9 +218,9 @@
         <div class="section">
           <div class="range-row">
             <div>
-              <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+              <strong>Rango a utilizar:</strong> <span id="rangeLabel">-</span>
             </div>
-            <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango a utilizar">Actualizar</button>
           </div>
         </div>
         <div class="section">
@@ -275,10 +275,45 @@
     </div>
 
     <script>
+      const DEFAULT_STYLE = {
+        headerColor: '#CFE8FC',
+        altColor1: '#FFFFFF',
+        altColor2: '#F3F4F6',
+        border: true,
+        bold: true
+      };
+
       let currentHeaders = [];
       let rangeInfo = null;
       let editingId = '';
       let currentTab = '';
+
+      function applyDefaultStylesToControls() {
+        const colorHeader = document.getElementById('colorHeader');
+        const colorAlt1 = document.getElementById('colorAlt1');
+        const colorAlt2 = document.getElementById('colorAlt2');
+        const toggleBorder = document.getElementById('toggleBorder');
+        const toggleBold = document.getElementById('toggleBold');
+        if (colorHeader) colorHeader.value = DEFAULT_STYLE.headerColor;
+        if (colorAlt1) colorAlt1.value = DEFAULT_STYLE.altColor1;
+        if (colorAlt2) colorAlt2.value = DEFAULT_STYLE.altColor2;
+        if (toggleBorder) toggleBorder.checked = DEFAULT_STYLE.border;
+        if (toggleBold) toggleBold.checked = DEFAULT_STYLE.bold;
+      }
+
+      function resetCreateTabState() {
+        rangeInfo = null;
+        editingId = '';
+        const label = document.getElementById('rangeLabel');
+        const nameInput = document.getElementById('tableName');
+        const descInput = document.getElementById('tableDesc');
+        if (label) label.textContent = '-';
+        if (nameInput) nameInput.value = '-';
+        if (descInput) descInput.value = '-';
+        currentHeaders = [];
+        renderHeaders();
+        applyDefaultStylesToControls();
+      }
 
       function renderHeaders() {
         const list = document.getElementById('headersList');
@@ -325,23 +360,17 @@
         });
       }
 
-      function setDefaultStyles() {
-        const colorHeader = document.getElementById('colorHeader');
-        const colorAlt1 = document.getElementById('colorAlt1');
-        const colorAlt2 = document.getElementById('colorAlt2');
-        if (colorHeader) colorHeader.value = '#CFE8FC';
-        if (colorAlt1) colorAlt1.value = '#FFFFFF';
-        if (colorAlt2) colorAlt2.value = '#F3F4F6';
-      }
-
       function loadActiveRange(updateHeaders = true) {
         google.script.run.withSuccessHandler(function(info) {
           const label = document.getElementById('rangeLabel');
           if (info.error) {
             if (label) {
-              label.textContent = info.error;
+              label.textContent = '-';
             }
             rangeInfo = null;
+            if (info.error) {
+              alert(info.error);
+            }
             return;
           }
           rangeInfo = info;
@@ -400,6 +429,10 @@
         if (currentTab === tabId) {
           return;
         }
+        const previousTab = currentTab;
+        if (previousTab === 'createTab' && tabId !== 'createTab') {
+          resetCreateTabState();
+        }
         currentTab = tabId;
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
           if (btn.dataset.tab === tabId) {
@@ -415,9 +448,10 @@
             content.classList.remove('active');
           }
         });
-
         if (tabId === 'createTab') {
-          loadActiveRange(editingId === '');
+          if (editingId) {
+            // Mantener datos cargados para edición; el rango debe seleccionarse manualmente.
+          }
         } else if (tabId === 'editTab') {
           refreshSavedTables('editSavedTables');
         } else if (tabId === 'aiTab') {
@@ -448,7 +482,13 @@
         const alt2 = document.getElementById('colorAlt2').value;
         const border = document.getElementById('toggleBorder').checked;
         const bold = document.getElementById('toggleBold').checked;
-        const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
+        const style = {
+          headerColor: headerColor || DEFAULT_STYLE.headerColor,
+          altColor1: alt1 || DEFAULT_STYLE.altColor1,
+          altColor2: alt2 || DEFAULT_STYLE.altColor2,
+          border: border,
+          bold: bold
+        };
         const tableId = editingId;
         const rangeA1 = rangeInfo.a1Notation;
         google.script.run.withSuccessHandler(function(res) {
@@ -538,7 +578,7 @@
       });
 
       document.addEventListener('DOMContentLoaded', function() {
-        setDefaultStyles();
+        resetCreateTabState();
         showTab('createTab');
       });
     </script>
