@@ -367,9 +367,27 @@ function applyFormattingToRange(range, style) {
   banded.setHeaderColor(style.headerColor);
   banded.setFirstBandColor(style.altColor1);
   banded.setSecondBandColor(style.altColor2);
-  // Encabezado en negrita o normal
+  // Encabezado en negrita o normal y centrado
   var headerRange = range.offset(0, 0, 1, cols);
   headerRange.setFontWeight(style.bold ? 'bold' : 'normal');
+  headerRange.setHorizontalAlignment('center');
+  headerRange.setVerticalAlignment('middle');
+  headerRange.setBackground(style.headerColor);
+  // Asegurar alternancia de colores para el resto de filas
+  var dataRows = rows - 1;
+  if (dataRows > 0) {
+    var dataRange = range.offset(1, 0, dataRows, cols);
+    var backgrounds = [];
+    for (var r = 0; r < dataRows; r++) {
+      var color = (r % 2 === 0) ? style.altColor1 : style.altColor2;
+      var rowColors = [];
+      for (var c = 0; c < cols; c++) {
+        rowColors.push(color);
+      }
+      backgrounds.push(rowColors);
+    }
+    dataRange.setBackgrounds(backgrounds);
+  }
   // Bordes finos negros
   if (style.border) {
     range.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
