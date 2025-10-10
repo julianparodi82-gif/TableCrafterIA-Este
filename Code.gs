@@ -14,8 +14,8 @@
  *     mantener la compatibilidad con el marketplace de Google Workspace.
  *   - Se ha habilitado el servicio avanzado de Sheets (Sheets API v4) para
  *     crear y eliminar vistas de filtro.
- *   - La API Key de OpenAI debe guardarse en PropertiesService a través
- *     del diálogo de configuración.  Nunca se expone al frontend.
+ *   - La API Key de OpenAI se guarda en las propiedades de usuario a
+ *     través del diálogo de configuración.  Nunca se expone al frontend.
  */
 
 /**
@@ -423,7 +423,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows)
  * @returns {Object} Objeto con key o null.
  */
 function getApiKey() {
-  var key = PropertiesService.getScriptProperties().getProperty('TC_API_KEY');
+  var key = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
   return { key: key || '' };
 }
 
@@ -434,11 +434,12 @@ function getApiKey() {
  * @returns {Object} Resultado de guardado.
  */
 function saveApiKey(key) {
+  var userProps = PropertiesService.getUserProperties();
   if (!key) {
-    PropertiesService.getScriptProperties().deleteProperty('TC_API_KEY');
+    userProps.deleteProperty('TC_API_KEY');
     return { ok: true };
   }
-  PropertiesService.getScriptProperties().setProperty('TC_API_KEY', key.trim());
+  userProps.setProperty('TC_API_KEY', key.trim());
   return { ok: true };
 }
 
@@ -454,7 +455,7 @@ function saveApiKey(key) {
  * @returns {Object} Objeto con answer o error.
  */
 function askQuestion(tableId, question) {
-  var apiKey = PropertiesService.getScriptProperties().getProperty('TC_API_KEY');
+  var apiKey = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
   if (!apiKey) {
     return { error: 'No hay API Key configurada. Configure su clave en la sección de configuración.' };
   }
