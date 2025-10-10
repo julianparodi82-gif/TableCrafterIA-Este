@@ -190,6 +190,15 @@
       .range-row strong {
         flex-grow: 1;
       }
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .action-buttons button {
+        flex: 1 1 160px;
+      }
       pre.answer-box {
         background-color: #FFFFFF;
         border: 1px solid #E5E7EB;
@@ -222,6 +231,11 @@
             </div>
             <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
           </div>
+          <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
+          <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
+          <div class="small-text" style="margin-top:4px;">
+            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+          </div>
         </div>
         <div class="section">
           <label for="tableName">Nombre de la tabla</label>
@@ -246,7 +260,10 @@
             <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
             <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
           </div>
-          <button id="applyBtn" class="btn-primary">Aplicar formato y guardar</button>
+          <div class="action-buttons">
+            <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
+            <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
+          </div>
         </div>
       </div>
 
@@ -279,6 +296,62 @@
       let rangeInfo = null;
       let editingId = '';
       let currentTab = '';
+
+      function clearRangeUI() {
+        const label = document.getElementById('rangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+        rangeInfo = null;
+      }
+
+      function setRangeUI(info, options) {
+        options = options || {};
+        if (!info || !info.sheetName || !info.a1Notation) {
+          clearRangeUI();
+          return;
+        }
+        const rows = typeof info.rows === 'number' ? info.rows : (info.rows || 0);
+        const cols = typeof info.cols === 'number' ? info.cols : (info.cols || 0);
+        const label = document.getElementById('rangeLabel');
+        const input = document.getElementById('rangeInput');
+        const fullA1 = info.sheetName + '!' + info.a1Notation;
+        if (label) {
+          const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+          label.textContent = fullA1 + dims;
+        }
+        if (input && (options.force || input.dataset.manual !== 'true')) {
+          input.value = fullA1;
+          input.dataset.manual = 'false';
+        }
+        rangeInfo = {
+          sheetName: info.sheetName,
+          a1Notation: info.a1Notation,
+          rows: rows,
+          cols: cols,
+          headers: Array.isArray(info.headers) ? info.headers.slice() : currentHeaders.slice()
+        };
+        rangeInfo.fullA1 = fullA1;
+      }
+
+      function getRangeInputValue() {
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          const text = input.value.trim();
+          if (text) {
+            return text;
+          }
+        }
+        if (rangeInfo && rangeInfo.sheetName && rangeInfo.a1Notation) {
+          return rangeInfo.sheetName + '!' + rangeInfo.a1Notation;
+        }
+        return '';
+      }
 
       function renderHeaders() {
         const list = document.getElementById('headersList');
@@ -338,18 +411,19 @@
         google.script.run.withSuccessHandler(function(info) {
           const label = document.getElementById('rangeLabel');
           if (info.error) {
+            clearRangeUI();
             if (label) {
               label.textContent = info.error;
             }
-            rangeInfo = null;
             return;
           }
-          rangeInfo = info;
-          if (label) {
-            label.textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
+          const infoForUi = Object.assign({}, info);
+          if (!updateHeaders) {
+            infoForUi.headers = currentHeaders.slice();
           }
+          setRangeUI(infoForUi, { force: editingId === '' || !document.getElementById('rangeInput') || document.getElementById('rangeInput').value === '' });
           if (updateHeaders) {
-            currentHeaders = info.headers;
+            currentHeaders = Array.isArray(info.headers) ? info.headers : [];
           }
           renderHeaders();
         }).getActiveRangeInfo();
@@ -433,15 +507,54 @@
       });
 
       document.getElementById('refreshRangeBtn').addEventListener('click', function() {
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          input.dataset.manual = 'false';
+        }
         loadActiveRange(editingId === '');
       });
 
-      document.getElementById('applyBtn').addEventListener('click', function() {
-        if (!rangeInfo) {
-          alert('No hay rango activo.');
+      document.getElementById('applyFormatBtn').addEventListener('click', function() {
+        const rangeA1 = getRangeInputValue();
+        if (!rangeA1) {
+          alert('Indique un rango válido antes de aplicar el formato.');
+          return;
+        }
+        const headerColor = document.getElementById('colorHeader').value;
+        const alt1 = document.getElementById('colorAlt1').value;
+        const alt2 = document.getElementById('colorAlt2').value;
+        const border = document.getElementById('toggleBorder').checked;
+        const bold = document.getElementById('toggleBold').checked;
+        const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
+        const tableId = editingId;
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.error) {
+            alert(res.error);
+            return;
+          }
+          if (res && res.rangeInfo) {
+            setRangeUI(res.rangeInfo, { force: true });
+            if (Array.isArray(res.rangeInfo.headers)) {
+              currentHeaders = res.rangeInfo.headers.slice();
+              renderHeaders();
+            }
+          }
+          alert((res && res.message) || 'Formato aplicado correctamente.');
+        }).applyTableFormatting(tableId, rangeA1, document.getElementById('tableName').value.trim(), document.getElementById('tableDesc').value.trim(), currentHeaders, style, { skipSaving: true });
+      });
+
+      document.getElementById('saveTableBtn').addEventListener('click', function() {
+        const rangeA1 = getRangeInputValue();
+        if (!rangeA1) {
+          alert('Indique un rango válido antes de guardar la tabla.');
           return;
         }
         const name = document.getElementById('tableName').value.trim();
+        if (!name) {
+          if (!confirm('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?')) {
+            return;
+          }
+        }
         const desc = document.getElementById('tableDesc').value.trim();
         const headerColor = document.getElementById('colorHeader').value;
         const alt1 = document.getElementById('colorAlt1').value;
@@ -450,15 +563,29 @@
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
-        const rangeA1 = rangeInfo.a1Notation;
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
+            alert(res.error);
             return;
           }
-          editingId = res.id;
+          if (res && res.rangeInfo) {
+            setRangeUI(res.rangeInfo, { force: true });
+            if (Array.isArray(res.rangeInfo.headers)) {
+              currentHeaders = res.rangeInfo.headers.slice();
+              renderHeaders();
+            }
+          }
+          if (res && res.isNew) {
+            editingId = '';
+            clearRangeUI();
+            currentHeaders = [];
+            renderHeaders();
+          } else if (res && res.id) {
+            editingId = res.id;
+          }
           refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-          alert('Formato aplicado correctamente.');
-        }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style);
+          alert((res && res.message) || 'Tabla guardada correctamente.');
+        }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style, { skipFormatting: true });
       });
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
@@ -469,6 +596,20 @@
             if (meta) {
               document.getElementById('tableName').value = meta.name || '';
               document.getElementById('tableDesc').value = meta.description || '';
+              if (meta.rangeA1 && meta.sheetName) {
+                const parts = meta.rangeA1.split('!');
+                let rangeNotation = meta.rangeA1;
+                if (parts.length === 2) {
+                  rangeNotation = parts[1];
+                }
+                setRangeUI({
+                  sheetName: meta.sheetName,
+                  a1Notation: rangeNotation,
+                  rows: meta.rows || 0,
+                  cols: meta.cols || 0,
+                  headers: currentHeaders.slice()
+                }, { force: true });
+              }
             }
           }).getTableMeta(val);
           google.script.run.withSuccessHandler(function(res) {
@@ -539,6 +680,16 @@
 
       document.addEventListener('DOMContentLoaded', function() {
         setDefaultStyles();
+        const rangeInput = document.getElementById('rangeInput');
+        if (rangeInput) {
+          rangeInput.dataset.manual = 'false';
+          rangeInput.addEventListener('input', function() {
+            this.dataset.manual = this.value.trim() ? 'true' : 'false';
+            if (this.dataset.manual === 'true') {
+              rangeInfo = null;
+            }
+          });
+        }
         showTab('createTab');
       });
     </script>

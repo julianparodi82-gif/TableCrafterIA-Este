@@ -156,6 +156,34 @@ function clearTable(tableId) {
 }
 
 /**
+ * Obtiene un rango válido a partir de una notación A1. Si la notación no
+ * incluye hoja, se asume la hoja activa.
+ *
+ * @param {string} rangeA1 Notación A1 ingresada por el usuario.
+ * @returns {Range} Rango correspondiente.
+ */
+function resolveRangeFromNotation(rangeA1) {
+  if (!rangeA1 || String(rangeA1).trim() === '') {
+    throw new Error('Proporcione un rango en notación A1.');
+  }
+  var ss = SpreadsheetApp.getActive();
+  var trimmed = String(rangeA1).trim();
+  try {
+    return ss.getRange(trimmed);
+  } catch (err) {
+    var sheet = ss.getActiveSheet();
+    if (!sheet) {
+      throw new Error('No se encontró la hoja activa.');
+    }
+    try {
+      return sheet.getRange(trimmed);
+    } catch (inner) {
+      throw new Error('El rango indicado no es válido: ' + trimmed);
+    }
+  }
+}
+
+/**
  * Aplica formato de tabla al rango seleccionado y guarda/actualiza los
  * metadatos.  Si tableId se proporciona y existe, se limpiará el rango y
  * vista previos.  Devuelve el id de la tabla aplicada.
@@ -166,53 +194,130 @@ function clearTable(tableId) {
  * @param {string} description Descripción de la tabla.
  * @param {Array} headers Lista de encabezados (fila 1) editados por el usuario.
  * @param {Object} style Objeto {headerColor, altColor1, altColor2, border, bold}.
- * @returns {Object} Resultado con id y mensaje, o error.
+ * @param {Object=} options Permite controlar acciones (skipFormatting, skipSaving).
+ * @returns {Object} Resultado con id, mensaje y datos del rango, o error.
  */
-function applyTableFormatting(tableId, rangeA1, name, description, headers, style) {
-  // Obtener rango activo
-  var ss = SpreadsheetApp.getActive();
-  var sheet = ss.getActiveSheet();
-  var range = sheet.getRange(rangeA1);
+function applyTableFormatting(tableId, rangeA1, name, description, headers, style, options) {
+  options = options || {};
+  var doFormat = !options.skipFormatting;
+  var doSave = !options.skipSaving;
+  if (!doFormat && !doSave) {
+    return { error: 'No se especificó ninguna acción para realizar.' };
+  }
+  var range;
+  try {
+    range = resolveRangeFromNotation(rangeA1);
+  } catch (err) {
+    return { error: err.message };
+  }
+  var sheet = range.getSheet();
   var rows = range.getNumRows();
   var cols = range.getNumColumns();
-  // Validar límites
   if (cols > 16 || rows > 1000) {
-    SpreadsheetApp.getUi().alert('El rango seleccionado (' + cols + ' columnas y ' + rows + ' filas) supera los límites permitidos (máx. 16 columnas y 1000 filas).');
-    return { error: 'exceeded' };
+    return {
+      error: 'El rango seleccionado (' + cols + ' columnas y ' + rows + ' filas) supera los límites permitidos (máx. 16 columnas y 1000 filas).'
+    };
   }
-  var id = tableId && tableId.trim() !== '' ? tableId : Utilities.getUuid();
-  // Si existe, limpiar rango anterior
-  if (tableId && tableId.trim() !== '') {
-    var entry = findMetaById(tableId);
-    if (entry) {
-      var prevRangeA1 = entry.data[2];
-      var prevSheetName = entry.data[4];
-      if (prevRangeA1) {
-        var prevSheet = ss.getSheetByName(prevSheetName);
-        if (prevSheet) {
-          var prevRange = prevSheet.getRange(prevRangeA1);
-          clearRangeAndFormatting(prevRange);
-          // Eliminar vista de filtro anterior
-          var prevTitle = 'TableCrafter_' + tableId;
-          deleteFilterViewsByTitle(prevSheet, prevTitle);
+  var id = tableId && tableId.trim() !== '' ? tableId.trim() : '';
+  var isNew = false;
+  if (doSave && !id) {
+    id = Utilities.getUuid();
+    isNew = true;
+  }
+
+  var appliedStyle = {
+    headerColor: style && style.headerColor ? style.headerColor : '#CFE8FC',
+    altColor1: style && style.altColor1 ? style.altColor1 : '#FFFFFF',
+    altColor2: style && style.altColor2 ? style.altColor2 : '#F3F4F6',
+    border: style && Object.prototype.hasOwnProperty.call(style, 'border') ? !!style.border : true,
+    bold: style && Object.prototype.hasOwnProperty.call(style, 'bold') ? !!style.bold : true
+  };
+
+  var normalizedRange = range.getA1Notation();
+  var headerRange = range.offset(0, 0, 1, cols);
+  var normalizedHeaders = null;
+  if (headers && headers.length > 0) {
+    normalizedHeaders = [];
+    for (var i = 0; i < cols; i++) {
+      var headerValue = headers[i] !== undefined ? headers[i] : '';
+      normalizedHeaders.push(headerValue === null ? '' : String(headerValue));
+    }
+    if (doFormat) {
+      headerRange.setValues([normalizedHeaders]);
+    }
+  }
+  if (!normalizedHeaders) {
+    var existingHeaders = headerRange.getValues()[0];
+    normalizedHeaders = existingHeaders.map(function(value) {
+      return value === null ? '' : String(value);
+    });
+  }
+
+  if (doFormat) {
+    if (id) {
+      var entry = findMetaById(id);
+      if (entry) {
+        var prevRangeA1 = entry.data[2];
+        var prevSheetName = entry.data[4];
+        if (prevRangeA1) {
+          var ss = SpreadsheetApp.getActive();
+          var prevSheet = ss.getSheetByName(prevSheetName);
+          if (prevSheet) {
+            try {
+              var prevRange = prevSheet.getRange(prevRangeA1);
+              var sameRange = prevSheetName === sheet.getName() && prevRange.getA1Notation() === normalizedRange;
+              if (!sameRange) {
+                clearRangeAndFormatting(prevRange);
+              }
+              deleteFilterViewsByTitle(prevSheet, 'TableCrafter_' + id);
+            } catch (prevErr) {
+              // Si el rango anterior no existe, continuar sin detener la ejecución.
+            }
+          }
         }
       }
     }
+    applyFormattingToRange(range, appliedStyle);
+    if (id) {
+      deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
+      createFilterViewForRange(range, 'TableCrafter_' + id);
+    }
   }
-  // Aplicar encabezados si han sido modificados
-  if (headers && headers.length > 0) {
-    var headerRange = range.offset(0, 0, 1, cols);
-    headerRange.setValues([headers]);
+
+  if (doSave) {
+    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows);
+    if (!doFormat && id) {
+      deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
+      createFilterViewForRange(range, 'TableCrafter_' + id);
+    }
   }
-  // Aplicar formato
-  applyFormattingToRange(range, style);
-  // Crear vista de filtro dedicada
-  var filterTitle = 'TableCrafter_' + id;
-  deleteFilterViewsByTitle(sheet, filterTitle); // eliminar si existe antes de crear
-  createFilterViewForRange(range, filterTitle);
-  // Guardar/actualizar metadatos
-  saveOrUpdateMeta(id, name, description, rangeA1, sheet.getName(), cols, rows);
-  return { id: id, message: 'Tabla aplicada' };
+
+  var message;
+  if (doFormat && doSave) {
+    message = 'Formato aplicado y tabla guardada correctamente.';
+  } else if (doFormat) {
+    message = 'Formato aplicado correctamente.';
+  } else if (doSave) {
+    message = isNew ? 'Tabla guardada correctamente.' : 'Tabla actualizada correctamente.';
+  } else {
+    message = 'Operación realizada.';
+  }
+
+  var result = {
+    id: id,
+    rangeInfo: {
+      sheetName: sheet.getName(),
+      a1Notation: normalizedRange,
+      rows: rows,
+      cols: cols,
+      headers: normalizedHeaders
+    },
+    message: message
+  };
+  if (doSave) {
+    result.isNew = isNew;
+  }
+  return result;
 }
 
 /**
