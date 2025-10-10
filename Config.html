@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background-color: #F9FAFB;
+        color: #111827;
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 20px;
+        color: #2563EB;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #E5E7EB;
+        border-radius: 4px;
+        background-color: #FFFFFF;
+        color: #111827;
+        box-sizing: border-box;
+        min-height: 36px;
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 40px;
+      }
+      .btn-save {
+        background-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .btn-save:hover {
+        background-color: #1E4DB7;
+      }
+      .btn-delete {
+        background-color: #EF4444;
+        color: #FFFFFF;
+        margin-left: 8px;
+      }
+      .btn-delete:hover {
+        background-color: #DC2626;
+      }
+      .message {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #6B7280;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Configuración de la API</h2>
+    <p>Introduzca su clave de API de OpenAI para habilitar las consultas de IA. Su clave se almacena de forma segura en las propiedades del script.</p>
+    <label for="apiKeyInput">API Key</label>
+    <input type="text" id="apiKeyInput" placeholder="sk-..." />
+    <div>
+      <button id="saveKeyBtn" class="btn-save">Guardar</button>
+      <button id="deleteKeyBtn" class="btn-delete">Eliminar clave</button>
+    </div>
+    <div id="message" class="message"></div>
+    <script>
+      // Cargar clave existente
+      document.addEventListener('DOMContentLoaded', function() {
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.key) {
+            document.getElementById('apiKeyInput').value = res.key;
+          }
+        }).getApiKey();
+      });
+      // Guardar clave
+      document.getElementById('saveKeyBtn').addEventListener('click', function() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        google.script.run.withSuccessHandler(function() {
+          document.getElementById('message').textContent = 'Clave guardada correctamente.';
+        }).saveApiKey(key);
+      });
+      // Eliminar clave
+      document.getElementById('deleteKeyBtn').addEventListener('click', function() {
+        if (confirm('¿Desea eliminar la clave almacenada?')) {
+          google.script.run.withSuccessHandler(function() {
+            document.getElementById('apiKeyInput').value = '';
+            document.getElementById('message').textContent = 'Clave eliminada.';
+          }).saveApiKey('');
+        }
+      });
+    </script>
+  </body>
+</html>
