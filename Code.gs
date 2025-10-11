@@ -253,6 +253,58 @@ function clearTable(tableId) {
 }
 
 /**
+ * Borra por completo una tabla guardada: limpia el rango asociado, elimina la
+ * vista de filtro y remueve los metadatos del registro.
+ *
+ * @param {string} tableId ID único de la tabla a borrar.
+ * @returns {Object} Resultado con ok=true o un mensaje de error/advertencia.
+ */
+function deleteSavedTable(tableId) {
+  var id = normalizeMetaId(tableId);
+  if (!id) {
+    return { error: 'Tabla no encontrada' };
+  }
+  var entry = findMetaById(id);
+  if (!entry) {
+    return { error: 'Tabla no encontrada' };
+  }
+
+  var data = entry.data;
+  var rangeA1 = data[META_INDEX.rangeA1];
+  var sheetName = data[META_INDEX.sheet];
+  var warnings = [];
+
+  if (rangeA1 && sheetName) {
+    var ss = SpreadsheetApp.getActive();
+    var sheet = ss.getSheetByName(sheetName);
+    if (sheet) {
+      try {
+        var range = sheet.getRange(rangeA1);
+        clearRangeAndFormatting(range);
+      } catch (err) {
+        warnings.push('No se pudo limpiar el rango: ' + err.message);
+      }
+      try {
+        deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
+      } catch (fvErr) {
+        warnings.push('No se pudo eliminar la vista de filtro: ' + fvErr.message);
+      }
+    } else {
+      warnings.push('La hoja asociada ya no existe.');
+    }
+  }
+
+  var metaSheet = getMetaSheet();
+  metaSheet.deleteRow(entry.row);
+  SpreadsheetApp.flush();
+
+  if (warnings.length > 0) {
+    return { ok: true, warning: warnings.join(' ') };
+  }
+  return { ok: true };
+}
+
+/**
  * Obtiene un rango válido a partir de una notación A1. Si la notación no
  * incluye hoja, se asume la hoja activa.
  *

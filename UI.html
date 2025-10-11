@@ -432,6 +432,9 @@
           <div class="action-buttons">
             <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar cambios</button>
           </div>
+          <div id="editDeleteRow" class="action-buttons" style="display:none;">
+            <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
+          </div>
         </div>
       </div>
 
@@ -686,6 +689,24 @@
         }
         savedTablesCacheInitialized = true;
         persistSavedTablesCache();
+      }
+
+      function removeSavedTableFromCache(id) {
+        if (!id) {
+          return;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return;
+        }
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (index >= 0) {
+          savedTablesCache.splice(index, 1);
+          persistSavedTablesCache();
+        }
+        savedTablesCacheInitialized = true;
       }
 
       function buildSavedTableCacheEntry(id, values, rangeInfo, style, headers) {
@@ -1033,6 +1054,14 @@
         const saveBtn = document.getElementById('editSaveTableBtn');
         if (saveBtn) {
           saveBtn.disabled = true;
+        }
+        const deleteBtn = document.getElementById('editDeleteTableBtn');
+        if (deleteBtn) {
+          deleteBtn.disabled = true;
+        }
+        const deleteRow = document.getElementById('editDeleteRow');
+        if (deleteRow) {
+          deleteRow.style.display = 'none';
         }
       }
 
@@ -1561,6 +1590,14 @@
         const saveBtn = document.getElementById('editSaveTableBtn');
         if (saveBtn) {
           saveBtn.disabled = false;
+        }
+        const deleteBtn = document.getElementById('editDeleteTableBtn');
+        if (deleteBtn) {
+          deleteBtn.disabled = false;
+        }
+        const deleteRow = document.getElementById('editDeleteRow');
+        if (deleteRow) {
+          deleteRow.style.display = 'flex';
         }
 
         const nameInput = document.getElementById('editTableName');
@@ -2513,6 +2550,65 @@
           }
           refreshSavedTables(['editSavedTables', 'aiSavedTables']);
         }).clearTable(val);
+      });
+
+      document.getElementById('editDeleteTableBtn').addEventListener('click', async function() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de borrarla.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return;
+        }
+        const targetId = editingId;
+        const cached = getSavedTableFromCache(targetId);
+        const nameSuffix = cached && cached.name ? ' "' + cached.name + '"' : '';
+        const confirmed = await showConfirmModal(
+          'Se eliminará la tabla' +
+            nameSuffix +
+            '. Se borrarán el contenido y formato del rango asociado y sus metadatos guardados. ¿Desea continuar?',
+          {
+            title: 'Confirmar borrado',
+            variant: 'warning',
+            confirmText: 'Borrar tabla',
+            cancelText: 'Cancelar'
+          }
+        );
+        if (!confirmed) {
+          return;
+        }
+        google.script.run
+          .withSuccessHandler(async function(res) {
+            if (res && res.error) {
+              await showMessageModal(res.error, {
+                title: 'No se pudo borrar',
+                variant: 'error'
+              });
+              return;
+            }
+            editingId = '';
+            lastSavedTableId = '';
+            removeSavedTableFromCache(targetId);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
+            await refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+            resetEditTabView();
+            const hasWarning = res && res.warning;
+            const message = hasWarning
+              ? 'Tabla borrada. ' + res.warning
+              : 'Tabla borrada correctamente.';
+            await showMessageModal(message, {
+              title: hasWarning ? 'Tabla borrada con advertencias' : 'Tabla borrada',
+              variant: hasWarning ? 'warning' : 'success'
+            });
+          })
+          .withFailureHandler(async function(err) {
+            const message = err && err.message ? err.message : err;
+            await showMessageModal('No se pudo borrar la tabla: ' + message, {
+              title: 'No se pudo borrar',
+              variant: 'error'
+            });
+          })
+          .deleteSavedTable(targetId);
       });
 
       document.getElementById('askBtn').addEventListener('click', function() {
