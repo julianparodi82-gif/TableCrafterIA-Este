@@ -551,6 +551,82 @@
       let savedTablesCache = [];
       let allowSidebarUnload = false;
       let sidebarClosePromptActive = false;
+      const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
+
+      function getLocalStorage() {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            return window.localStorage;
+          }
+        } catch (err) {
+          console.log('El almacenamiento local no está disponible.', err);
+        }
+        return null;
+      }
+
+      function persistSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return;
+        }
+        try {
+          const payload = JSON.stringify(
+            savedTablesCache.map(function(entry) {
+              if (!entry || !entry.id) {
+                return null;
+              }
+              return {
+                id: entry.id,
+                name: entry.name || '',
+                rangeA1: entry.rangeA1 || '',
+                description: entry.description || '',
+                sheetName: entry.sheetName || '',
+                cols: entry.cols || 0,
+                rows: entry.rows || 0,
+                style: normalizeStyleModel(entry.style || {}),
+                headers: cloneHeaderModels(entry.headers || [])
+              };
+            }).filter(function(item) {
+              return !!item;
+            })
+          );
+          storage.setItem(SAVED_TABLES_STORAGE_KEY, payload);
+        } catch (err) {
+          console.log('No se pudo guardar la caché de tablas guardadas.', err);
+        }
+      }
+
+      function restoreSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return [];
+        }
+        try {
+          const raw = storage.getItem(SAVED_TABLES_STORAGE_KEY);
+          if (!raw) {
+            savedTablesCache = [];
+            return savedTablesCache.slice();
+          }
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            savedTablesCache = [];
+            return savedTablesCache.slice();
+          }
+          const restored = parsed
+            .map(function(entry) {
+              return normalizeMetaForPopulate(entry);
+            })
+            .filter(function(item) {
+              return !!item;
+            });
+          savedTablesCache = restored;
+          return savedTablesCache.slice();
+        } catch (err) {
+          console.log('No se pudo restaurar la caché de tablas guardadas.', err);
+          savedTablesCache = [];
+          return [];
+        }
+      }
 
       function normalizeMetaForPopulate(meta) {
         if (!meta || typeof meta !== 'object') {
@@ -602,6 +678,7 @@
         } else {
           savedTablesCache.push(normalized);
         }
+        persistSavedTablesCache();
       }
 
       function buildSavedTableCacheEntry(id, values, rangeInfo, style, headers) {
@@ -1464,6 +1541,7 @@
               return previousCache.slice();
             }
             savedTablesCache = normalizedList;
+            persistSavedTablesCache();
             updateSavedTableSelects(ids, savedTablesCache, options);
             return savedTablesCache.slice();
           })
@@ -2320,6 +2398,7 @@
           });
         }
         resetEditTabView();
+        restoreSavedTablesCache();
         applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
         refreshSavedTables(['editSavedTables', 'aiSavedTables']);
         setActiveTab('createTab', { force: true });

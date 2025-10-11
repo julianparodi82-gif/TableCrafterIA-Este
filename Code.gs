@@ -362,10 +362,6 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var headerValues = headerMetaForReturn.map(function(item) {
     return item.label || '';
   });
-  if (doFormat && shouldOverwriteHeaders) {
-    headerRange.setValues([headerValues]);
-  }
-
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
@@ -391,10 +387,15 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       }
     }
     applyFormattingToRange(range, appliedStyle);
+    if (shouldOverwriteHeaders) {
+      headerRange.setValues([headerValues]);
+    }
     if (id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
       createFilterViewForRange(range, 'TableCrafter_' + id);
     }
+  } else if (shouldOverwriteHeaders) {
+    headerRange.setValues([headerValues]);
   }
 
   if (doSave) {
