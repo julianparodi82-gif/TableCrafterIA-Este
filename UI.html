@@ -782,6 +782,19 @@
       let currentTab = '';
       let pendingFormatState = { applied: false, range: null };
       let lastSavedTableId = '';
+      let editFormatDirty = false;
+
+      function clearEditFormatDirty() {
+        editFormatDirty = false;
+      }
+
+      function markEditFormatDirty() {
+        editFormatDirty = true;
+      }
+
+      function isEditFormatDirty() {
+        return !!editFormatDirty;
+      }
 
       function resetPendingFormatState() {
         pendingFormatState = { applied: false, range: null };
@@ -866,6 +879,7 @@
 
       function resetEditTabView(options) {
         const opts = options || {};
+        clearEditFormatDirty();
         if (!opts.preserveSelection) {
           const select = document.getElementById('editSavedTables');
           if (select) {
@@ -1183,6 +1197,7 @@
           input.dataset.manual = 'false';
         }
         editRangeInfo = null;
+        clearEditFormatDirty();
       }
 
       function setEditRangeUI(info, options) {
@@ -1213,6 +1228,11 @@
           headers: cloneHeaderModels(incomingEditHeaders)
         };
         editRangeInfo.fullA1 = fullA1;
+        if (options.clearDirty) {
+          clearEditFormatDirty();
+        } else if (options.markDirty) {
+          markEditFormatDirty();
+        }
       }
 
       function getEditRangeInputValue() {
@@ -1377,7 +1397,8 @@
         }).getActiveRangeInfo();
       }
 
-      function loadEditActiveRange(updateHeaders = true) {
+      function loadEditActiveRange(updateHeaders = true, options) {
+        const opts = options || {};
         google.script.run.withSuccessHandler(function(info) {
           const label = document.getElementById('editRangeLabel');
           if (info.error) {
@@ -1397,7 +1418,7 @@
           }
           const input = document.getElementById('editRangeInput');
           const shouldForce = !input || input.dataset.manual !== 'true';
-          setEditRangeUI(infoForUi, { force: shouldForce });
+          setEditRangeUI(infoForUi, { force: shouldForce, markDirty: !!opts.markDirty });
           if (updateHeaders) {
             editHeaders = cloneHeaderModels(info.headers);
           }
@@ -1418,6 +1439,7 @@
 
         upsertSavedTablesCache(normalizedMeta);
         lastSavedTableId = normalizedMeta.id;
+        clearEditFormatDirty();
 
         const rangeSection = document.getElementById('editRangeSection');
         const metaSection = document.getElementById('editMetaSection');
@@ -1502,7 +1524,7 @@
               cols: normalizedMeta.cols || 0,
               headers: cloneHeaderModels(editHeaders)
             },
-            { force: true }
+            { force: true, clearDirty: true }
           );
         } else {
           clearEditRangeUI();
@@ -1661,7 +1683,7 @@
           });
           return;
         }
-        loadEditActiveRange(true);
+        loadEditActiveRange(true, { markDirty: true });
       });
 
       async function handleApplyFormat() {
@@ -1842,7 +1864,7 @@
         }
 
         if (response && response.rangeInfo) {
-          setEditRangeUI(response.rangeInfo, { force: true });
+          setEditRangeUI(response.rangeInfo, { force: true, clearDirty: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             editHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderEditHeaders();
@@ -1870,6 +1892,8 @@
         await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
           selectId: editingId
         });
+
+        clearEditFormatDirty();
 
         await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
           title: 'Formato aplicado',
@@ -2020,7 +2044,8 @@
         handleEditSaveAction();
       });
 
-      async function handleEditSaveAction() {
+      async function handleEditSaveAction(options) {
+        const opts = options || {};
         if (!editingId) {
           await showMessageModal('Seleccione una tabla guardada antes de guardar los cambios.', {
             title: 'Seleccione una tabla',
@@ -2098,6 +2123,24 @@
           bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
         };
 
+        if (isEditFormatDirty() && !opts.skipFormatPrompt) {
+          const decision = await openModal({
+            title: 'Formato pendiente',
+            message: 'Debe aplicar formato antes de guardar.',
+            variant: 'warning',
+            primaryText: 'Aplicar formato y guardar',
+            secondaryText: 'Cancelar'
+          });
+          if (decision === 'primary') {
+            const applied = await handleEditApplyFormat();
+            if (!applied) {
+              return false;
+            }
+            return handleEditSaveAction(Object.assign({}, opts, { skipFormatPrompt: true }));
+          }
+          return false;
+        }
+
         let response;
         try {
           response = await callServerFunction(
@@ -2127,7 +2170,7 @@
         }
 
         if (response && response.rangeInfo) {
-          setEditRangeUI(response.rangeInfo, { force: true });
+          setEditRangeUI(response.rangeInfo, { force: true, clearDirty: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             editHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderEditHeaders();
@@ -2394,6 +2437,9 @@
             this.dataset.manual = this.value.trim() ? 'true' : 'false';
             if (this.dataset.manual === 'true') {
               editRangeInfo = null;
+            }
+            if (editingId) {
+              markEditFormatDirty();
             }
           });
         }
