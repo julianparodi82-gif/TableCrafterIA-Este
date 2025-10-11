@@ -783,6 +783,7 @@
       let pendingFormatState = { applied: false, range: null };
       let lastSavedTableId = '';
       let editFormatDirty = false;
+      let createFormatDirty = false;
 
       function clearEditFormatDirty() {
         editFormatDirty = false;
@@ -825,6 +826,18 @@
         return !!(pendingFormatState && pendingFormatState.applied);
       }
 
+      function clearCreateFormatDirty() {
+        createFormatDirty = false;
+      }
+
+      function markCreateFormatDirty() {
+        createFormatDirty = true;
+      }
+
+      function isCreateFormatDirty() {
+        return !!createFormatDirty;
+      }
+
       function callServerFunction(functionName) {
         const args = Array.prototype.slice.call(arguments, 1);
         return new Promise(function(resolve, reject) {
@@ -862,6 +875,7 @@
           currentHeaders = [];
           renderCreateHeaders();
         }
+        clearCreateFormatDirty();
       }
 
       function setEditDefaultStyles() {
@@ -1140,6 +1154,7 @@
           input.dataset.manual = 'false';
         }
         rangeInfo = null;
+        clearCreateFormatDirty();
       }
 
       function setRangeUI(info, options) {
@@ -1394,6 +1409,8 @@
             currentHeaders = cloneHeaderModels(info.headers);
           }
           renderCreateHeaders();
+          markCreateFormatDirty();
+          resetPendingFormatState();
         }).getActiveRangeInfo();
       }
 
@@ -1769,6 +1786,8 @@
           }
         }
 
+        clearCreateFormatDirty();
+
         await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
           title: 'Formato aplicado',
           variant: 'success'
@@ -1959,6 +1978,14 @@
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
+
+        if (isCreateFormatDirty() && !options.skipFormatCheck) {
+          await showMessageModal('Debe aplicar el formato al rango actual antes de guardar la tabla.', {
+            title: 'Formato pendiente',
+            variant: 'warning'
+          });
+          return false;
+        }
 
         let response;
         try {
@@ -2427,6 +2454,10 @@
             this.dataset.manual = this.value.trim() ? 'true' : 'false';
             if (this.dataset.manual === 'true') {
               rangeInfo = null;
+              markCreateFormatDirty();
+              resetPendingFormatState();
+            } else {
+              clearCreateFormatDirty();
             }
           });
         }
