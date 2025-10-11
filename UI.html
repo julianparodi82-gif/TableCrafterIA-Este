@@ -2586,6 +2586,7 @@
               });
               return;
             }
+            const removedOnly = res && res.removed && !(res && res.warning);
             editingId = '';
             lastSavedTableId = '';
             removeSavedTableFromCache(targetId);
@@ -2593,12 +2594,25 @@
             await refreshSavedTables(['editSavedTables', 'aiSavedTables']);
             resetEditTabView();
             const hasWarning = res && res.warning;
-            const message = hasWarning
-              ? 'Tabla borrada. ' + res.warning
-              : 'Tabla borrada correctamente.';
+            let message;
+            let title;
+            let variant;
+            if (removedOnly) {
+              message = (res && res.message) || 'Se ha retirado de la lista.';
+              title = 'Tabla no encontrada';
+              variant = 'info';
+            } else if (hasWarning) {
+              message = 'Tabla borrada. ' + res.warning;
+              title = 'Tabla borrada con advertencias';
+              variant = 'warning';
+            } else {
+              message = 'Tabla borrada correctamente.';
+              title = 'Tabla borrada';
+              variant = 'success';
+            }
             await showMessageModal(message, {
-              title: hasWarning ? 'Tabla borrada con advertencias' : 'Tabla borrada',
-              variant: hasWarning ? 'warning' : 'success'
+              title: title,
+              variant: variant
             });
           })
           .withFailureHandler(async function(err) {

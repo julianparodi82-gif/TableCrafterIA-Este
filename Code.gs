@@ -262,11 +262,19 @@ function clearTable(tableId) {
 function deleteSavedTable(tableId) {
   var id = normalizeMetaId(tableId);
   if (!id) {
-    return { error: 'Tabla no encontrada' };
+    return {
+      ok: true,
+      removed: true,
+      message: 'Se ha retirado de la lista.'
+    };
   }
   var entry = findMetaById(id);
   if (!entry) {
-    return { error: 'Tabla no encontrada' };
+    return {
+      ok: true,
+      removed: true,
+      message: 'Se ha retirado de la lista.'
+    };
   }
 
   var data = entry.data;
