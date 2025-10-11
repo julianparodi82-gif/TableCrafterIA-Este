@@ -549,6 +549,7 @@
       }
 
       let savedTablesCache = [];
+      let savedTablesCacheInitialized = false;
       let allowSidebarUnload = false;
       let sidebarClosePromptActive = false;
       const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
@@ -599,17 +600,20 @@
       function restoreSavedTablesCache() {
         const storage = getLocalStorage();
         if (!storage) {
+          savedTablesCacheInitialized = false;
           return [];
         }
         try {
           const raw = storage.getItem(SAVED_TABLES_STORAGE_KEY);
           if (!raw) {
             savedTablesCache = [];
+            savedTablesCacheInitialized = false;
             return savedTablesCache.slice();
           }
           const parsed = JSON.parse(raw);
           if (!Array.isArray(parsed)) {
             savedTablesCache = [];
+            savedTablesCacheInitialized = false;
             return savedTablesCache.slice();
           }
           const restored = parsed
@@ -620,10 +624,12 @@
               return !!item;
             });
           savedTablesCache = restored;
+          savedTablesCacheInitialized = savedTablesCache.length > 0;
           return savedTablesCache.slice();
         } catch (err) {
           console.log('No se pudo restaurar la caché de tablas guardadas.', err);
           savedTablesCache = [];
+          savedTablesCacheInitialized = false;
           return [];
         }
       }
@@ -678,6 +684,7 @@
         } else {
           savedTablesCache.push(normalized);
         }
+        savedTablesCacheInitialized = true;
         persistSavedTablesCache();
       }
 
@@ -774,6 +781,82 @@
 
       function applySavedTablesFromCache(targetIds, config) {
         updateSavedTableSelects(targetIds, savedTablesCache, config || {});
+      }
+
+      function normalizeNameForComparison(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim().toLowerCase();
+      }
+
+      function findDuplicateTableName(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return null;
+        }
+        const opts = options || {};
+        const ignoreId = opts.ignoreId ? String(opts.ignoreId).trim() : '';
+        if (!Array.isArray(savedTablesCache)) {
+          return null;
+        }
+        const duplicate = savedTablesCache.find(function(entry) {
+          if (!entry || !entry.id) {
+            return false;
+          }
+          if (ignoreId && entry.id === ignoreId) {
+            return false;
+          }
+          const entryName = normalizeNameForComparison(entry.name);
+          return entryName && entryName === normalized;
+        });
+        return duplicate || null;
+      }
+
+      async function ensureUniqueTableNameOrAlert(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return true;
+        }
+        const opts = options || {};
+        try {
+          await ensureSavedTablesLoaded();
+        } catch (err) {
+          console.log('No se pudo actualizar la lista de tablas antes de validar duplicados.', err);
+        }
+        const duplicate = findDuplicateTableName(name, { ignoreId: opts.ignoreId });
+        if (duplicate) {
+          await showMessageModal(
+            opts.message || 'Ya existe una tabla guardada con ese nombre. Elija un nombre diferente.',
+            {
+              title: opts.title || 'Nombre duplicado',
+              variant: opts.variant || 'error'
+            }
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function ensureSavedTablesLoaded() {
+        if (savedTablesCacheInitialized) {
+          return Promise.resolve(savedTablesCache.slice());
+        }
+        if (!ensureSavedTablesLoaded._pending) {
+          ensureSavedTablesLoaded._pending = refreshSavedTables([])
+            .then(function(result) {
+              ensureSavedTablesLoaded._pending = null;
+              if (Array.isArray(result)) {
+                return result;
+              }
+              return savedTablesCache.slice();
+            })
+            .catch(function(err) {
+              ensureSavedTablesLoaded._pending = null;
+              throw err;
+            });
+        }
+        return ensureSavedTablesLoaded._pending;
       }
 
       let rangeInfo = null;
@@ -1576,10 +1659,12 @@
                 return !!entry;
               });
             if (normalizedList.length === 0 && previousCache.length > 0) {
+              savedTablesCacheInitialized = true;
               updateSavedTableSelects(ids, previousCache, options);
               return previousCache.slice();
             }
             savedTablesCache = normalizedList;
+            savedTablesCacheInitialized = true;
             persistSavedTablesCache();
             updateSavedTableSelects(ids, savedTablesCache, options);
             return savedTablesCache.slice();
@@ -1855,6 +1940,13 @@
           bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
         };
 
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
+        }
+
         let response;
         try {
           response = await callServerFunction(
@@ -1958,6 +2050,13 @@
               return false;
             }
           }
+        }
+
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
         }
 
         currentHeaders = cloneHeaderModels(validation.values.headers);
@@ -2124,6 +2223,13 @@
               return false;
             }
           }
+        }
+
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
         }
 
         editHeaders = cloneHeaderModels(validation.values.headers);

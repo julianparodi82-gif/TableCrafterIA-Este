@@ -118,6 +118,13 @@ function normalizeMetaId(value) {
   return String(value).trim();
 }
 
+function normalizeMetaName(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim().toLowerCase();
+}
+
 function parseJsonValue(value, fallback) {
   if (!value) {
     return fallback;
@@ -313,6 +320,18 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   if (doSave && !id) {
     id = Utilities.getUuid();
     isNew = true;
+  }
+
+  if (doSave) {
+    var normalizedName = normalizeMetaName(name);
+    if (normalizedName) {
+      var duplicate = findMetaByName(name, { ignoreId: id });
+      if (duplicate) {
+        return {
+          error: 'Ya existe una tabla guardada con ese nombre. Elija un nombre diferente antes de guardar.'
+        };
+      }
+    }
   }
 
   var appliedStyle = {
@@ -664,6 +683,32 @@ function findMetaById(id) {
   for (var i = 1; i < data.length; i++) {
     if (normalizeMetaId(data[i][0]) === targetId) {
       return { row: i + 1, data: data[i] };
+    }
+  }
+  return null;
+}
+
+function findMetaByName(name, options) {
+  var normalizedName = normalizeMetaName(name);
+  if (!normalizedName) {
+    return null;
+  }
+  var opts = options || {};
+  var ignoreId = normalizeMetaId(opts.ignoreId);
+  var sheet = getMetaSheet();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    if (ignoreId && entryId === ignoreId) {
+      continue;
+    }
+    var entryName = normalizeMetaName(row[META_INDEX.name]);
+    if (entryName && entryName === normalizedName) {
+      return { row: i + 1, data: row };
     }
   }
   return null;
