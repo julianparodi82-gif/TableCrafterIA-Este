@@ -159,6 +159,88 @@
       .header-desc-field.hidden {
         display: none;
       }
+      .ai-multi-select {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-multi-list {
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        min-height: 180px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 6px 0;
+        font-size: 15px;
+      }
+      .ai-multi-list.disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      .ai-multi-list.disabled .ai-multi-item {
+        cursor: not-allowed;
+      }
+      .ai-multi-empty {
+        padding: 12px 16px;
+        color: #6B7280;
+        font-size: 14px;
+      }
+      .ai-multi-group {
+        padding-bottom: 4px;
+      }
+      .ai-multi-group-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1F2937;
+        padding: 8px 18px 4px;
+      }
+      .ai-multi-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 18px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+      .ai-multi-item:focus {
+        outline: 2px solid #2563EB;
+        outline-offset: 2px;
+      }
+      .ai-multi-item:hover {
+        background-color: #F3F4F6;
+      }
+      .ai-multi-group .ai-multi-item {
+        padding-left: 32px;
+      }
+      .ai-multi-item .ai-check {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #94A3B8;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #FFFFFF;
+      }
+      .ai-multi-item.selected .ai-check {
+        background-color: #2563EB;
+        border-color: #2563EB;
+      }
+      .ai-multi-item.selected .ai-check::after {
+        content: '\2713';
+      }
+      .ai-multi-item .ai-label {
+        flex: 1 1 auto;
+        color: #111827;
+      }
+      .ai-multi-item.all-option .ai-label {
+        font-weight: 600;
+      }
+      .ai-hidden-select {
+        display: none;
+      }
       .toggle-group {
         display: flex;
         align-items: center;
@@ -474,7 +556,10 @@
       <div id="aiTab" class="tab-content">
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
-          <select id="aiSavedTables" multiple></select>
+          <div class="ai-multi-select">
+            <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
+            <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
+          </div>
           <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
           <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
           <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
@@ -872,19 +957,6 @@
             select.appendChild(placeholderOption);
           }
 
-          if (entries.length === 0) {
-            if (isMulti) {
-              const emptyOption = document.createElement('option');
-              emptyOption.value = '';
-              emptyOption.textContent = 'No hay tablas guardadas';
-              emptyOption.disabled = true;
-              emptyOption.selected = true;
-              select.appendChild(emptyOption);
-            }
-            select.disabled = true;
-            return;
-          }
-
           const validValues = {};
           entries.forEach(function(entry) {
             if (entry && entry.id) {
@@ -959,7 +1031,7 @@
               .filter(function(value) {
                 return !!validValues[value];
               });
-            if (targetValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+            if (includeAll && targetValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
               targetValues = [ALL_TABLES_OPTION_VALUE];
             }
           } else {
@@ -1012,7 +1084,31 @@
             });
           }
 
-          select.disabled = entries.length === 0;
+          if (entries.length === 0) {
+            if (isMulti) {
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '';
+              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.disabled = true;
+              emptyOption.selected = true;
+              select.appendChild(emptyOption);
+            }
+            select.disabled = true;
+          } else {
+            select.disabled = false;
+          }
+
+          if (id === 'aiSavedTables') {
+            select.dataset.allValue = includeAll ? ALL_TABLES_OPTION_VALUE : '';
+            renderAiSavedTablesList(entries, {
+              includeAll: includeAll,
+              allValue: includeAll ? ALL_TABLES_OPTION_VALUE : '',
+              allLabel: allOptionLabel,
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValues: getSelectedOptionValues(select)
+            });
+          }
         });
       }
 
@@ -1020,54 +1116,204 @@
         updateSavedTableSelects(targetIds, savedTablesCache, config || {});
       }
 
-      function setupMultiSelectToggle(select, options) {
-        if (!select) {
+      function getSelectedOptionValues(select) {
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+      function createAiMultiItem(value, label, selected) {
+        const item = document.createElement('div');
+        item.className = 'ai-multi-item';
+        item.dataset.value = value;
+        item.setAttribute('role', 'option');
+        item.tabIndex = 0;
+        if (selected) {
+          item.classList.add('selected');
+        }
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        const check = document.createElement('span');
+        check.className = 'ai-check';
+        item.appendChild(check);
+        const text = document.createElement('span');
+        text.className = 'ai-label';
+        text.textContent = label;
+        item.appendChild(text);
+        return item;
+      }
+
+      function renderAiSavedTablesList(entries, config) {
+        const listEl = document.getElementById('aiSavedTablesList');
+        const selectEl = document.getElementById('aiSavedTables');
+        if (!listEl || !selectEl) {
           return;
         }
-        const config = options || {};
-        const allValue = config.allValue || '';
-        select.addEventListener('mousedown', function(event) {
-          let option = event.target;
-          if (!option) {
-            return;
-          }
-          if (option.tagName !== 'OPTION') {
-            if (option.parentElement && option.parentElement.tagName === 'OPTION') {
-              option = option.parentElement;
-            } else {
+        const data = Array.isArray(entries) ? entries : [];
+        const options = config || {};
+        const includeAll = !!options.includeAll;
+        const allValue = options.allValue || '';
+        const allLabel = options.allLabel || 'Todas las tablas';
+        const groupBySheet = !!options.groupBySheet;
+        const disabled = !!options.disabled;
+        const selectedValues = Array.isArray(options.selectedValues) ? options.selectedValues : [];
+        const selectedSet = Object.create(null);
+        selectedValues.forEach(function(value) {
+          selectedSet[String(value)] = true;
+        });
+
+        listEl.innerHTML = '';
+        listEl.setAttribute('role', 'listbox');
+        listEl.setAttribute('aria-multiselectable', 'true');
+        listEl.dataset.allValue = includeAll ? allValue : '';
+        listEl.classList.toggle('disabled', disabled);
+        listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+        if (disabled || data.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'ai-multi-empty';
+          empty.textContent = 'No hay tablas guardadas';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        if (includeAll && allValue) {
+          const allItem = createAiMultiItem(allValue, allLabel, !!selectedSet[allValue]);
+          allItem.classList.add('all-option');
+          listEl.appendChild(allItem);
+        }
+
+        if (groupBySheet) {
+          const grouped = Object.create(null);
+          const order = [];
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
               return;
             }
-          }
-          if (option.disabled) {
+            const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+            if (!grouped[sheetLabel]) {
+              grouped[sheetLabel] = [];
+              order.push(sheetLabel);
+            }
+            grouped[sheetLabel].push(entry);
+          });
+          order.forEach(function(sheetLabel) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ai-multi-group';
+            const labelEl = document.createElement('div');
+            labelEl.className = 'ai-multi-group-label';
+            labelEl.textContent = sheetLabel;
+            wrapper.appendChild(labelEl);
+            grouped[sheetLabel].forEach(function(entry) {
+              const item = createAiMultiItem(entry.id, entry.name || entry.id, !!selectedSet[entry.id]);
+              wrapper.appendChild(item);
+            });
+            listEl.appendChild(wrapper);
+          });
+        } else {
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const item = createAiMultiItem(entry.id, entry.name || entry.id, !!selectedSet[entry.id]);
+            listEl.appendChild(item);
+          });
+        }
+        updateAiListSelectionUI(selectEl);
+      }
+
+      function updateAiListSelectionUI(select) {
+        const listEl = document.getElementById('aiSavedTablesList');
+        if (!listEl || !select) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        if (select.options) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value && option.selected && !option.disabled) {
+              selectedSet[option.value] = true;
+            }
+          });
+        }
+        const items = listEl.querySelectorAll('.ai-multi-item');
+        Array.prototype.forEach.call(items, function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
             return;
           }
-          event.preventDefault();
-          const isAll = allValue && option.value === allValue;
-          const currentlySelected = option.selected;
-          if (isAll) {
-            const newState = !currentlySelected;
-            Array.prototype.forEach.call(select.options, function(opt) {
-              if (!opt || opt.disabled) {
-                return;
-              }
-              if (opt.value === allValue) {
-                opt.selected = newState;
-              } else {
-                opt.selected = false;
+          if (selectedSet[value]) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+      }
+
+      function toggleAiListValue(value) {
+        const selectEl = document.getElementById('aiSavedTables');
+        const listEl = document.getElementById('aiSavedTablesList');
+        if (!selectEl || !listEl || selectEl.disabled) {
+          return;
+        }
+        const options = selectEl.options ? Array.prototype.slice.call(selectEl.options) : [];
+        if (!options.length) {
+          return;
+        }
+        const allValue = listEl.dataset.allValue || selectEl.dataset.allValue || '';
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        if (allValue && targetValue === allValue) {
+          let currentlySelected = false;
+          options.forEach(function(option) {
+            if (option && option.value === allValue && option.selected) {
+              currentlySelected = true;
+            }
+          });
+          const newState = !currentlySelected;
+          options.forEach(function(option) {
+            if (!option || option.disabled || !option.value) {
+              return;
+            }
+            if (option.value === allValue) {
+              option.selected = newState;
+            } else {
+              option.selected = false;
+            }
+          });
+        } else {
+          let targetOption = null;
+          options.forEach(function(option) {
+            if (option && option.value === targetValue) {
+              targetOption = option;
+            }
+          });
+          if (!targetOption) {
+            return;
+          }
+          const newState = !targetOption.selected;
+          targetOption.selected = newState;
+          if (newState && allValue) {
+            options.forEach(function(option) {
+              if (option && option.value === allValue) {
+                option.selected = false;
               }
             });
-          } else {
-            option.selected = !currentlySelected;
-            if (option.selected && allValue) {
-              Array.prototype.forEach.call(select.options, function(opt) {
-                if (opt && opt.value === allValue) {
-                  opt.selected = false;
-                }
-              });
-            }
           }
-          select.dispatchEvent(new Event('change', { bubbles: true }));
-        });
+        }
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        updateAiListSelectionUI(selectEl);
       }
 
       function normalizeNameForComparison(value) {
@@ -2985,7 +3231,40 @@
         setDefaultStyles();
         setEditDefaultStyles();
         const aiSelect = document.getElementById('aiSavedTables');
-        setupMultiSelectToggle(aiSelect, { allValue: ALL_TABLES_OPTION_VALUE });
+        const aiList = document.getElementById('aiSavedTablesList');
+        if (aiSelect) {
+          aiSelect.addEventListener('change', function() {
+            updateAiListSelectionUI(aiSelect);
+          });
+        }
+        if (aiList) {
+          aiList.addEventListener('click', function(event) {
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiList.classList.contains('disabled')) {
+              return;
+            }
+            toggleAiListValue(item.dataset.value);
+          });
+          aiList.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiList.classList.contains('disabled')) {
+              return;
+            }
+            event.preventDefault();
+            toggleAiListValue(item.dataset.value);
+          });
+        }
         const rangeInput = document.getElementById('rangeInput');
         if (rangeInput) {
           rangeInput.dataset.manual = 'false';
