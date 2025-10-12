@@ -166,6 +166,14 @@
         margin-top: 8px;
         margin-bottom: 8px;
       }
+      .checkbox-subtle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #4B5563;
+      }
       .btn-primary {
         background-color: #2563EB;
         color: #FFFFFF;
@@ -361,7 +369,7 @@
             </div>
             <div class="range-actions">
               <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
-              <span class="shortcut-hint">(Alt + T)</span>
+              <span class="shortcut-hint">(Ctrl/⌘ + Alt + Shift + R)</span>
             </div>
           </div>
           <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
@@ -416,11 +424,14 @@
             </div>
             <div class="range-actions">
               <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
-              <span class="shortcut-hint">(Alt + T)</span>
+              <span class="shortcut-hint">(Ctrl/⌘ + Alt + Shift + R)</span>
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
-            <label><input type="checkbox" id="editUpdateFormulaRefs" checked /> Actualizar referencias de fórmulas</label>
+            <label class="checkbox-subtle">
+              <input type="checkbox" id="editUpdateFormulaRefs" checked />
+              Actualizar referencias de fórmulas al mover tabla.
+            </label>
           </div>
           <label for="editRangeInput" style="margin-top:12px;">Rango a utilizar</label>
           <input type="text" id="editRangeInput" placeholder="Ej: Hoja1!A1:D10" />
@@ -1860,25 +1871,22 @@
       });
 
       document.addEventListener('keydown', function(event) {
-        if (!event.altKey) {
-          return;
-        }
-        const key = event.key || '';
-        if (key.toLowerCase() !== 't') {
+        const key = (event.key || '').toLowerCase();
+        const hasPrimaryModifier = event.ctrlKey || event.metaKey;
+        if (!hasPrimaryModifier || !event.altKey || !event.shiftKey || key !== 'r') {
           return;
         }
         const overlay = document.getElementById('tcModalOverlay');
         if (overlay && overlay.classList.contains('show')) {
           return;
         }
+        event.preventDefault();
         if (currentTab === 'editTab') {
-          event.preventDefault();
           const editBtn = document.getElementById('editRefreshRangeBtn');
           if (editBtn) {
             editBtn.click();
           }
         } else if (!currentTab || currentTab === 'createTab') {
-          event.preventDefault();
           const createBtn = document.getElementById('refreshRangeBtn');
           if (createBtn) {
             createBtn.click();
