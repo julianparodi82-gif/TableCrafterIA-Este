@@ -959,6 +959,9 @@
               .filter(function(value) {
                 return !!validValues[value];
               });
+            if (targetValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+              targetValues = [ALL_TABLES_OPTION_VALUE];
+            }
           } else {
             let candidateValue = '';
             if (typeof configuredSelectId === 'string' && configuredSelectId) {
@@ -1015,6 +1018,56 @@
 
       function applySavedTablesFromCache(targetIds, config) {
         updateSavedTableSelects(targetIds, savedTablesCache, config || {});
+      }
+
+      function setupMultiSelectToggle(select, options) {
+        if (!select) {
+          return;
+        }
+        const config = options || {};
+        const allValue = config.allValue || '';
+        select.addEventListener('mousedown', function(event) {
+          let option = event.target;
+          if (!option) {
+            return;
+          }
+          if (option.tagName !== 'OPTION') {
+            if (option.parentElement && option.parentElement.tagName === 'OPTION') {
+              option = option.parentElement;
+            } else {
+              return;
+            }
+          }
+          if (option.disabled) {
+            return;
+          }
+          event.preventDefault();
+          const isAll = allValue && option.value === allValue;
+          const currentlySelected = option.selected;
+          if (isAll) {
+            const newState = !currentlySelected;
+            Array.prototype.forEach.call(select.options, function(opt) {
+              if (!opt || opt.disabled) {
+                return;
+              }
+              if (opt.value === allValue) {
+                opt.selected = newState;
+              } else {
+                opt.selected = false;
+              }
+            });
+          } else {
+            option.selected = !currentlySelected;
+            if (option.selected && allValue) {
+              Array.prototype.forEach.call(select.options, function(opt) {
+                if (opt && opt.value === allValue) {
+                  opt.selected = false;
+                }
+              });
+            }
+          }
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
       }
 
       function normalizeNameForComparison(value) {
@@ -2931,6 +2984,8 @@
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        const aiSelect = document.getElementById('aiSavedTables');
+        setupMultiSelectToggle(aiSelect, { allValue: ALL_TABLES_OPTION_VALUE });
         const rangeInput = document.getElementById('rangeInput');
         if (rangeInput) {
           rangeInput.dataset.manual = 'false';
