@@ -168,9 +168,10 @@
         border: 1px solid #D1D5DB;
         border-radius: 6px;
         background-color: #FFFFFF;
-        min-height: 180px;
-        max-height: 300px;
+        height: 280px;
         overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-gutter: stable;
         padding: 6px 0;
         font-size: 15px;
       }
@@ -924,6 +925,8 @@
               allOptionLabel: 'Todas las tablas',
               size: Math.min(Math.max(totalOptions, 4), 12)
             };
+          } else if (id === 'editSavedTables') {
+            defaultSettings.groupBySheet = true;
           }
 
           const isMulti = !!resolveSelectOption(options, id, 'multi', defaultSettings.multi);
