@@ -358,6 +358,10 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   options = options || {};
   var doFormat = !options.skipFormatting;
   var doSave = !options.skipSaving;
+  var shouldUpdateFormulaReferences = true;
+  if (options && Object.prototype.hasOwnProperty.call(options, 'updateFormulaReferences')) {
+    shouldUpdateFormulaReferences = !!options.updateFormulaReferences;
+  }
   if (!doFormat && !doSave) {
     return { error: 'No se especificó ninguna acción para realizar.' };
   }
@@ -442,6 +446,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     return item.label || '';
   });
   var previousTableData = null;
+  var previousTableRows = 0;
+  var previousTableCols = 0;
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
@@ -464,8 +470,42 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                     verticalAlignments: prevRange.getVerticalAlignments(),
                     fontWeights: prevRange.getFontWeights()
                   };
+                  previousTableRows = prevRange.getNumRows();
+                  previousTableCols = prevRange.getNumColumns();
                 } catch (readErr) {
                   previousTableData = null;
+                }
+                if (previousTableData && shouldUpdateFormulaReferences) {
+                  var copyRows = Math.min(previousTableRows, rows);
+                  var copyCols = Math.min(previousTableCols, cols);
+                  if (copyRows > 0 && copyCols > 0) {
+                    try {
+                      var sourceCopyRange = prevRange.offset(0, 0, copyRows, copyCols);
+                      var destCopyRange = range.offset(0, 0, copyRows, copyCols);
+                      sourceCopyRange.copyTo(destCopyRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+                      SpreadsheetApp.flush();
+                      var copiedFormulas = destCopyRange.getFormulas();
+                      var normalizedFormulas = [];
+                      for (var nfRow = 0; nfRow < rows; nfRow++) {
+                        var rowArray = [];
+                        for (var nfCol = 0; nfCol < cols; nfCol++) {
+                          rowArray.push('');
+                        }
+                        normalizedFormulas.push(rowArray);
+                      }
+                      for (var cfRow = 0; cfRow < copiedFormulas.length && cfRow < rows; cfRow++) {
+                        var copiedRow = copiedFormulas[cfRow] || [];
+                        for (var cfCol = 0; cfCol < copiedRow.length && cfCol < cols; cfCol++) {
+                          if (copiedRow[cfCol]) {
+                            normalizedFormulas[cfRow][cfCol] = copiedRow[cfCol];
+                          }
+                        }
+                      }
+                      previousTableData.formulas = normalizedFormulas;
+                    } catch (copyErr) {
+                      // Si falla la copia, continuar con las fórmulas originales.
+                    }
+                  }
                 }
                 clearRangeAndFormatting(prevRange);
               }

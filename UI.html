@@ -214,8 +214,21 @@
         gap: 12px;
         flex-wrap: wrap;
       }
+      .range-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+      }
       .range-row strong {
         flex-grow: 1;
+      }
+      .shortcut-hint {
+        font-size: 12px;
+        color: #6B7280;
+        margin-left: 8px;
+        white-space: nowrap;
       }
       .action-buttons {
         display: flex;
@@ -346,7 +359,10 @@
             <div>
               <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
             </div>
-            <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            <div class="range-actions">
+              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+              <span class="shortcut-hint">(Alt + T)</span>
+            </div>
           </div>
           <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
           <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
@@ -398,7 +414,13 @@
             <div>
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
-            <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            <div class="range-actions">
+              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+              <span class="shortcut-hint">(Alt + T)</span>
+            </div>
+          </div>
+          <div class="toggle-group" style="margin-top:8px;">
+            <label><input type="checkbox" id="editUpdateFormulaRefs" checked /> Actualizar referencias de fórmulas</label>
           </div>
           <label for="editRangeInput" style="margin-top:12px;">Rango a utilizar</label>
           <input type="text" id="editRangeInput" placeholder="Ej: Hoja1!A1:D10" />
@@ -1063,6 +1085,10 @@
         if (deleteRow) {
           deleteRow.style.display = 'none';
         }
+        const updateFormulasToggle = document.getElementById('editUpdateFormulaRefs');
+        if (updateFormulasToggle) {
+          updateFormulasToggle.checked = true;
+        }
       }
 
       function validateTableDetails(config) {
@@ -1374,6 +1400,14 @@
           return editRangeInfo.sheetName + '!' + editRangeInfo.a1Notation;
         }
         return '';
+      }
+
+      function shouldUpdateEditFormulaReferences() {
+        const toggle = document.getElementById('editUpdateFormulaRefs');
+        if (!toggle) {
+          return true;
+        }
+        return !!toggle.checked;
       }
 
       function renderHeaderList(listId, headers) {
@@ -1825,6 +1859,33 @@
         loadEditActiveRange(true, { markDirty: true });
       });
 
+      document.addEventListener('keydown', function(event) {
+        if (!event.altKey) {
+          return;
+        }
+        const key = event.key || '';
+        if (key.toLowerCase() !== 't') {
+          return;
+        }
+        const overlay = document.getElementById('tcModalOverlay');
+        if (overlay && overlay.classList.contains('show')) {
+          return;
+        }
+        if (currentTab === 'editTab') {
+          event.preventDefault();
+          const editBtn = document.getElementById('editRefreshRangeBtn');
+          if (editBtn) {
+            editBtn.click();
+          }
+        } else if (!currentTab || currentTab === 'createTab') {
+          event.preventDefault();
+          const createBtn = document.getElementById('refreshRangeBtn');
+          if (createBtn) {
+            createBtn.click();
+          }
+        }
+      });
+
       async function handleApplyFormat() {
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
@@ -1984,6 +2045,8 @@
           return false;
         }
 
+        const updateFormulaReferences = shouldUpdateEditFormulaReferences();
+
         let response;
         try {
           response = await callServerFunction(
@@ -1993,7 +2056,8 @@
             validation.values.name,
             validation.values.description,
             cloneHeaderModels(editHeaders),
-            style
+            style,
+            { updateFormulaReferences: updateFormulaReferences }
           );
         } catch (err) {
           await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
