@@ -111,6 +111,8 @@ var META_INDEX = {
   headers: 10
 };
 
+var ALL_TABLES_OPTION_VALUE = '__ALL__';
+
 function normalizeMetaId(value) {
   if (value === null || value === undefined) {
     return '';
@@ -997,45 +999,83 @@ function saveApiKey(key) {
  * una llamada al modelo configurado.  Se recomienda limitar el número de
  * filas para mantener la respuesta rápida.
  *
- * @param {string} tableId ID de la tabla.
+ * @param {string|string[]} tableSelection ID(s) de las tablas a consultar.
  * @param {string} question Pregunta del usuario.
  * @returns {Object} Objeto con answer o error.
  */
-function askQuestion(tableId, question) {
+function askQuestion(tableSelection, question) {
   var apiKey = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
   if (!apiKey) {
     return { error: 'No hay API Key configurada. Configure su clave en la sección de configuración.' };
   }
-  var meta = findMetaById(tableId);
-  if (!meta) {
-    return { error: 'Tabla no encontrada.' };
+
+  var normalizedIds = normalizeTableSelection(tableSelection);
+  if (normalizedIds.length === 0) {
+    return { error: 'Seleccione al menos una tabla válida para consultar.' };
   }
-  var rangeA1 = meta.data[META_INDEX.rangeA1];
-  var sheetName = meta.data[META_INDEX.sheet];
+
   var ss = SpreadsheetApp.getActive();
-  var sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    return { error: 'No se encontró la hoja con la tabla.' };
+  var remainingSampleRows = 500;
+  var contexts = [];
+
+  for (var i = 0; i < normalizedIds.length; i++) {
+    if (remainingSampleRows <= 0) {
+      break;
+    }
+    var tableId = normalizedIds[i];
+    var metaEntry = findMetaById(tableId);
+    if (!metaEntry) {
+      continue;
+    }
+
+    var data = metaEntry.data;
+    var rangeA1 = data[META_INDEX.rangeA1];
+    var sheetName = data[META_INDEX.sheet];
+    if (!rangeA1 || !sheetName) {
+      continue;
+    }
+
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      continue;
+    }
+
+    var range = sheet.getRange(rangeA1);
+    var values = range.getDisplayValues();
+    if (!values || values.length === 0) {
+      continue;
+    }
+
+    var headers = values[0] || [];
+    var dataRows = values.slice(1);
+    var availableRows = dataRows.length;
+    if (availableRows === 0) {
+      contexts.push(buildTableContextSnippet(data, headers, [], sheetName, rangeA1));
+      continue;
+    }
+
+    var sampleSize = Math.min(availableRows, remainingSampleRows);
+    var samples = [];
+    for (var j = 0; j < sampleSize; j++) {
+      samples.push(dataRows[j].join(', '));
+    }
+    remainingSampleRows -= sampleSize;
+    contexts.push(buildTableContextSnippet(data, headers, samples, sheetName, rangeA1));
   }
-  var range = sheet.getRange(rangeA1);
-  var values = range.getDisplayValues();
-  if (values.length === 0) {
-    return { error: 'El rango está vacío.' };
+
+  if (contexts.length === 0) {
+    return { error: 'No se encontraron datos en las tablas seleccionadas.' };
   }
-  var headers = values[0];
-  // Preparar muestra de hasta 500 filas (excluyendo encabezado)
-  var maxRows = Math.min(500, values.length - 1);
-  var sampleRows = [];
-  for (var i = 1; i <= maxRows; i++) {
-    sampleRows.push(values[i].join(', '));
-  }
-  // Construir contexto
-  var context = 'Encabezados: ' + headers.join(', ') + '\n';
-  context += 'Muestra:\n' + sampleRows.join('\n');
+
+  var context = contexts.join('\n\n');
   var messages = [
-    { role: 'system', content: 'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.' },
+    {
+      role: 'system',
+      content: 'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.'
+    },
     { role: 'user', content: context + '\n\nPregunta: ' + question }
   ];
+
   var payload = {
     model: 'gpt-4o-mini',
     messages: messages,
@@ -1054,15 +1094,67 @@ function askQuestion(tableId, question) {
   };
   try {
     var response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', options);
-    var json = JSON.parse(response.getContentText());
-    if (json.error) {
-      return { error: json.error.message || 'Error en la respuesta de la IA.' };
+    var result = JSON.parse(response.getContentText());
+    if (result.error) {
+      return { error: result.error.message || 'Error al procesar la solicitud.' };
     }
-    var answer = (json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content) || '';
-    return { answer: answer.trim() };
+    if (result.choices && result.choices.length > 0) {
+      return { answer: result.choices[0].message.content };
+    }
+    return { error: 'No se obtuvo respuesta del modelo.' };
   } catch (err) {
-    return { error: 'Error al consultar la IA: ' + err.message };
+    return { error: 'Error al conectar con OpenAI: ' + err.message };
   }
+}
+
+function buildTableContextSnippet(metaDataRow, headers, samples, sheetName, rangeA1) {
+  var name = metaDataRow[META_INDEX.name] || '';
+  var tableLabel = name ? String(name).trim() : '';
+  if (!tableLabel) {
+    tableLabel = normalizeMetaId(metaDataRow[META_INDEX.id] || '');
+  }
+  var displayName = tableLabel || 'Tabla sin nombre';
+  var location = sheetName + '!' + rangeA1;
+  var headerLine = 'Tabla: ' + displayName + ' (' + location + ')';
+  var headersLine = 'Encabezados: ' + headers.join(', ');
+  var sampleText = samples.length > 0 ? 'Muestra:\n' + samples.join('\n') : 'Sin filas de datos.';
+  return headerLine + '\n' + headersLine + '\n' + sampleText;
+}
+
+function normalizeTableSelection(selection) {
+  if (selection === null || selection === undefined) {
+    return [];
+  }
+
+  if (selection === ALL_TABLES_OPTION_VALUE) {
+    return listSavedTables()
+      .map(function(entry) {
+        return normalizeMetaId(entry && entry.id);
+      })
+      .filter(function(id) {
+        return !!id;
+      });
+  }
+
+  if (Array.isArray(selection)) {
+    var ids = [];
+    for (var i = 0; i < selection.length; i++) {
+      var normalized = normalizeMetaId(selection[i]);
+      if (normalized && normalized !== ALL_TABLES_OPTION_VALUE) {
+        ids.push(normalized);
+      }
+    }
+    return ids;
+  }
+
+  var value = normalizeMetaId(selection);
+  if (!value) {
+    return [];
+  }
+  if (value === ALL_TABLES_OPTION_VALUE) {
+    return normalizeTableSelection(ALL_TABLES_OPTION_VALUE);
+  }
+  return [value];
 }
 
 /**

@@ -368,8 +368,8 @@
               <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + Alt + Shift + R)</span>
+              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + \)">Actualizar</button>
+              <span class="shortcut-hint">(Ctrl/⌘ + \)</span>
             </div>
           </div>
           <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
@@ -423,8 +423,8 @@
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + Alt + Shift + R)</span>
+              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + \)">Actualizar</button>
+              <span class="shortcut-hint">(Ctrl/⌘ + \)</span>
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
@@ -474,7 +474,7 @@
       <div id="aiTab" class="tab-content">
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
-          <select id="aiSavedTables"></select>
+          <select id="aiSavedTables" multiple></select>
           <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
           <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
           <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
@@ -506,6 +506,8 @@
         border: true,
         bold: true
       });
+
+      const ALL_TABLES_OPTION_VALUE = '__ALL__';
 
       function normalizeHeaderModel(entry) {
         const normalized = {
@@ -779,56 +781,234 @@
         return normalizeMetaForPopulate(found);
       }
 
+      function resolveSelectOption(options, id, key, fallback) {
+        if (!options || typeof options !== 'object') {
+          return fallback;
+        }
+        const value = options[key];
+        if (value === undefined) {
+          return fallback;
+        }
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.prototype.hasOwnProperty.call(value, id)) {
+            return value[id];
+          }
+          return fallback;
+        }
+        return value;
+      }
+
       function updateSavedTableSelects(targetIds, list, config) {
         const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
         const entries = Array.isArray(list) ? list : [];
         const options = config || {};
         const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+
         ids.forEach(function(id) {
           const select = document.getElementById(id);
           if (!select) {
             return;
           }
-          const previousValue = select.value;
+
+          const previousValues = [];
+          if (select.options && select.options.length) {
+            for (let idx = 0; idx < select.options.length; idx++) {
+              const opt = select.options[idx];
+              if (opt && opt.selected && opt.value) {
+                previousValues.push(opt.value);
+              }
+            }
+          }
+
+          let defaultSettings = {
+            placeholder: '-- Seleccione --',
+            multi: false,
+            groupBySheet: false,
+            includeAllOption: false,
+            allOptionLabel: 'Todas las tablas',
+            size: null
+          };
+
+          if (id === 'aiSavedTables') {
+            const totalOptions = entries.length + 1;
+            defaultSettings = {
+              placeholder: '-- Seleccione una o más tablas --',
+              multi: true,
+              groupBySheet: true,
+              includeAllOption: true,
+              allOptionLabel: 'Todas las tablas',
+              size: Math.min(Math.max(totalOptions, 4), 12)
+            };
+          }
+
+          const isMulti = !!resolveSelectOption(options, id, 'multi', defaultSettings.multi);
+          const groupBySheet = !!resolveSelectOption(options, id, 'groupBySheet', defaultSettings.groupBySheet);
+          const includeAll = !!resolveSelectOption(options, id, 'includeAllOption', defaultSettings.includeAllOption);
+          const allOptionLabel = resolveSelectOption(options, id, 'allOptionLabel', defaultSettings.allOptionLabel) || 'Todas las tablas';
+          const placeholder = resolveSelectOption(options, id, 'placeholder', defaultSettings.placeholder);
+          const customSize = resolveSelectOption(options, id, 'size', defaultSettings.size);
+
+          select.multiple = isMulti;
+          if (isMulti) {
+            const total = entries.length + (includeAll ? 1 : 0);
+            const computedSize = customSize || Math.min(Math.max(total, 4), 12);
+            select.size = computedSize;
+          } else {
+            select.size = 1;
+          }
+
           select.innerHTML = '';
-          const defaultOption = document.createElement('option');
-          defaultOption.value = '';
-          defaultOption.textContent = '-- Seleccione --';
-          select.appendChild(defaultOption);
-          entries.forEach(function(item) {
-            if (!item || !item.id) {
+
+          if (!isMulti) {
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = placeholder || '-- Seleccione --';
+            select.appendChild(defaultOption);
+          } else if (placeholder) {
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = placeholder;
+            placeholderOption.disabled = true;
+            select.appendChild(placeholderOption);
+          }
+
+          if (entries.length === 0) {
+            if (isMulti) {
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '';
+              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.disabled = true;
+              emptyOption.selected = true;
+              select.appendChild(emptyOption);
+            }
+            select.disabled = true;
+            return;
+          }
+
+          const validValues = {};
+          entries.forEach(function(entry) {
+            if (entry && entry.id) {
+              validValues[entry.id] = true;
+            }
+          });
+
+          if (includeAll) {
+            validValues[ALL_TABLES_OPTION_VALUE] = true;
+            const allOption = document.createElement('option');
+            allOption.value = ALL_TABLES_OPTION_VALUE;
+            allOption.textContent = allOptionLabel;
+            select.appendChild(allOption);
+          }
+
+          if (groupBySheet) {
+            const grouped = Object.create(null);
+            const order = [];
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+              if (!grouped[sheetLabel]) {
+                grouped[sheetLabel] = [];
+                order.push(sheetLabel);
+              }
+              grouped[sheetLabel].push(entry);
+            });
+            order.forEach(function(sheetLabel) {
+              const optgroup = document.createElement('optgroup');
+              optgroup.label = sheetLabel;
+              grouped[sheetLabel].forEach(function(entry) {
+                const opt = document.createElement('option');
+                opt.value = entry.id;
+                opt.textContent = entry.name || entry.id;
+                optgroup.appendChild(opt);
+              });
+              select.appendChild(optgroup);
+            });
+          } else {
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const opt = document.createElement('option');
+              opt.value = entry.id;
+              opt.textContent = entry.name || entry.id;
+              select.appendChild(opt);
+            });
+          }
+
+          const configuredSelectId = resolveSelectOption(options, id, 'selectId', '');
+          const configuredSelectedIds = resolveSelectOption(options, id, 'selectedIds', []);
+          let targetValues = [];
+
+          if (isMulti) {
+            let candidate = [];
+            if (Array.isArray(configuredSelectedIds) && configuredSelectedIds.length) {
+              candidate = configuredSelectedIds;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidate = configuredSelectId;
+            } else if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidate = [configuredSelectId];
+            } else {
+              candidate = previousValues;
+            }
+            targetValues = candidate
+              .map(function(value) {
+                return String(value);
+              })
+              .filter(function(value) {
+                return !!validValues[value];
+              });
+          } else {
+            let candidateValue = '';
+            if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidateValue = configuredSelectId;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidateValue = configuredSelectId[0];
+            } else if (id === 'editSavedTables' && activeEditingId && validValues[activeEditingId]) {
+              candidateValue = activeEditingId;
+            } else if (previousValues.length && validValues[previousValues[0]]) {
+              candidateValue = previousValues[0];
+            }
+            targetValues = candidateValue ? [String(candidateValue)] : [];
+          }
+
+          const valueSet = Object.create(null);
+          targetValues.forEach(function(value) {
+            valueSet[value] = true;
+          });
+
+          let hasSelection = false;
+          const optionList = Array.prototype.slice.call(select.options);
+          optionList.forEach(function(option) {
+            if (!option.value) {
+              option.selected = false;
               return;
             }
-            const opt = document.createElement('option');
-            opt.value = item.id;
-            opt.textContent = item.name || item.id;
-            select.appendChild(opt);
+            if (valueSet[option.value]) {
+              option.selected = true;
+              hasSelection = true;
+            } else if (!isMulti) {
+              option.selected = false;
+            } else if (option.selected) {
+              option.selected = false;
+            }
           });
-          let targetValue = '';
-          if (
-            options.selectId &&
-            entries.some(function(entry) {
-              return entry && entry.id === options.selectId;
-            })
-          ) {
-            targetValue = options.selectId;
-          } else if (
-            id === 'editSavedTables' &&
-            activeEditingId &&
-            entries.some(function(entry) {
-              return entry && entry.id === activeEditingId;
-            })
-          ) {
-            targetValue = activeEditingId;
-          } else if (
-            previousValue &&
-            entries.some(function(entry) {
-              return entry && entry.id === previousValue;
-            })
-          ) {
-            targetValue = previousValue;
+
+          if (!isMulti) {
+            if (hasSelection) {
+              select.value = targetValues[0];
+            } else if (select.options.length > 0) {
+              select.selectedIndex = 0;
+            }
+          } else if (!hasSelection) {
+            optionList.forEach(function(option) {
+              if (option.value === '' && option.disabled) {
+                option.selected = true;
+              }
+            });
           }
-          select.value = targetValue || '';
+
           select.disabled = entries.length === 0;
         });
       }
@@ -1871,9 +2051,17 @@
       });
 
       document.addEventListener('keydown', function(event) {
-        const key = (event.key || '').toLowerCase();
+        const rawKey = event.key || '';
+        const normalizedKey = rawKey.length === 1 ? rawKey.toLowerCase() : rawKey;
         const hasPrimaryModifier = event.ctrlKey || event.metaKey;
-        if (!hasPrimaryModifier || !event.altKey || !event.shiftKey || key !== 'r') {
+        if (!hasPrimaryModifier || event.altKey || event.shiftKey) {
+          return;
+        }
+        if (normalizedKey !== '\\' && normalizedKey !== '|') {
+          return;
+        }
+        if (event.repeat) {
+          event.preventDefault();
           return;
         }
         const overlay = document.getElementById('tcModalOverlay');
@@ -2699,10 +2887,17 @@
 
       document.getElementById('askBtn').addEventListener('click', function() {
         const select = document.getElementById('aiSavedTables');
-        const val = select.value;
+        const selectedValues = Array.prototype.slice
+          .call(select && select.options ? select.options : [])
+          .filter(function(option) {
+            return option.selected && option.value;
+          })
+          .map(function(option) {
+            return option.value;
+          });
         const question = document.getElementById('questionInput').value.trim();
-        if (!val) {
-          showMessageModal('Seleccione una tabla para realizar la consulta.', {
+        if (selectedValues.length === 0) {
+          showMessageModal('Seleccione al menos una tabla para realizar la consulta.', {
             title: 'Seleccione una tabla',
             variant: 'error'
           });
@@ -2715,6 +2910,7 @@
           });
           return;
         }
+        const payload = selectedValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1 ? ALL_TABLES_OPTION_VALUE : selectedValues;
         const pre = document.getElementById('answerBox');
         pre.style.display = 'none';
         pre.textContent = '';
@@ -2728,7 +2924,7 @@
             pre.textContent = res.answer || '';
             pre.style.display = 'block';
           }
-        }).askQuestion(val, question);
+        }).askQuestion(payload, question);
       });
 
       document.addEventListener('DOMContentLoaded', function() {
