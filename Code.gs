@@ -441,6 +441,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var headerValues = headerMetaForReturn.map(function(item) {
     return item.label || '';
   });
+  var previousTableData = null;
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
@@ -455,6 +456,14 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
               var prevRange = prevSheet.getRange(prevRangeA1);
               var sameRange = prevSheetName === sheet.getName() && prevRange.getA1Notation() === normalizedRange;
               if (!sameRange) {
+                try {
+                  previousTableData = {
+                    values: prevRange.getValues(),
+                    formulas: prevRange.getFormulas()
+                  };
+                } catch (readErr) {
+                  previousTableData = null;
+                }
                 clearRangeAndFormatting(prevRange);
               }
               deleteFilterViewsByTitle(prevSheet, 'TableCrafter_' + id);
@@ -465,9 +474,62 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
         }
       }
     }
+    if (previousTableData) {
+      range.clearContent();
+    }
     applyFormattingToRange(range, appliedStyle);
     if (shouldOverwriteHeaders) {
       headerRange.setValues([headerValues]);
+    } else if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
+      var prevHeaderValues = previousTableData.values[0] || [];
+      var headerRowValues = [];
+      for (var hc = 0; hc < cols; hc++) {
+        headerRowValues.push(hc < prevHeaderValues.length ? prevHeaderValues[hc] : '');
+      }
+      headerRange.setValues([headerRowValues]);
+      if (previousTableData.formulas && previousTableData.formulas.length > 0) {
+        var headerFormulas = previousTableData.formulas[0] || [];
+        for (var hf = 0; hf < cols; hf++) {
+          var headerFormula = headerFormulas[hf];
+          if (headerFormula && headerFormula !== '') {
+            headerRange.getCell(1, hf + 1).setFormula(headerFormula);
+          }
+        }
+      }
+    }
+    if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
+      var prevValues = previousTableData.values;
+      var totalTargetRows = rows - 1;
+      if (totalTargetRows > 0) {
+        var dataRange = range.offset(1, 0, totalTargetRows, cols);
+        var valuesMatrix = [];
+        for (var dr = 0; dr < totalTargetRows; dr++) {
+          var sourceRow = (dr + 1 < prevValues.length) ? prevValues[dr + 1] : null;
+          var newRow = [];
+          for (var dc = 0; dc < cols; dc++) {
+            if (sourceRow && dc < sourceRow.length && sourceRow[dc] !== undefined && sourceRow[dc] !== null) {
+              newRow.push(sourceRow[dc]);
+            } else {
+              newRow.push('');
+            }
+          }
+          valuesMatrix.push(newRow);
+        }
+        dataRange.setValues(valuesMatrix);
+        if (previousTableData.formulas && previousTableData.formulas.length > 1) {
+          var prevFormulas = previousTableData.formulas;
+          var maxFormulaRows = Math.min(totalTargetRows, prevFormulas.length - 1);
+          for (var fr = 0; fr < maxFormulaRows; fr++) {
+            var formulaRow = prevFormulas[fr + 1] || [];
+            for (var fc = 0; fc < cols; fc++) {
+              var formula = formulaRow[fc];
+              if (formula && formula !== '') {
+                dataRange.getCell(fr + 1, fc + 1).setFormula(formula);
+              }
+            }
+          }
+        }
+      }
     }
     if (id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
