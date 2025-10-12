@@ -459,7 +459,10 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                 try {
                   previousTableData = {
                     values: prevRange.getValues(),
-                    formulas: prevRange.getFormulas()
+                    formulas: prevRange.getFormulas(),
+                    horizontalAlignments: prevRange.getHorizontalAlignments(),
+                    verticalAlignments: prevRange.getVerticalAlignments(),
+                    fontWeights: prevRange.getFontWeights()
                   };
                 } catch (readErr) {
                   previousTableData = null;
@@ -527,6 +530,54 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                 dataRange.getCell(fr + 1, fc + 1).setFormula(formula);
               }
             }
+          }
+        }
+        if (previousTableData.horizontalAlignments && previousTableData.horizontalAlignments.length > 1) {
+          var availableHorizontalRows = Math.min(totalTargetRows, previousTableData.horizontalAlignments.length - 1);
+          if (availableHorizontalRows > 0) {
+            var horizontalMatrix = [];
+            for (var har = 0; har < availableHorizontalRows; har++) {
+              var horizontalSource = previousTableData.horizontalAlignments[har + 1] || [];
+              var horizontalRow = [];
+              for (var hac = 0; hac < cols; hac++) {
+                var horizontalValue = (horizontalSource && hac < horizontalSource.length) ? horizontalSource[hac] : null;
+                horizontalRow.push(horizontalValue ? horizontalValue : null);
+              }
+              horizontalMatrix.push(horizontalRow);
+            }
+            dataRange.offset(0, 0, availableHorizontalRows, cols).setHorizontalAlignments(horizontalMatrix);
+          }
+        }
+        if (previousTableData.verticalAlignments && previousTableData.verticalAlignments.length > 1) {
+          var availableVerticalRows = Math.min(totalTargetRows, previousTableData.verticalAlignments.length - 1);
+          if (availableVerticalRows > 0) {
+            var verticalMatrix = [];
+            for (var varr = 0; varr < availableVerticalRows; varr++) {
+              var verticalSource = previousTableData.verticalAlignments[varr + 1] || [];
+              var verticalRow = [];
+              for (var vac = 0; vac < cols; vac++) {
+                var verticalValue = (verticalSource && vac < verticalSource.length) ? verticalSource[vac] : null;
+                verticalRow.push(verticalValue ? verticalValue : null);
+              }
+              verticalMatrix.push(verticalRow);
+            }
+            dataRange.offset(0, 0, availableVerticalRows, cols).setVerticalAlignments(verticalMatrix);
+          }
+        }
+        if (previousTableData.fontWeights && previousTableData.fontWeights.length > 1) {
+          var availableWeightRows = Math.min(totalTargetRows, previousTableData.fontWeights.length - 1);
+          if (availableWeightRows > 0) {
+            var weightMatrix = [];
+            for (var wr = 0; wr < availableWeightRows; wr++) {
+              var weightSource = previousTableData.fontWeights[wr + 1] || [];
+              var weightRow = [];
+              for (var wc = 0; wc < cols; wc++) {
+                var weightValue = (weightSource && wc < weightSource.length) ? weightSource[wc] : '';
+                weightRow.push(weightValue === 'bold' ? 'bold' : 'normal');
+              }
+              weightMatrix.push(weightRow);
+            }
+            dataRange.offset(0, 0, availableWeightRows, cols).setFontWeights(weightMatrix);
           }
         }
       }
