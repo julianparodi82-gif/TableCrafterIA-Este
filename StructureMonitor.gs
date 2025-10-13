@@ -40,15 +40,219 @@ function onEdit(e) {
   } catch (err) {
     console.error('Error en onEdit: ' + err.message);
   }
+  try {
+    reconcileTablesAfterEvent(e);
+  } catch (err2) {
+    console.error('Error al reconciliar tras onEdit: ' + err2.message);
+  }
 }
 
 function reconcileTablesAfterEvent(e) {
-  var sheet = getEventSheet(e);
-  if (sheet) {
-    reconcileSheetTables(sheet);
-  } else {
+  var sheets = determineSheetsForEvent(e);
+  if (!sheets || sheets.length === 0) {
+    reconcileAllSheets();
+    return;
+  }
+  var structural = isStructuralChangeType(e && e.changeType);
+  var processed = false;
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    if (!sheet) {
+      continue;
+    }
+    var sheetName = sheet.getName();
+    if (sheetName === '__TableCrafter_Meta') {
+      continue;
+    }
+    var entries = getMetaEntriesForSheet(sheetName);
+    if (!entries || entries.length === 0) {
+      continue;
+    }
+    var bounds = extractEventBounds(e, sheet);
+    var targetedEntries = bounds && bounds.length > 0 ? filterEntriesByBounds(entries, bounds) : [];
+    if ((!targetedEntries || targetedEntries.length === 0) && structural) {
+      targetedEntries = entries;
+    }
+    if (!targetedEntries || targetedEntries.length === 0) {
+      continue;
+    }
+    reconcileSheetTables(sheet, targetedEntries);
+    processed = true;
+  }
+
+  if (!processed && structural) {
     reconcileAllSheets();
   }
+}
+
+function determineSheetsForEvent(e) {
+  var sheet = getEventSheet(e);
+  if (sheet) {
+    return [sheet];
+  }
+  return getSheetsWithTables();
+}
+
+function isStructuralChangeType(changeType) {
+  if (!changeType) {
+    return false;
+  }
+  switch (changeType) {
+    case 'INSERT_COLUMN':
+    case 'REMOVE_COLUMN':
+    case 'INSERT_ROW':
+    case 'REMOVE_ROW':
+    case 'REMOVE_RANGE':
+    case 'INSERT_GRID':
+    case 'REMOVE_GRID':
+    case 'FORMAT':
+    case 'OTHER':
+      return true;
+    default:
+      return false;
+  }
+}
+
+function extractEventBounds(e, sheet) {
+  var bounds = [];
+  if (!e) {
+    return bounds;
+  }
+  var maxRows = sheet ? sheet.getMaxRows() : 50000;
+  var maxColumns = sheet ? sheet.getMaxColumns() : 18278;
+
+  if (e.range && typeof e.range.getRow === 'function') {
+    try {
+      var range = e.range;
+      bounds.push({
+        startRow: range.getRow(),
+        endRow: range.getRow() + range.getNumRows() - 1,
+        startColumn: range.getColumn(),
+        endColumn: range.getColumn() + range.getNumColumns() - 1
+      });
+    } catch (err) {
+      // Ignorar errores al leer el rango del evento.
+    }
+  }
+
+  var startRow = coerceNumber(e.startRow, e.rowStart);
+  var endRow = coerceNumber(e.endRow, e.rowEnd);
+  var startColumn = coerceNumber(e.startColumn, e.columnStart);
+  var endColumn = coerceNumber(e.endColumn, e.columnEnd);
+
+  if (startRow !== null) {
+    bounds.push({
+      startRow: startRow,
+      endRow: endRow !== null ? endRow : startRow,
+      startColumn: 1,
+      endColumn: maxColumns
+    });
+  }
+
+  if (startColumn !== null) {
+    bounds.push({
+      startRow: 1,
+      endRow: maxRows,
+      startColumn: startColumn,
+      endColumn: endColumn !== null ? endColumn : startColumn
+    });
+  }
+
+  if (e.oldRange && typeof e.oldRange.getRow === 'function') {
+    try {
+      var oldRange = e.oldRange;
+      bounds.push({
+        startRow: oldRange.getRow(),
+        endRow: oldRange.getRow() + oldRange.getNumRows() - 1,
+        startColumn: oldRange.getColumn(),
+        endColumn: oldRange.getColumn() + oldRange.getNumColumns() - 1
+      });
+    } catch (err2) {
+      // Ignorar si no se puede leer oldRange.
+    }
+  }
+
+  return bounds;
+}
+
+function coerceNumber() {
+  for (var i = 0; i < arguments.length; i++) {
+    var candidate = arguments[i];
+    if (typeof candidate === 'number' && !isNaN(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function filterEntriesByBounds(entries, bounds) {
+  if (!entries || entries.length === 0 || !bounds || bounds.length === 0) {
+    return [];
+  }
+  var results = [];
+  var seen = {};
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    if (!entry || !entry.data) {
+      continue;
+    }
+    var parsed = parseRangeA1(entry.data[META_INDEX.rangeA1]);
+    if (!parsed) {
+      continue;
+    }
+    for (var b = 0; b < bounds.length; b++) {
+      if (boundsIntersectEntry(bounds[b], parsed)) {
+        if (!seen[entry.id]) {
+          results.push(entry);
+          seen[entry.id] = true;
+        }
+        break;
+      }
+    }
+  }
+  return results;
+}
+
+function boundsIntersectEntry(bounds, parsed) {
+  if (!bounds || !parsed) {
+    return false;
+  }
+  var entryStartRow = parsed.startRow;
+  var entryEndRow = parsed.startRow + parsed.rows - 1;
+  var entryStartColumn = parsed.startColumn;
+  var entryEndColumn = parsed.startColumn + parsed.cols - 1;
+  var intersectsRows = !(bounds.endRow < entryStartRow || bounds.startRow > entryEndRow);
+  var intersectsColumns = !(bounds.endColumn < entryStartColumn || bounds.startColumn > entryEndColumn);
+  return intersectsRows && intersectsColumns;
+}
+
+function getSheetsWithTables() {
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return [];
+  }
+  var ss = SpreadsheetApp.getActive();
+  var seen = {};
+  var sheets = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    var sheetName = row[META_INDEX.sheet];
+    if (!sheetName || sheetName === '__TableCrafter_Meta' || seen[sheetName]) {
+      continue;
+    }
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      continue;
+    }
+    sheets.push(sheet);
+    seen[sheetName] = true;
+  }
+  return sheets;
 }
 
 function getEventSheet(e) {
