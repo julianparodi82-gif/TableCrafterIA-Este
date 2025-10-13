@@ -97,7 +97,20 @@ function getActiveRangeInfo() {
   };
 }
 
-var META_HEADERS = ['id', 'name', 'rangeA1', 'description', 'sheet', 'cols', 'rows', 'createdAt', 'updatedAt', 'style', 'headers'];
+var META_HEADERS = [
+  'id',
+  'name',
+  'rangeA1',
+  'description',
+  'sheet',
+  'cols',
+  'rows',
+  'createdAt',
+  'updatedAt',
+  'style',
+  'headers',
+  'formulaRefs'
+];
 var META_INDEX = {
   id: 0,
   name: 1,
@@ -109,7 +122,8 @@ var META_INDEX = {
   createdAt: 7,
   updatedAt: 8,
   style: 9,
-  headers: 10
+  headers: 10,
+  formulaRefs: 11
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
@@ -119,6 +133,23 @@ function normalizeMetaId(value) {
     return '';
   }
   return String(value).trim();
+}
+
+function parseBooleanValue(value, defaultValue) {
+  if (value === null || value === undefined || value === '') {
+    return defaultValue;
+  }
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  var normalized = String(value).trim().toLowerCase();
+  if (normalized === 'true' || normalized === '1' || normalized === 'si' || normalized === 'sí' || normalized === 'yes') {
+    return true;
+  }
+  if (normalized === 'false' || normalized === '0' || normalized === 'no') {
+    return false;
+  }
+  return defaultValue;
 }
 
 function buildTableNamedRangeName(id) {
@@ -613,7 +644,8 @@ function listSavedTables() {
         createdAt: row[META_INDEX.createdAt],
         updatedAt: row[META_INDEX.updatedAt],
         style: style,
-        headers: headers
+        headers: headers,
+        updateFormulaReferences: parseBooleanValue(row[META_INDEX.formulaRefs], true)
       });
     }
   }
@@ -807,6 +839,15 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   if (options && Object.prototype.hasOwnProperty.call(options, 'updateFormulaReferences')) {
     shouldUpdateFormulaReferences = !!options.updateFormulaReferences;
   }
+  var formulaPreference = shouldUpdateFormulaReferences;
+  var hasExplicitFormulaPreference = false;
+  if (options && Object.prototype.hasOwnProperty.call(options, 'formulaPreference')) {
+    formulaPreference = !!options.formulaPreference;
+    hasExplicitFormulaPreference = true;
+  } else if (options && Object.prototype.hasOwnProperty.call(options, 'updateFormulaReferences')) {
+    formulaPreference = !!options.updateFormulaReferences;
+    hasExplicitFormulaPreference = true;
+  }
   if (!doFormat && !doSave) {
     return { error: 'No se especificó ninguna acción para realizar.' };
   }
@@ -906,6 +947,11 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     if (id) {
       var entry = findMetaById(id);
       if (entry) {
+        var storedFormulaPreference = parseBooleanValue(entry.data[META_INDEX.formulaRefs], true);
+        if (!hasExplicitFormulaPreference) {
+          formulaPreference = storedFormulaPreference;
+          shouldUpdateFormulaReferences = storedFormulaPreference;
+        }
         storedHeaderMeta = normalizeHeaderArray(parseJsonValue(entry.data[META_INDEX.headers], null));
         var prevRangeA1 = entry.data[META_INDEX.rangeA1];
         var prevSheetName = entry.data[META_INDEX.sheet];
@@ -913,14 +959,19 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
           var ss = SpreadsheetApp.getActive();
           var prevSheet = ss.getSheetByName(prevSheetName);
           if (prevSheet) {
+            var allowOverlapWithHeaderRow = false;
             try {
               var prevRange = prevSheet.getRange(prevRangeA1);
               var sameSheet = prevSheet.getSheetId() === sheet.getSheetId();
               var sameRange = sameSheet && prevRange.getA1Notation() === normalizedRange;
               if (!sameRange && sameSheet && rangesIntersect(prevRange, range)) {
-                return {
-                  error: 'No se puede superponer el nuevo rango con el anterior.'
-                };
+                if (prevRange.getRow() === range.getRow()) {
+                  allowOverlapWithHeaderRow = true;
+                } else {
+                  return {
+                    error: 'No se puede superponer el nuevo rango con el anterior.'
+                  };
+                }
               }
               try {
                 previousTableData = {
@@ -938,7 +989,11 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                 previousTableData = null;
               }
               if (!sameRange) {
-                previousRangeDetails = { range: prevRange, sheet: prevSheet };
+                previousRangeDetails = {
+                  range: prevRange,
+                  sheet: prevSheet,
+                  allowOverlap: allowOverlapWithHeaderRow
+                };
                 if (previousTableData && shouldUpdateFormulaReferences) {
                   var copyRows = Math.min(previousTableRows, rows);
                   var copyCols = Math.min(previousTableCols, cols);
@@ -1114,14 +1169,29 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   if (shouldClearPreviousRange && previousRangeDetails && previousRangeDetails.range) {
     SpreadsheetApp.flush();
     try {
-      clearRangeAndFormatting(previousRangeDetails.range);
+      if (previousRangeDetails.allowOverlap) {
+        clearRangePortionsOutsideTarget(previousRangeDetails.range, range);
+      } else {
+        clearRangeAndFormatting(previousRangeDetails.range);
+      }
     } catch (cleanupErr) {
       // Ignorar errores al limpiar el rango anterior para no interrumpir la operación principal.
     }
   }
 
   if (doSave) {
-    saveOrUpdateMeta(id, name, description, normalizedRange, sheet.getName(), cols, rows, appliedStyle, headerMetaForReturn);
+    saveOrUpdateMeta(
+      id,
+      name,
+      description,
+      normalizedRange,
+      sheet.getName(),
+      cols,
+      rows,
+      appliedStyle,
+      headerMetaForReturn,
+      formulaPreference
+    );
     if (!doFormat && id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
       createFilterViewForRange(range, 'TableCrafter_' + id);
@@ -1146,7 +1216,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       a1Notation: normalizedRange,
       rows: rows,
       cols: cols,
-      headers: headerMetaForReturn
+      headers: headerMetaForReturn,
+      updateFormulaReferences: formulaPreference
     },
     message: message
   };
@@ -1192,6 +1263,63 @@ function clearRangeAndFormatting(range) {
   // Eliminar filtros nativos si existiesen
   if (range.getFilter()) {
     range.getFilter().remove();
+  }
+}
+
+function clearRangePortionsOutsideTarget(previousRange, targetRange) {
+  if (!previousRange || !targetRange) {
+    return;
+  }
+  var previousSheet = previousRange.getSheet();
+  var targetSheet = targetRange.getSheet();
+  if (!previousSheet || !targetSheet || previousSheet.getSheetId() !== targetSheet.getSheetId()) {
+    clearRangeAndFormatting(previousRange);
+    return;
+  }
+  if (!rangesIntersect(previousRange, targetRange)) {
+    clearRangeAndFormatting(previousRange);
+    return;
+  }
+  var prevStartRow = previousRange.getRow();
+  var prevRows = previousRange.getNumRows();
+  var prevCols = previousRange.getNumColumns();
+  var prevStartCol = previousRange.getColumn();
+  var prevEndRow = prevStartRow + prevRows - 1;
+  var prevEndCol = prevStartCol + prevCols - 1;
+
+  var targetStartRow = targetRange.getRow();
+  var targetRows = targetRange.getNumRows();
+  var targetCols = targetRange.getNumColumns();
+  var targetStartCol = targetRange.getColumn();
+  var targetEndRow = targetStartRow + targetRows - 1;
+  var targetEndCol = targetStartCol + targetCols - 1;
+
+  if (targetStartRow > prevStartRow) {
+    var topRows = targetStartRow - prevStartRow;
+    if (topRows > 0) {
+      clearRangeAndFormatting(previousRange.offset(0, 0, topRows, prevCols));
+    }
+  }
+
+  if (targetEndRow < prevEndRow) {
+    var bottomRows = prevEndRow - targetEndRow;
+    if (bottomRows > 0) {
+      clearRangeAndFormatting(previousRange.offset(targetEndRow - prevStartRow + 1, 0, bottomRows, prevCols));
+    }
+  }
+
+  if (targetStartCol > prevStartCol) {
+    var leftCols = targetStartCol - prevStartCol;
+    if (leftCols > 0) {
+      clearRangeAndFormatting(previousRange.offset(0, 0, prevRows, leftCols));
+    }
+  }
+
+  if (targetEndCol < prevEndCol) {
+    var rightCols = prevEndCol - targetEndCol;
+    if (rightCols > 0) {
+      clearRangeAndFormatting(previousRange.offset(0, targetEndCol - prevStartCol + 1, prevRows, rightCols));
+    }
   }
 }
 
@@ -1447,7 +1575,7 @@ function findMetaByName(name, options) {
  * @param {number} cols Número de columnas.
  * @param {number} rows Número de filas.
  */
-function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows, style, headers) {
+function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows, style, headers, formulaPreference) {
   var normalizedId = normalizeMetaId(id);
   if (!normalizedId) {
     throw new Error('No se pudo determinar el identificador de la tabla.');
@@ -1458,16 +1586,46 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
   var styleValue = stringifyJsonValue(style || {});
   var normalizedHeaders = normalizeHeaderArray(headers);
   var headersValue = stringifyJsonValue(normalizedHeaders);
+  var normalizedFormulaPreference = typeof formulaPreference === 'boolean' ? formulaPreference : true;
+  var formulaPreferenceValue = normalizedFormulaPreference ? 'TRUE' : 'FALSE';
   if (meta) {
     // Actualizar
     var row = meta.row;
     var createdAt = meta.data[META_INDEX.createdAt] || now;
     sheet
       .getRange(row, 1, 1, META_HEADERS.length)
-      .setValues([[normalizedId, name, rangeA1, description, sheetName, cols, rows, createdAt, now, styleValue, headersValue]]);
+      .setValues([
+        [
+          normalizedId,
+          name,
+          rangeA1,
+          description,
+          sheetName,
+          cols,
+          rows,
+          createdAt,
+          now,
+          styleValue,
+          headersValue,
+          formulaPreferenceValue
+        ]
+      ]);
   } else {
     // Crear nueva
-    sheet.appendRow([normalizedId, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
+    sheet.appendRow([
+      normalizedId,
+      name,
+      rangeA1,
+      description,
+      sheetName,
+      cols,
+      rows,
+      now,
+      now,
+      styleValue,
+      headersValue,
+      formulaPreferenceValue
+    ]);
   }
 
   syncNamedRangeForTable(normalizedId, sheetName, rangeA1);
@@ -1689,7 +1847,8 @@ function getTableMeta(tableId) {
     createdAt: d[META_INDEX.createdAt],
     updatedAt: d[META_INDEX.updatedAt],
     style: style,
-    headers: headers
+    headers: headers,
+    updateFormulaReferences: parseBooleanValue(d[META_INDEX.formulaRefs], true)
   };
 }
 
