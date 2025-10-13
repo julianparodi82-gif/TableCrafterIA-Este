@@ -28,16 +28,58 @@ function onChange(e) {
       default:
         break;
     }
+    reconcileTablesAfterEvent(e);
   } catch (err) {
     console.error('Error en onChange: ' + err.message);
   }
+}
+
+function onEdit(e) {
+  try {
+    protectHeadersOnEdit(e);
+  } catch (err) {
+    console.error('Error en onEdit: ' + err.message);
+  }
+}
+
+function reconcileTablesAfterEvent(e) {
+  var sheet = getEventSheet(e);
+  if (sheet) {
+    reconcileSheetTables(sheet);
+  } else {
+    reconcileAllSheets();
+  }
+}
+
+function getEventSheet(e) {
+  if (!e) {
+    return null;
+  }
+  if (e.sheet) {
+    return e.sheet;
+  }
+  if (e.range && typeof e.range.getSheet === 'function') {
+    try {
+      return e.range.getSheet();
+    } catch (err) {
+      return null;
+    }
+  }
+  if (e.source && typeof e.source.getActiveSheet === 'function') {
+    try {
+      return e.source.getActiveSheet();
+    } catch (err2) {
+      return null;
+    }
+  }
+  return null;
 }
 
 function handleInsertedColumnsChange(e) {
   if (!e) {
     return;
   }
-  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  var sheet = getEventSheet(e);
   if (!sheet) {
     return;
   }
@@ -163,7 +205,7 @@ function handleInsertedRowsChange(e) {
   if (!e) {
     return;
   }
-  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  var sheet = getEventSheet(e);
   if (!sheet) {
     return;
   }
@@ -257,7 +299,7 @@ function handleRemovedColumnsChange(e) {
   if (!e) {
     return;
   }
-  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  var sheet = getEventSheet(e);
   if (!sheet) {
     return;
   }
@@ -385,7 +427,7 @@ function handleRemovedRowsChange(e) {
   if (!e) {
     return;
   }
-  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  var sheet = getEventSheet(e);
   if (!sheet) {
     return;
   }
@@ -763,4 +805,380 @@ function collectHeaderLabelsFromMeta(metaRow, columnCount) {
     }
   }
   return labels;
+}
+
+function reconcileAllSheets() {
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return;
+  }
+  var grouped = {};
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    var sheetName = row[META_INDEX.sheet];
+    if (!sheetName || sheetName === '__TableCrafter_Meta') {
+      continue;
+    }
+    if (!grouped[sheetName]) {
+      grouped[sheetName] = [];
+    }
+    grouped[sheetName].push({
+      rowNumber: i + 1,
+      data: row,
+      id: entryId
+    });
+  }
+  var ss = SpreadsheetApp.getActive();
+  for (var key in grouped) {
+    if (!Object.prototype.hasOwnProperty.call(grouped, key)) {
+      continue;
+    }
+    var sheet = ss.getSheetByName(key);
+    if (!sheet) {
+      continue;
+    }
+    reconcileSheetTables(sheet, grouped[key]);
+  }
+}
+
+function getMetaEntriesForSheet(sheetName) {
+  if (!sheetName) {
+    return [];
+  }
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return [];
+  }
+  var entries = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    if (row[META_INDEX.sheet] !== sheetName) {
+      continue;
+    }
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    entries.push({
+      rowNumber: i + 1,
+      data: row,
+      id: entryId
+    });
+  }
+  return entries;
+}
+
+function reconcileSheetTables(sheet, optEntries) {
+  if (!sheet) {
+    return;
+  }
+  var sheetName = sheet.getName();
+  if (sheetName === '__TableCrafter_Meta') {
+    return;
+  }
+  var entries = optEntries || getMetaEntriesForSheet(sheetName);
+  if (!entries || entries.length === 0) {
+    return;
+  }
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var updates = [];
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    if (!entry || !entry.data) {
+      continue;
+    }
+    var parsed = parseRangeA1(entry.data[META_INDEX.rangeA1]);
+    if (!parsed) {
+      continue;
+    }
+    var storedHeaders = normalizeHeaderArray(parseJsonValue(entry.data[META_INDEX.headers], []));
+    storedHeaders = ensureHeaderKeys(storedHeaders);
+    var columnCount = storedHeaders.length > 0 ? storedHeaders.length : parsed.cols;
+    if (columnCount <= 0) {
+      columnCount = parsed.cols;
+    }
+    var headerLocation = locateHeaderPosition(sheet, storedHeaders, parsed);
+    if (!headerLocation) {
+      ensureHeaderRowIntegrity(sheet, parsed.startRow, parsed.startColumn, columnCount, entry.data, storedHeaders);
+      continue;
+    }
+    ensureHeaderRowIntegrity(sheet, headerLocation.row, headerLocation.column, columnCount, entry.data, storedHeaders);
+    var rowCount = determineTableRowCount(sheet, headerLocation.row, headerLocation.column, columnCount, parsed.rows);
+    var newRange = buildA1Notation(headerLocation.column, headerLocation.row, columnCount, rowCount);
+    if (newRange !== entry.data[META_INDEX.rangeA1] || entry.data[META_INDEX.cols] !== columnCount || entry.data[META_INDEX.rows] !== rowCount) {
+      var updatedRow = entry.data.slice();
+      updatedRow[META_INDEX.rangeA1] = newRange;
+      updatedRow[META_INDEX.cols] = columnCount;
+      updatedRow[META_INDEX.rows] = rowCount;
+      updatedRow[META_INDEX.updatedAt] = now;
+      updates.push({
+        rowNumber: entry.rowNumber,
+        values: updatedRow,
+        id: entry.id,
+        newRange: newRange
+      });
+    }
+  }
+  if (updates.length > 0) {
+    applyStructuralUpdates(updates, sheet);
+  }
+}
+
+function locateHeaderPosition(sheet, storedHeaders, parsedRange) {
+  if (!sheet || !storedHeaders) {
+    return null;
+  }
+  var columnCount = storedHeaders.length > 0 ? storedHeaders.length : parsedRange.cols;
+  if (columnCount <= 0) {
+    columnCount = parsedRange.cols;
+  }
+  if (parsedRange && parsedRange.startRow && parsedRange.startColumn) {
+    try {
+      var candidate = sheet.getRange(parsedRange.startRow, parsedRange.startColumn, 1, columnCount);
+      var candidateValues = candidate.getDisplayValues()[0];
+      if (headersMatchStored(candidateValues, storedHeaders)) {
+        return {
+          row: parsedRange.startRow,
+          column: parsedRange.startColumn
+        };
+      }
+    } catch (err) {
+      // Ignorar errores al leer el rango almacenado.
+    }
+  }
+  var desiredLabels = buildDesiredHeaderLabels(storedHeaders, columnCount);
+  var anchors = [];
+  for (var i = 0; i < desiredLabels.length; i++) {
+    var label = desiredLabels[i];
+    if (label && String(label).trim() !== '') {
+      anchors.push({ index: i, label: label });
+    }
+  }
+  for (var a = 0; a < anchors.length; a++) {
+    var anchor = anchors[a];
+    try {
+      var finder = sheet.createTextFinder(anchor.label);
+      if (!finder) {
+        continue;
+      }
+      finder = finder.matchEntireCell(true);
+      var matches = finder.findAll();
+      if (!matches || matches.length === 0) {
+        continue;
+      }
+      for (var m = 0; m < matches.length; m++) {
+        var range = matches[m];
+        if (!range) {
+          continue;
+        }
+        var startColumn = range.getColumn() - anchor.index;
+        if (startColumn < 1) {
+          continue;
+        }
+        var startRow = range.getRow();
+        try {
+          var rowValues = sheet.getRange(startRow, startColumn, 1, columnCount).getDisplayValues()[0];
+          if (headersMatchStored(rowValues, storedHeaders)) {
+            return {
+              row: startRow,
+              column: startColumn
+            };
+          }
+        } catch (err2) {
+          // Ignorar candidatos inválidos.
+        }
+      }
+    } catch (err3) {
+      // Ignorar errores en la búsqueda por texto.
+    }
+  }
+  return null;
+}
+
+function buildDesiredHeaderLabels(storedHeaders, columnCount) {
+  var labels = [];
+  for (var i = 0; i < columnCount; i++) {
+    var entry = storedHeaders[i] || normalizeHeaderEntry('');
+    labels.push(entry.label || '');
+  }
+  return labels;
+}
+
+function headersMatchStored(rowValues, storedHeaders) {
+  if (!rowValues || !storedHeaders) {
+    return false;
+  }
+  var length = storedHeaders.length;
+  for (var i = 0; i < length; i++) {
+    var expected = storedHeaders[i] || normalizeHeaderEntry('');
+    var expectedLabel = expected.label || '';
+    var cellValue = i < rowValues.length ? rowValues[i] : '';
+    if (normalizeHeaderLabelValue(cellValue) !== normalizeHeaderLabelValue(expectedLabel)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function ensureHeaderRowIntegrity(sheet, startRow, startColumn, columnCount, metaRow, storedHeaders) {
+  if (!sheet || !startRow || !startColumn || !columnCount) {
+    return;
+  }
+  var headerRange;
+  try {
+    headerRange = sheet.getRange(startRow, startColumn, 1, columnCount);
+  } catch (err) {
+    return;
+  }
+  var desiredLabels = buildDesiredHeaderLabels(storedHeaders, columnCount);
+  var currentValues = [];
+  try {
+    currentValues = headerRange.getDisplayValues()[0];
+  } catch (err2) {
+    currentValues = [];
+  }
+  var needsValues = false;
+  for (var i = 0; i < desiredLabels.length; i++) {
+    var cellValue = i < currentValues.length ? currentValues[i] : '';
+    if (normalizeHeaderLabelValue(cellValue) !== normalizeHeaderLabelValue(desiredLabels[i])) {
+      needsValues = true;
+      break;
+    }
+  }
+  if (needsValues) {
+    try {
+      headerRange.setValues([desiredLabels]);
+    } catch (err3) {
+      // Ignorar si no se pueden restablecer los valores.
+    }
+  }
+  try {
+    headerRange.setHorizontalAlignment('center');
+    headerRange.setVerticalAlignment('middle');
+  } catch (err4) {
+    // Ignorar errores al aplicar alineaciones.
+  }
+  var style = parseJsonValue(metaRow[META_INDEX.style], {}) || {};
+  var headerColor = style && style.headerColor ? style.headerColor : '#CFE8FC';
+  try {
+    headerRange.setBackground(headerColor);
+  } catch (err5) {
+    // Ignorar si no se puede aplicar el color.
+  }
+  var bold = true;
+  if (style && Object.prototype.hasOwnProperty.call(style, 'bold')) {
+    bold = !!style.bold;
+  }
+  try {
+    headerRange.setFontWeight(bold ? 'bold' : 'normal');
+  } catch (err6) {
+    // Ignorar si no se puede aplicar el peso.
+  }
+  var applyBorders = true;
+  if (style && Object.prototype.hasOwnProperty.call(style, 'border')) {
+    applyBorders = !!style.border;
+  }
+  try {
+    headerRange.setBorder(applyBorders, applyBorders, applyBorders, applyBorders, applyBorders, applyBorders);
+  } catch (err7) {
+    // Ignorar si no se pueden aplicar los bordes.
+  }
+}
+
+function determineTableRowCount(sheet, startRow, startColumn, columnCount, storedRows) {
+  if (!sheet || !startRow || !startColumn || !columnCount) {
+    return storedRows > 0 ? storedRows : 1;
+  }
+  var lastRow = sheet.getLastRow();
+  if (lastRow < startRow) {
+    return storedRows > 0 ? storedRows : 1;
+  }
+  var maxHeight = Math.max(1, lastRow - startRow + 1);
+  var range;
+  try {
+    range = sheet.getRange(startRow, startColumn, maxHeight, columnCount);
+  } catch (err) {
+    return storedRows > 0 ? storedRows : 1;
+  }
+  var values;
+  try {
+    values = range.getDisplayValues();
+  } catch (err2) {
+    values = [];
+  }
+  var rowCount = storedRows > 0 ? storedRows : 1;
+  for (var r = values.length - 1; r >= 0; r--) {
+    var rowValues = values[r];
+    var hasContent = false;
+    for (var c = 0; c < rowValues.length; c++) {
+      if (String(rowValues[c]).trim() !== '') {
+        hasContent = true;
+        break;
+      }
+    }
+    if (hasContent) {
+      rowCount = Math.max(r + 1, 1);
+      break;
+    }
+  }
+  if (storedRows > 0) {
+    rowCount = Math.max(rowCount, storedRows);
+  }
+  return rowCount;
+}
+
+function protectHeadersOnEdit(e) {
+  if (!e || !e.range) {
+    return;
+  }
+  var range = e.range;
+  var sheet;
+  try {
+    sheet = range.getSheet();
+  } catch (err) {
+    return;
+  }
+  if (!sheet || sheet.getName() === '__TableCrafter_Meta') {
+    return;
+  }
+  var entries = getMetaEntriesForSheet(sheet.getName());
+  if (!entries || entries.length === 0) {
+    return;
+  }
+  var editStartRow = range.getRow();
+  var editEndRow = editStartRow + range.getNumRows() - 1;
+  var editStartCol = range.getColumn();
+  var editEndCol = editStartCol + range.getNumColumns() - 1;
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    var parsed = parseRangeA1(entry.data[META_INDEX.rangeA1]);
+    if (!parsed) {
+      continue;
+    }
+    var headerRow = parsed.startRow;
+    if (headerRow < editStartRow || headerRow > editEndRow) {
+      continue;
+    }
+    var headerStartCol = parsed.startColumn;
+    var headerEndCol = headerStartCol + parsed.cols - 1;
+    var intersectsCols = !(editStartCol > headerEndCol || editEndCol < headerStartCol);
+    if (!intersectsCols) {
+      continue;
+    }
+    var headers = normalizeHeaderArray(parseJsonValue(entry.data[META_INDEX.headers], []));
+    headers = ensureHeaderKeys(headers);
+    ensureHeaderRowIntegrity(sheet, headerRow, headerStartCol, headers.length > 0 ? headers.length : parsed.cols, entry.data, headers);
+  }
 }
