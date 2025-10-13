@@ -428,6 +428,11 @@
         gap: 8px;
         flex-shrink: 0;
       }
+      .range-actions--stacked {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+      }
       .range-row strong {
         flex-grow: 1;
       }
@@ -440,11 +445,24 @@
       .action-buttons button {
         flex: 1 1 160px;
       }
-      #editApplyRow {
+      #editActionsRow {
         margin-top: 20px;
       }
-      #editApplyRow + .action-buttons {
-        margin-top: 8px;
+      #editActionsRow.action-buttons--balanced {
+        justify-content: space-between;
+      }
+      #editActionsRow.action-buttons--balanced button {
+        flex: 1 1 auto;
+      }
+      #editActionsRow.action-buttons--balanced button + button {
+        margin-left: 0;
+      }
+      .btn-secondary-dark {
+        background-color: #0D6B5A;
+        color: #FFFFFF;
+      }
+      .btn-secondary-dark:hover {
+        background-color: #0B5F50;
       }
       pre.answer-box {
         background-color: #FFFFFF;
@@ -619,15 +637,15 @@
             <div>
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
-            <div class="range-actions">
+            <div class="range-actions range-actions--stacked">
               <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
               <button
                 id="editRefreshApplyBtn"
-                class="btn-secondary"
-                title="Actualizar rango activo y aplicar formato"
+                class="btn-secondary btn-secondary-dark"
+                title="Actualizar rango y aplicar formato"
                 disabled
               >
-                Actualizar y aplicar formato
+                Actualizar rango y formato
               </button>
             </div>
           </div>
@@ -666,13 +684,16 @@
             <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
             <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
           </div>
-          <div id="editApplyRow" class="action-buttons" style="display:none;">
-            <button id="editApplyFormatBtn" class="btn-secondary" title="Aplicar formato a la tabla seleccionada" disabled>Aplicar formato</button>
-          </div>
-          <div class="action-buttons">
+          <div id="editActionsRow" class="action-buttons action-buttons--balanced" style="display:none;">
+            <button
+              id="editApplyFormatBtn"
+              class="btn-secondary"
+              title="Aplicar formato a la tabla seleccionada"
+              disabled
+            >
+              Aplicar formato
+            </button>
             <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar cambios</button>
-          </div>
-          <div id="editDeleteRow" class="action-buttons" style="display:none;">
             <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
           </div>
         </div>
@@ -2112,9 +2133,9 @@
 
         setEditDefaultStyles();
 
-        const applyRow = document.getElementById('editApplyRow');
-        if (applyRow) {
-          applyRow.style.display = 'none';
+        const actionsRow = document.getElementById('editActionsRow');
+        if (actionsRow) {
+          actionsRow.style.display = 'none';
         }
         const applyBtn = document.getElementById('editApplyFormatBtn');
         if (applyBtn) {
@@ -2131,10 +2152,6 @@
         const deleteBtn = document.getElementById('editDeleteTableBtn');
         if (deleteBtn) {
           deleteBtn.disabled = true;
-        }
-        const deleteRow = document.getElementById('editDeleteRow');
-        if (deleteRow) {
-          deleteRow.style.display = 'none';
         }
         const updateFormulasToggle = document.getElementById('editUpdateFormulaRefs');
         if (updateFormulasToggle) {
@@ -2426,18 +2443,47 @@
         }
         const previousInfo = editRangeInfo;
         const incomingEditHeaders = Array.isArray(info.headers) ? info.headers : editHeaders;
+        const previousHeadersSource = previousInfo && Array.isArray(previousInfo.headers)
+          ? previousInfo.headers
+          : Array.isArray(editHeaders)
+          ? editHeaders
+          : [];
+        const normalizedPreviousHeaders = cloneHeaderModels(previousHeadersSource);
+        const normalizedHeaders = cloneHeaderModels(incomingEditHeaders);
+        if (normalizedPreviousHeaders.length > 0) {
+          for (let i = 0; i < normalizedHeaders.length; i++) {
+            const header = normalizedHeaders[i];
+            const fallback = normalizedPreviousHeaders[i];
+            if (!fallback) {
+              continue;
+            }
+            const labelText = header.label ? String(header.label).trim() : '';
+            if (!labelText) {
+              header.label = fallback.label || '';
+            }
+            const hasDescriptionText = header.description ? String(header.description).trim() : '';
+            if ((!hasDescriptionText || !header.hasDescription) && fallback.hasDescription) {
+              header.description = fallback.description || '';
+              header.hasDescription = true;
+            }
+            if (fallback.key) {
+              header.key = fallback.key;
+            }
+          }
+        }
         const incomingPreference =
           typeof info.updateFormulaReferences === 'boolean'
             ? info.updateFormulaReferences
             : previousInfo && typeof previousInfo.updateFormulaReferences === 'boolean'
             ? previousInfo.updateFormulaReferences
             : true;
+        info.headers = normalizedHeaders;
         editRangeInfo = {
           sheetName: info.sheetName,
           a1Notation: info.a1Notation,
           rows: rows,
           cols: cols,
-          headers: cloneHeaderModels(incomingEditHeaders),
+          headers: cloneHeaderModels(info.headers),
           updateFormulaReferences: incomingPreference
         };
         editRangeInfo.fullA1 = fullA1;
@@ -2657,7 +2703,7 @@
               const shouldForce = !input || input.dataset.manual !== 'true';
               setEditRangeUI(infoForUi, { force: shouldForce, markDirty: !!opts.markDirty });
               if (updateHeaders) {
-                editHeaders = cloneHeaderModels(info.headers);
+                editHeaders = cloneHeaderModels(infoForUi.headers);
               }
               renderEditHeaders();
               resolve({ ok: true, info: infoForUi });
@@ -2698,9 +2744,9 @@
           metaSection.style.display = 'block';
         }
 
-        const applyRow = document.getElementById('editApplyRow');
-        if (applyRow) {
-          applyRow.style.display = 'flex';
+        const actionsRow = document.getElementById('editActionsRow');
+        if (actionsRow) {
+          actionsRow.style.display = 'flex';
         }
         const applyBtn = document.getElementById('editApplyFormatBtn');
         if (applyBtn) {
@@ -2717,10 +2763,6 @@
         const deleteBtn = document.getElementById('editDeleteTableBtn');
         if (deleteBtn) {
           deleteBtn.disabled = false;
-        }
-        const deleteRow = document.getElementById('editDeleteRow');
-        if (deleteRow) {
-          deleteRow.style.display = 'flex';
         }
 
         const nameInput = document.getElementById('editTableName');
