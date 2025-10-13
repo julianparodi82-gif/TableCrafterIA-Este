@@ -79,19 +79,103 @@
         box-sizing: border-box;
         min-height: 36px;
       }
+      .edit-saved-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
       #editSavedTables {
-        max-height: 220px;
+        display: none;
+      }
+      #editSavedTablesList {
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        padding: 4px 0;
+        max-height: 268px;
         overflow-y: auto;
-        font-size: 15px;
-        line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
-      #editSavedTables option {
-        font-size: 15px;
+      .edit-saved-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
-      #editSavedTables optgroup {
-        font-size: 14px;
-        font-weight: 600;
+      .edit-saved-group-label {
+        font-weight: 700;
+        font-size: 15px;
         color: #1F2937;
+        padding: 4px 12px 0;
+      }
+      .edit-saved-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px 8px 20px;
+        margin: 0 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        background-image: linear-gradient(90deg, var(--header-color, #E5E7EB) 0 14px, rgba(255, 255, 255, 0) 14px 100%);
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        color: var(--header-text-color, #111827);
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .edit-saved-item:hover {
+        background-color: rgba(37, 99, 235, 0.08);
+      }
+      .edit-saved-item.selected {
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+      }
+      .edit-saved-item.disabled,
+      #editSavedTablesList.disabled .edit-saved-item {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .edit-saved-label {
+        flex: 1 1 auto;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .edit-saved-locate {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background-color: rgba(37, 99, 235, 0.12);
+        color: var(--header-text-color, #1E40AF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+      }
+      .edit-saved-locate:hover {
+        background-color: rgba(37, 99, 235, 0.25);
+      }
+      .edit-saved-locate:active {
+        transform: scale(0.95);
+      }
+      .edit-saved-empty {
+        padding: 16px 12px;
+        color: #6B7280;
+        font-size: 14px;
+        text-align: center;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       textarea {
         min-height: 60px;
@@ -507,7 +591,10 @@
       <div id="editTab" class="tab-content">
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
-          <select id="editSavedTables" size="8"></select>
+          <div class="edit-saved-container">
+            <div id="editSavedTablesList" aria-label="Tablas guardadas"></div>
+            <select id="editSavedTables" size="8"></select>
+          </div>
         </div>
         <div id="editRangeSection" class="section" style="display:none;">
           <div class="range-row">
@@ -772,6 +859,23 @@
         if (option.dataset) {
           option.dataset.headerColor = normalizedColor;
         }
+      }
+
+      function styleEditListItem(item, entry) {
+        if (!item) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          item.style.removeProperty('--header-color');
+          item.style.removeProperty('--header-text-color');
+          item.dataset.headerColor = '';
+          return;
+        }
+        item.style.setProperty('--header-color', normalizedColor);
+        item.style.setProperty('--header-text-color', getReadableTextColor(normalizedColor));
+        item.dataset.headerColor = normalizedColor;
       }
 
       let savedTablesCache = [];
@@ -1205,6 +1309,15 @@
             select.disabled = false;
           }
 
+          if (id === 'editSavedTables') {
+            renderEditSavedTablesList(entries, {
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValue: !select.disabled ? select.value : ''
+            });
+            syncEditSavedTablesHighlight();
+          }
+
           if (id === 'aiSavedTables') {
             select.dataset.allValue = includeAll ? ALL_TABLES_OPTION_VALUE : '';
             renderAiSavedTablesList(entries, {
@@ -1254,6 +1367,140 @@
         text.textContent = label;
         item.appendChild(text);
         return item;
+      }
+
+      function createEditSavedItem(entry, selected, disabled) {
+        const item = document.createElement('div');
+        item.className = 'edit-saved-item';
+        if (selected) {
+          item.classList.add('selected');
+        }
+        if (disabled) {
+          item.classList.add('disabled');
+          item.tabIndex = -1;
+          item.setAttribute('aria-disabled', 'true');
+        } else {
+          item.tabIndex = 0;
+          item.setAttribute('aria-disabled', 'false');
+        }
+        item.dataset.value = entry.id;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        styleEditListItem(item, entry);
+
+        const label = document.createElement('span');
+        label.className = 'edit-saved-label';
+        label.textContent = entry.name || entry.id;
+        item.appendChild(label);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'edit-saved-locate';
+        btn.dataset.value = entry.id;
+        btn.title = 'Ir a la tabla';
+        if (disabled) {
+          btn.disabled = true;
+          btn.tabIndex = -1;
+        }
+        const icon = document.createElement('span');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '📍';
+        btn.appendChild(icon);
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = 'Ir a la tabla';
+        btn.appendChild(sr);
+        item.appendChild(btn);
+        return item;
+      }
+
+      function renderEditSavedTablesList(entries, config) {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const data = Array.isArray(entries) ? entries : [];
+        const options = config || {};
+        const disabled = !!options.disabled;
+        const groupBySheet = !!options.groupBySheet;
+        const selectedValue = options.selectedValue ? String(options.selectedValue) : '';
+        listEl.innerHTML = '';
+        listEl.setAttribute('role', 'listbox');
+        listEl.setAttribute('aria-multiselectable', 'false');
+        listEl.classList.toggle('disabled', disabled);
+        listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+        if (disabled || data.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'edit-saved-empty';
+          empty.textContent = 'No hay tablas guardadas';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        if (groupBySheet) {
+          const grouped = Object.create(null);
+          const order = [];
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+            if (!grouped[sheetLabel]) {
+              grouped[sheetLabel] = [];
+              order.push(sheetLabel);
+            }
+            grouped[sheetLabel].push(entry);
+          });
+          order.forEach(function(sheetLabel) {
+            const groupWrapper = document.createElement('div');
+            groupWrapper.className = 'edit-saved-group';
+            const labelEl = document.createElement('div');
+            labelEl.className = 'edit-saved-group-label';
+            labelEl.textContent = sheetLabel;
+            groupWrapper.appendChild(labelEl);
+            grouped[sheetLabel].forEach(function(entry) {
+              const isSelected = entry.id === selectedValue;
+              const item = createEditSavedItem(entry, isSelected, disabled);
+              groupWrapper.appendChild(item);
+            });
+            listEl.appendChild(groupWrapper);
+          });
+        } else {
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const isSelected = entry.id === selectedValue;
+            const item = createEditSavedItem(entry, isSelected, disabled);
+            listEl.appendChild(item);
+          });
+        }
+      }
+
+      function syncEditSavedTablesHighlight() {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const selectedValue = !selectEl.disabled && selectEl.value ? String(selectEl.value) : '';
+        listEl.querySelectorAll('.edit-saved-item').forEach(function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedValue && value === selectedValue) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
       }
 
       function renderAiSavedTablesList(entries, config) {
@@ -1577,6 +1824,59 @@
         });
       }
 
+      function selectEditSavedTable(value) {
+        const select = document.getElementById('editSavedTables');
+        if (!select) {
+          return;
+        }
+        if (select.disabled) {
+          return;
+        }
+        const normalized = value ? String(value) : '';
+        let hasMatch = false;
+        if (select.options && select.options.length) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value === normalized) {
+              hasMatch = true;
+            }
+          });
+        }
+        if (!normalized || !hasMatch) {
+          select.value = '';
+          const event = new Event('change', { bubbles: true });
+          select.dispatchEvent(event);
+          return;
+        }
+        if (select.value !== normalized) {
+          select.value = normalized;
+        }
+        const event = new Event('change', { bubbles: true });
+        select.dispatchEvent(event);
+      }
+
+      async function locateSavedTable(tableId) {
+        const id = tableId ? String(tableId).trim() : '';
+        if (!id) {
+          return;
+        }
+        let response;
+        try {
+          response = await callServerFunction('focusSavedTableRange', id);
+        } catch (err) {
+          await showMessageModal('No se pudo enfocar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo enfocar',
+            variant: 'error'
+          });
+          return;
+        }
+        if (!response || response.error) {
+          await showMessageModal((response && response.error) || 'No se pudo enfocar la tabla seleccionada.', {
+            title: 'No se pudo enfocar',
+            variant: 'error'
+          });
+        }
+      }
+
       function resetCreateTabView(options) {
         options = options || {};
         if (!options.preserveRange) {
@@ -1686,6 +1986,7 @@
         if (updateFormulasToggle) {
           updateFormulasToggle.checked = true;
         }
+        syncEditSavedTablesHighlight();
       }
 
       function validateTableDetails(config) {
@@ -3132,6 +3433,7 @@
       }
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
+        syncEditSavedTablesHighlight();
         const val = this.value;
         if (!val) {
           resetEditTabView();
@@ -3162,6 +3464,42 @@
           })
           .getTableMeta(val);
       });
+
+      const editSavedList = document.getElementById('editSavedTablesList');
+      if (editSavedList) {
+        editSavedList.addEventListener('click', function(event) {
+          if (editSavedList.classList.contains('disabled')) {
+            return;
+          }
+          const locateBtn = event.target.closest('.edit-saved-locate');
+          if (locateBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            const tableId = locateBtn.dataset ? locateBtn.dataset.value : '';
+            if (tableId) {
+              locateSavedTable(tableId);
+            }
+            return;
+          }
+          const item = event.target.closest('.edit-saved-item');
+          if (item && item.dataset && item.dataset.value) {
+            event.preventDefault();
+            selectEditSavedTable(item.dataset.value);
+          }
+        });
+        editSavedList.addEventListener('keydown', function(event) {
+          if (editSavedList.classList.contains('disabled')) {
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            const item = event.target.closest('.edit-saved-item');
+            if (item && item.dataset && item.dataset.value) {
+              event.preventDefault();
+              selectEditSavedTable(item.dataset.value);
+            }
+          }
+        });
+      }
 
       document.getElementById('editDeleteTableBtn').addEventListener('click', async function() {
         if (!editingId) {

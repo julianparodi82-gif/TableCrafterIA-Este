@@ -390,6 +390,50 @@ function listSavedTables() {
   return result;
 }
 
+function focusSavedTableRange(tableId) {
+  var id = normalizeMetaId(tableId);
+  if (!id) {
+    return { error: 'Tabla no encontrada.' };
+  }
+  var entry = findMetaById(id);
+  if (!entry) {
+    return { error: 'Tabla no encontrada.' };
+  }
+  var rowData = entry.data || [];
+  var sheetName = rowData[META_INDEX.sheet];
+  var rangeA1 = rowData[META_INDEX.rangeA1];
+  if (!sheetName || !rangeA1) {
+    return { error: 'La tabla no tiene un rango asociado.' };
+  }
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    return { error: 'No se encontró la hoja "' + sheetName + '".' };
+  }
+  var range;
+  try {
+    range = sheet.getRange(rangeA1);
+  } catch (err) {
+    return { error: 'No se pudo obtener el rango: ' + err.message };
+  }
+  ss.setActiveSheet(sheet);
+  range.activate();
+  if (typeof range.getCell === 'function') {
+    var firstCell = range.getCell(1, 1);
+    if (firstCell && typeof firstCell.activateAsCurrentCell === 'function') {
+      firstCell.activateAsCurrentCell();
+    }
+  }
+  SpreadsheetApp.flush();
+  return {
+    ok: true,
+    sheetName: sheetName,
+    rangeA1: rangeA1,
+    rows: range.getNumRows(),
+    cols: range.getNumColumns()
+  };
+}
+
 /**
  * Borra el rango y la vista de filtro de una tabla específica sin eliminar
  * sus metadatos.  Se utiliza desde la UI para limpiar el rastro.
