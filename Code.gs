@@ -944,6 +944,9 @@ function applyFormattingToRange(range, style) {
   banded.setHeaderRowColor(style.headerColor);
   banded.setFirstRowColor(style.altColor1);
   banded.setSecondRowColor(style.altColor2);
+  // Centrar todas las celdas del rango para las tablas recién creadas
+  range.setHorizontalAlignment('center');
+  range.setVerticalAlignment('middle');
   // Encabezado en negrita o normal y centrado
   var headerRange = range.offset(0, 0, 1, cols);
   headerRange.setFontWeight(style.bold ? 'bold' : 'normal');
