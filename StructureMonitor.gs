@@ -262,6 +262,33 @@ function getEventSheet(e) {
   if (e.sheet) {
     return e.sheet;
   }
+  if (typeof e.sheetId === 'number' && e.source) {
+    try {
+      if (typeof e.source.getSheetById === 'function') {
+        var sheetById = e.source.getSheetById(e.sheetId);
+        if (sheetById) {
+          return sheetById;
+        }
+      }
+      if (typeof e.source.getSheets === 'function') {
+        var sheets = e.source.getSheets();
+        if (sheets && sheets.length) {
+          for (var i = 0; i < sheets.length; i++) {
+            var candidate = sheets[i];
+            try {
+              if (candidate && typeof candidate.getSheetId === 'function' && candidate.getSheetId() === e.sheetId) {
+                return candidate;
+              }
+            } catch (err2) {
+              // Ignorar y continuar buscando.
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Ignorar y continuar con los demás intentos.
+    }
+  }
   if (e.range && typeof e.range.getSheet === 'function') {
     try {
       return e.range.getSheet();
