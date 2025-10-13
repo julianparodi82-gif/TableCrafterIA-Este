@@ -624,6 +624,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var previousTableCols = 0;
   var storedHeaderMeta = [];
   var columnMapping = [];
+  var previousRangeToClear = null;
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
@@ -638,6 +639,11 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
             try {
               var prevRange = prevSheet.getRange(prevRangeA1);
               var sameRange = prevSheetName === sheet.getName() && prevRange.getA1Notation() === normalizedRange;
+              if (!sameRange && prevSheet.getSheetId() === sheet.getSheetId() && rangesIntersect(prevRange, range)) {
+                return {
+                  error: 'No se puede superponer el nuevo rango con el anterior.'
+                };
+              }
               if (!sameRange) {
                 try {
                   previousTableData = {
@@ -653,6 +659,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                 } catch (readErr) {
                   previousTableData = null;
                 }
+                previousRangeToClear = prevRange;
                 if (previousTableData && shouldUpdateFormulaReferences) {
                   var copyRows = Math.min(previousTableRows, rows);
                   var copyCols = Math.min(previousTableCols, cols);
@@ -685,7 +692,6 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                     }
                   }
                 }
-                clearRangeAndFormatting(prevRange);
               }
               deleteFilterViewsByTitle(prevSheet, 'TableCrafter_' + id);
             } catch (prevErr) {
@@ -764,6 +770,14 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     }
   } else if (shouldOverwriteHeaders) {
     headerRange.setValues([headerValues]);
+  }
+
+  if (previousRangeToClear) {
+    try {
+      clearRangeAndFormatting(previousRangeToClear);
+    } catch (cleanupErr) {
+      // Ignorar errores al limpiar el rango anterior para no interrumpir la operación principal.
+    }
   }
 
   if (doSave) {
