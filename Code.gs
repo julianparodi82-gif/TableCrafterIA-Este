@@ -68,6 +68,8 @@ function onChange(e) {
   try {
     if (e.changeType === 'REMOVE_COLUMN') {
       handleRemovedColumnsChange(e);
+    } else if (e.changeType === 'REMOVE_ROW') {
+      handleRemovedRowsChange(e);
     } else if (e.changeType === 'REMOVE_RANGE') {
       handleRemovedRangeChange(e);
     }
@@ -1165,6 +1167,144 @@ function handleRemovedColumnsChange(e) {
     updatedRowWithOverlap[META_INDEX.cols] = newCols;
     updatedRowWithOverlap[META_INDEX.updatedAt] = now;
     updatedRowWithOverlap[META_INDEX.headers] = stringifyJsonValue(headers);
+    updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
+  }
+
+  if (updates.length === 0 && deletions.length === 0) {
+    return;
+  }
+
+  updates.forEach(function(update) {
+    metaSheet.getRange(update.rowNumber, 1, 1, META_HEADERS.length).setValues([update.values]);
+    try {
+      var targetRange = sheet.getRange(update.newRange);
+      deleteFilterViewsByTitle(sheet, 'TableCrafter_' + update.id);
+      createFilterViewForRange(targetRange, 'TableCrafter_' + update.id);
+    } catch (err) {
+      // Ignorar errores al reconstruir la vista de filtro.
+    }
+  });
+
+  deletions.forEach(function(tableId) {
+    try {
+      deleteSavedTable(tableId);
+    } catch (err) {
+      // Ignorar fallos al eliminar metadatos inexistentes.
+    }
+  });
+}
+
+function handleRemovedRowsChange(e) {
+  if (!e) {
+    return;
+  }
+  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  if (!sheet) {
+    return;
+  }
+  var sheetName = sheet.getName();
+  if (sheetName === '__TableCrafter_Meta') {
+    return;
+  }
+  var rowStart = typeof e.rowStart === 'number' ? e.rowStart : null;
+  if (rowStart === null) {
+    rowStart = typeof e.startRow === 'number' ? e.startRow : null;
+  }
+  var rowEnd = typeof e.rowEnd === 'number' ? e.rowEnd : null;
+  if (rowEnd === null) {
+    rowEnd = typeof e.endRow === 'number' ? e.endRow : rowStart;
+  }
+  if (rowStart === null || rowEnd === null) {
+    return;
+  }
+  if (rowEnd < rowStart) {
+    var temp = rowStart;
+    rowStart = rowEnd;
+    rowEnd = temp;
+  }
+  var removedCount = rowEnd - rowStart + 1;
+  if (removedCount <= 0) {
+    return;
+  }
+
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return;
+  }
+
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var updates = [];
+  var deletions = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    if (row[META_INDEX.sheet] !== sheetName) {
+      continue;
+    }
+    var storedRangeA1 = row[META_INDEX.rangeA1];
+    if (!storedRangeA1) {
+      continue;
+    }
+    var parsed = parseRangeA1(storedRangeA1);
+    if (!parsed) {
+      continue;
+    }
+
+    var tableStartRow = parsed.startRow;
+    var tableEndRow = parsed.endRow;
+    var tableRows = parsed.rows;
+    var tableStartCol = parsed.startColumn;
+    var tableCols = parsed.cols;
+
+    if (rowStart > tableEndRow) {
+      continue;
+    }
+
+    if (rowEnd < tableStartRow) {
+      var shiftedStartRow = tableStartRow - removedCount;
+      if (shiftedStartRow < 1) {
+        shiftedStartRow = 1;
+      }
+      var shiftedRange = buildA1Notation(tableStartCol, shiftedStartRow, tableCols, tableRows);
+      var updatedRow = row.slice();
+      updatedRow[META_INDEX.rangeA1] = shiftedRange;
+      updatedRow[META_INDEX.rows] = tableRows;
+      updatedRow[META_INDEX.updatedAt] = now;
+      updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
+      continue;
+    }
+
+    var beforeStart = Math.max(0, Math.min(rowEnd, tableStartRow - 1) - rowStart + 1);
+    var overlap = Math.max(0, Math.min(rowEnd, tableEndRow) - Math.max(rowStart, tableStartRow) + 1);
+    var newStartRow = tableStartRow - beforeStart;
+    if (newStartRow < 1) {
+      newStartRow = 1;
+    }
+    var newRows = tableRows - overlap;
+    if (newRows <= 0) {
+      deletions.push(entryId);
+      continue;
+    }
+
+    // Si se elimina la fila del encabezado, se descarta la tabla.
+    if (rowStart <= tableStartRow && rowEnd >= tableStartRow) {
+      deletions.push(entryId);
+      continue;
+    }
+
+    var newRange = buildA1Notation(tableStartCol, newStartRow, tableCols, newRows);
+    var updatedRowWithOverlap = row.slice();
+    updatedRowWithOverlap[META_INDEX.rangeA1] = newRange;
+    updatedRowWithOverlap[META_INDEX.rows] = newRows;
+    updatedRowWithOverlap[META_INDEX.updatedAt] = now;
     updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
   }
 
