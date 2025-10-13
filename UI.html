@@ -465,8 +465,8 @@
               <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + \)">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + \)</span>
+              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + |)">Actualizar</button>
+              <span class="shortcut-hint">(Ctrl/⌘ + |)</span>
             </div>
           </div>
           <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
@@ -509,10 +509,6 @@
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
           <select id="editSavedTables" size="8"></select>
-          <div class="toggle-group" style="margin-top:8px;">
-            <button id="editApplyFormatBtn" class="btn-secondary" title="Aplicar formato a la tabla seleccionada" disabled>Aplicar formato</button>
-            <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla" disabled>Limpiar rango</button>
-          </div>
         </div>
         <div id="editRangeSection" class="section" style="display:none;">
           <div class="range-row">
@@ -520,8 +516,8 @@
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + \)">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + \)</span>
+              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + |)">Actualizar</button>
+              <span class="shortcut-hint">(Ctrl/⌘ + |)</span>
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
@@ -558,6 +554,9 @@
           <div class="toggle-group">
             <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
             <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
+          </div>
+          <div id="editApplyRow" class="action-buttons" style="display:none;">
+            <button id="editApplyFormatBtn" class="btn-secondary" title="Aplicar formato a la tabla seleccionada" disabled>Aplicar formato</button>
           </div>
           <div class="action-buttons">
             <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar cambios</button>
@@ -1597,13 +1596,13 @@
 
         setEditDefaultStyles();
 
+        const applyRow = document.getElementById('editApplyRow');
+        if (applyRow) {
+          applyRow.style.display = 'none';
+        }
         const applyBtn = document.getElementById('editApplyFormatBtn');
         if (applyBtn) {
           applyBtn.disabled = true;
-        }
-        const clearBtn = document.getElementById('clearTableBtn');
-        if (clearBtn) {
-          clearBtn.disabled = true;
         }
         const saveBtn = document.getElementById('editSaveTableBtn');
         if (saveBtn) {
@@ -2160,13 +2159,13 @@
           metaSection.style.display = 'block';
         }
 
+        const applyRow = document.getElementById('editApplyRow');
+        if (applyRow) {
+          applyRow.style.display = 'flex';
+        }
         const applyBtn = document.getElementById('editApplyFormatBtn');
         if (applyBtn) {
           applyBtn.disabled = false;
-        }
-        const clearBtn = document.getElementById('clearTableBtn');
-        if (clearBtn) {
-          clearBtn.disabled = false;
         }
         const saveBtn = document.getElementById('editSaveTableBtn');
         if (saveBtn) {
@@ -2407,13 +2406,9 @@
       });
 
       document.addEventListener('keydown', function(event) {
-        const rawKey = event.key || '';
-        const normalizedKey = rawKey.length === 1 ? rawKey.toLowerCase() : rawKey;
+        const key = event.key || '';
         const hasPrimaryModifier = event.ctrlKey || event.metaKey;
-        if (!hasPrimaryModifier || event.altKey || event.shiftKey) {
-          return;
-        }
-        if (normalizedKey !== '\\' && normalizedKey !== '|') {
+        if (!hasPrimaryModifier || event.altKey || key !== '|') {
           return;
         }
         if (event.repeat) {
@@ -3128,44 +3123,6 @@
             });
           })
           .getTableMeta(val);
-      });
-
-      document.getElementById('clearTableBtn').addEventListener('click', async function() {
-        const select = document.getElementById('editSavedTables');
-        const val = select.value;
-        if (!val) {
-          showMessageModal('Seleccione una tabla para limpiar.', {
-            title: 'Seleccione una tabla',
-            variant: 'error'
-          });
-          return;
-        }
-        const confirmed = await showConfirmModal('¿Seguro que desea limpiar el rango y formato de la tabla seleccionada?', {
-          title: 'Confirmar limpieza',
-          variant: 'warning',
-          confirmText: 'Sí, limpiar',
-          cancelText: 'Cancelar'
-        });
-        if (!confirmed) {
-          return;
-        }
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.error) {
-            showMessageModal(res.error, {
-              title: 'No se pudo limpiar',
-              variant: 'error'
-            });
-          } else {
-            showMessageModal('Rango limpiado.', {
-              title: 'Limpieza completada',
-              variant: 'success'
-            });
-          }
-          if (val && val === lastSavedTableId) {
-            lastSavedTableId = '';
-          }
-          refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-        }).clearTable(val);
       });
 
       document.getElementById('editDeleteTableBtn').addEventListener('click', async function() {
