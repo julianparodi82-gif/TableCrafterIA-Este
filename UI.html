@@ -284,12 +284,14 @@
         border: 1px solid #D1D5DB;
         border-radius: 6px;
         background-color: #FFFFFF;
-        height: 280px;
+        padding: 4px 0;
+        max-height: 268px;
         overflow-y: auto;
         overflow-x: hidden;
         scrollbar-gutter: stable;
-        padding: 6px 0;
-        font-size: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
       .ai-multi-list.disabled {
         opacity: 0.6;
@@ -304,56 +306,78 @@
         font-size: 14px;
       }
       .ai-multi-group {
-        padding-bottom: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
       .ai-multi-group-label {
-        font-size: 13px;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 15px;
         color: #1F2937;
-        padding: 8px 18px 4px;
+        padding: 4px 12px 0;
       }
       .ai-multi-item {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 8px 18px;
+        padding: 8px 12px 8px 20px;
+        margin: 0 8px;
+        border-radius: 6px;
         cursor: pointer;
-        transition: background-color 0.15s ease;
+        background-image: linear-gradient(
+          90deg,
+          var(--header-color, #E5E7EB) 0 14px,
+          rgba(255, 255, 255, 0) 14px 100%
+        );
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        color: #111827;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
       }
       .ai-multi-item:focus {
         outline: 2px solid #2563EB;
         outline-offset: 2px;
       }
       .ai-multi-item:hover {
-        background-color: #F3F4F6;
+        background-color: rgba(37, 99, 235, 0.08);
       }
-      .ai-multi-group .ai-multi-item {
-        padding-left: 32px;
+      .ai-multi-item.selected {
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+      }
+      .ai-multi-item .ai-label {
+        flex: 1 1 auto;
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
       }
       .ai-multi-item .ai-check {
-        width: 18px;
-        height: 18px;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
         border: 2px solid #94A3B8;
-        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        color: #FFFFFF;
+        font-size: 14px;
+        line-height: 1;
+        color: transparent;
+        background-color: rgba(255, 255, 255, 0.9);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       }
       .ai-multi-item.selected .ai-check {
         background-color: #2563EB;
         border-color: #2563EB;
+        color: #FFFFFF;
       }
       .ai-multi-item.selected .ai-check::after {
         content: '\2713';
       }
-      .ai-multi-item .ai-label {
-        flex: 1 1 auto;
-        color: #111827;
+      .ai-multi-item.all-option {
+        background-image: none;
       }
       .ai-multi-item.all-option .ai-label {
-        font-weight: 600;
+        font-weight: 700;
       }
       .ai-hidden-select {
         display: none;
@@ -573,12 +597,12 @@
     <div class="container">
       <h2>TableCrafter AI</h2>
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="createTab">Crear tabla</button>
+        <button class="tab-btn active" data-tab="aiTab">Consultas IA</button>
         <button class="tab-btn" data-tab="editTab">Editar tabla</button>
-        <button class="tab-btn" data-tab="aiTab">Consultas IA</button>
+        <button class="tab-btn" data-tab="createTab">Crear tabla</button>
       </div>
 
-      <div id="createTab" class="tab-content active">
+      <div id="createTab" class="tab-content">
         <div class="section">
           <div class="range-row">
             <div>
@@ -690,7 +714,7 @@
         </div>
       </div>
 
-      <div id="aiTab" class="tab-content">
+      <div id="aiTab" class="tab-content active">
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
           <div class="ai-multi-select">
@@ -1506,9 +1530,27 @@
         return values;
       }
 
-      function createAiMultiItem(value, label, selected) {
+      function createAiMultiItem(entry, selected, options) {
+        const config = options || {};
+        const hasOverride = Object.prototype.hasOwnProperty.call(config, 'valueOverride');
+        const value = hasOverride
+          ? String(config.valueOverride || '')
+          : entry && entry.id
+          ? String(entry.id)
+          : '';
+        if (!value) {
+          return null;
+        }
+        const labelText = config.labelOverride
+          ? String(config.labelOverride)
+          : entry && entry.name
+          ? entry.name
+          : value;
         const item = document.createElement('div');
         item.className = 'ai-multi-item';
+        if (config.allOption) {
+          item.classList.add('all-option');
+        }
         item.dataset.value = value;
         item.setAttribute('role', 'option');
         item.tabIndex = 0;
@@ -1516,13 +1558,24 @@
           item.classList.add('selected');
         }
         item.setAttribute('aria-selected', selected ? 'true' : 'false');
+
+        if (entry) {
+          styleEditListItem(item, entry);
+        } else {
+          item.style.removeProperty('--header-color');
+          item.style.removeProperty('--header-text-color');
+          item.dataset.headerColor = '';
+        }
+
+        const label = document.createElement('span');
+        label.className = 'ai-label';
+        label.textContent = labelText;
+        item.appendChild(label);
+
         const check = document.createElement('span');
         check.className = 'ai-check';
         item.appendChild(check);
-        const text = document.createElement('span');
-        text.className = 'ai-label';
-        text.textContent = label;
-        item.appendChild(text);
+
         return item;
       }
 
@@ -1699,9 +1752,14 @@
         }
 
         if (includeAll && allValue) {
-          const allItem = createAiMultiItem(allValue, allLabel, !!selectedSet[allValue]);
-          allItem.classList.add('all-option');
-          listEl.appendChild(allItem);
+          const allItem = createAiMultiItem(null, !!selectedSet[allValue], {
+            valueOverride: allValue,
+            labelOverride: allLabel,
+            allOption: true
+          });
+          if (allItem) {
+            listEl.appendChild(allItem);
+          }
         }
 
         if (groupBySheet) {
@@ -1726,8 +1784,10 @@
             labelEl.textContent = sheetLabel;
             wrapper.appendChild(labelEl);
             grouped[sheetLabel].forEach(function(entry) {
-              const item = createAiMultiItem(entry.id, entry.name || entry.id, !!selectedSet[entry.id]);
-              wrapper.appendChild(item);
+              const item = createAiMultiItem(entry, !!selectedSet[entry.id]);
+              if (item) {
+                wrapper.appendChild(item);
+              }
             });
             listEl.appendChild(wrapper);
           });
@@ -1736,8 +1796,10 @@
             if (!entry || !entry.id) {
               return;
             }
-            const item = createAiMultiItem(entry.id, entry.name || entry.id, !!selectedSet[entry.id]);
-            listEl.appendChild(item);
+            const item = createAiMultiItem(entry, !!selectedSet[entry.id]);
+            if (item) {
+              listEl.appendChild(item);
+            }
           });
         }
         updateAiListSelectionUI(selectEl);
@@ -3954,7 +4016,7 @@
         restoreSavedTablesCache();
         applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
         refreshSavedTables(['editSavedTables', 'aiSavedTables']);
-        setActiveTab('createTab', { force: true });
+        setActiveTab('aiTab', { force: true });
       });
     </script>
   </body>
