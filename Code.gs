@@ -121,6 +121,134 @@ function normalizeMetaId(value) {
   return String(value).trim();
 }
 
+function buildTableNamedRangeName(id) {
+  var normalized = normalizeMetaId(id);
+  if (!normalized) {
+    return '';
+  }
+  var sanitized = normalized.replace(/[^A-Za-z0-9_]/g, '_');
+  if (!/^[A-Za-z_]/.test(sanitized)) {
+    sanitized = 'TC_' + sanitized;
+  }
+  return 'TableCrafterRange_' + sanitized;
+}
+
+function findNamedRangeByName(name, optSpreadsheet) {
+  if (!name) {
+    return null;
+  }
+  var ss = optSpreadsheet || SpreadsheetApp.getActive();
+  if (!ss) {
+    return null;
+  }
+  var namedRanges;
+  try {
+    namedRanges = ss.getNamedRanges();
+  } catch (err) {
+    return null;
+  }
+  if (!namedRanges || namedRanges.length === 0) {
+    return null;
+  }
+  for (var i = 0; i < namedRanges.length; i++) {
+    var candidate = namedRanges[i];
+    if (!candidate) {
+      continue;
+    }
+    try {
+      if (candidate.getName && candidate.getName() === name) {
+        return candidate;
+      }
+    } catch (err2) {
+      // Ignorar y continuar buscando.
+    }
+  }
+  return null;
+}
+
+function syncNamedRangeForTable(id, sheetName, rangeA1) {
+  var name = buildTableNamedRangeName(id);
+  if (!name) {
+    return;
+  }
+  var ss = SpreadsheetApp.getActive();
+  if (!ss) {
+    return;
+  }
+  var namedRange = findNamedRangeByName(name, ss);
+  if (!sheetName || !rangeA1) {
+    if (namedRange && namedRange.remove) {
+      try {
+        namedRange.remove();
+      } catch (err) {
+        // Ignorar fallos al eliminar el rango con nombre.
+      }
+    }
+    return;
+  }
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    if (namedRange && namedRange.remove) {
+      try {
+        namedRange.remove();
+      } catch (err2) {
+        // Ignorar fallos al eliminar el rango con nombre.
+      }
+    }
+    return;
+  }
+  var range;
+  try {
+    range = sheet.getRange(rangeA1);
+  } catch (err3) {
+    range = null;
+  }
+  if (!range) {
+    if (namedRange && namedRange.remove) {
+      try {
+        namedRange.remove();
+      } catch (err4) {
+        // Ignorar fallos al eliminar el rango con nombre.
+      }
+    }
+    return;
+  }
+  if (namedRange) {
+    try {
+      namedRange.setRange(range);
+    } catch (err5) {
+      // Si no se puede actualizar, intentar recrearlo.
+      try {
+        namedRange.remove();
+      } catch (err6) {
+        // Ignorar y continuar creando uno nuevo.
+      }
+      ss.setNamedRange(name, range);
+    }
+  } else {
+    ss.setNamedRange(name, range);
+  }
+}
+
+function removeNamedRangeForTable(id) {
+  var name = buildTableNamedRangeName(id);
+  if (!name) {
+    return;
+  }
+  var ss = SpreadsheetApp.getActive();
+  if (!ss) {
+    return;
+  }
+  var namedRange = findNamedRangeByName(name, ss);
+  if (namedRange && namedRange.remove) {
+    try {
+      namedRange.remove();
+    } catch (err) {
+      // Ignorar fallos al eliminar.
+    }
+  }
+}
+
 function normalizeMetaName(value) {
   if (value === null || value === undefined) {
     return '';
@@ -620,6 +748,7 @@ function deleteSavedTable(tableId) {
 
   var metaSheet = getMetaSheet();
   metaSheet.deleteRow(entry.row);
+  removeNamedRangeForTable(id);
   SpreadsheetApp.flush();
 
   if (warnings.length > 0) {
@@ -1341,6 +1470,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     sheet.appendRow([normalizedId, name, rangeA1, description, sheetName, cols, rows, now, now, styleValue, headersValue]);
   }
 
+  syncNamedRangeForTable(normalizedId, sheetName, rangeA1);
   SpreadsheetApp.flush();
 }
 

@@ -936,14 +936,32 @@ function applyStructuralUpdates(updates, sheet) {
     return;
   }
   var metaSheet = getMetaSheet();
+  var sheetName = null;
+  if (sheet && typeof sheet.getName === 'function') {
+    try {
+      sheetName = sheet.getName();
+    } catch (errName) {
+      sheetName = null;
+    }
+  }
   updates.forEach(function(update) {
     metaSheet.getRange(update.rowNumber, 1, 1, META_HEADERS.length).setValues([update.values]);
-    try {
-      var targetRange = sheet.getRange(update.newRange);
-      deleteFilterViewsByTitle(sheet, 'TableCrafter_' + update.id);
-      createFilterViewForRange(targetRange, 'TableCrafter_' + update.id);
-    } catch (err) {
-      // Ignorar errores al reconstruir la vista de filtro.
+    var effectiveSheetName = sheetName;
+    if (!effectiveSheetName && update.values && update.values.length > META_INDEX.sheet) {
+      effectiveSheetName = update.values[META_INDEX.sheet];
+    }
+    if (sheet && typeof sheet.getRange === 'function' && sheetName) {
+      try {
+        var targetRange = sheet.getRange(update.newRange);
+        deleteFilterViewsByTitle(sheet, 'TableCrafter_' + update.id);
+        createFilterViewForRange(targetRange, 'TableCrafter_' + update.id);
+        syncNamedRangeForTable(update.id, sheetName, update.newRange);
+      } catch (err) {
+        syncNamedRangeForTable(update.id, sheetName, update.newRange);
+        // Ignorar errores al reconstruir la vista de filtro.
+      }
+    } else {
+      syncNamedRangeForTable(update.id, effectiveSheetName, update.newRange);
     }
   });
   SpreadsheetApp.flush();
@@ -1119,6 +1137,7 @@ function reconcileSheetTables(sheet, optEntries) {
   }
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var updates = [];
+  var namedRangeIndex = buildNamedRangeIndex();
   for (var i = 0; i < entries.length; i++) {
     var entry = entries[i];
     if (!entry || !entry.data) {
@@ -1134,13 +1153,30 @@ function reconcileSheetTables(sheet, optEntries) {
     if (columnCount <= 0) {
       columnCount = parsed.cols;
     }
-    var headerLocation = locateHeaderPosition(sheet, storedHeaders, parsed);
+    var storedRowsHint = parsed.rows;
+    var namedRangeInfo = getNamedRangeInfoFromIndex(entry.id, namedRangeIndex);
+    var headerLocation = null;
+    if (namedRangeInfo && namedRangeInfo.sheetId && sheet.getSheetId && namedRangeInfo.sheetId === sheet.getSheetId()) {
+      headerLocation = {
+        row: namedRangeInfo.row,
+        column: namedRangeInfo.column
+      };
+      if (namedRangeInfo.cols > 0) {
+        columnCount = Math.max(columnCount, namedRangeInfo.cols);
+      }
+      if (namedRangeInfo.rows > 0) {
+        storedRowsHint = Math.max(storedRowsHint, namedRangeInfo.rows);
+      }
+    }
+    if (!headerLocation) {
+      headerLocation = locateHeaderPosition(sheet, storedHeaders, parsed);
+    }
     if (!headerLocation) {
       ensureHeaderRowIntegrity(sheet, parsed.startRow, parsed.startColumn, columnCount, entry.data, storedHeaders);
       continue;
     }
     ensureHeaderRowIntegrity(sheet, headerLocation.row, headerLocation.column, columnCount, entry.data, storedHeaders);
-    var rowCount = determineTableRowCount(sheet, headerLocation.row, headerLocation.column, columnCount, parsed.rows);
+    var rowCount = determineTableRowCount(sheet, headerLocation.row, headerLocation.column, columnCount, storedRowsHint);
     var newRange = buildA1Notation(headerLocation.column, headerLocation.row, columnCount, rowCount);
     if (newRange !== entry.data[META_INDEX.rangeA1] || entry.data[META_INDEX.cols] !== columnCount || entry.data[META_INDEX.rows] !== rowCount) {
       var updatedRow = entry.data.slice();
@@ -1159,6 +1195,87 @@ function reconcileSheetTables(sheet, optEntries) {
   if (updates.length > 0) {
     applyStructuralUpdates(updates, sheet);
   }
+}
+
+function buildNamedRangeIndex() {
+  var index = {};
+  var ss = SpreadsheetApp.getActive();
+  if (!ss) {
+    return index;
+  }
+  var namedRanges;
+  try {
+    namedRanges = ss.getNamedRanges();
+  } catch (err) {
+    return index;
+  }
+  if (!namedRanges || namedRanges.length === 0) {
+    return index;
+  }
+  for (var i = 0; i < namedRanges.length; i++) {
+    var namedRange = namedRanges[i];
+    if (!namedRange) {
+      continue;
+    }
+    try {
+      var name = namedRange.getName();
+      if (name) {
+        index[name] = namedRange;
+      }
+    } catch (err2) {
+      // Ignorar errores al leer el nombre.
+    }
+  }
+  return index;
+}
+
+function getNamedRangeInfoFromIndex(tableId, namedRangeIndex) {
+  if (!namedRangeIndex) {
+    return null;
+  }
+  var name = buildTableNamedRangeName(tableId);
+  if (!name) {
+    return null;
+  }
+  var namedRange = namedRangeIndex[name];
+  if (!namedRange) {
+    return null;
+  }
+  var range;
+  try {
+    range = namedRange.getRange();
+  } catch (err) {
+    return null;
+  }
+  if (!range) {
+    return null;
+  }
+  var info = {
+    row: null,
+    column: null,
+    rows: null,
+    cols: null,
+    sheetId: null,
+    sheetName: ''
+  };
+  try {
+    info.row = range.getRow();
+    info.column = range.getColumn();
+    info.rows = range.getNumRows();
+    info.cols = range.getNumColumns();
+  } catch (err2) {
+    // Ignorar errores al leer dimensiones.
+  }
+  try {
+    var rangeSheet = range.getSheet();
+    if (rangeSheet) {
+      info.sheetId = typeof rangeSheet.getSheetId === 'function' ? rangeSheet.getSheetId() : null;
+      info.sheetName = rangeSheet.getName ? rangeSheet.getName() : '';
+    }
+  } catch (err3) {
+    // Ignorar si no se puede obtener la hoja.
+  }
+  return info;
 }
 
 function locateHeaderPosition(sheet, storedHeaders, parsedRange) {
