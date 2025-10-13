@@ -640,29 +640,30 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
           if (prevSheet) {
             try {
               var prevRange = prevSheet.getRange(prevRangeA1);
-              var sameRange = prevSheetName === sheet.getName() && prevRange.getA1Notation() === normalizedRange;
-              if (!sameRange && prevSheet.getSheetId() === sheet.getSheetId() && rangesIntersect(prevRange, range)) {
+              var sameSheet = prevSheet.getSheetId() === sheet.getSheetId();
+              var sameRange = sameSheet && prevRange.getA1Notation() === normalizedRange;
+              if (!sameRange && sameSheet && rangesIntersect(prevRange, range)) {
                 return {
                   error: 'No se puede superponer el nuevo rango con el anterior.'
                 };
               }
+              try {
+                previousTableData = {
+                  values: prevRange.getValues(),
+                  formulas: prevRange.getFormulas(),
+                  horizontalAlignments: prevRange.getHorizontalAlignments(),
+                  verticalAlignments: prevRange.getVerticalAlignments(),
+                  fontWeights: prevRange.getFontWeights(),
+                  numberFormats: prevRange.getNumberFormats()
+                };
+                previousTableRows = prevRange.getNumRows();
+                previousTableCols = prevRange.getNumColumns();
+              } catch (readErr) {
+                previousRangeReadError = true;
+                previousTableData = null;
+              }
               if (!sameRange) {
                 previousRangeDetails = { range: prevRange, sheet: prevSheet };
-                try {
-                  previousTableData = {
-                    values: prevRange.getValues(),
-                    formulas: prevRange.getFormulas(),
-                    horizontalAlignments: prevRange.getHorizontalAlignments(),
-                    verticalAlignments: prevRange.getVerticalAlignments(),
-                    fontWeights: prevRange.getFontWeights(),
-                    numberFormats: prevRange.getNumberFormats()
-                  };
-                  previousTableRows = prevRange.getNumRows();
-                  previousTableCols = prevRange.getNumColumns();
-                } catch (readErr) {
-                  previousRangeReadError = true;
-                  previousTableData = null;
-                }
                 if (previousTableData && shouldUpdateFormulaReferences) {
                   var copyRows = Math.min(previousTableRows, rows);
                   var copyCols = Math.min(previousTableCols, cols);
