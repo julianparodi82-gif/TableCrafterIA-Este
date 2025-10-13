@@ -61,6 +61,21 @@ function showHelp() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Ayuda de TableCrafter');
 }
 
+function onChange(e) {
+  if (!e || !e.changeType) {
+    return;
+  }
+  try {
+    if (e.changeType === 'REMOVE_COLUMN') {
+      handleRemovedColumnsChange(e);
+    } else if (e.changeType === 'REMOVE_RANGE') {
+      handleRemovedRangeChange(e);
+    }
+  } catch (err) {
+    console.error('Error en onChange: ' + err.message);
+  }
+}
+
 /**
  * Devuelve información sobre el rango activo.  Incluye nombre de la hoja,
  * notación A1, número de filas y columnas y los encabezados detectados en
@@ -211,6 +226,108 @@ function normalizeHeaderEntry(entry) {
     normalized.label = String(entry).trim();
   }
   return normalized;
+}
+
+function columnLetterToNumber(letter) {
+  if (!letter) {
+    return null;
+  }
+  var value = 0;
+  var upper = String(letter).replace(/\$/g, '').toUpperCase();
+  for (var i = 0; i < upper.length; i++) {
+    var code = upper.charCodeAt(i);
+    if (code < 65 || code > 90) {
+      return null;
+    }
+    value = value * 26 + (code - 64);
+  }
+  return value;
+}
+
+function columnNumberToLetter(number) {
+  var num = parseInt(number, 10);
+  if (!num || num < 1) {
+    return null;
+  }
+  var result = '';
+  while (num > 0) {
+    var mod = (num - 1) % 26;
+    result = String.fromCharCode(65 + mod) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+}
+
+function parseRangeA1(rangeA1) {
+  if (!rangeA1) {
+    return null;
+  }
+  var trimmed = String(rangeA1).trim();
+  if (trimmed === '') {
+    return null;
+  }
+  var exclIndex = trimmed.lastIndexOf('!');
+  if (exclIndex !== -1) {
+    trimmed = trimmed.substring(exclIndex + 1);
+  }
+  var parts = trimmed.split(':');
+  var startRef = parts[0];
+  var endRef = parts.length > 1 ? parts[1] : parts[0];
+  var startMatch = startRef.match(/\$?([A-Za-z]+)\$?(\d+)/);
+  if (!startMatch) {
+    return null;
+  }
+  var endMatch = endRef.match(/\$?([A-Za-z]+)\$?(\d+)/);
+  if (!endMatch) {
+    endMatch = startMatch;
+  }
+  var startColumn = columnLetterToNumber(startMatch[1]);
+  var startRow = parseInt(startMatch[2], 10);
+  var endColumn = columnLetterToNumber(endMatch[1]);
+  var endRow = parseInt(endMatch[2], 10);
+  if (!startColumn || !startRow || !endColumn || !endRow) {
+    return null;
+  }
+  var normalizedStartColumn = Math.min(startColumn, endColumn);
+  var normalizedEndColumn = Math.max(startColumn, endColumn);
+  var normalizedStartRow = Math.min(startRow, endRow);
+  var normalizedEndRow = Math.max(startRow, endRow);
+  return {
+    startColumn: normalizedStartColumn,
+    startRow: normalizedStartRow,
+    endColumn: normalizedEndColumn,
+    endRow: normalizedEndRow,
+    cols: normalizedEndColumn - normalizedStartColumn + 1,
+    rows: normalizedEndRow - normalizedStartRow + 1
+  };
+}
+
+function buildA1Notation(startColumn, startRow, cols, rows) {
+  var col = parseInt(startColumn, 10);
+  var row = parseInt(startRow, 10);
+  var totalCols = parseInt(cols, 10);
+  var totalRows = parseInt(rows, 10);
+  if (!col || !row || !totalCols || !totalRows) {
+    return '';
+  }
+  var endColumn = col + totalCols - 1;
+  var endRow = row + totalRows - 1;
+  var startLetter = columnNumberToLetter(col);
+  var endLetter = columnNumberToLetter(endColumn);
+  if (!startLetter || !endLetter) {
+    return '';
+  }
+  var startRef = startLetter + row;
+  if (totalCols === 1 && totalRows === 1) {
+    return startRef;
+  }
+  if (totalCols === 1) {
+    return startRef + ':' + startLetter + endRow;
+  }
+  if (totalRows === 1) {
+    return startRef + ':' + endLetter + row;
+  }
+  return startRef + ':' + endLetter + endRow;
 }
 
 function normalizeHeaderArray(headers) {
@@ -923,6 +1040,322 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     result.isNew = isNew;
   }
   return result;
+}
+
+function handleRemovedColumnsChange(e) {
+  if (!e) {
+    return;
+  }
+  var sheet = e.sheet || (e.range ? e.range.getSheet() : null);
+  if (!sheet) {
+    return;
+  }
+  var sheetName = sheet.getName();
+  if (sheetName === '__TableCrafter_Meta') {
+    return;
+  }
+  var columnStart = typeof e.columnStart === 'number' ? e.columnStart : null;
+  if (columnStart === null) {
+    columnStart = typeof e.startColumn === 'number' ? e.startColumn : null;
+  }
+  var columnEnd = typeof e.columnEnd === 'number' ? e.columnEnd : null;
+  if (columnEnd === null) {
+    columnEnd = typeof e.endColumn === 'number' ? e.endColumn : columnStart;
+  }
+  if (columnStart === null || columnEnd === null) {
+    return;
+  }
+  if (columnEnd < columnStart) {
+    var temp = columnStart;
+    columnStart = columnEnd;
+    columnEnd = temp;
+  }
+  var removedCount = columnEnd - columnStart + 1;
+  if (removedCount <= 0) {
+    return;
+  }
+
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return;
+  }
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var updates = [];
+  var deletions = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    if (row[META_INDEX.sheet] !== sheetName) {
+      continue;
+    }
+    var storedRangeA1 = row[META_INDEX.rangeA1];
+    if (!storedRangeA1) {
+      continue;
+    }
+    var parsed = parseRangeA1(storedRangeA1);
+    if (!parsed) {
+      continue;
+    }
+    var tableStartCol = parsed.startColumn;
+    var tableEndCol = parsed.endColumn;
+    var tableCols = parsed.cols;
+    var tableStartRow = parsed.startRow;
+    var tableRows = parsed.rows;
+    if (columnStart > tableEndCol) {
+      continue;
+    }
+    if (columnEnd < tableStartCol) {
+      var shiftedStartCol = tableStartCol - removedCount;
+      if (shiftedStartCol < 1) {
+        shiftedStartCol = 1;
+      }
+      var shiftedRange = buildA1Notation(shiftedStartCol, tableStartRow, tableCols, tableRows);
+      var updatedRow = row.slice();
+      updatedRow[META_INDEX.rangeA1] = shiftedRange;
+      updatedRow[META_INDEX.cols] = tableCols;
+      updatedRow[META_INDEX.updatedAt] = now;
+      updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
+      continue;
+    }
+
+    var beforeStart = Math.max(0, Math.min(columnEnd, tableStartCol - 1) - columnStart + 1);
+    var overlap = Math.max(0, Math.min(columnEnd, tableEndCol) - Math.max(columnStart, tableStartCol) + 1);
+    var newStartCol = tableStartCol - beforeStart;
+    if (newStartCol < 1) {
+      newStartCol = 1;
+    }
+    var newCols = tableCols - overlap;
+    if (newCols <= 0) {
+      deletions.push(entryId);
+      continue;
+    }
+    var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], []));
+    if (overlap > 0) {
+      var removeIndex = Math.max(columnStart, tableStartCol) - tableStartCol;
+      if (removeIndex < 0) {
+        removeIndex = 0;
+      }
+      var availableToRemove = Math.max(0, headers.length - removeIndex);
+      var removeCount = Math.min(overlap, availableToRemove);
+      if (removeCount > 0) {
+        headers.splice(removeIndex, removeCount);
+      }
+    }
+    if (headers.length > newCols) {
+      headers = headers.slice(0, newCols);
+    }
+    if (headers.length < newCols) {
+      newCols = headers.length;
+    }
+    if (newCols <= 0) {
+      deletions.push(entryId);
+      continue;
+    }
+    var newRange = buildA1Notation(newStartCol, tableStartRow, newCols, tableRows);
+    var updatedRowWithOverlap = row.slice();
+    updatedRowWithOverlap[META_INDEX.rangeA1] = newRange;
+    updatedRowWithOverlap[META_INDEX.cols] = newCols;
+    updatedRowWithOverlap[META_INDEX.updatedAt] = now;
+    updatedRowWithOverlap[META_INDEX.headers] = stringifyJsonValue(headers);
+    updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
+  }
+
+  if (updates.length === 0 && deletions.length === 0) {
+    return;
+  }
+
+  updates.forEach(function(update) {
+    metaSheet.getRange(update.rowNumber, 1, 1, META_HEADERS.length).setValues([update.values]);
+    try {
+      var targetRange = sheet.getRange(update.newRange);
+      deleteFilterViewsByTitle(sheet, 'TableCrafter_' + update.id);
+      createFilterViewForRange(targetRange, 'TableCrafter_' + update.id);
+    } catch (err) {
+      // Ignorar errores al reconstruir la vista de filtro.
+    }
+  });
+
+  deletions.forEach(function(tableId) {
+    try {
+      deleteSavedTable(tableId);
+    } catch (err) {
+      // Ignorar fallos al eliminar metadatos inexistentes.
+    }
+  });
+}
+
+function extractSubMatrix(matrix, rowOffset, colOffset, numRows, numCols) {
+  var result = [];
+  if (!Array.isArray(matrix)) {
+    return result;
+  }
+  for (var r = 0; r < numRows; r++) {
+    var sourceRow = matrix[rowOffset + r] || [];
+    var rowResult = [];
+    for (var c = 0; c < numCols; c++) {
+      rowResult.push(sourceRow[colOffset + c]);
+    }
+    result.push(rowResult);
+  }
+  return result;
+}
+
+function handleRemovedRangeChange(e) {
+  if (!e || !e.removedRange) {
+    return;
+  }
+  var removedRange = e.removedRange;
+  var sheet = removedRange.getSheet();
+  if (!sheet) {
+    return;
+  }
+  var sheetName = sheet.getName();
+  if (sheetName === '__TableCrafter_Meta') {
+    return;
+  }
+  var removedValues;
+  var removedFormulas = null;
+  var removedBackgrounds = null;
+  var removedNumberFormats = null;
+  var removedHorizontal = null;
+  var removedVertical = null;
+  var removedFontWeights = null;
+  try {
+    removedValues = removedRange.getValues();
+  } catch (err) {
+    removedValues = null;
+  }
+  try {
+    removedFormulas = removedRange.getFormulas();
+  } catch (err2) {
+    removedFormulas = null;
+  }
+  try {
+    removedBackgrounds = removedRange.getBackgrounds();
+  } catch (err3) {
+    removedBackgrounds = null;
+  }
+  try {
+    removedNumberFormats = removedRange.getNumberFormats();
+  } catch (err4) {
+    removedNumberFormats = null;
+  }
+  try {
+    removedHorizontal = removedRange.getHorizontalAlignments();
+  } catch (err5) {
+    removedHorizontal = null;
+  }
+  try {
+    removedVertical = removedRange.getVerticalAlignments();
+  } catch (err6) {
+    removedVertical = null;
+  }
+  try {
+    removedFontWeights = removedRange.getFontWeights();
+  } catch (err7) {
+    removedFontWeights = null;
+  }
+  if (!removedValues) {
+    return;
+  }
+  var removedStartRow = removedRange.getRow();
+  var removedStartCol = removedRange.getColumn();
+  var removedEndRow = removedStartRow + removedRange.getNumRows() - 1;
+  var removedEndCol = removedStartCol + removedRange.getNumColumns() - 1;
+
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  if (!data || data.length <= 1) {
+    return;
+  }
+  var restored = false;
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row || row.length === 0) {
+      continue;
+    }
+    if (row[META_INDEX.sheet] !== sheetName) {
+      continue;
+    }
+    var rangeA1 = row[META_INDEX.rangeA1];
+    if (!rangeA1) {
+      continue;
+    }
+    var parsed = parseRangeA1(rangeA1);
+    if (!parsed) {
+      continue;
+    }
+    var intersectStartRow = Math.max(parsed.startRow, removedStartRow);
+    var intersectEndRow = Math.min(parsed.endRow, removedEndRow);
+    var intersectStartCol = Math.max(parsed.startColumn, removedStartCol);
+    var intersectEndCol = Math.min(parsed.endColumn, removedEndCol);
+    if (intersectStartRow > intersectEndRow || intersectStartCol > intersectEndCol) {
+      continue;
+    }
+    var intersectRows = intersectEndRow - intersectStartRow + 1;
+    var intersectCols = intersectEndCol - intersectStartCol + 1;
+    var rowOffset = intersectStartRow - removedStartRow;
+    var colOffset = intersectStartCol - removedStartCol;
+    var valuesSlice = extractSubMatrix(removedValues, rowOffset, colOffset, intersectRows, intersectCols);
+    var formulasSlice = removedFormulas ? extractSubMatrix(removedFormulas, rowOffset, colOffset, intersectRows, intersectCols) : null;
+    var backgroundsSlice = removedBackgrounds ? extractSubMatrix(removedBackgrounds, rowOffset, colOffset, intersectRows, intersectCols) : null;
+    var numberFormatsSlice = removedNumberFormats ? extractSubMatrix(removedNumberFormats, rowOffset, colOffset, intersectRows, intersectCols) : null;
+    var horizontalSlice = removedHorizontal ? extractSubMatrix(removedHorizontal, rowOffset, colOffset, intersectRows, intersectCols) : null;
+    var verticalSlice = removedVertical ? extractSubMatrix(removedVertical, rowOffset, colOffset, intersectRows, intersectCols) : null;
+    var fontWeightSlice = removedFontWeights ? extractSubMatrix(removedFontWeights, rowOffset, colOffset, intersectRows, intersectCols) : null;
+
+    var combinedMatrix = [];
+    for (var r = 0; r < intersectRows; r++) {
+      var valueRow = valuesSlice[r] || [];
+      var formulaRow = (formulasSlice && formulasSlice[r]) || [];
+      var combinedRow = [];
+      for (var c = 0; c < intersectCols; c++) {
+        var formulaCell = formulaRow[c];
+        if (formulaCell) {
+          combinedRow.push(formulaCell);
+        } else {
+          combinedRow.push(c < valueRow.length ? valueRow[c] : '');
+        }
+      }
+      combinedMatrix.push(combinedRow);
+    }
+
+    try {
+      var targetRange = sheet.getRange(intersectStartRow, intersectStartCol, intersectRows, intersectCols);
+      targetRange.setValues(combinedMatrix);
+      if (numberFormatsSlice) {
+        targetRange.setNumberFormats(numberFormatsSlice);
+      }
+      if (backgroundsSlice) {
+        targetRange.setBackgrounds(backgroundsSlice);
+      }
+      if (horizontalSlice) {
+        targetRange.setHorizontalAlignments(horizontalSlice);
+      }
+      if (verticalSlice) {
+        targetRange.setVerticalAlignments(verticalSlice);
+      }
+      if (fontWeightSlice) {
+        targetRange.setFontWeights(fontWeightSlice);
+      }
+      restored = true;
+    } catch (err3) {
+      // Ignorar errores al restaurar porciones del rango.
+    }
+  }
+
+  if (restored) {
+    SpreadsheetApp.flush();
+  }
 }
 
 /**
