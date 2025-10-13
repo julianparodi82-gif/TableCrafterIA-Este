@@ -1954,6 +1954,16 @@
         for (let i = 0; i < headers.length; i++) {
           headers[i] = normalizeHeaderModel(headers[i]);
         }
+        const isEditList = listId === 'editHeadersList';
+        function markHeadersDirty() {
+          if (isEditList) {
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          } else if (listId === 'headersList') {
+            markCreateFormatDirty();
+          }
+        }
         headers.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
@@ -1967,6 +1977,7 @@
           inp.placeholder = 'Encabezado ' + (index + 1);
           inp.addEventListener('input', function() {
             headers[index].label = this.value;
+            markHeadersDirty();
           });
           topRow.appendChild(inp);
 
@@ -1981,6 +1992,7 @@
               const tmp = headers[index - 1];
               headers[index - 1] = headers[index];
               headers[index] = tmp;
+              markHeadersDirty();
               renderHeaderList(listId, headers);
             }
           });
@@ -1994,6 +2006,7 @@
               const tmp = headers[index + 1];
               headers[index + 1] = headers[index];
               headers[index] = tmp;
+              markHeadersDirty();
               renderHeaderList(listId, headers);
             }
           });
@@ -2013,6 +2026,7 @@
           }
           descField.addEventListener('input', function() {
             headers[index].description = this.value;
+            markHeadersDirty();
           });
 
           const toggleLabel = document.createElement('label');
@@ -2032,6 +2046,7 @@
               descField.disabled = false;
               descField.focus();
             }
+            markHeadersDirty();
           });
           toggleLabel.appendChild(toggle);
           toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
@@ -3334,6 +3349,25 @@
             }
           });
         }
+        const editStyleInputs = [
+          { id: 'editColorHeader', event: 'input' },
+          { id: 'editColorAlt1', event: 'input' },
+          { id: 'editColorAlt2', event: 'input' },
+          { id: 'editToggleBorder', event: 'change' },
+          { id: 'editToggleBold', event: 'change' },
+          { id: 'editUpdateFormulaRefs', event: 'change' }
+        ];
+        editStyleInputs.forEach(function(cfg) {
+          const el = document.getElementById(cfg.id);
+          if (!el) {
+            return;
+          }
+          el.addEventListener(cfg.event || 'change', function() {
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          });
+        });
         resetEditTabView();
         restoreSavedTablesCache();
         applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);

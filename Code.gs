@@ -624,7 +624,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var previousTableCols = 0;
   var storedHeaderMeta = [];
   var columnMapping = [];
-  var previousRangeToClear = null;
+  var previousRangeDetails = null;
+  var shouldClearPreviousRange = false;
+  var previousRangeReadError = false;
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
@@ -645,6 +647,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                 };
               }
               if (!sameRange) {
+                previousRangeDetails = { range: prevRange, sheet: prevSheet };
                 try {
                   previousTableData = {
                     values: prevRange.getValues(),
@@ -657,9 +660,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                   previousTableRows = prevRange.getNumRows();
                   previousTableCols = prevRange.getNumColumns();
                 } catch (readErr) {
+                  previousRangeReadError = true;
                   previousTableData = null;
                 }
-                previousRangeToClear = prevRange;
                 if (previousTableData && shouldUpdateFormulaReferences) {
                   var copyRows = Math.min(previousTableRows, rows);
                   var copyCols = Math.min(previousTableCols, cols);
@@ -693,6 +696,11 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                   }
                 }
               }
+              if (previousRangeReadError) {
+                return {
+                  error: 'No se pudo copiar la tabla original al nuevo rango. Intente aplicar el formato nuevamente antes de borrar el rango anterior.'
+                };
+              }
               deleteFilterViewsByTitle(prevSheet, 'TableCrafter_' + id);
             } catch (prevErr) {
               // Si el rango anterior no existe, continuar sin detener la ejecución.
@@ -700,6 +708,11 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
           }
         }
       }
+    }
+    if (previousRangeReadError) {
+      return {
+        error: 'No se pudo copiar la tabla original al nuevo rango. Intente aplicar el formato nuevamente antes de borrar el rango anterior.'
+      };
     }
     if (previousTableData) {
       range.clearContent();
@@ -763,6 +776,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       if (numberFormatsMatrix && numberFormatsMatrix.length === rows) {
         range.setNumberFormats(numberFormatsMatrix);
       }
+      if (previousRangeDetails) {
+        shouldClearPreviousRange = true;
+      }
     }
     if (id) {
       deleteFilterViewsByTitle(sheet, 'TableCrafter_' + id);
@@ -772,9 +788,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     headerRange.setValues([headerValues]);
   }
 
-  if (previousRangeToClear) {
+  if (shouldClearPreviousRange && previousRangeDetails && previousRangeDetails.range) {
     try {
-      clearRangeAndFormatting(previousRangeToClear);
+      clearRangeAndFormatting(previousRangeDetails.range);
     } catch (cleanupErr) {
       // Ignorar errores al limpiar el rango anterior para no interrumpir la operación principal.
     }
