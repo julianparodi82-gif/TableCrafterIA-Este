@@ -79,6 +79,20 @@
         box-sizing: border-box;
         min-height: 36px;
       }
+      #editSavedTables {
+        max-height: 220px;
+        overflow-y: auto;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      #editSavedTables option {
+        font-size: 15px;
+      }
+      #editSavedTables optgroup {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1F2937;
+      }
       textarea {
         min-height: 60px;
         resize: vertical;
@@ -494,7 +508,7 @@
       <div id="editTab" class="tab-content">
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
-          <select id="editSavedTables"></select>
+          <select id="editSavedTables" size="8"></select>
           <div class="toggle-group" style="margin-top:8px;">
             <button id="editApplyFormatBtn" class="btn-secondary" title="Aplicar formato a la tabla seleccionada" disabled>Aplicar formato</button>
             <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla" disabled>Limpiar rango</button>
