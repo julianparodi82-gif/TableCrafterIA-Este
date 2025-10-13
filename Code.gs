@@ -1806,7 +1806,11 @@ function askQuestion(tableSelection, question) {
   var messages = [
     {
       role: 'system',
-      content: 'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.'
+      content:
+        'Eres un asistente experto en análisis de datos de Google Sheets y respondes únicamente en español. ' +
+        'Tus respuestas se muestran en un sidebar, por lo que deben ser directas y concisas. ' +
+        'Cuando la solicitud requiera una lista o tabla, responde sólo con ese resultado sin texto adicional. ' +
+        'Evita comentarios ornamentales y agrega una nota breve únicamente si es estrictamente necesaria para aclarar la respuesta.'
     },
     { role: 'user', content: context + '\n\nPregunta: ' + question }
   ];
