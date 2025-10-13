@@ -609,11 +609,22 @@
 
       const ALL_TABLES_OPTION_VALUE = '__ALL__';
 
+      let headerKeyCounter = 0;
+
+      function generateHeaderKey() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return 'hdr_' + crypto.randomUUID();
+        }
+        headerKeyCounter += 1;
+        return 'hdr_' + Date.now().toString(36) + '_' + headerKeyCounter.toString(36);
+      }
+
       function normalizeHeaderModel(entry) {
         const normalized = {
           label: '',
           description: '',
-          hasDescription: false
+          hasDescription: false,
+          key: ''
         };
         if (entry && typeof entry === 'object') {
           const labelValue =
@@ -628,13 +639,26 @@
           const explicitHasDescription =
             Object.prototype.hasOwnProperty.call(entry, 'hasDescription') && entry.hasDescription === true;
           const hasDescription = explicitHasDescription || trimmedDescription !== '';
+          const keyValue =
+            entry.key !== undefined && entry.key !== null
+              ? entry.key
+              : entry.id !== undefined && entry.id !== null
+              ? entry.id
+              : '';
           normalized.label = trimmedLabel;
           normalized.description = hasDescription ? trimmedDescription : '';
           normalized.hasDescription = hasDescription;
+          normalized.key = String(keyValue || '').trim();
+          if (!normalized.key) {
+            normalized.key = generateHeaderKey();
+          }
           return normalized;
         }
         if (entry !== undefined && entry !== null) {
           normalized.label = String(entry).trim();
+        }
+        if (!normalized.key) {
+          normalized.key = generateHeaderKey();
         }
         return normalized;
       }
@@ -653,7 +677,8 @@
           return {
             label: item.label,
             description: item.hasDescription ? item.description : '',
-            hasDescription: item.hasDescription
+            hasDescription: item.hasDescription,
+            key: item.key || generateHeaderKey()
           };
         });
       }

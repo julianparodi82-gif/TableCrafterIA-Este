@@ -87,6 +87,7 @@ function getActiveRangeInfo() {
       headers.push(normalizeHeaderEntry(headerText));
     }
   }
+  headers = ensureHeaderKeys(headers);
   return {
     a1Notation: range.getA1Notation(),
     sheetName: sheet.getName(),
@@ -127,6 +128,33 @@ function normalizeMetaName(value) {
   return String(value).trim().toLowerCase();
 }
 
+function normalizeHeaderKey(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+}
+
+function normalizeHeaderLabelValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim().toLowerCase();
+}
+
+function generateUniqueHeaderKey(usedKeys) {
+  var key;
+  var attempts = 0;
+  do {
+    key = 'hdr_' + Utilities.getUuid();
+    attempts++;
+  } while (usedKeys[key] && attempts < 10);
+  while (usedKeys[key]) {
+    key = 'hdr_' + Utilities.getUuid();
+  }
+  return key;
+}
+
 function parseJsonValue(value, fallback) {
   if (!value) {
     return fallback;
@@ -153,7 +181,8 @@ function normalizeHeaderEntry(entry) {
   var normalized = {
     label: '',
     description: '',
-    hasDescription: false
+    hasDescription: false,
+    key: ''
   };
   if (entry && typeof entry === 'object') {
     var labelValue = '';
@@ -166,9 +195,16 @@ function normalizeHeaderEntry(entry) {
     var hasDescription = Object.prototype.hasOwnProperty.call(entry, 'hasDescription')
       ? !!entry.hasDescription
       : String(descriptionValue || '').trim() !== '';
+    var keyValue = '';
+    if (Object.prototype.hasOwnProperty.call(entry, 'key')) {
+      keyValue = entry.key;
+    } else if (Object.prototype.hasOwnProperty.call(entry, 'id')) {
+      keyValue = entry.id;
+    }
     normalized.label = String(labelValue === undefined || labelValue === null ? '' : labelValue).trim();
     normalized.description = hasDescription ? String(descriptionValue || '').trim() : '';
     normalized.hasDescription = hasDescription;
+    normalized.key = normalizeHeaderKey(keyValue);
     return normalized;
   }
   if (entry !== undefined && entry !== null) {
@@ -184,6 +220,138 @@ function normalizeHeaderArray(headers) {
   return headers.map(function(item) {
     return normalizeHeaderEntry(item);
   });
+}
+
+function ensureHeaderKeys(headers) {
+  if (!Array.isArray(headers)) {
+    return [];
+  }
+  var used = {};
+  return headers.map(function(item, index) {
+    var normalized = normalizeHeaderEntry(item);
+    var key = normalizeHeaderKey(normalized.key);
+    if (!key) {
+      key = 'col_' + (index + 1);
+    }
+    if (used[key]) {
+      key = generateUniqueHeaderKey(used);
+    }
+    normalized.key = key;
+    used[key] = true;
+    return normalized;
+  });
+}
+
+function buildColumnMapping(newHeaders, previousHeaders, previousTableData, targetColumnCount) {
+  var mapping = [];
+  var normalizedNewHeaders = Array.isArray(newHeaders) ? newHeaders : [];
+  var normalizedPreviousHeaders = Array.isArray(previousHeaders) ? previousHeaders : [];
+  var previousKeyIndexMap = {};
+  var previousLabelIndexMap = {};
+  for (var i = 0; i < normalizedPreviousHeaders.length; i++) {
+    var prevItem = normalizeHeaderEntry(normalizedPreviousHeaders[i]);
+    var prevKey = normalizeHeaderKey(prevItem.key);
+    if (prevKey && !previousKeyIndexMap.hasOwnProperty(prevKey)) {
+      previousKeyIndexMap[prevKey] = i;
+    }
+    var prevLabel = normalizeHeaderLabelValue(prevItem.label);
+    if (prevLabel) {
+      if (!previousLabelIndexMap[prevLabel]) {
+        previousLabelIndexMap[prevLabel] = [];
+      }
+      previousLabelIndexMap[prevLabel].push(i);
+    }
+  }
+  var previousHeaderRow = [];
+  if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
+    previousHeaderRow = previousTableData.values[0] || [];
+    for (var hr = 0; hr < previousHeaderRow.length; hr++) {
+      var headerLabel = normalizeHeaderLabelValue(previousHeaderRow[hr]);
+      if (headerLabel) {
+        if (!previousLabelIndexMap[headerLabel]) {
+          previousLabelIndexMap[headerLabel] = [];
+        }
+        if (previousLabelIndexMap[headerLabel].indexOf(hr) === -1) {
+          previousLabelIndexMap[headerLabel].push(hr);
+        }
+      }
+    }
+  }
+  var previousColumnCount = 0;
+  if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
+    previousColumnCount = previousTableData.values[0].length;
+  } else if (previousTableData && previousTableData.formulas && previousTableData.formulas.length > 0) {
+    previousColumnCount = previousTableData.formulas[0].length;
+  } else if (normalizedPreviousHeaders.length > 0) {
+    previousColumnCount = normalizedPreviousHeaders.length;
+  }
+  var usedIndices = {};
+  var totalColumns = typeof targetColumnCount === 'number' && targetColumnCount > 0 ? targetColumnCount : normalizedNewHeaders.length;
+  for (var col = 0; col < totalColumns; col++) {
+    var newHeader = normalizeHeaderEntry(normalizedNewHeaders[col]);
+    var desiredKey = normalizeHeaderKey(newHeader.key);
+    var desiredLabel = normalizeHeaderLabelValue(newHeader.label);
+    var sourceIndex = -1;
+    if (desiredKey && previousKeyIndexMap.hasOwnProperty(desiredKey)) {
+      var candidateIndex = previousKeyIndexMap[desiredKey];
+      if (!usedIndices[candidateIndex]) {
+        sourceIndex = candidateIndex;
+      }
+    }
+    if (sourceIndex === -1 && desiredLabel && previousLabelIndexMap[desiredLabel]) {
+      var labelCandidates = previousLabelIndexMap[desiredLabel];
+      while (labelCandidates.length > 0 && sourceIndex === -1) {
+        var candidate = labelCandidates.shift();
+        if (!usedIndices[candidate]) {
+          sourceIndex = candidate;
+        }
+      }
+      previousLabelIndexMap[desiredLabel] = labelCandidates;
+    }
+    if (sourceIndex === -1) {
+      if (!usedIndices[col] && col < previousColumnCount) {
+        sourceIndex = col;
+      } else {
+        for (var fallback = 0; fallback < previousColumnCount; fallback++) {
+          if (!usedIndices[fallback]) {
+            sourceIndex = fallback;
+            break;
+          }
+        }
+      }
+    }
+    if (sourceIndex !== -1) {
+      usedIndices[sourceIndex] = true;
+    }
+    mapping.push(sourceIndex);
+  }
+  return mapping;
+}
+
+function reorderRowByMapping(row, mapping, defaultValue) {
+  var result = [];
+  var sourceRow = Array.isArray(row) ? row : [];
+  for (var i = 0; i < mapping.length; i++) {
+    var sourceIndex = mapping[i];
+    if (sourceIndex !== -1 && sourceRow && sourceIndex < sourceRow.length) {
+      result.push(sourceRow[sourceIndex]);
+    } else {
+      result.push(defaultValue);
+    }
+  }
+  return result;
+}
+
+function reorderDataRows(matrix, mapping, startIndex, rowCount, defaultValue) {
+  var result = [];
+  var sourceMatrix = Array.isArray(matrix) ? matrix : [];
+  var totalRows = typeof rowCount === 'number' && rowCount >= 0 ? rowCount : 0;
+  for (var r = 0; r < totalRows; r++) {
+    var sourceRowIndex = startIndex + r;
+    var row = sourceRowIndex >= 0 && sourceRowIndex < sourceMatrix.length ? sourceMatrix[sourceRowIndex] : null;
+    result.push(reorderRowByMapping(row, mapping, defaultValue));
+  }
+  return result;
 }
 
 
@@ -424,6 +592,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       headerMeta.push(derivedMeta[j] || normalizeHeaderEntry(''));
     }
   }
+  headerMeta = ensureHeaderKeys(headerMeta);
   headerMeta = headerMeta.map(function(entry) {
     var labelValue = entry && entry.label !== undefined && entry.label !== null ? String(entry.label) : '';
     var descriptionValue = entry && entry.description !== undefined && entry.description !== null ? String(entry.description) : '';
@@ -431,17 +600,20 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     var trimmedDescription = descriptionValue.trim();
     var explicitHasDescription = entry && Object.prototype.hasOwnProperty.call(entry, 'hasDescription') ? !!entry.hasDescription : false;
     var hasDescription = explicitHasDescription || trimmedDescription !== '';
+    var keyValue = entry && entry.key !== undefined && entry.key !== null ? String(entry.key) : '';
     return {
       label: trimmedLabel,
       description: hasDescription ? trimmedDescription : '',
-      hasDescription: hasDescription
+      hasDescription: hasDescription,
+      key: normalizeHeaderKey(keyValue)
     };
   });
   var headerMetaForReturn = headerMeta.map(function(item) {
     return {
       label: item.label || '',
       description: item.hasDescription ? (item.description || '') : '',
-      hasDescription: !!item.hasDescription
+      hasDescription: !!item.hasDescription,
+      key: item.key || ''
     };
   });
   var headerValues = headerMetaForReturn.map(function(item) {
@@ -450,10 +622,13 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   var previousTableData = null;
   var previousTableRows = 0;
   var previousTableCols = 0;
+  var storedHeaderMeta = [];
+  var columnMapping = [];
   if (doFormat) {
     if (id) {
       var entry = findMetaById(id);
       if (entry) {
+        storedHeaderMeta = normalizeHeaderArray(parseJsonValue(entry.data[META_INDEX.headers], null));
         var prevRangeA1 = entry.data[META_INDEX.rangeA1];
         var prevSheetName = entry.data[META_INDEX.sheet];
         if (prevRangeA1) {
@@ -470,7 +645,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
                     formulas: prevRange.getFormulas(),
                     horizontalAlignments: prevRange.getHorizontalAlignments(),
                     verticalAlignments: prevRange.getVerticalAlignments(),
-                    fontWeights: prevRange.getFontWeights()
+                    fontWeights: prevRange.getFontWeights(),
+                    numberFormats: prevRange.getNumberFormats()
                   };
                   previousTableRows = prevRange.getNumRows();
                   previousTableCols = prevRange.getNumColumns();
@@ -521,107 +697,65 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     }
     if (previousTableData) {
       range.clearContent();
+      columnMapping = buildColumnMapping(headerMeta, storedHeaderMeta, previousTableData, cols);
+      if (!columnMapping || columnMapping.length !== cols) {
+        columnMapping = [];
+        for (var cm = 0; cm < cols; cm++) {
+          columnMapping.push(cm);
+        }
+      }
+    } else {
+      columnMapping = [];
     }
     applyFormattingToRange(range, appliedStyle);
     if (shouldOverwriteHeaders) {
       headerRange.setValues([headerValues]);
     } else if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
-      var prevHeaderValues = previousTableData.values[0] || [];
-      var headerRowValues = [];
-      for (var hc = 0; hc < cols; hc++) {
-        headerRowValues.push(hc < prevHeaderValues.length ? prevHeaderValues[hc] : '');
-      }
-      headerRange.setValues([headerRowValues]);
+      var reorderedHeaderValues = reorderRowByMapping(previousTableData.values[0], columnMapping, '');
+      headerRange.setValues([reorderedHeaderValues]);
       if (previousTableData.formulas && previousTableData.formulas.length > 0) {
-        var headerFormulas = previousTableData.formulas[0] || [];
-        for (var hf = 0; hf < cols; hf++) {
-          var headerFormula = headerFormulas[hf];
+        var reorderedHeaderFormulas = reorderRowByMapping(previousTableData.formulas[0], columnMapping, '');
+        for (var hf = 0; hf < reorderedHeaderFormulas.length; hf++) {
+          var headerFormula = reorderedHeaderFormulas[hf];
           if (headerFormula && headerFormula !== '') {
             headerRange.getCell(1, hf + 1).setFormula(headerFormula);
           }
         }
       }
     }
-    if (previousTableData && previousTableData.values && previousTableData.values.length > 0) {
-      var prevValues = previousTableData.values;
+    if (previousTableData) {
+      var numberFormatsMatrix = null;
+      if (previousTableData.numberFormats) {
+        numberFormatsMatrix = [];
+        for (var nfr = 0; nfr < rows; nfr++) {
+          var numberFormatRow = nfr < previousTableData.numberFormats.length ? previousTableData.numberFormats[nfr] : null;
+          numberFormatsMatrix.push(reorderRowByMapping(numberFormatRow, columnMapping, '@'));
+        }
+      }
       var totalTargetRows = rows - 1;
       if (totalTargetRows > 0) {
         var dataRange = range.offset(1, 0, totalTargetRows, cols);
-        var valuesMatrix = [];
-        for (var dr = 0; dr < totalTargetRows; dr++) {
-          var sourceRow = (dr + 1 < prevValues.length) ? prevValues[dr + 1] : null;
-          var newRow = [];
-          for (var dc = 0; dc < cols; dc++) {
-            if (sourceRow && dc < sourceRow.length && sourceRow[dc] !== undefined && sourceRow[dc] !== null) {
-              newRow.push(sourceRow[dc]);
-            } else {
-              newRow.push('');
-            }
-          }
-          valuesMatrix.push(newRow);
-        }
+        var valuesMatrix = reorderDataRows(previousTableData.values, columnMapping, 1, totalTargetRows, '');
         dataRange.setValues(valuesMatrix);
-        if (previousTableData.formulas && previousTableData.formulas.length > 1) {
-          var prevFormulas = previousTableData.formulas;
-          var maxFormulaRows = Math.min(totalTargetRows, prevFormulas.length - 1);
-          for (var fr = 0; fr < maxFormulaRows; fr++) {
-            var formulaRow = prevFormulas[fr + 1] || [];
-            for (var fc = 0; fc < cols; fc++) {
-              var formula = formulaRow[fc];
-              if (formula && formula !== '') {
-                dataRange.getCell(fr + 1, fc + 1).setFormula(formula);
-              }
-            }
-          }
+        if (previousTableData.formulas) {
+          var formulasMatrix = reorderDataRows(previousTableData.formulas, columnMapping, 1, totalTargetRows, '');
+          dataRange.setFormulas(formulasMatrix);
         }
-        if (previousTableData.horizontalAlignments && previousTableData.horizontalAlignments.length > 1) {
-          var availableHorizontalRows = Math.min(totalTargetRows, previousTableData.horizontalAlignments.length - 1);
-          if (availableHorizontalRows > 0) {
-            var horizontalMatrix = [];
-            for (var har = 0; har < availableHorizontalRows; har++) {
-              var horizontalSource = previousTableData.horizontalAlignments[har + 1] || [];
-              var horizontalRow = [];
-              for (var hac = 0; hac < cols; hac++) {
-                var horizontalValue = (horizontalSource && hac < horizontalSource.length) ? horizontalSource[hac] : null;
-                horizontalRow.push(horizontalValue ? horizontalValue : null);
-              }
-              horizontalMatrix.push(horizontalRow);
-            }
-            dataRange.offset(0, 0, availableHorizontalRows, cols).setHorizontalAlignments(horizontalMatrix);
-          }
+        if (previousTableData.horizontalAlignments) {
+          var horizontalMatrix = reorderDataRows(previousTableData.horizontalAlignments, columnMapping, 1, totalTargetRows, null);
+          dataRange.setHorizontalAlignments(horizontalMatrix);
         }
-        if (previousTableData.verticalAlignments && previousTableData.verticalAlignments.length > 1) {
-          var availableVerticalRows = Math.min(totalTargetRows, previousTableData.verticalAlignments.length - 1);
-          if (availableVerticalRows > 0) {
-            var verticalMatrix = [];
-            for (var varr = 0; varr < availableVerticalRows; varr++) {
-              var verticalSource = previousTableData.verticalAlignments[varr + 1] || [];
-              var verticalRow = [];
-              for (var vac = 0; vac < cols; vac++) {
-                var verticalValue = (verticalSource && vac < verticalSource.length) ? verticalSource[vac] : null;
-                verticalRow.push(verticalValue ? verticalValue : null);
-              }
-              verticalMatrix.push(verticalRow);
-            }
-            dataRange.offset(0, 0, availableVerticalRows, cols).setVerticalAlignments(verticalMatrix);
-          }
+        if (previousTableData.verticalAlignments) {
+          var verticalMatrix = reorderDataRows(previousTableData.verticalAlignments, columnMapping, 1, totalTargetRows, null);
+          dataRange.setVerticalAlignments(verticalMatrix);
         }
-        if (previousTableData.fontWeights && previousTableData.fontWeights.length > 1) {
-          var availableWeightRows = Math.min(totalTargetRows, previousTableData.fontWeights.length - 1);
-          if (availableWeightRows > 0) {
-            var weightMatrix = [];
-            for (var wr = 0; wr < availableWeightRows; wr++) {
-              var weightSource = previousTableData.fontWeights[wr + 1] || [];
-              var weightRow = [];
-              for (var wc = 0; wc < cols; wc++) {
-                var weightValue = (weightSource && wc < weightSource.length) ? weightSource[wc] : '';
-                weightRow.push(weightValue === 'bold' ? 'bold' : 'normal');
-              }
-              weightMatrix.push(weightRow);
-            }
-            dataRange.offset(0, 0, availableWeightRows, cols).setFontWeights(weightMatrix);
-          }
+        if (previousTableData.fontWeights) {
+          var weightMatrix = reorderDataRows(previousTableData.fontWeights, columnMapping, 1, totalTargetRows, 'normal');
+          dataRange.setFontWeights(weightMatrix);
         }
+      }
+      if (numberFormatsMatrix && numberFormatsMatrix.length === rows) {
+        range.setNumberFormats(numberFormatsMatrix);
       }
     }
     if (id) {
