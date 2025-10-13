@@ -411,7 +411,7 @@ function handleInsertedColumnsChange(e) {
 
     var newRange = buildA1Notation(currentStart, parsed.startRow, newCols, parsed.rows);
     var updatedRow = row.slice();
-    updatedRow[META_INDEX.rangeA1] = newRange;
+    updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRow[META_INDEX.cols] = newCols;
     updatedRow[META_INDEX.headers] = stringifyJsonValue(headers);
     updatedRow[META_INDEX.updatedAt] = now;
@@ -506,7 +506,7 @@ function handleInsertedRowsChange(e) {
 
     var newRange = buildA1Notation(parsed.startColumn, currentStart, parsed.cols, newRows);
     var updatedRow = row.slice();
-    updatedRow[META_INDEX.rangeA1] = newRange;
+    updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRow[META_INDEX.rows] = newRows;
     updatedRow[META_INDEX.updatedAt] = now;
     updates.push({
@@ -597,7 +597,7 @@ function handleRemovedColumnsChange(e) {
       }
       var shiftedRange = buildA1Notation(shiftedStartCol, tableStartRow, tableCols, tableRows);
       var updatedRow = row.slice();
-      updatedRow[META_INDEX.rangeA1] = shiftedRange;
+      updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, shiftedRange);
       updatedRow[META_INDEX.cols] = tableCols;
       updatedRow[META_INDEX.updatedAt] = now;
       updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
@@ -636,7 +636,7 @@ function handleRemovedColumnsChange(e) {
     headers = ensureHeaderKeys(headers);
     var newRange = buildA1Notation(newStartCol, tableStartRow, newCols, tableRows);
     var updatedRowWithOverlap = row.slice();
-    updatedRowWithOverlap[META_INDEX.rangeA1] = newRange;
+    updatedRowWithOverlap[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRowWithOverlap[META_INDEX.cols] = newCols;
     updatedRowWithOverlap[META_INDEX.headers] = stringifyJsonValue(headers);
     updatedRowWithOverlap[META_INDEX.updatedAt] = now;
@@ -730,7 +730,7 @@ function handleRemovedRowsChange(e) {
       }
       var shiftedRange = buildA1Notation(tableStartCol, shiftedStartRow, tableCols, tableRows);
       var updatedRow = row.slice();
-      updatedRow[META_INDEX.rangeA1] = shiftedRange;
+      updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, shiftedRange);
       updatedRow[META_INDEX.rows] = tableRows;
       updatedRow[META_INDEX.updatedAt] = now;
       updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
@@ -771,7 +771,7 @@ function handleRemovedRowsChange(e) {
 
     var newRange = buildA1Notation(tableStartCol, newStartRow, tableCols, newRows);
     var updatedRowWithOverlap = row.slice();
-    updatedRowWithOverlap[META_INDEX.rangeA1] = newRange;
+    updatedRowWithOverlap[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRowWithOverlap[META_INDEX.rows] = newRows;
     updatedRowWithOverlap[META_INDEX.updatedAt] = now;
     updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
@@ -1056,7 +1056,13 @@ function reconcileAllSheets() {
   if (!data || data.length <= 1) {
     return;
   }
+  var ss = SpreadsheetApp.getActive();
+  var namedRangeIndex = buildNamedRangeIndex();
+  var sheetIdIndex = buildSheetIdIndex(ss);
   var grouped = {};
+  var renameBuckets = {};
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     if (!row || row.length === 0) {
@@ -1066,20 +1072,75 @@ function reconcileAllSheets() {
     if (!entryId) {
       continue;
     }
-    var sheetName = row[META_INDEX.sheet];
-    if (!sheetName || sheetName === '__TableCrafter_Meta') {
+
+    var storedRange = row[META_INDEX.rangeA1] || '';
+    var rangeParts = splitRangeNotation(storedRange);
+    var storedSheetName = row[META_INDEX.sheet];
+    var candidateSheetName = storedSheetName || rangeParts.sheet;
+    var resolvedSheet = candidateSheetName ? ss.getSheetByName(candidateSheetName) : null;
+    var namedInfo = getNamedRangeInfoFromIndex(entryId, namedRangeIndex);
+    if (namedInfo) {
+      var namedSheet = resolveSheetFromNamedInfo(namedInfo, ss, sheetIdIndex);
+      if (!resolvedSheet && namedSheet) {
+        resolvedSheet = namedSheet;
+      } else if (resolvedSheet && namedSheet && typeof resolvedSheet.getSheetId === 'function' && typeof namedSheet.getSheetId === 'function') {
+        if (resolvedSheet.getSheetId() !== namedSheet.getSheetId()) {
+          resolvedSheet = namedSheet;
+        }
+      }
+    }
+
+    var effectiveSheetName = resolvedSheet ? resolvedSheet.getName() : candidateSheetName;
+    if (!effectiveSheetName || effectiveSheetName === '__TableCrafter_Meta') {
       continue;
     }
-    if (!grouped[sheetName]) {
-      grouped[sheetName] = [];
+
+    var pureRange = stripSheetFromRange(storedRange);
+    var desiredStoredRange = pureRange ? buildFullRangeNotation(effectiveSheetName, pureRange) : storedRange;
+    var needsSheetUpdate = resolvedSheet && storedSheetName !== effectiveSheetName;
+    var needsRangeUpdate = resolvedSheet && pureRange && desiredStoredRange && desiredStoredRange !== storedRange;
+    var updatedRow = row;
+
+    if ((needsSheetUpdate || needsRangeUpdate) && pureRange) {
+      updatedRow = row.slice();
+      updatedRow[META_INDEX.sheet] = effectiveSheetName;
+      updatedRow[META_INDEX.rangeA1] = desiredStoredRange;
+      updatedRow[META_INDEX.updatedAt] = now;
+      var bucketKey = resolvedSheet && typeof resolvedSheet.getSheetId === 'function' ? String(resolvedSheet.getSheetId()) : '__none__';
+      if (!renameBuckets[bucketKey]) {
+        renameBuckets[bucketKey] = { sheet: resolvedSheet, updates: [] };
+      }
+      renameBuckets[bucketKey].updates.push({
+        rowNumber: i + 1,
+        values: updatedRow,
+        id: entryId,
+        newRange: pureRange
+      });
     }
-    grouped[sheetName].push({
-      rowNumber: i + 1,
-      data: row,
-      id: entryId
-    });
+
+    if (resolvedSheet) {
+      var groupKey = resolvedSheet.getName();
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = [];
+      }
+      grouped[groupKey].push({
+        rowNumber: i + 1,
+        data: updatedRow,
+        id: entryId
+      });
+    }
   }
-  var ss = SpreadsheetApp.getActive();
+
+  for (var bucketKey in renameBuckets) {
+    if (!Object.prototype.hasOwnProperty.call(renameBuckets, bucketKey)) {
+      continue;
+    }
+    var bucket = renameBuckets[bucketKey];
+    if (bucket && bucket.updates && bucket.updates.length > 0) {
+      applyStructuralUpdates(bucket.updates, bucket.sheet);
+    }
+  }
+
   for (var key in grouped) {
     if (!Object.prototype.hasOwnProperty.call(grouped, key)) {
       continue;
@@ -1178,9 +1239,10 @@ function reconcileSheetTables(sheet, optEntries) {
     ensureHeaderRowIntegrity(sheet, headerLocation.row, headerLocation.column, columnCount, entry.data, storedHeaders);
     var rowCount = determineTableRowCount(sheet, headerLocation.row, headerLocation.column, columnCount, storedRowsHint);
     var newRange = buildA1Notation(headerLocation.column, headerLocation.row, columnCount, rowCount);
-    if (newRange !== entry.data[META_INDEX.rangeA1] || entry.data[META_INDEX.cols] !== columnCount || entry.data[META_INDEX.rows] !== rowCount) {
+    var storedRangeNotation = buildFullRangeNotation(sheetName, newRange);
+    if (storedRangeNotation !== entry.data[META_INDEX.rangeA1] || entry.data[META_INDEX.cols] !== columnCount || entry.data[META_INDEX.rows] !== rowCount) {
       var updatedRow = entry.data.slice();
-      updatedRow[META_INDEX.rangeA1] = newRange;
+      updatedRow[META_INDEX.rangeA1] = storedRangeNotation;
       updatedRow[META_INDEX.cols] = columnCount;
       updatedRow[META_INDEX.rows] = rowCount;
       updatedRow[META_INDEX.updatedAt] = now;
@@ -1227,6 +1289,61 @@ function buildNamedRangeIndex() {
     }
   }
   return index;
+}
+
+function buildSheetIdIndex(ss) {
+  var index = {};
+  if (!ss || typeof ss.getSheets !== 'function') {
+    return index;
+  }
+  var sheets = ss.getSheets();
+  if (!sheets || sheets.length === 0) {
+    return index;
+  }
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    if (!sheet || typeof sheet.getSheetId !== 'function') {
+      continue;
+    }
+    try {
+      var sheetId = sheet.getSheetId();
+      index[sheetId] = sheet;
+    } catch (err) {
+      // Ignorar errores al leer el ID de la hoja.
+    }
+  }
+  return index;
+}
+
+function resolveSheetFromNamedInfo(namedRangeInfo, ss, sheetIdIndex) {
+  if (!namedRangeInfo) {
+    return null;
+  }
+  if (namedRangeInfo.sheetName) {
+    var byName = ss.getSheetByName(namedRangeInfo.sheetName);
+    if (byName) {
+      return byName;
+    }
+  }
+  if (typeof namedRangeInfo.sheetId === 'number') {
+    if (sheetIdIndex && sheetIdIndex[namedRangeInfo.sheetId]) {
+      return sheetIdIndex[namedRangeInfo.sheetId];
+    }
+    if (ss && typeof ss.getSheets === 'function') {
+      var sheets = ss.getSheets();
+      for (var i = 0; i < sheets.length; i++) {
+        var candidate = sheets[i];
+        try {
+          if (candidate && typeof candidate.getSheetId === 'function' && candidate.getSheetId() === namedRangeInfo.sheetId) {
+            return candidate;
+          }
+        } catch (err) {
+          // Ignorar y continuar.
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function getNamedRangeInfoFromIndex(tableId, namedRangeIndex) {

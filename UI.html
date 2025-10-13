@@ -1020,6 +1020,7 @@
                 id: entry.id,
                 name: entry.name || '',
                 rangeA1: entry.rangeA1 || '',
+                fullRangeA1: entry.fullRangeA1 || (entry.sheetName && entry.rangeA1 ? entry.sheetName + '!' + entry.rangeA1 : ''),
                 description: entry.description || '',
                 sheetName: entry.sheetName || '',
                 cols: entry.cols || 0,
@@ -1140,12 +1141,32 @@
         const style = normalizeStyleModel(meta.style || {});
         const cols = typeof meta.cols === 'number' ? meta.cols : parseInt(meta.cols, 10) || headers.length;
         const rows = typeof meta.rows === 'number' ? meta.rows : parseInt(meta.rows, 10) || 0;
+        const rawFullRange = meta.fullRangeA1 ? String(meta.fullRangeA1).trim() : '';
+        let sheetName = meta.sheetName ? String(meta.sheetName).trim() : '';
+        let rangeA1 = meta.rangeA1 ? String(meta.rangeA1).trim() : '';
+        if ((!sheetName || !rangeA1) && rawFullRange) {
+          const bangIndex = rawFullRange.lastIndexOf('!');
+          if (bangIndex !== -1) {
+            if (!sheetName) {
+              let candidateSheet = rawFullRange.substring(0, bangIndex);
+              if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+              }
+              sheetName = candidateSheet;
+            }
+            if (!rangeA1) {
+              rangeA1 = rawFullRange.substring(bangIndex + 1);
+            }
+          }
+        }
+        const fullRangeA1 = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
         return {
           id: id,
           name: meta.name ? String(meta.name).trim() : '',
           description: meta.description ? String(meta.description).trim() : '',
-          sheetName: meta.sheetName ? String(meta.sheetName).trim() : '',
-          rangeA1: meta.rangeA1 ? String(meta.rangeA1).trim() : '',
+          sheetName: sheetName,
+          rangeA1: rangeA1,
+          fullRangeA1: fullRangeA1,
           cols: cols,
           rows: rows,
           createdAt: meta.createdAt || '',
@@ -1164,6 +1185,12 @@
           id: entry.id,
           name: entry.name ? String(entry.name).trim() : '',
           rangeA1: entry.rangeA1 ? String(entry.rangeA1).trim() : '',
+          fullRangeA1:
+            entry.fullRangeA1
+              ? String(entry.fullRangeA1).trim()
+              : entry.sheetName && entry.rangeA1
+              ? entry.sheetName + '!' + entry.rangeA1
+              : '',
           description: entry.description ? String(entry.description).trim() : '',
           sheetName: entry.sheetName ? String(entry.sheetName).trim() : '',
           cols: typeof entry.cols === 'number' ? entry.cols : parseInt(entry.cols, 10) || 0,
@@ -1223,12 +1250,16 @@
             : preferenceFromInfo !== undefined
             ? preferenceFromInfo
             : true;
+        const sheetName = info.sheetName || (values && values.sheetName) || '';
+        const a1Notation = info.a1Notation || (values && values.rangeA1) || '';
+        const fullRangeA1 = sheetName && a1Notation ? sheetName + '!' + a1Notation : (values && values.fullRangeA1) || '';
         return {
           id: id,
           name: values && values.name ? values.name : '',
           description: values && values.description ? values.description : '',
-          sheetName: info.sheetName || '',
-          rangeA1: info.a1Notation || '',
+          sheetName: sheetName,
+          rangeA1: a1Notation,
+          fullRangeA1: fullRangeA1,
           cols: typeof info.cols === 'number' ? info.cols : normalizedHeaders.length,
           rows: typeof info.rows === 'number' ? info.rows : 0,
           style: normalizedStyle,
@@ -2895,12 +2926,32 @@
                 if (!item || !item.id) {
                   return null;
                 }
+                const rawFullRange = item.fullRangeA1 ? String(item.fullRangeA1).trim() : '';
+                let sheetName = item.sheetName ? String(item.sheetName).trim() : '';
+                let rangeA1 = item.rangeA1 ? String(item.rangeA1).trim() : '';
+                if ((!sheetName || !rangeA1) && rawFullRange) {
+                  const bangIndex = rawFullRange.lastIndexOf('!');
+                  if (bangIndex !== -1) {
+                    if (!sheetName) {
+                      let candidateSheet = rawFullRange.substring(0, bangIndex);
+                      if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                        candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+                      }
+                      sheetName = candidateSheet;
+                    }
+                    if (!rangeA1) {
+                      rangeA1 = rawFullRange.substring(bangIndex + 1);
+                    }
+                  }
+                }
+                const normalizedFullRange = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
                 return {
                   id: item.id,
                   name: item.name ? String(item.name).trim() : '',
-                  rangeA1: item.rangeA1 ? String(item.rangeA1).trim() : '',
+                  rangeA1: rangeA1,
+                  fullRangeA1: normalizedFullRange,
                   description: item.description ? String(item.description).trim() : '',
-                  sheetName: item.sheetName ? String(item.sheetName).trim() : '',
+                  sheetName: sheetName,
                   cols: item.cols || 0,
                   rows: item.rows || 0,
                   style: normalizeStyleModel(item.style || {}),

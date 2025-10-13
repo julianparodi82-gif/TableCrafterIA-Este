@@ -230,7 +230,7 @@ function syncNamedRangeForTable(id, sheetName, rangeA1) {
   }
   var range;
   try {
-    range = sheet.getRange(rangeA1);
+    range = getRangeWithinSheet(sheet, rangeA1);
   } catch (err3) {
     range = null;
   }
@@ -474,6 +474,62 @@ function buildA1Notation(startColumn, startRow, cols, rows) {
   return startRef + ':' + endLetter + endRow;
 }
 
+function splitRangeNotation(rangeA1) {
+  var result = { sheet: '', range: '' };
+  if (rangeA1 === null || rangeA1 === undefined) {
+    return result;
+  }
+  var text = String(rangeA1).trim();
+  if (text === '') {
+    return result;
+  }
+  var exclIndex = text.lastIndexOf('!');
+  if (exclIndex === -1) {
+    result.range = text;
+    return result;
+  }
+  var sheetPart = text.substring(0, exclIndex);
+  var rangePart = text.substring(exclIndex + 1);
+  if (sheetPart.length >= 2 && sheetPart.charAt(0) === "'" && sheetPart.charAt(sheetPart.length - 1) === "'") {
+    sheetPart = sheetPart.substring(1, sheetPart.length - 1).replace(/''/g, "'");
+  }
+  result.sheet = sheetPart;
+  result.range = rangePart;
+  return result;
+}
+
+function stripSheetFromRange(rangeA1) {
+  return splitRangeNotation(rangeA1).range;
+}
+
+function extractSheetNameFromRange(rangeA1) {
+  return splitRangeNotation(rangeA1).sheet;
+}
+
+function buildFullRangeNotation(sheetName, rangeA1) {
+  var pureRange = stripSheetFromRange(rangeA1);
+  if (!pureRange) {
+    return '';
+  }
+  var normalizedSheet = sheetName === null || sheetName === undefined ? '' : String(sheetName).trim();
+  if (!normalizedSheet) {
+    return pureRange;
+  }
+  var escaped = normalizedSheet.replace(/'/g, "''");
+  return "'" + escaped + "'!" + pureRange;
+}
+
+function getRangeWithinSheet(sheet, rangeA1) {
+  if (!sheet || typeof sheet.getRange !== 'function') {
+    throw new Error('Hoja no encontrada.');
+  }
+  var pureRange = stripSheetFromRange(rangeA1);
+  if (!pureRange) {
+    throw new Error('Rango no especificado.');
+  }
+  return sheet.getRange(pureRange);
+}
+
 function normalizeHeaderArray(headers) {
   if (!Array.isArray(headers)) {
     return [];
@@ -633,12 +689,17 @@ function listSavedTables() {
     if (entryId) {
       var style = parseJsonValue(row[META_INDEX.style], null);
       var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], null));
+      var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
+      var entrySheetName = row[META_INDEX.sheet] || rangeParts.sheet;
+      var pureRange = rangeParts.range || '';
+      var fullRange = buildFullRangeNotation(entrySheetName, pureRange);
       result.push({
         id: entryId,
         name: row[META_INDEX.name],
-        rangeA1: row[META_INDEX.rangeA1],
+        rangeA1: pureRange,
+        fullRangeA1: fullRange,
         description: row[META_INDEX.description],
-        sheetName: row[META_INDEX.sheet],
+        sheetName: entrySheetName,
         cols: row[META_INDEX.cols],
         rows: row[META_INDEX.rows],
         createdAt: row[META_INDEX.createdAt],
@@ -662,8 +723,9 @@ function focusSavedTableRange(tableId) {
     return { error: 'Tabla no encontrada.' };
   }
   var rowData = entry.data || [];
-  var sheetName = rowData[META_INDEX.sheet];
-  var rangeA1 = rowData[META_INDEX.rangeA1];
+  var rangeParts = splitRangeNotation(rowData[META_INDEX.rangeA1]);
+  var sheetName = rowData[META_INDEX.sheet] || rangeParts.sheet;
+  var rangeA1 = rangeParts.range;
   if (!sheetName || !rangeA1) {
     return { error: 'La tabla no tiene un rango asociado.' };
   }
@@ -674,7 +736,7 @@ function focusSavedTableRange(tableId) {
   }
   var range;
   try {
-    range = sheet.getRange(rangeA1);
+    range = getRangeWithinSheet(sheet, rowData[META_INDEX.rangeA1] || rangeA1);
   } catch (err) {
     return { error: 'No se pudo obtener el rango: ' + err.message };
   }
@@ -690,7 +752,7 @@ function focusSavedTableRange(tableId) {
   return {
     ok: true,
     sheetName: sheetName,
-    rangeA1: rangeA1,
+    rangeA1: buildFullRangeNotation(sheetName, rangeA1),
     rows: range.getNumRows(),
     cols: range.getNumColumns()
   };
@@ -710,13 +772,14 @@ function clearTable(tableId) {
   }
   var row = entry.row;
   var data = entry.data;
-  var rangeA1 = data[META_INDEX.rangeA1];
-  var sheetName = data[META_INDEX.sheet];
+  var rangeParts = splitRangeNotation(data[META_INDEX.rangeA1]);
+  var rangeA1 = rangeParts.range;
+  var sheetName = data[META_INDEX.sheet] || rangeParts.sheet;
   if (rangeA1) {
     try {
       var ss = SpreadsheetApp.getActive();
       var sheet = ss.getSheetByName(sheetName);
-      var range = sheet.getRange(rangeA1);
+      var range = getRangeWithinSheet(sheet, data[META_INDEX.rangeA1] || rangeA1);
       clearRangeAndFormatting(range);
       // Eliminar vista de filtro correspondiente
       var title = 'TableCrafter_' + tableId;
@@ -754,8 +817,9 @@ function deleteSavedTable(tableId) {
   }
 
   var data = entry.data;
-  var rangeA1 = data[META_INDEX.rangeA1];
-  var sheetName = data[META_INDEX.sheet];
+  var rangeParts = splitRangeNotation(data[META_INDEX.rangeA1]);
+  var rangeA1 = rangeParts.range;
+  var sheetName = data[META_INDEX.sheet] || rangeParts.sheet;
   var warnings = [];
 
   if (rangeA1 && sheetName) {
@@ -763,7 +827,7 @@ function deleteSavedTable(tableId) {
     var sheet = ss.getSheetByName(sheetName);
     if (sheet) {
       try {
-        var range = sheet.getRange(rangeA1);
+        var range = getRangeWithinSheet(sheet, data[META_INDEX.rangeA1] || rangeA1);
         clearRangeAndFormatting(range);
       } catch (err) {
         warnings.push('No se pudo limpiar el rango: ' + err.message);
@@ -953,15 +1017,17 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
           shouldUpdateFormulaReferences = storedFormulaPreference;
         }
         storedHeaderMeta = normalizeHeaderArray(parseJsonValue(entry.data[META_INDEX.headers], null));
-        var prevRangeA1 = entry.data[META_INDEX.rangeA1];
-        var prevSheetName = entry.data[META_INDEX.sheet];
-        if (prevRangeA1) {
+        var prevRangeStored = entry.data[META_INDEX.rangeA1];
+        var prevRangeParts = splitRangeNotation(prevRangeStored);
+        var prevRangeA1 = prevRangeParts.range;
+        var prevSheetName = entry.data[META_INDEX.sheet] || prevRangeParts.sheet;
+        if (prevRangeA1 && prevSheetName) {
           var ss = SpreadsheetApp.getActive();
           var prevSheet = ss.getSheetByName(prevSheetName);
           if (prevSheet) {
             var allowOverlapWithHeaderRow = false;
             try {
-              var prevRange = prevSheet.getRange(prevRangeA1);
+              var prevRange = getRangeWithinSheet(prevSheet, prevRangeStored || prevRangeA1);
               var sameSheet = prevSheet.getSheetId() === sheet.getSheetId();
               var sameRange = sameSheet && prevRange.getA1Notation() === normalizedRange;
               if (!sameRange && sameSheet && rangesIntersect(prevRange, range)) {
@@ -1588,6 +1654,8 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
   var headersValue = stringifyJsonValue(normalizedHeaders);
   var normalizedFormulaPreference = typeof formulaPreference === 'boolean' ? formulaPreference : true;
   var formulaPreferenceValue = normalizedFormulaPreference ? 'TRUE' : 'FALSE';
+  var normalizedRangeOnly = stripSheetFromRange(rangeA1);
+  var storedRange = buildFullRangeNotation(sheetName, normalizedRangeOnly);
   if (meta) {
     // Actualizar
     var row = meta.row;
@@ -1598,7 +1666,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
         [
           normalizedId,
           name,
-          rangeA1,
+          storedRange,
           description,
           sheetName,
           cols,
@@ -1615,7 +1683,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     sheet.appendRow([
       normalizedId,
       name,
-      rangeA1,
+      storedRange,
       description,
       sheetName,
       cols,
@@ -1628,7 +1696,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     ]);
   }
 
-  syncNamedRangeForTable(normalizedId, sheetName, rangeA1);
+  syncNamedRangeForTable(normalizedId, sheetName, storedRange || normalizedRangeOnly);
   SpreadsheetApp.flush();
 }
 
@@ -1695,8 +1763,9 @@ function askQuestion(tableSelection, question) {
     }
 
     var data = metaEntry.data;
-    var rangeA1 = data[META_INDEX.rangeA1];
-    var sheetName = data[META_INDEX.sheet];
+    var rangeParts = splitRangeNotation(data[META_INDEX.rangeA1]);
+    var rangeA1 = rangeParts.range;
+    var sheetName = data[META_INDEX.sheet] || rangeParts.sheet;
     if (!rangeA1 || !sheetName) {
       continue;
     }
@@ -1706,7 +1775,7 @@ function askQuestion(tableSelection, question) {
       continue;
     }
 
-    var range = sheet.getRange(rangeA1);
+    var range = getRangeWithinSheet(sheet, data[META_INDEX.rangeA1] || rangeA1);
     var values = range.getDisplayValues();
     if (!values || values.length === 0) {
       continue;
@@ -1836,12 +1905,16 @@ function getTableMeta(tableId) {
   var d = meta.data;
   var style = parseJsonValue(d[META_INDEX.style], null);
   var headers = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
+  var rangeParts = splitRangeNotation(d[META_INDEX.rangeA1]);
+  var sheetName = d[META_INDEX.sheet] || rangeParts.sheet;
+  var pureRange = rangeParts.range || '';
   return {
     id: normalizeMetaId(d[META_INDEX.id]),
     name: d[META_INDEX.name],
-    rangeA1: d[META_INDEX.rangeA1],
+    rangeA1: pureRange,
+    fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
     description: d[META_INDEX.description],
-    sheetName: d[META_INDEX.sheet],
+    sheetName: sheetName,
     cols: d[META_INDEX.cols],
     rows: d[META_INDEX.rows],
     createdAt: d[META_INDEX.createdAt],
@@ -1868,12 +1941,13 @@ function getTableHeaders(tableId) {
   if (storedHeaders && storedHeaders.length) {
     return { headers: storedHeaders };
   }
-  var sheetName = d[META_INDEX.sheet];
-  var rangeA1 = d[META_INDEX.rangeA1];
+  var rangeParts = splitRangeNotation(d[META_INDEX.rangeA1]);
+  var sheetName = d[META_INDEX.sheet] || rangeParts.sheet;
+  var rangeA1 = rangeParts.range;
   var ss = SpreadsheetApp.getActive();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return { error: 'Hoja no encontrada' };
-  var range = sheet.getRange(rangeA1);
+  var range = getRangeWithinSheet(sheet, d[META_INDEX.rangeA1] || rangeA1);
   var values = range.getValues();
   if (!values || values.length === 0) return { error: 'Rango vacío' };
   var headers = values[0].map(function(v) {
