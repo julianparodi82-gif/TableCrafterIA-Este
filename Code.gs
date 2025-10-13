@@ -752,29 +752,47 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
         }
       }
       var totalTargetRows = rows - 1;
+      var dataRange = null;
+      var valuesMatrix = null;
+      var formulasMatrix = null;
+      var horizontalMatrix = null;
+      var verticalMatrix = null;
+      var weightMatrix = null;
       if (totalTargetRows > 0) {
-        var dataRange = range.offset(1, 0, totalTargetRows, cols);
-        var valuesMatrix = reorderDataRows(previousTableData.values, columnMapping, 1, totalTargetRows, '');
-        dataRange.setValues(valuesMatrix);
+        dataRange = range.offset(1, 0, totalTargetRows, cols);
+        valuesMatrix = reorderDataRows(previousTableData.values, columnMapping, 1, totalTargetRows, '');
         if (previousTableData.formulas) {
-          var formulasMatrix = reorderDataRows(previousTableData.formulas, columnMapping, 1, totalTargetRows, '');
-          dataRange.setFormulas(formulasMatrix);
+          formulasMatrix = reorderDataRows(previousTableData.formulas, columnMapping, 1, totalTargetRows, '');
         }
         if (previousTableData.horizontalAlignments) {
-          var horizontalMatrix = reorderDataRows(previousTableData.horizontalAlignments, columnMapping, 1, totalTargetRows, null);
-          dataRange.setHorizontalAlignments(horizontalMatrix);
+          horizontalMatrix = reorderDataRows(previousTableData.horizontalAlignments, columnMapping, 1, totalTargetRows, null);
         }
         if (previousTableData.verticalAlignments) {
-          var verticalMatrix = reorderDataRows(previousTableData.verticalAlignments, columnMapping, 1, totalTargetRows, null);
-          dataRange.setVerticalAlignments(verticalMatrix);
+          verticalMatrix = reorderDataRows(previousTableData.verticalAlignments, columnMapping, 1, totalTargetRows, null);
         }
         if (previousTableData.fontWeights) {
-          var weightMatrix = reorderDataRows(previousTableData.fontWeights, columnMapping, 1, totalTargetRows, 'normal');
-          dataRange.setFontWeights(weightMatrix);
+          weightMatrix = reorderDataRows(previousTableData.fontWeights, columnMapping, 1, totalTargetRows, 'normal');
         }
       }
       if (numberFormatsMatrix && numberFormatsMatrix.length === rows) {
         range.setNumberFormats(numberFormatsMatrix);
+      }
+      if (dataRange && valuesMatrix) {
+        if (horizontalMatrix) {
+          dataRange.setHorizontalAlignments(horizontalMatrix);
+        }
+        if (verticalMatrix) {
+          dataRange.setVerticalAlignments(verticalMatrix);
+        }
+        if (weightMatrix) {
+          dataRange.setFontWeights(weightMatrix);
+        }
+        // El cuerpo se pega al final (junto con las fórmulas) para evitar que
+        // alguna operación de formato posterior borre los datos restaurados.
+        dataRange.setValues(valuesMatrix);
+        if (formulasMatrix) {
+          dataRange.setFormulas(formulasMatrix);
+        }
       }
       if (previousRangeDetails) {
         shouldClearPreviousRange = true;
@@ -789,6 +807,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   }
 
   if (shouldClearPreviousRange && previousRangeDetails && previousRangeDetails.range) {
+    SpreadsheetApp.flush();
     try {
       clearRangeAndFormatting(previousRangeDetails.range);
     } catch (cleanupErr) {
