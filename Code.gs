@@ -788,11 +788,40 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
         if (weightMatrix) {
           dataRange.setFontWeights(weightMatrix);
         }
-        // El cuerpo se pega al final (junto con las fórmulas) para evitar que
-        // alguna operación de formato posterior borre los datos restaurados.
-        dataRange.setValues(valuesMatrix);
+
+        var hasAnyFormula = false;
         if (formulasMatrix) {
-          dataRange.setFormulas(formulasMatrix);
+          for (var fmRow = 0; fmRow < formulasMatrix.length && !hasAnyFormula; fmRow++) {
+            var fmRowValues = formulasMatrix[fmRow] || [];
+            for (var fmCol = 0; fmCol < fmRowValues.length; fmCol++) {
+              if (fmRowValues[fmCol]) {
+                hasAnyFormula = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (hasAnyFormula) {
+          var combinedMatrix = [];
+          for (var cr = 0; cr < valuesMatrix.length; cr++) {
+            var valueRow = valuesMatrix[cr] || [];
+            var formulaRow = (formulasMatrix && formulasMatrix[cr]) || [];
+            var combinedRow = [];
+            var maxLength = Math.max(valueRow.length, formulaRow.length);
+            for (var cc = 0; cc < maxLength; cc++) {
+              var candidateFormula = formulaRow[cc];
+              if (candidateFormula) {
+                combinedRow.push(candidateFormula);
+              } else {
+                combinedRow.push(cc < valueRow.length ? valueRow[cc] : '');
+              }
+            }
+            combinedMatrix.push(combinedRow);
+          }
+          dataRange.setValues(combinedMatrix);
+        } else {
+          dataRange.setValues(valuesMatrix);
         }
       }
       if (previousRangeDetails) {
