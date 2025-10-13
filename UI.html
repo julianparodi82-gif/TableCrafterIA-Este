@@ -329,12 +329,6 @@
       .range-row strong {
         flex-grow: 1;
       }
-      .shortcut-hint {
-        font-size: 12px;
-        color: #6B7280;
-        margin-left: 8px;
-        white-space: nowrap;
-      }
       .action-buttons {
         display: flex;
         gap: 12px;
@@ -343,6 +337,12 @@
       }
       .action-buttons button {
         flex: 1 1 160px;
+      }
+      #editApplyRow {
+        margin-top: 20px;
+      }
+      #editApplyRow + .action-buttons {
+        margin-top: 8px;
       }
       pre.answer-box {
         background-color: #FFFFFF;
@@ -465,8 +465,7 @@
               <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + |)">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + |)</span>
+              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
             </div>
           </div>
           <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
@@ -516,8 +515,7 @@
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
             <div class="range-actions">
-              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo (Ctrl/⌘ + |)">Actualizar</button>
-              <span class="shortcut-hint">(Ctrl/⌘ + |)</span>
+              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
@@ -708,6 +706,72 @@
           }
         }
         return normalized;
+      }
+
+      function normalizeHexColor(color) {
+        if (typeof color !== 'string') {
+          return '';
+        }
+        const trimmed = color.trim();
+        if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) {
+          return '';
+        }
+        let digits = trimmed.slice(1);
+        if (digits.length === 3) {
+          digits = digits
+            .split('')
+            .map(function(char) {
+              return char + char;
+            })
+            .join('');
+        }
+        return '#' + digits.toUpperCase();
+      }
+
+      function getReadableTextColor(hexColor) {
+        const normalized = normalizeHexColor(hexColor);
+        if (!normalized) {
+          return '#111827';
+        }
+        const r = parseInt(normalized.slice(1, 3), 16) / 255;
+        const g = parseInt(normalized.slice(3, 5), 16) / 255;
+        const b = parseInt(normalized.slice(5, 7), 16) / 255;
+        function channelToLinear(channel) {
+          return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        }
+        const luminance =
+          0.2126 * channelToLinear(r) +
+          0.7152 * channelToLinear(g) +
+          0.0722 * channelToLinear(b);
+        return luminance > 0.55 ? '#111827' : '#FFFFFF';
+      }
+
+      function styleOptionWithHeaderColor(option, entry) {
+        if (!option) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          option.style.removeProperty('background-color');
+          option.style.removeProperty('color');
+          option.style.removeProperty('background-image');
+          option.style.removeProperty('background-size');
+          option.style.removeProperty('background-repeat');
+          if (option.dataset) {
+            delete option.dataset.headerColor;
+          }
+          return;
+        }
+        option.style.backgroundColor = normalizedColor;
+        option.style.color = getReadableTextColor(normalizedColor);
+        option.style.backgroundImage =
+          'linear-gradient(90deg, ' + normalizedColor + ' 0 16px, rgba(255,255,255,0) 16px 100%)';
+        option.style.backgroundSize = '100% 100%';
+        option.style.backgroundRepeat = 'no-repeat';
+        if (option.dataset) {
+          option.dataset.headerColor = normalizedColor;
+        }
       }
 
       let savedTablesCache = [];
@@ -1034,6 +1098,7 @@
                 const opt = document.createElement('option');
                 opt.value = entry.id;
                 opt.textContent = entry.name || entry.id;
+                styleOptionWithHeaderColor(opt, entry);
                 optgroup.appendChild(opt);
               });
               select.appendChild(optgroup);
@@ -1046,6 +1111,7 @@
               const opt = document.createElement('option');
               opt.value = entry.id;
               opt.textContent = entry.name || entry.id;
+              styleOptionWithHeaderColor(opt, entry);
               select.appendChild(opt);
             });
           }
@@ -2403,34 +2469,6 @@
           return;
         }
         loadEditActiveRange(true, { markDirty: true });
-      });
-
-      document.addEventListener('keydown', function(event) {
-        const key = event.key || '';
-        const hasPrimaryModifier = event.ctrlKey || event.metaKey;
-        if (!hasPrimaryModifier || event.altKey || key !== '|') {
-          return;
-        }
-        if (event.repeat) {
-          event.preventDefault();
-          return;
-        }
-        const overlay = document.getElementById('tcModalOverlay');
-        if (overlay && overlay.classList.contains('show')) {
-          return;
-        }
-        event.preventDefault();
-        if (currentTab === 'editTab') {
-          const editBtn = document.getElementById('editRefreshRangeBtn');
-          if (editBtn) {
-            editBtn.click();
-          }
-        } else if (!currentTab || currentTab === 'createTab') {
-          const createBtn = document.getElementById('refreshRangeBtn');
-          if (createBtn) {
-            createBtn.click();
-          }
-        }
       });
 
       async function handleApplyFormat() {
