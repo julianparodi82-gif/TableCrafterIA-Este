@@ -638,10 +638,9 @@
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
             <div class="range-actions range-actions--stacked">
-              <button id="editRefreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
               <button
                 id="editRefreshApplyBtn"
-                class="btn-secondary btn-secondary-dark"
+                class="btn-secondary"
                 title="Actualizar rango y aplicar formato"
                 disabled
               >
@@ -658,7 +657,7 @@
           <label for="editRangeInput" style="margin-top:12px;">Rango a utilizar</label>
           <input type="text" id="editRangeInput" placeholder="Ej: Hoja1!A1:D10" />
           <div class="small-text" style="margin-top:4px;">
-            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+            Puede escribir el rango manualmente o usar "Actualizar rango y formato" para tomar la selección activa.
           </div>
         </div>
         <div id="editMetaSection" class="section" style="display:none;">
@@ -685,15 +684,7 @@
             <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
           </div>
           <div id="editActionsRow" class="action-buttons action-buttons--balanced" style="display:none;">
-            <button
-              id="editApplyFormatBtn"
-              class="btn-secondary"
-              title="Aplicar formato a la tabla seleccionada"
-              disabled
-            >
-              Aplicar formato
-            </button>
-            <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar cambios</button>
+            <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar tabla</button>
             <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
           </div>
         </div>
@@ -2137,10 +2128,6 @@
         if (actionsRow) {
           actionsRow.style.display = 'none';
         }
-        const applyBtn = document.getElementById('editApplyFormatBtn');
-        if (applyBtn) {
-          applyBtn.disabled = true;
-        }
         const refreshApplyBtn = document.getElementById('editRefreshApplyBtn');
         if (refreshApplyBtn) {
           refreshApplyBtn.disabled = true;
@@ -2748,10 +2735,6 @@
         if (actionsRow) {
           actionsRow.style.display = 'flex';
         }
-        const applyBtn = document.getElementById('editApplyFormatBtn');
-        if (applyBtn) {
-          applyBtn.disabled = false;
-        }
         const refreshApplyBtn = document.getElementById('editRefreshApplyBtn');
         if (refreshApplyBtn) {
           refreshApplyBtn.disabled = false;
@@ -2983,17 +2966,6 @@
           input.dataset.manual = 'false';
         }
         loadActiveRange(editingId === '');
-      });
-
-      document.getElementById('editRefreshRangeBtn').addEventListener('click', async function() {
-        if (!editingId) {
-          await showMessageModal('Seleccione una tabla antes de actualizar el rango.', {
-            title: 'Seleccione una tabla',
-            variant: 'error'
-          });
-          return;
-        }
-        loadEditActiveRange(true, { markDirty: true });
       });
 
       document.getElementById('editRefreshApplyBtn').addEventListener('click', async function() {
@@ -3400,10 +3372,6 @@
 
       document.getElementById('saveTableBtn').addEventListener('click', function() {
         handleSaveAction();
-      });
-
-      document.getElementById('editApplyFormatBtn').addEventListener('click', function() {
-        handleEditApplyFormat();
       });
 
       document.getElementById('editSaveTableBtn').addEventListener('click', function() {
