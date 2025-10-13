@@ -122,7 +122,7 @@
         background-image: linear-gradient(90deg, var(--header-color, #E5E7EB) 0 14px, rgba(255, 255, 255, 0) 14px 100%);
         background-repeat: no-repeat;
         background-size: 100% 100%;
-        color: var(--header-text-color, #111827);
+        color: #111827;
         transition: background-color 0.15s ease, box-shadow 0.15s ease;
       }
       .edit-saved-item:hover {
@@ -140,6 +140,7 @@
         flex: 1 1 auto;
         font-weight: 600;
         font-size: 14px;
+        color: #111827;
       }
       .edit-saved-locate {
         width: 28px;
@@ -147,7 +148,7 @@
         border-radius: 50%;
         border: none;
         background-color: rgba(37, 99, 235, 0.12);
-        color: var(--header-text-color, #1E40AF);
+        color: #111827;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -165,6 +166,23 @@
         color: #6B7280;
         font-size: 14px;
         text-align: center;
+      }
+      #editSavedTablesList.collapsed {
+        max-height: 68px;
+        overflow: hidden;
+      }
+      #editSavedTablesList.collapsed .edit-saved-group {
+        gap: 0;
+      }
+      #editSavedTablesList.collapsed .edit-saved-group-label {
+        display: none;
+      }
+      #editSavedTablesList.collapsed .edit-saved-item {
+        display: none;
+        margin: 4px 8px;
+      }
+      #editSavedTablesList.collapsed .edit-saved-item.selected {
+        display: flex;
       }
       .visually-hidden {
         position: absolute;
@@ -883,6 +901,37 @@
       let allowSidebarUnload = false;
       let sidebarClosePromptActive = false;
       const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
+      let editSavedListCollapsed = false;
+
+      function syncEditSavedListCollapseClass() {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl) {
+          return;
+        }
+        const hasSelection = !!(
+          selectEl &&
+          !selectEl.disabled &&
+          selectEl.value &&
+          String(selectEl.value).trim()
+        );
+        const shouldCollapse =
+          hasSelection && editSavedListCollapsed && !listEl.classList.contains('disabled');
+        if (shouldCollapse) {
+          listEl.classList.add('collapsed');
+          listEl.setAttribute('aria-expanded', 'false');
+          listEl.dataset.collapsed = 'true';
+        } else {
+          listEl.classList.remove('collapsed');
+          listEl.setAttribute('aria-expanded', 'true');
+          listEl.dataset.collapsed = 'false';
+        }
+      }
+
+      function setEditSavedListCollapsed(collapsed) {
+        editSavedListCollapsed = !!collapsed;
+        syncEditSavedListCollapseClass();
+      }
 
       function getLocalStorage() {
         try {
@@ -1432,10 +1481,12 @@
         listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
 
         if (disabled || data.length === 0) {
+          setEditSavedListCollapsed(false);
           const empty = document.createElement('div');
           empty.className = 'edit-saved-empty';
           empty.textContent = 'No hay tablas guardadas';
           listEl.appendChild(empty);
+          syncEditSavedListCollapseClass();
           return;
         }
 
@@ -1477,6 +1528,7 @@
             listEl.appendChild(item);
           });
         }
+        syncEditSavedListCollapseClass();
       }
 
       function syncEditSavedTablesHighlight() {
@@ -1501,6 +1553,7 @@
             item.setAttribute('aria-selected', 'false');
           }
         });
+        syncEditSavedListCollapseClass();
       }
 
       function renderAiSavedTablesList(entries, config) {
@@ -1925,6 +1978,7 @@
           if (opts.clearEditingId !== false) {
             editingId = '';
           }
+          setEditSavedListCollapsed(false);
         } else if (opts.clearEditingId) {
           editingId = '';
         }
@@ -3436,9 +3490,11 @@
         syncEditSavedTablesHighlight();
         const val = this.value;
         if (!val) {
+          setEditSavedListCollapsed(false);
           resetEditTabView();
           return;
         }
+        setEditSavedListCollapsed(true);
         resetEditTabView({ preserveSelection: true, clearEditingId: false });
         editingId = val;
         const cachedMeta = getSavedTableFromCache(val);
@@ -3483,6 +3539,11 @@
           }
           const item = event.target.closest('.edit-saved-item');
           if (item && item.dataset && item.dataset.value) {
+            if (editSavedList.classList.contains('collapsed')) {
+              event.preventDefault();
+              setEditSavedListCollapsed(false);
+              return;
+            }
             event.preventDefault();
             selectEditSavedTable(item.dataset.value);
           }
@@ -3494,6 +3555,11 @@
           if (event.key === 'Enter' || event.key === ' ') {
             const item = event.target.closest('.edit-saved-item');
             if (item && item.dataset && item.dataset.value) {
+              if (editSavedList.classList.contains('collapsed')) {
+                event.preventDefault();
+                setEditSavedListCollapsed(false);
+                return;
+              }
               event.preventDefault();
               selectEditSavedTable(item.dataset.value);
             }
