@@ -48,14 +48,16 @@ function onEdit(e) {
 }
 
 function reconcileTablesAfterEvent(e) {
+  var structural = isStructuralChangeType(e && e.changeType);
+  if (structural) {
+    reconcileAllSheets();
+    return;
+  }
   var sheets = determineSheetsForEvent(e);
   if (!sheets || sheets.length === 0) {
     reconcileAllSheets();
     return;
   }
-  var structural = isStructuralChangeType(e && e.changeType);
-  var processed = false;
-
   for (var i = 0; i < sheets.length; i++) {
     var sheet = sheets[i];
     if (!sheet) {
@@ -71,18 +73,10 @@ function reconcileTablesAfterEvent(e) {
     }
     var bounds = extractEventBounds(e, sheet);
     var targetedEntries = bounds && bounds.length > 0 ? filterEntriesByBounds(entries, bounds) : [];
-    if ((!targetedEntries || targetedEntries.length === 0) && structural) {
-      targetedEntries = entries;
-    }
     if (!targetedEntries || targetedEntries.length === 0) {
       continue;
     }
     reconcileSheetTables(sheet, targetedEntries);
-    processed = true;
-  }
-
-  if (!processed && structural) {
-    reconcileAllSheets();
   }
 }
 
@@ -1233,6 +1227,65 @@ function locateHeaderPosition(sheet, storedHeaders, parsedRange) {
       }
     } catch (err3) {
       // Ignorar errores en la búsqueda por texto.
+    }
+  }
+  var scanned = scanSheetForHeaderSequence(sheet, desiredLabels);
+  if (scanned) {
+    return scanned;
+  }
+  return null;
+}
+
+function scanSheetForHeaderSequence(sheet, desiredLabels) {
+  if (!sheet || !desiredLabels || desiredLabels.length === 0) {
+    return null;
+  }
+  var dataRange;
+  try {
+    dataRange = sheet.getDataRange();
+  } catch (err) {
+    return null;
+  }
+  if (!dataRange) {
+    return null;
+  }
+  var numRows = dataRange.getNumRows();
+  var numCols = dataRange.getNumColumns();
+  if (numRows === 0 || numCols === 0 || numCols < desiredLabels.length) {
+    return null;
+  }
+  var startRow = dataRange.getRow();
+  var startColumn = dataRange.getColumn();
+  var values;
+  try {
+    values = dataRange.getDisplayValues();
+  } catch (err2) {
+    values = [];
+  }
+  if (!values || values.length === 0) {
+    return null;
+  }
+  for (var r = 0; r < values.length; r++) {
+    var rowValues = values[r];
+    if (!rowValues || rowValues.length === 0) {
+      continue;
+    }
+    for (var c = 0; c <= rowValues.length - desiredLabels.length; c++) {
+      var matches = true;
+      for (var offset = 0; offset < desiredLabels.length; offset++) {
+        var desired = desiredLabels[offset];
+        var candidate = rowValues[c + offset];
+        if (normalizeHeaderLabelValue(candidate) !== normalizeHeaderLabelValue(desired)) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) {
+        return {
+          row: startRow + r,
+          column: startColumn + c
+        };
+      }
     }
   }
   return null;
