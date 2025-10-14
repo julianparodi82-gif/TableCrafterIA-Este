@@ -264,7 +264,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 16px;
+        margin-top: 12px;
         font-size: 14px;
         color: #374151;
       }
@@ -273,6 +273,7 @@
       }
       .ai-report-description-field {
         margin-top: 8px;
+        margin-bottom: 16px;
         min-height: 68px;
         resize: vertical;
       }
@@ -811,7 +812,7 @@
     <div class="container">
       <h2>TableCrafter AI</h2>
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="aiTab">Consultas IA</button>
+        <button class="tab-btn active" data-tab="aiTab">Panel IA</button>
         <button class="tab-btn" data-tab="editTab">Editar tabla</button>
         <button class="tab-btn" data-tab="createTab">Crear tabla</button>
       </div>
@@ -979,6 +980,14 @@
             ></textarea>
           </div>
           <div id="aiReportSection" class="ai-action-section">
+            <label class="ai-report-description-toggle">
+              <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
+            </label>
+            <textarea
+              id="aiReportDescription"
+              class="ai-report-description-field ai-hidden"
+              placeholder="Describe el objetivo o contenido del reporte"
+            ></textarea>
             <h3 class="ai-action-title">Generar reporte</h3>
             <p class="ai-action-description">
               Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
@@ -989,14 +998,6 @@
               <button type="button" class="ai-report-btn" data-format="excel">Excel</button>
               <button type="button" class="ai-report-btn" data-format="sheets">Google Sheets</button>
             </div>
-            <label class="ai-report-description-toggle">
-              <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
-            </label>
-            <textarea
-              id="aiReportDescription"
-              class="ai-report-description-field ai-hidden"
-              placeholder="Describe el objetivo o contenido del reporte"
-            ></textarea>
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
               <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
               <p class="ai-report-helper" style="margin-top:0;">
@@ -1028,8 +1029,8 @@
               </div>
               <div class="ai-delivery-config" data-channel="email">
                 <h4 class="ai-delivery-title">Enviar por correo</h4>
-                <label for="aiReportEmailSelect">Selecciona un correo guardado</label>
-                <select id="aiReportEmailSelect"></select>
+                <label for="aiReportEmailSelect">Selecciona uno o más correos guardados</label>
+                <select id="aiReportEmailSelect" multiple size="4"></select>
                 <div class="ai-inline-input">
                   <input type="email" id="aiReportEmailInput" placeholder="Agregar nuevo correo electrónico" />
                   <button type="button" id="aiReportEmailSaveBtn">Guardar correo</button>
@@ -1038,8 +1039,8 @@
               </div>
               <div class="ai-delivery-config" data-channel="whatsapp">
                 <h4 class="ai-delivery-title">Enviar por WhatsApp</h4>
-                <label for="aiReportPhoneSelect">Selecciona un número guardado</label>
-                <select id="aiReportPhoneSelect"></select>
+                <label for="aiReportPhoneSelect">Selecciona uno o más números guardados</label>
+                <select id="aiReportPhoneSelect" multiple size="4"></select>
                 <div class="ai-inline-input">
                   <input type="tel" id="aiReportPhoneInput" placeholder="Agregar nuevo número de contacto" />
                   <button type="button" id="aiReportPhoneSaveBtn">Guardar número</button>
@@ -3381,28 +3382,70 @@
         }
       }
 
-      function populateReportContactSelect(selectId, values, placeholder) {
+      function populateReportContactSelect(selectId, values, placeholder, selectedValues) {
         const select = document.getElementById(selectId);
         if (!select) {
           return;
         }
-        const currentValue = select.value || '';
+        let preservedSelection = [];
+        if (Array.isArray(selectedValues) && selectedValues.length > 0) {
+          preservedSelection = selectedValues.slice();
+        } else {
+          preservedSelection = getSelectValues(select);
+        }
+        const seenValues = {};
+        preservedSelection = preservedSelection.filter(function(value) {
+          if (!value || seenValues[value]) {
+            return false;
+          }
+          seenValues[value] = true;
+          return true;
+        });
         select.innerHTML = '';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = placeholder || 'Selecciona una opción';
-        select.appendChild(defaultOption);
+        if (!select.multiple) {
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = placeholder || 'Selecciona una opción';
+          select.appendChild(defaultOption);
+        }
         (values || []).forEach(function(value) {
           const option = document.createElement('option');
           option.value = value;
           option.textContent = value;
           select.appendChild(option);
         });
-        if (values && values.indexOf(currentValue) !== -1) {
-          select.value = currentValue;
+        if (select.multiple) {
+          for (let i = 0; i < select.options.length; i += 1) {
+            const option = select.options[i];
+            if (!option) {
+              continue;
+            }
+            option.selected = preservedSelection.indexOf(option.value) !== -1;
+          }
+        } else if (preservedSelection.length > 0 && Array.isArray(values) && values.indexOf(preservedSelection[0]) !== -1) {
+          select.value = preservedSelection[0];
         } else {
           select.value = '';
         }
+      }
+
+      function getSelectValues(select) {
+        if (!select) {
+          return [];
+        }
+        if (!select.multiple) {
+          const singleValue = select.value || '';
+          return singleValue ? [singleValue] : [];
+        }
+        const selected = [];
+        const options = select.options;
+        for (let i = 0; i < options.length; i += 1) {
+          const option = options[i];
+          if (option && option.selected && option.value) {
+            selected.push(option.value);
+          }
+        }
+        return selected;
       }
 
       function setReportHelperMessage(id, message, variant) {
@@ -3593,11 +3636,23 @@
         }
         const emailSelect = document.getElementById('aiReportEmailSelect');
         if (emailSelect) {
-          emailSelect.value = '';
+          if (emailSelect.multiple) {
+            for (let i = 0; i < emailSelect.options.length; i += 1) {
+              emailSelect.options[i].selected = false;
+            }
+          } else {
+            emailSelect.value = '';
+          }
         }
         const phoneSelect = document.getElementById('aiReportPhoneSelect');
         if (phoneSelect) {
-          phoneSelect.value = '';
+          if (phoneSelect.multiple) {
+            for (let j = 0; j < phoneSelect.options.length; j += 1) {
+              phoneSelect.options[j].selected = false;
+            }
+          } else {
+            phoneSelect.value = '';
+          }
         }
         setReportHelperMessage('aiReportEmailMessage', '');
         setReportHelperMessage('aiReportPhoneMessage', '');
@@ -3619,15 +3674,19 @@
           setReportHelperMessage('aiReportEmailMessage', 'El formato del correo no es válido.', 'error');
           return;
         }
+        const previouslySelected = getSelectValues(select);
         if (savedReportEmails.indexOf(value) === -1) {
           savedReportEmails.push(value);
           persistReportContactList('emails', savedReportEmails);
-          populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona un correo guardado');
+          const nextSelection = previouslySelected.slice();
+          nextSelection.push(value);
+          populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona uno o más correos guardados', nextSelection);
           setReportHelperMessage('aiReportEmailMessage', 'Correo guardado correctamente.', 'success');
         } else {
+          const nextSelection = previouslySelected.indexOf(value) === -1 ? previouslySelected.concat([value]) : previouslySelected;
+          populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona uno o más correos guardados', nextSelection);
           setReportHelperMessage('aiReportEmailMessage', 'El correo ya estaba guardado. Se seleccionó automáticamente.', 'success');
         }
-        select.value = value;
         input.value = '';
       }
 
@@ -3647,15 +3706,19 @@
           setReportHelperMessage('aiReportPhoneMessage', 'El número ingresado no parece válido.', 'error');
           return;
         }
+        const previouslySelected = getSelectValues(select);
         if (savedReportPhones.indexOf(value) === -1) {
           savedReportPhones.push(value);
           persistReportContactList('phones', savedReportPhones);
-          populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona un número guardado');
+          const nextSelection = previouslySelected.slice();
+          nextSelection.push(value);
+          populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona uno o más números guardados', nextSelection);
           setReportHelperMessage('aiReportPhoneMessage', 'Número guardado correctamente.', 'success');
         } else {
+          const nextSelection = previouslySelected.indexOf(value) === -1 ? previouslySelected.concat([value]) : previouslySelected;
+          populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona uno o más números guardados', nextSelection);
           setReportHelperMessage('aiReportPhoneMessage', 'El número ya estaba guardado. Se seleccionó automáticamente.', 'success');
         }
-        select.value = value;
         input.value = '';
       }
 
@@ -3665,8 +3728,8 @@
         }
         savedReportEmails = loadReportContactList('emails');
         savedReportPhones = loadReportContactList('phones');
-        populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona un correo guardado');
-        populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona un número guardado');
+        populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona uno o más correos guardados');
+        populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona uno o más números guardados');
         const formatButtons = document.querySelectorAll('#aiReportSection .ai-report-btn');
         formatButtons.forEach(function(btn) {
           btn.addEventListener('click', function() {
