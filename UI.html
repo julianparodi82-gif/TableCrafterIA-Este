@@ -36,8 +36,8 @@
         border: 1px solid #D1D5DB;
         background-color: #FFFFFF;
         color: #111827;
-        padding: 10px;
-        min-height: 44px;
+        padding: 12px 16px;
+        min-height: 48px;
         border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
@@ -225,6 +225,31 @@
       .ai-action-section {
         margin-top: 16px;
         display: none;
+      }
+      .ai-report-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .ai-report-btn {
+        border: 1px solid #2563EB;
+        background-color: rgba(37, 99, 235, 0.08);
+        color: #1D4ED8;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+      .ai-report-btn:hover {
+        background-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .ai-report-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
       }
       .ai-action-title {
         font-size: 18px;
@@ -796,6 +821,19 @@
               placeholder="Aquí verás la respuesta de la IA"
               readonly
             ></textarea>
+          </div>
+          <div id="aiReportSection" class="ai-action-section">
+            <h3 class="ai-action-title">Generar reporte</h3>
+            <p class="ai-action-description">
+              Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
+            </p>
+            <div class="ai-report-options">
+              <button type="button" class="ai-report-btn" disabled>PDF</button>
+              <button type="button" class="ai-report-btn" disabled>Excel</button>
+              <button type="button" class="ai-report-btn" disabled>Google Sheets</button>
+              <button type="button" class="ai-report-btn" disabled>CSV</button>
+              <button type="button" class="ai-report-btn" disabled>Power BI</button>
+            </div>
           </div>
         </div>
       </div>
@@ -3083,6 +3121,7 @@
       function updateAiActionState() {
         const select = document.getElementById('aiActionSelect');
         const askSection = document.getElementById('aiAskSection');
+        const reportSection = document.getElementById('aiReportSection');
         const questionInput = document.getElementById('questionInput');
         const askBtn = document.getElementById('askBtn');
         const answerBox = document.getElementById('answerBox');
@@ -3092,14 +3131,35 @@
         const action = select.value;
         if (action === 'ask') {
           askSection.style.display = 'block';
+          if (reportSection) {
+            reportSection.style.display = 'none';
+          }
           if (questionInput) {
             questionInput.disabled = false;
           }
           if (askBtn) {
             askBtn.disabled = false;
           }
+        } else if (action === 'report') {
+          askSection.style.display = 'none';
+          if (reportSection) {
+            reportSection.style.display = 'block';
+          }
+          if (questionInput) {
+            questionInput.value = '';
+            questionInput.disabled = true;
+          }
+          if (askBtn) {
+            askBtn.disabled = true;
+          }
+          if (answerBox) {
+            answerBox.value = '';
+          }
         } else {
           askSection.style.display = 'none';
+          if (reportSection) {
+            reportSection.style.display = 'none';
+          }
           if (questionInput) {
             questionInput.value = '';
             questionInput.disabled = true;
