@@ -260,6 +260,67 @@
         color: #374151;
         font-size: 14px;
       }
+      .ai-collapsible-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .ai-collapsible-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .ai-collapsible-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        border-radius: 999px;
+        background-color: rgba(37, 99, 235, 0.12);
+        color: #1D4ED8;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .ai-collapsible-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-collapsible[data-open='false'] > .ai-collapsible-body {
+        display: none;
+      }
+      .ai-collapse-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: none;
+        background-color: transparent;
+        color: #2563EB;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .ai-collapse-toggle:hover {
+        background-color: rgba(37, 99, 235, 0.12);
+      }
+      .ai-collapse-toggle:focus-visible {
+        outline: 2px solid #93C5FD;
+        outline-offset: 2px;
+      }
+      .ai-collapse-toggle-icon {
+        font-size: 12px;
+      }
+      .ai-collapse-toggle-text {
+        line-height: 1;
+      }
+      .ai-collapsible-header .ai-action-title,
+      .ai-collapsible-header .ai-delivery-title {
+        margin-bottom: 0;
+      }
       .ai-report-description-toggle {
         display: flex;
         align-items: center;
@@ -292,8 +353,6 @@
         border-radius: 6px;
         background-color: #FFFFFF;
         display: none;
-        flex-direction: column;
-        gap: 8px;
       }
       .ai-delivery-title {
         margin: 0;
@@ -1065,15 +1124,37 @@
               class="ai-report-description-field ai-hidden"
               placeholder="Describe el objetivo o contenido del reporte"
             ></textarea>
-            <h3 class="ai-action-title">Generar reporte</h3>
-            <p class="ai-action-description">
-              Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
-            </p>
-            <p class="ai-report-helper">Elige el formato en el que deseas generar el reporte.</p>
-            <div class="ai-report-options">
-              <button type="button" class="ai-report-btn" data-format="pdf">PDF</button>
-              <button type="button" class="ai-report-btn" data-format="excel">Excel</button>
-              <button type="button" class="ai-report-btn" data-format="sheets">Google Sheets</button>
+            <div id="aiReportFormatsWrapper" class="ai-collapsible" data-open="true">
+              <div class="ai-collapsible-header">
+                <div class="ai-collapsible-title">
+                  <h3 class="ai-action-title">Generar reporte</h3>
+                  <span id="aiReportFormatSummary" class="ai-collapsible-badge ai-hidden"></span>
+                </div>
+                <button
+                  type="button"
+                  class="ai-collapse-toggle"
+                  id="aiReportFormatsToggle"
+                  data-target="aiReportFormatsWrapper"
+                  data-open-text="Replegar"
+                  data-closed-text="Desplegar"
+                  aria-expanded="true"
+                  aria-controls="aiReportFormatsBody"
+                >
+                  <span class="ai-collapse-toggle-text">Replegar</span>
+                  <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                </button>
+              </div>
+              <div class="ai-collapsible-body" id="aiReportFormatsBody">
+                <p class="ai-action-description">
+                  Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
+                </p>
+                <p class="ai-report-helper">Elige el formato en el que deseas generar el reporte.</p>
+                <div class="ai-report-options">
+                  <button type="button" class="ai-report-btn" data-format="pdf">PDF</button>
+                  <button type="button" class="ai-report-btn" data-format="excel">Excel</button>
+                  <button type="button" class="ai-report-btn" data-format="sheets">Google Sheets</button>
+                </div>
+              </div>
             </div>
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
               <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
@@ -1099,52 +1180,100 @@
               </div>
               <div id="aiReportDeliverySummary" class="ai-delivery-badge ai-hidden"></div>
               <div class="ai-delivery-config" data-channel="download">
-                <h4 class="ai-delivery-title">Descargar</h4>
-                <p class="ai-delivery-description">
-                  El reporte se generará y descargará directamente en tu dispositivo.
-                </p>
-              </div>
-              <div class="ai-delivery-config" data-channel="email">
-                <h4 class="ai-delivery-title">Enviar por correo</h4>
-                <label class="ai-contact-label">Selecciona uno o más correos guardados</label>
-                <div
-                  id="aiReportEmailList"
-                  class="ai-contact-list"
-                  role="group"
-                  aria-label="Correos electrónicos guardados"
-                ></div>
-                <input
-                  type="text"
-                  id="aiReportEmailNameInput"
-                  class="ai-contact-name-input"
-                  placeholder="Nombre del contacto (opcional)"
-                />
-                <div class="ai-inline-input">
-                  <input type="email" id="aiReportEmailInput" placeholder="Agregar nuevo correo electrónico" />
-                  <button type="button" id="aiReportEmailSaveBtn">Guardar correo</button>
+                <div class="ai-collapsible-body">
+                  <h4 class="ai-delivery-title">Descargar</h4>
+                  <p class="ai-delivery-description">
+                    El reporte se generará y descargará directamente en tu dispositivo.
+                  </p>
                 </div>
-                <div id="aiReportEmailMessage" class="ai-helper-text"></div>
               </div>
-              <div class="ai-delivery-config" data-channel="whatsapp">
-                <h4 class="ai-delivery-title">Enviar por WhatsApp</h4>
-                <label class="ai-contact-label">Selecciona uno o más números guardados</label>
-                <div
-                  id="aiReportPhoneList"
-                  class="ai-contact-list"
-                  role="group"
-                  aria-label="Números de contacto guardados"
-                ></div>
-                <input
-                  type="text"
-                  id="aiReportPhoneNameInput"
-                  class="ai-contact-name-input"
-                  placeholder="Nombre del contacto (opcional)"
-                />
-                <div class="ai-inline-input">
-                  <input type="tel" id="aiReportPhoneInput" placeholder="Agregar nuevo número de contacto" />
-                  <button type="button" id="aiReportPhoneSaveBtn">Guardar número</button>
+              <div
+                id="aiReportEmailConfig"
+                class="ai-delivery-config ai-collapsible"
+                data-channel="email"
+                data-open="true"
+              >
+                <div class="ai-collapsible-header">
+                  <div class="ai-collapsible-title">
+                    <h4 class="ai-delivery-title">Enviar por correo</h4>
+                  </div>
+                  <button
+                    type="button"
+                    class="ai-collapse-toggle"
+                    data-target="aiReportEmailConfig"
+                    data-open-text="Replegar"
+                    data-closed-text="Desplegar"
+                    aria-expanded="true"
+                    aria-controls="aiReportEmailBody"
+                  >
+                    <span class="ai-collapse-toggle-text">Replegar</span>
+                    <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                  </button>
                 </div>
-                <div id="aiReportPhoneMessage" class="ai-helper-text"></div>
+                <div class="ai-collapsible-body" id="aiReportEmailBody">
+                  <label class="ai-contact-label">Selecciona uno o más correos guardados</label>
+                  <div
+                    id="aiReportEmailList"
+                    class="ai-contact-list"
+                    role="group"
+                    aria-label="Correos electrónicos guardados"
+                  ></div>
+                  <input
+                    type="text"
+                    id="aiReportEmailNameInput"
+                    class="ai-contact-name-input"
+                    placeholder="Nombre del contacto (opcional)"
+                  />
+                  <div class="ai-inline-input">
+                    <input type="email" id="aiReportEmailInput" placeholder="Agregar nuevo correo electrónico" />
+                    <button type="button" id="aiReportEmailSaveBtn">Guardar correo</button>
+                  </div>
+                  <div id="aiReportEmailMessage" class="ai-helper-text"></div>
+                </div>
+              </div>
+              <div
+                id="aiReportPhoneConfig"
+                class="ai-delivery-config ai-collapsible"
+                data-channel="whatsapp"
+                data-open="true"
+              >
+                <div class="ai-collapsible-header">
+                  <div class="ai-collapsible-title">
+                    <h4 class="ai-delivery-title">Enviar por WhatsApp</h4>
+                  </div>
+                  <button
+                    type="button"
+                    class="ai-collapse-toggle"
+                    data-target="aiReportPhoneConfig"
+                    data-open-text="Replegar"
+                    data-closed-text="Desplegar"
+                    aria-expanded="true"
+                    aria-controls="aiReportPhoneBody"
+                  >
+                    <span class="ai-collapse-toggle-text">Replegar</span>
+                    <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                  </button>
+                </div>
+                <div class="ai-collapsible-body" id="aiReportPhoneBody">
+                  <label class="ai-contact-label">Selecciona uno o más números guardados</label>
+                  <div
+                    id="aiReportPhoneList"
+                    class="ai-contact-list"
+                    role="group"
+                    aria-label="Números de contacto guardados"
+                  ></div>
+                  <input
+                    type="text"
+                    id="aiReportPhoneNameInput"
+                    class="ai-contact-name-input"
+                    placeholder="Nombre del contacto (opcional)"
+                  />
+                  <div class="ai-inline-input">
+                    <input type="tel" id="aiReportPhoneInput" placeholder="Agregar nuevo número de contacto" />
+                    <button type="button" id="aiReportPhoneSaveBtn">Guardar número</button>
+                  </div>
+                  <div id="aiReportPhoneMessage" class="ai-helper-text"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -1199,6 +1328,11 @@
 
       const REPORT_ALL_EMAILS_VALUE = '__ALL_REPORT_EMAILS__';
       const REPORT_ALL_PHONES_VALUE = '__ALL_REPORT_PHONES__';
+      const REPORT_FORMAT_LABELS = Object.freeze({
+        pdf: 'PDF',
+        excel: 'Excel',
+        sheets: 'Google Sheets'
+      });
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -3955,6 +4089,104 @@
         }
       }
 
+      function getCollapsibleTarget(trigger) {
+        if (!trigger) {
+          return null;
+        }
+        const targetId = trigger.dataset ? trigger.dataset.target : '';
+        if (targetId) {
+          const directTarget = document.getElementById(targetId);
+          if (directTarget) {
+            return directTarget;
+          }
+        }
+        return trigger.closest('.ai-collapsible');
+      }
+
+      function updateCollapsibleToggle(element) {
+        if (!element) {
+          return;
+        }
+        const header = element.querySelector(':scope > .ai-collapsible-header');
+        if (!header) {
+          return;
+        }
+        const toggle = header.querySelector('.ai-collapse-toggle');
+        if (!toggle) {
+          return;
+        }
+        const isOpen = element.dataset.open !== 'false';
+        const openText = toggle.dataset.openText || 'Replegar';
+        const closedText = toggle.dataset.closedText || 'Desplegar';
+        const textSpan = toggle.querySelector('.ai-collapse-toggle-text');
+        if (textSpan) {
+          textSpan.textContent = isOpen ? openText : closedText;
+        } else {
+          toggle.textContent = isOpen ? openText : closedText;
+        }
+        const iconSpan = toggle.querySelector('.ai-collapse-toggle-icon');
+        if (iconSpan) {
+          iconSpan.textContent = isOpen ? '▴' : '▾';
+        }
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+
+      function setCollapsibleOpen(element, open) {
+        if (!element) {
+          return;
+        }
+        element.dataset.open = open ? 'true' : 'false';
+        updateCollapsibleToggle(element);
+      }
+
+      function toggleCollapsible(trigger) {
+        const target = getCollapsibleTarget(trigger);
+        if (!target) {
+          return;
+        }
+        const isOpen = target.dataset.open !== 'false';
+        setCollapsibleOpen(target, !isOpen);
+      }
+
+      function setupCollapsibleControls(root) {
+        const context = root || document;
+        if (!context || !context.querySelectorAll) {
+          return;
+        }
+        context.querySelectorAll('.ai-collapse-toggle').forEach(function(toggle) {
+          if (!toggle.dataset) {
+            return;
+          }
+          if (!toggle.dataset.bound) {
+            toggle.addEventListener('click', function(event) {
+              event.preventDefault();
+              toggleCollapsible(toggle);
+            });
+            toggle.dataset.bound = 'true';
+          }
+          const target = getCollapsibleTarget(toggle);
+          if (target && !target.dataset.open) {
+            target.dataset.open = 'true';
+          }
+          updateCollapsibleToggle(target);
+        });
+      }
+
+      function updateReportFormatSummary() {
+        const summary = document.getElementById('aiReportFormatSummary');
+        if (!summary) {
+          return;
+        }
+        if (selectedReportFormat) {
+          const label = REPORT_FORMAT_LABELS[selectedReportFormat] || selectedReportFormat.toUpperCase();
+          summary.textContent = 'Formato: ' + label;
+          summary.classList.remove('ai-hidden');
+        } else {
+          summary.textContent = '';
+          summary.classList.add('ai-hidden');
+        }
+      }
+
       function updateSelectedReportChannels() {
         const checkboxes = getReportDeliveryCheckboxes();
         selectedReportChannels = checkboxes
@@ -3981,6 +4213,15 @@
             btn.classList.remove('selected');
           }
         });
+        updateReportFormatSummary();
+        const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
+        if (formatsWrapper) {
+          if (selectedReportFormat) {
+            setCollapsibleOpen(formatsWrapper, false);
+          } else {
+            setCollapsibleOpen(formatsWrapper, true);
+          }
+        }
         const deliverySection = document.getElementById('aiReportDeliverySection');
         if (deliverySection) {
           if (selectedReportFormat) {
@@ -4019,7 +4260,13 @@
         document.querySelectorAll('.ai-delivery-config').forEach(function(section) {
           const channel = section.dataset ? section.dataset.channel : '';
           if (channel && values.indexOf(channel) !== -1) {
-            section.style.display = 'flex';
+            section.style.display = 'block';
+            if (section.classList && section.classList.contains('ai-collapsible')) {
+              if (!section.dataset.open) {
+                section.dataset.open = 'true';
+              }
+              updateCollapsibleToggle(section);
+            }
           } else {
             section.style.display = 'none';
           }
@@ -4028,6 +4275,11 @@
 
       function resetReportSection() {
         selectedReportFormat = '';
+        updateReportFormatSummary();
+        const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
+        if (formatsWrapper) {
+          setCollapsibleOpen(formatsWrapper, true);
+        }
         document.querySelectorAll('#aiReportSection .ai-report-btn').forEach(function(btn) {
           btn.classList.remove('selected');
         });
@@ -4046,6 +4298,9 @@
           cb.checked = false;
         });
         setReportDeliveryOpen(false);
+        document.querySelectorAll('#aiReportDeliverySection .ai-delivery-config.ai-collapsible').forEach(function(section) {
+          setCollapsibleOpen(section, true);
+        });
         updateReportDeliverySummary();
         updateReportDeliverySections();
         const emailNameInput = document.getElementById('aiReportEmailNameInput');
@@ -4198,6 +4453,8 @@
         savedReportPhones = loadReportContactList('phones');
         renderReportEmailList([]);
         renderReportPhoneList([]);
+        setupCollapsibleControls(document.getElementById('aiReportSection'));
+        updateReportFormatSummary();
         const formatButtons = document.querySelectorAll('#aiReportSection .ai-report-btn');
         formatButtons.forEach(function(btn) {
           btn.addEventListener('click', function() {
