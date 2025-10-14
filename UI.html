@@ -1113,6 +1113,12 @@
                   role="group"
                   aria-label="Correos electrónicos guardados"
                 ></div>
+                <input
+                  type="text"
+                  id="aiReportEmailNameInput"
+                  class="ai-contact-name-input"
+                  placeholder="Nombre del contacto (opcional)"
+                />
                 <div class="ai-inline-input">
                   <input type="email" id="aiReportEmailInput" placeholder="Agregar nuevo correo electrónico" />
                   <button type="button" id="aiReportEmailSaveBtn">Guardar correo</button>
@@ -1190,6 +1196,9 @@
         emails: 'tc_report_emails',
         phones: 'tc_report_phones'
       });
+
+      const REPORT_ALL_EMAILS_VALUE = '__ALL_REPORT_EMAILS__';
+      const REPORT_ALL_PHONES_VALUE = '__ALL_REPORT_PHONES__';
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -3437,6 +3446,88 @@
         }).getApiKey();
       }
 
+      function normalizeReportEmailEntry(entry) {
+        if (!entry) {
+          return null;
+        }
+        if (typeof entry === 'string') {
+          const address = entry.trim();
+          return address ? { address: address, label: '' } : null;
+        }
+        if (typeof entry === 'object') {
+          const address = typeof entry.address === 'string'
+            ? entry.address.trim()
+            : typeof entry.email === 'string'
+            ? entry.email.trim()
+            : typeof entry.value === 'string'
+            ? entry.value.trim()
+            : '';
+          if (!address) {
+            return null;
+          }
+          const label = typeof entry.label === 'string'
+            ? entry.label.trim()
+            : typeof entry.name === 'string'
+            ? entry.name.trim()
+            : '';
+          return { address: address, label: label };
+        }
+        return null;
+      }
+
+      function sanitizeContactSelection(values, allValue) {
+        if (!Array.isArray(values) || values.length === 0) {
+          return [];
+        }
+        if (values.indexOf(allValue) !== -1) {
+          return [allValue];
+        }
+        const seen = {};
+        const result = [];
+        values.forEach(function(value) {
+          if (value && !seen[value]) {
+            seen[value] = true;
+            result.push(value);
+          }
+        });
+        return result;
+      }
+
+      function ensureContactListHandler(listId, allValue) {
+        const list = document.getElementById(listId);
+        if (!list) {
+          return;
+        }
+        if (list.dataset && list.dataset.handlerAttached === 'true') {
+          return;
+        }
+        list.addEventListener('change', function(event) {
+          const target = event.target;
+          if (!target || target.type !== 'checkbox') {
+            return;
+          }
+          if (target.value === allValue) {
+            if (target.checked) {
+              Array.prototype.slice
+                .call(list.querySelectorAll('input[type="checkbox"]'))
+                .forEach(function(cb) {
+                  if (cb !== target) {
+                    cb.checked = false;
+                  }
+                });
+            }
+          } else if (target.checked) {
+            const allOption = list.querySelector('input[type="checkbox"][value="' + allValue + '"]');
+            if (allOption) {
+              allOption.checked = false;
+            }
+          }
+        });
+        if (list.dataset) {
+          list.dataset.handlerAttached = 'true';
+        }
+      }
+
       function normalizeReportPhoneEntry(entry) {
         if (!entry) {
           return null;
@@ -3490,18 +3581,18 @@
                   return true;
                 });
             }
-            const seenEmails = {};
-            return parsed
-              .map(function(entry) {
-                return typeof entry === 'string' ? entry.trim() : '';
-              })
-              .filter(function(entry) {
-                if (!entry || seenEmails[entry]) {
-                  return false;
-                }
-                seenEmails[entry] = true;
-                return true;
-              });
+            if (key === 'emails') {
+              const seenEmails = {};
+              return parsed
+                .map(normalizeReportEmailEntry)
+                .filter(function(entry) {
+                  if (!entry || !entry.address || seenEmails[entry.address]) {
+                    return false;
+                  }
+                  seenEmails[entry.address] = true;
+                  return true;
+                });
+            }
           }
         } catch (err) {
           console.log('No se pudieron cargar los contactos guardados para reportes.', err);
@@ -3541,55 +3632,90 @@
         if (!list) {
           return;
         }
-        const preserved = Array.isArray(selectedValues) ? selectedValues.slice() : [];
+        const sanitizedSelection = sanitizeContactSelection(selectedValues, REPORT_ALL_EMAILS_VALUE);
         const selectedMap = {};
-        preserved.forEach(function(value) {
+        sanitizedSelection.forEach(function(value) {
           if (value) {
             selectedMap[value] = true;
           }
         });
+        const allSelected = !!selectedMap[REPORT_ALL_EMAILS_VALUE];
         list.innerHTML = '';
-        if (!Array.isArray(savedReportEmails) || savedReportEmails.length === 0) {
+
+        const allItem = document.createElement('label');
+        allItem.className = 'ai-contact-item ai-contact-all';
+        const allCheckbox = document.createElement('input');
+        allCheckbox.type = 'checkbox';
+        allCheckbox.className = 'ai-contact-checkbox';
+        allCheckbox.value = REPORT_ALL_EMAILS_VALUE;
+        allCheckbox.checked = allSelected;
+        const allDetails = document.createElement('span');
+        allDetails.className = 'ai-contact-details';
+        const allValueEl = document.createElement('span');
+        allValueEl.className = 'ai-contact-value';
+        allValueEl.textContent = 'Todos los contactos';
+        allDetails.appendChild(allValueEl);
+        allItem.appendChild(allCheckbox);
+        allItem.appendChild(allDetails);
+        list.appendChild(allItem);
+
+        let hasContacts = false;
+        const seen = {};
+        if (Array.isArray(savedReportEmails)) {
+          savedReportEmails.forEach(function(entry) {
+            const normalized = normalizeReportEmailEntry(entry);
+            if (!normalized || !normalized.address) {
+              return;
+            }
+            if (seen[normalized.address]) {
+              return;
+            }
+            seen[normalized.address] = true;
+            hasContacts = true;
+            const item = document.createElement('label');
+            item.className = 'ai-contact-item';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'ai-contact-checkbox';
+            checkbox.value = normalized.address;
+            checkbox.checked = !allSelected && !!selectedMap[normalized.address];
+            const details = document.createElement('span');
+            details.className = 'ai-contact-details';
+            if (normalized.label) {
+              const nameEl = document.createElement('span');
+              nameEl.className = 'ai-contact-name';
+              nameEl.textContent = normalized.label;
+              details.appendChild(nameEl);
+            }
+            const valueEl = document.createElement('span');
+            valueEl.className = 'ai-contact-value';
+            valueEl.textContent = normalized.address;
+            details.appendChild(valueEl);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ai-contact-remove';
+            removeBtn.setAttribute('aria-label', 'Eliminar correo ' + normalized.address);
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', function(event) {
+              event.preventDefault();
+              event.stopPropagation();
+              removeReportEmail(normalized.address);
+            });
+            item.appendChild(checkbox);
+            item.appendChild(details);
+            item.appendChild(removeBtn);
+            list.appendChild(item);
+          });
+        }
+
+        if (!hasContacts) {
           const empty = document.createElement('div');
           empty.className = 'ai-contact-empty';
           empty.textContent = 'Aún no hay correos guardados.';
           list.appendChild(empty);
-          return;
         }
-        const seen = {};
-        savedReportEmails.forEach(function(email) {
-          if (!email || seen[email]) {
-            return;
-          }
-          seen[email] = true;
-          const item = document.createElement('label');
-          item.className = 'ai-contact-item';
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.className = 'ai-contact-checkbox';
-          checkbox.value = email;
-          checkbox.checked = !!selectedMap[email];
-          const details = document.createElement('span');
-          details.className = 'ai-contact-details';
-          const valueEl = document.createElement('span');
-          valueEl.className = 'ai-contact-value';
-          valueEl.textContent = email;
-          details.appendChild(valueEl);
-          const removeBtn = document.createElement('button');
-          removeBtn.type = 'button';
-          removeBtn.className = 'ai-contact-remove';
-          removeBtn.setAttribute('aria-label', 'Eliminar correo ' + email);
-          removeBtn.textContent = '×';
-          removeBtn.addEventListener('click', function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            removeReportEmail(email);
-          });
-          item.appendChild(checkbox);
-          item.appendChild(details);
-          item.appendChild(removeBtn);
-          list.appendChild(item);
-        });
+
+        ensureContactListHandler('aiReportEmailList', REPORT_ALL_EMAILS_VALUE);
       }
 
       function renderReportPhoneList(selectedValues) {
@@ -3597,78 +3723,91 @@
         if (!list) {
           return;
         }
-        const preserved = Array.isArray(selectedValues) ? selectedValues.slice() : [];
+        const sanitizedSelection = sanitizeContactSelection(selectedValues, REPORT_ALL_PHONES_VALUE);
         const selectedMap = {};
-        preserved.forEach(function(value) {
+        sanitizedSelection.forEach(function(value) {
           if (value) {
             selectedMap[value] = true;
           }
         });
+        const allSelected = !!selectedMap[REPORT_ALL_PHONES_VALUE];
         list.innerHTML = '';
-        if (!Array.isArray(savedReportPhones) || savedReportPhones.length === 0) {
+
+        const allItem = document.createElement('label');
+        allItem.className = 'ai-contact-item ai-contact-all';
+        const allCheckbox = document.createElement('input');
+        allCheckbox.type = 'checkbox';
+        allCheckbox.className = 'ai-contact-checkbox';
+        allCheckbox.value = REPORT_ALL_PHONES_VALUE;
+        allCheckbox.checked = allSelected;
+        const allDetails = document.createElement('span');
+        allDetails.className = 'ai-contact-details';
+        const allValueEl = document.createElement('span');
+        allValueEl.className = 'ai-contact-value';
+        allValueEl.textContent = 'Todos los contactos';
+        allDetails.appendChild(allValueEl);
+        allItem.appendChild(allCheckbox);
+        allItem.appendChild(allDetails);
+        list.appendChild(allItem);
+
+        let hasContacts = false;
+        const seen = {};
+        if (Array.isArray(savedReportPhones)) {
+          savedReportPhones.forEach(function(entry) {
+            const normalized = normalizeReportPhoneEntry(entry);
+            if (!normalized || !normalized.number) {
+              return;
+            }
+            const trimmedNumber = normalized.number.trim();
+            if (!trimmedNumber || seen[trimmedNumber]) {
+              return;
+            }
+            seen[trimmedNumber] = true;
+            hasContacts = true;
+            const item = document.createElement('label');
+            item.className = 'ai-contact-item';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'ai-contact-checkbox';
+            checkbox.value = trimmedNumber;
+            checkbox.checked = !allSelected && !!selectedMap[trimmedNumber];
+            const details = document.createElement('span');
+            details.className = 'ai-contact-details';
+            if (normalized.label) {
+              const nameEl = document.createElement('span');
+              nameEl.className = 'ai-contact-name';
+              nameEl.textContent = normalized.label;
+              details.appendChild(nameEl);
+            }
+            const valueEl = document.createElement('span');
+            valueEl.className = 'ai-contact-value';
+            valueEl.textContent = trimmedNumber;
+            details.appendChild(valueEl);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ai-contact-remove';
+            removeBtn.setAttribute('aria-label', 'Eliminar número ' + trimmedNumber);
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', function(event) {
+              event.preventDefault();
+              event.stopPropagation();
+              removeReportPhone(trimmedNumber);
+            });
+            item.appendChild(checkbox);
+            item.appendChild(details);
+            item.appendChild(removeBtn);
+            list.appendChild(item);
+          });
+        }
+
+        if (!hasContacts) {
           const empty = document.createElement('div');
           empty.className = 'ai-contact-empty';
           empty.textContent = 'Aún no hay números guardados.';
           list.appendChild(empty);
-          return;
         }
-        const seen = {};
-        savedReportPhones.forEach(function(entry) {
-          if (!entry) {
-            return;
-          }
-          const number = typeof entry.number === 'string'
-            ? entry.number
-            : typeof entry.phone === 'string'
-            ? entry.phone
-            : '';
-          if (!number) {
-            return;
-          }
-          const trimmedNumber = number.trim();
-          if (!trimmedNumber || seen[trimmedNumber]) {
-            return;
-          }
-          seen[trimmedNumber] = true;
-          const labelText = typeof entry.label === 'string'
-            ? entry.label
-            : typeof entry.name === 'string'
-            ? entry.name
-            : '';
-          const item = document.createElement('label');
-          item.className = 'ai-contact-item';
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.className = 'ai-contact-checkbox';
-          checkbox.value = trimmedNumber;
-          checkbox.checked = !!selectedMap[trimmedNumber];
-          const details = document.createElement('span');
-          details.className = 'ai-contact-details';
-          if (labelText) {
-            const nameEl = document.createElement('span');
-            nameEl.className = 'ai-contact-name';
-            nameEl.textContent = labelText;
-            details.appendChild(nameEl);
-          }
-          const valueEl = document.createElement('span');
-          valueEl.className = 'ai-contact-value';
-          valueEl.textContent = trimmedNumber;
-          details.appendChild(valueEl);
-          const removeBtn = document.createElement('button');
-          removeBtn.type = 'button';
-          removeBtn.className = 'ai-contact-remove';
-          removeBtn.setAttribute('aria-label', 'Eliminar número ' + trimmedNumber);
-          removeBtn.textContent = '×';
-          removeBtn.addEventListener('click', function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            removeReportPhone(trimmedNumber);
-          });
-          item.appendChild(checkbox);
-          item.appendChild(details);
-          item.appendChild(removeBtn);
-          list.appendChild(item);
-        });
+
+        ensureContactListHandler('aiReportPhoneList', REPORT_ALL_PHONES_VALUE);
       }
 
       function removeReportEmail(value) {
@@ -3676,11 +3815,19 @@
         if (!email) {
           return;
         }
-        const previouslySelected = getCheckedValuesFromList('aiReportEmailList').filter(function(entry) {
-          return entry !== email;
-        });
-        const nextEmails = savedReportEmails.filter(function(entry) {
-          return entry && entry !== email;
+        const previouslySelected = sanitizeContactSelection(
+          getCheckedValuesFromList('aiReportEmailList').filter(function(entry) {
+            return entry !== email;
+          }),
+          REPORT_ALL_EMAILS_VALUE
+        );
+        const nextEmails = [];
+        savedReportEmails.forEach(function(entry) {
+          const normalized = normalizeReportEmailEntry(entry);
+          if (!normalized || !normalized.address || normalized.address === email) {
+            return;
+          }
+          nextEmails.push(normalized);
         });
         if (nextEmails.length === savedReportEmails.length) {
           return;
@@ -3696,19 +3843,23 @@
         if (!phone) {
           return;
         }
-        const previouslySelected = getCheckedValuesFromList('aiReportPhoneList').filter(function(entry) {
-          return entry !== phone;
-        });
-        const nextPhones = savedReportPhones.filter(function(entry) {
-          if (!entry) {
-            return false;
+        const previouslySelected = sanitizeContactSelection(
+          getCheckedValuesFromList('aiReportPhoneList').filter(function(entry) {
+            return entry !== phone;
+          }),
+          REPORT_ALL_PHONES_VALUE
+        );
+        const nextPhones = [];
+        savedReportPhones.forEach(function(entry) {
+          const normalized = normalizeReportPhoneEntry(entry);
+          if (!normalized || !normalized.number) {
+            return;
           }
-          const entryNumber = typeof entry.number === 'string'
-            ? entry.number.trim()
-            : typeof entry.phone === 'string'
-            ? entry.phone.trim()
-            : '';
-          return entryNumber && entryNumber !== phone;
+          const trimmedNumber = normalized.number.trim();
+          if (!trimmedNumber || trimmedNumber === phone) {
+            return;
+          }
+          nextPhones.push({ number: trimmedNumber, label: normalized.label || '' });
         });
         if (nextPhones.length === savedReportPhones.length) {
           return;
@@ -3897,6 +4048,10 @@
         setReportDeliveryOpen(false);
         updateReportDeliverySummary();
         updateReportDeliverySections();
+        const emailNameInput = document.getElementById('aiReportEmailNameInput');
+        if (emailNameInput) {
+          emailNameInput.value = '';
+        }
         const emailInput = document.getElementById('aiReportEmailInput');
         if (emailInput) {
           emailInput.value = '';
@@ -3917,11 +4072,13 @@
 
       function saveReportEmail() {
         const input = document.getElementById('aiReportEmailInput');
+        const nameInput = document.getElementById('aiReportEmailNameInput');
         const list = document.getElementById('aiReportEmailList');
         if (!input || !list) {
           return;
         }
         const value = (input.value || '').trim();
+        const label = nameInput ? (nameInput.value || '').trim() : '';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) {
           setReportHelperMessage('aiReportEmailMessage', 'Ingrese un correo electrónico válido para guardarlo.', 'error');
@@ -3931,21 +4088,46 @@
           setReportHelperMessage('aiReportEmailMessage', 'El formato del correo no es válido.', 'error');
           return;
         }
-        const previouslySelected = getCheckedValuesFromList('aiReportEmailList');
-        if (savedReportEmails.indexOf(value) === -1) {
-          savedReportEmails.push(value);
+        const trimmedValue = value.trim();
+        const previouslySelected = sanitizeContactSelection(
+          getCheckedValuesFromList('aiReportEmailList'),
+          REPORT_ALL_EMAILS_VALUE
+        );
+        const existingIndex = savedReportEmails.findIndex(function(entry) {
+          const normalized = normalizeReportEmailEntry(entry);
+          return normalized && normalized.address === trimmedValue;
+        });
+        const baseSelection = previouslySelected.indexOf(REPORT_ALL_EMAILS_VALUE) !== -1
+          ? [REPORT_ALL_EMAILS_VALUE]
+          : previouslySelected.slice();
+        if (existingIndex === -1) {
+          savedReportEmails.push({ address: trimmedValue, label: label });
           persistReportContactList('emails', savedReportEmails);
-          const nextSelection = previouslySelected.slice();
-          nextSelection.push(value);
-          renderReportEmailList(nextSelection);
+          if (baseSelection.indexOf(REPORT_ALL_EMAILS_VALUE) === -1) {
+            baseSelection.push(trimmedValue);
+          }
+          renderReportEmailList(baseSelection);
           setReportHelperMessage('aiReportEmailMessage', 'Correo guardado correctamente.', 'success');
         } else {
-          const alreadySelected = previouslySelected.indexOf(value) !== -1;
-          const nextSelection = alreadySelected ? previouslySelected.slice() : previouslySelected.concat([value]);
-          renderReportEmailList(nextSelection);
-          setReportHelperMessage('aiReportEmailMessage', 'El correo ya estaba guardado. Se seleccionó automáticamente.', 'success');
+          const existingEntry = normalizeReportEmailEntry(savedReportEmails[existingIndex]);
+          let message = 'El correo ya estaba guardado. Se seleccionó automáticamente.';
+          if (existingEntry && existingEntry.address) {
+            if ((existingEntry.label || '') !== label) {
+              savedReportEmails[existingIndex] = { address: existingEntry.address, label: label };
+              persistReportContactList('emails', savedReportEmails);
+              message = 'Se actualizó la información del correo guardado.';
+            }
+          }
+          if (baseSelection.indexOf(trimmedValue) === -1 && baseSelection.indexOf(REPORT_ALL_EMAILS_VALUE) === -1) {
+            baseSelection.push(trimmedValue);
+          }
+          renderReportEmailList(baseSelection);
+          setReportHelperMessage('aiReportEmailMessage', message, 'success');
         }
         input.value = '';
+        if (nameInput) {
+          nameInput.value = '';
+        }
       }
 
       function saveReportPhone() {
@@ -3967,28 +4149,40 @@
           return;
         }
         const trimmedValue = value.trim();
-        const previouslySelected = getCheckedValuesFromList('aiReportPhoneList');
+        const previouslySelected = sanitizeContactSelection(
+          getCheckedValuesFromList('aiReportPhoneList'),
+          REPORT_ALL_PHONES_VALUE
+        );
         const existingIndex = savedReportPhones.findIndex(function(entry) {
-          return entry && entry.number === trimmedValue;
+          const normalized = normalizeReportPhoneEntry(entry);
+          return normalized && normalized.number === trimmedValue;
         });
+        const baseSelection = previouslySelected.indexOf(REPORT_ALL_PHONES_VALUE) !== -1
+          ? [REPORT_ALL_PHONES_VALUE]
+          : previouslySelected.slice();
         if (existingIndex === -1) {
           savedReportPhones.push({ number: trimmedValue, label: label });
           persistReportContactList('phones', savedReportPhones);
-          const nextSelection = previouslySelected.slice();
-          nextSelection.push(trimmedValue);
-          renderReportPhoneList(nextSelection);
+          if (baseSelection.indexOf(REPORT_ALL_PHONES_VALUE) === -1) {
+            baseSelection.push(trimmedValue);
+          }
+          renderReportPhoneList(baseSelection);
           setReportHelperMessage('aiReportPhoneMessage', 'Número guardado correctamente.', 'success');
         } else {
-          if (label && savedReportPhones[existingIndex].label !== label) {
-            savedReportPhones[existingIndex].label = label;
-            persistReportContactList('phones', savedReportPhones);
-            setReportHelperMessage('aiReportPhoneMessage', 'Se actualizó la información del número guardado.', 'success');
-          } else {
-            setReportHelperMessage('aiReportPhoneMessage', 'El número ya estaba guardado. Se seleccionó automáticamente.', 'success');
+          const existingEntry = normalizeReportPhoneEntry(savedReportPhones[existingIndex]);
+          let message = 'El número ya estaba guardado. Se seleccionó automáticamente.';
+          if (existingEntry && existingEntry.number) {
+            if ((existingEntry.label || '') !== label) {
+              savedReportPhones[existingIndex] = { number: existingEntry.number, label: label };
+              persistReportContactList('phones', savedReportPhones);
+              message = 'Se actualizó la información del número guardado.';
+            }
           }
-          const alreadySelected = previouslySelected.indexOf(trimmedValue) !== -1;
-          const nextSelection = alreadySelected ? previouslySelected.slice() : previouslySelected.concat([trimmedValue]);
-          renderReportPhoneList(nextSelection);
+          if (baseSelection.indexOf(trimmedValue) === -1 && baseSelection.indexOf(REPORT_ALL_PHONES_VALUE) === -1) {
+            baseSelection.push(trimmedValue);
+          }
+          renderReportPhoneList(baseSelection);
+          setReportHelperMessage('aiReportPhoneMessage', message, 'success');
         }
         input.value = '';
         if (nameInput) {
