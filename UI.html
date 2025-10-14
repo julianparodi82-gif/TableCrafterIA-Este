@@ -37,6 +37,7 @@
         background-color: #FFFFFF;
         color: #111827;
         padding: 10px;
+        min-height: 44px;
         border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
@@ -216,6 +217,29 @@
       }
       .ai-question-input {
         min-height: 90px;
+      }
+      .ai-action-select {
+        margin-top: 4px;
+        display: block;
+      }
+      .ai-action-section {
+        margin-top: 16px;
+        display: none;
+      }
+      .ai-action-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1D4ED8;
+        margin: 0 0 4px;
+      }
+      .ai-action-description {
+        color: #4B5563;
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      .ai-answer-output {
+        min-height: 120px;
+        resize: vertical;
       }
       input[type="color"] {
         width: 100%;
@@ -506,15 +530,6 @@
       .btn-secondary-dark:hover {
         background-color: #0B5F50;
       }
-      pre.answer-box {
-        background-color: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-radius: 4px;
-        padding: 8px;
-        max-height: 220px;
-        overflow: auto;
-        white-space: pre-wrap;
-      }
       .small-text {
         font-size: 12px;
         color: #6B7280;
@@ -752,15 +767,36 @@
             <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
             <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
           </div>
-          <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
-          <textarea
-            id="questionInput"
-            class="ai-question-input"
-            placeholder="Escribe tu pregunta..."
-          ></textarea>
-          <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
-          <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
-          <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+          <label for="aiActionSelect" style="margin-top:12px;">Acción a realizar</label>
+          <select id="aiActionSelect" class="ai-action-select">
+            <option value="">Seleccionar</option>
+            <option value="ask">Pregunta IA</option>
+            <option value="report">Reporte</option>
+            <option value="autoTable">Tabla automática</option>
+            <option value="editTable">Editar tabla</option>
+          </select>
+          <div id="aiAskSection" class="ai-action-section">
+            <h3 class="ai-action-title">Pregunta a la IA</h3>
+            <p class="ai-action-description">
+              Selecciona las tablas y formula una consulta para recibir una respuesta generada automáticamente.
+            </p>
+            <label for="questionInput">Pregunta para la IA</label>
+            <textarea
+              id="questionInput"
+              class="ai-question-input"
+              placeholder="Escribe tu pregunta..."
+              disabled
+            ></textarea>
+            <button id="askBtn" class="btn-secondary" style="margin-top:8px;" disabled>Preguntar</button>
+            <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
+            <label for="answerBox" style="margin-top:12px;">Respuesta de la IA</label>
+            <textarea
+              id="answerBox"
+              class="ai-answer-output"
+              placeholder="Aquí verás la respuesta de la IA"
+              readonly
+            ></textarea>
+          </div>
         </div>
       </div>
       <div id="triggersTab" class="tab-content">
@@ -3044,6 +3080,39 @@
         }).getApiKey();
       }
 
+      function updateAiActionState() {
+        const select = document.getElementById('aiActionSelect');
+        const askSection = document.getElementById('aiAskSection');
+        const questionInput = document.getElementById('questionInput');
+        const askBtn = document.getElementById('askBtn');
+        const answerBox = document.getElementById('answerBox');
+        if (!select || !askSection) {
+          return;
+        }
+        const action = select.value;
+        if (action === 'ask') {
+          askSection.style.display = 'block';
+          if (questionInput) {
+            questionInput.disabled = false;
+          }
+          if (askBtn) {
+            askBtn.disabled = false;
+          }
+        } else {
+          askSection.style.display = 'none';
+          if (questionInput) {
+            questionInput.value = '';
+            questionInput.disabled = true;
+          }
+          if (askBtn) {
+            askBtn.disabled = true;
+          }
+          if (answerBox) {
+            answerBox.value = '';
+          }
+        }
+      }
+
       function setActiveTab(tabId, options) {
         options = options || {};
         if (currentTab === tabId && !options.force) {
@@ -3094,6 +3163,7 @@
         } else if (tabId === 'aiTab') {
           applySavedTablesFromCache('aiSavedTables', { selectId: lastSavedTableId });
           refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
+          updateAiActionState();
           checkApiKey();
         }
       }
@@ -3984,6 +4054,10 @@
       });
 
       document.getElementById('askBtn').addEventListener('click', function() {
+        const actionSelect = document.getElementById('aiActionSelect');
+        if (actionSelect && actionSelect.value !== 'ask') {
+          return;
+        }
         const select = document.getElementById('aiSavedTables');
         const selectedValues = Array.prototype.slice
           .call(select && select.options ? select.options : [])
@@ -3993,7 +4067,8 @@
           .map(function(option) {
             return option.value;
           });
-        const question = document.getElementById('questionInput').value.trim();
+        const questionInput = document.getElementById('questionInput');
+        const question = questionInput ? questionInput.value.trim() : '';
         if (selectedValues.length === 0) {
           showMessageModal('Seleccione al menos una tabla para realizar la consulta.', {
             title: 'Seleccione una tabla',
@@ -4009,9 +4084,10 @@
           return;
         }
         const payload = selectedValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1 ? ALL_TABLES_OPTION_VALUE : selectedValues;
-        const pre = document.getElementById('answerBox');
-        pre.style.display = 'none';
-        pre.textContent = '';
+        const answerField = document.getElementById('answerBox');
+        if (answerField) {
+          answerField.value = '';
+        }
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
             showMessageModal(res.error, {
@@ -4019,8 +4095,9 @@
               variant: 'error'
             });
           } else {
-            pre.textContent = res.answer || '';
-            pre.style.display = 'block';
+            if (answerField) {
+              answerField.value = res.answer || '';
+            }
           }
         }).askQuestion(payload, question);
       });
@@ -4063,6 +4140,11 @@
             event.preventDefault();
             toggleAiListValue(item.dataset.value);
           });
+        }
+        const aiActionSelect = document.getElementById('aiActionSelect');
+        if (aiActionSelect) {
+          aiActionSelect.addEventListener('change', updateAiActionState);
+          updateAiActionState();
         }
         const rangeInput = document.getElementById('rangeInput');
         if (rangeInput) {
