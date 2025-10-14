@@ -128,6 +128,30 @@ var META_INDEX = {
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
+var STRUCTURE_MONITOR_SYNC = {
+  lastRun: 0
+};
+
+function ensureStructureMonitorSync(options) {
+  var opts = options || {};
+  if (typeof reconcileAllSheets !== 'function') {
+    return;
+  }
+  var now = Date.now ? Date.now() : new Date().getTime();
+  var minInterval = typeof opts.minIntervalMs === 'number' ? opts.minIntervalMs : 5000;
+  if (!STRUCTURE_MONITOR_SYNC.lastRun || opts.force || now - STRUCTURE_MONITOR_SYNC.lastRun >= minInterval) {
+    try {
+      reconcileAllSheets();
+    } catch (err) {
+      console.error('Error al ejecutar StructureMonitor: ' + err.message);
+      if (opts.throwOnError) {
+        throw err;
+      }
+    }
+    STRUCTURE_MONITOR_SYNC.lastRun = now;
+  }
+}
+
 function normalizeMetaId(value) {
   if (value === null || value === undefined) {
     return '';
@@ -679,6 +703,7 @@ function reorderDataRows(matrix, mapping, startIndex, rowCount, defaultValue) {
  * @returns {Array} Lista de objetos con los metadatos de las tablas.
  */
 function listSavedTables() {
+  ensureStructureMonitorSync();
   SpreadsheetApp.flush();
   var meta = getMetaSheet();
   var data = meta.getDataRange().getValues();
@@ -714,6 +739,7 @@ function listSavedTables() {
 }
 
 function focusSavedTableRange(tableId) {
+  ensureStructureMonitorSync();
   var id = normalizeMetaId(tableId);
   if (!id) {
     return { error: 'Tabla no encontrada.' };
@@ -766,6 +792,7 @@ function focusSavedTableRange(tableId) {
  * @returns {Object} Resultado con ok = true si se limpia correctamente.
  */
 function clearTable(tableId) {
+  ensureStructureMonitorSync();
   var entry = findMetaById(tableId);
   if (!entry) {
     return { error: 'Tabla no encontrada' };
@@ -799,6 +826,7 @@ function clearTable(tableId) {
  * @returns {Object} Resultado con ok=true o un mensaje de error/advertencia.
  */
 function deleteSavedTable(tableId) {
+  ensureStructureMonitorSync({ force: true });
   var id = normalizeMetaId(tableId);
   if (!id) {
     return {
@@ -915,6 +943,7 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
   if (!doFormat && !doSave) {
     return { error: 'No se especificó ninguna acción para realizar.' };
   }
+  ensureStructureMonitorSync({ force: true });
   var range;
   try {
     range = resolveRangeFromNotation(rangeA1);
@@ -1900,6 +1929,7 @@ function normalizeTableSelection(selection) {
  * @returns {Object|null} Objeto con metadatos o null si no existe.
  */
 function getTableMeta(tableId) {
+  ensureStructureMonitorSync();
   SpreadsheetApp.flush();
   var meta = findMetaById(tableId);
   if (!meta) return null;
@@ -1935,6 +1965,7 @@ function getTableMeta(tableId) {
  * @returns {Object} Objeto con headers (array de strings) o error.
  */
 function getTableHeaders(tableId) {
+  ensureStructureMonitorSync();
   var meta = findMetaById(tableId);
   if (!meta) return { error: 'Tabla no encontrada' };
   var d = meta.data;
