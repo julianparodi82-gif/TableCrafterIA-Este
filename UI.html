@@ -19,6 +19,70 @@
         font-weight: 600;
         color: #2563EB;
       }
+      .container {
+        background: transparent;
+      }
+      .tab-nav {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tab-nav::-webkit-scrollbar {
+        height: 6px;
+      }
+      .tab-nav::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .tab-nav::-webkit-scrollbar-thumb {
+        background-color: rgba(17, 24, 39, 0.2);
+        border-radius: 999px;
+      }
+      .secondary-tab-nav {
+        margin-top: -4px;
+      }
+      .tab-btn {
+        flex: 0 0 auto;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        color: #111827;
+        padding: 10px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        scroll-snap-align: start;
+        min-width: 140px;
+      }
+      .tab-btn:hover {
+        background-color: #EFF6FF;
+        border-color: #2563EB;
+        color: #1E40AF;
+      }
+      .tab-btn.active {
+        background-color: #2563EB;
+        border-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .tab-btn .favorite-icon {
+        color: #FBBF24;
+        font-size: 16px;
+        line-height: 1;
+      }
       .section {
         margin-bottom: 20px;
         padding-bottom: 12px;
@@ -26,6 +90,7 @@
       }
       .section:last-child {
         border-bottom: none;
+        margin-bottom: 0;
       }
       label {
         display: block;
@@ -42,6 +107,122 @@
         color: #111827;
         box-sizing: border-box;
         min-height: 36px;
+      }
+      .edit-saved-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #editSavedTables {
+        display: none;
+      }
+      #editSavedTablesList {
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        padding: 4px 0;
+        max-height: 268px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .edit-saved-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .edit-saved-group-label {
+        font-weight: 700;
+        font-size: 15px;
+        color: #1F2937;
+        padding: 4px 12px 0;
+      }
+      .edit-saved-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px 8px 20px;
+        margin: 0 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        background-image: linear-gradient(90deg, var(--header-color, #E5E7EB) 0 14px, rgba(255, 255, 255, 0) 14px 100%);
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        color: #111827;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .edit-saved-item:hover {
+        background-color: rgba(37, 99, 235, 0.08);
+      }
+      .edit-saved-item.selected {
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+      }
+      .edit-saved-item.disabled,
+      #editSavedTablesList.disabled .edit-saved-item {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .edit-saved-label {
+        flex: 1 1 auto;
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+      }
+      .edit-saved-locate {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background-color: rgba(37, 99, 235, 0.12);
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+      }
+      .edit-saved-locate:hover {
+        background-color: rgba(37, 99, 235, 0.25);
+      }
+      .edit-saved-locate:active {
+        transform: scale(0.95);
+      }
+      .edit-saved-empty {
+        padding: 16px 12px;
+        color: #6B7280;
+        font-size: 14px;
+        text-align: center;
+      }
+      #editSavedTablesList.collapsed {
+        max-height: 68px;
+        overflow: hidden;
+      }
+      #editSavedTablesList.collapsed .edit-saved-group {
+        gap: 0;
+      }
+      #editSavedTablesList.collapsed .edit-saved-group-label {
+        display: none;
+      }
+      #editSavedTablesList.collapsed .edit-saved-item {
+        display: none;
+        margin: 4px 8px;
+      }
+      #editSavedTablesList.collapsed .edit-saved-item.selected {
+        display: flex;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       textarea {
         min-height: 60px;
@@ -63,23 +244,31 @@
         border: 1px solid #E5E7EB;
         border-radius: 4px;
         background-color: #FFFFFF;
-        max-height: 180px;
+        max-height: 240px;
         overflow-y: auto;
       }
       .header-item {
         display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
         border-bottom: 1px solid #E5E7EB;
       }
       .header-item:last-child {
         border-bottom: none;
       }
+      .header-item-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
       .header-item input[type="text"] {
-        flex-grow: 1;
-        margin-right: 4px;
+        flex: 1 1 auto;
         min-height: 32px;
+      }
+      .header-item-actions {
+        display: flex;
+        gap: 4px;
       }
       .header-item button {
         border: none;
@@ -96,12 +285,146 @@
       .header-item button:hover {
         background-color: #D1D5DB;
       }
+      .header-desc-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #4B5563;
+        cursor: pointer;
+      }
+      .header-desc-toggle input {
+        margin: 0;
+      }
+      .header-desc-field {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+      }
+      .header-desc-field.hidden {
+        display: none;
+      }
+      .ai-multi-select {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-multi-list {
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        padding: 4px 0;
+        max-height: 268px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-gutter: stable;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-multi-list.disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      .ai-multi-list.disabled .ai-multi-item {
+        cursor: not-allowed;
+      }
+      .ai-multi-empty {
+        padding: 12px 16px;
+        color: #6B7280;
+        font-size: 14px;
+      }
+      .ai-multi-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-multi-group-label {
+        font-weight: 700;
+        font-size: 15px;
+        color: #1F2937;
+        padding: 4px 12px 0;
+      }
+      .ai-multi-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px 8px 20px;
+        margin: 0 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        background-image: linear-gradient(
+          90deg,
+          var(--header-color, #E5E7EB) 0 14px,
+          rgba(255, 255, 255, 0) 14px 100%
+        );
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        color: #111827;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .ai-multi-item:focus {
+        outline: 2px solid #2563EB;
+        outline-offset: 2px;
+      }
+      .ai-multi-item:hover {
+        background-color: rgba(37, 99, 235, 0.08);
+      }
+      .ai-multi-item.selected {
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+      }
+      .ai-multi-item .ai-label {
+        flex: 1 1 auto;
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+      }
+      .ai-multi-item .ai-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 2px solid #94A3B8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+        color: transparent;
+        background-color: rgba(255, 255, 255, 0.9);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+      .ai-multi-item.selected .ai-check {
+        background-color: #2563EB;
+        border-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .ai-multi-item.selected .ai-check::after {
+        content: '\2713';
+      }
+      .ai-multi-item.all-option {
+        background-image: none;
+      }
+      .ai-multi-item.all-option .ai-label {
+        font-weight: 700;
+      }
+      .ai-hidden-select {
+        display: none;
+      }
       .toggle-group {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-top: 8px;
         margin-bottom: 8px;
+      }
+      .checkbox-subtle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #4B5563;
       }
       .btn-primary {
         background-color: #2563EB;
@@ -144,6 +467,56 @@
       .btn-danger:hover {
         background-color: #DC2626;
       }
+      .range-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .range-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .range-actions--stacked {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+      }
+      .range-row strong {
+        flex-grow: 1;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .action-buttons button {
+        flex: 1 1 160px;
+      }
+      #editActionsRow {
+        margin-top: 20px;
+      }
+      #editActionsRow.action-buttons--balanced {
+        justify-content: space-between;
+      }
+      #editActionsRow.action-buttons--balanced button {
+        flex: 1 1 auto;
+      }
+      #editActionsRow.action-buttons--balanced button + button {
+        margin-left: 0;
+      }
+      .btn-secondary-dark {
+        background-color: #0D6B5A;
+        color: #FFFFFF;
+      }
+      .btn-secondary-dark:hover {
+        background-color: #0B5F50;
+      }
       pre.answer-box {
         background-color: #FFFFFF;
         border: 1px solid #E5E7EB;
@@ -157,126 +530,2519 @@
         font-size: 12px;
         color: #6B7280;
       }
+      .tc-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 9999;
+      }
+      .tc-modal-overlay.show {
+        display: flex;
+      }
+      .tc-modal {
+        background: #FFFFFF;
+        border-radius: 16px;
+        padding: 24px;
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+      }
+      .tc-modal-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .tc-modal-title {
+        margin: 0 0 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+      }
+      .tc-modal-message {
+        margin: 0 0 24px;
+        color: #4B5563;
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+      .tc-modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .tc-modal-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        min-width: 120px;
+        font-size: 14px;
+      }
+      .tc-modal-btn.primary {
+        background-color: #2563EB;
+        color: #FFFFFF;
+      }
+      .tc-modal-btn.primary:hover {
+        background-color: #1E4DB7;
+      }
+      .tc-modal-btn.secondary {
+        background-color: #E5E7EB;
+        color: #111827;
+      }
+      .tc-modal-btn.secondary:hover {
+        background-color: #D1D5DB;
+      }
+      .tc-modal-overlay[data-variant="info"] .tc-modal-icon {
+        background: #DBEAFE;
+        color: #1D4ED8;
+      }
+      .tc-modal-overlay[data-variant="success"] .tc-modal-icon {
+        background: #DCFCE7;
+        color: #15803D;
+      }
+      .tc-modal-overlay[data-variant="error"] .tc-modal-icon {
+        background: #FEE2E2;
+        color: #B91C1C;
+      }
+      .tc-modal-overlay[data-variant="warning"] .tc-modal-icon {
+        background: #FEF3C7;
+        color: #B45309;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h2>TableCrafter AI</h2>
-      <div class="section">
-        <div>
-          <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
-          <button id="refreshRangeBtn" class="btn-secondary" style="float:right;" title="Actualizar rango activo">Actualizar</button>
-        </div>
-        <label for="tableName">Nombre de la tabla</label>
-        <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
-        <label for="tableDesc">Descripción</label>
-        <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
-        <label>Encabezados (puede editar y reordenar)</label>
-        <ul id="headersList" class="header-list"></ul>
-        <div class="toggle-group">
-          <label for="colorHeader">Color encabezado</label>
-          <input type="color" id="colorHeader" />
-        </div>
-        <div class="toggle-group">
-          <label for="colorAlt1">Color filas alternas 1</label>
-          <input type="color" id="colorAlt1" />
-        </div>
-        <div class="toggle-group">
-          <label for="colorAlt2">Color filas alternas 2</label>
-          <input type="color" id="colorAlt2" />
-        </div>
-        <div class="toggle-group">
-          <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
-          <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
-        </div>
-        <button id="applyBtn" class="btn-primary">Aplicar formato y guardar</button>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="aiTab">Consultas IA</button>
+        <button class="tab-btn" data-tab="editTab">Editar tabla</button>
+        <button class="tab-btn" data-tab="createTab">Crear tabla</button>
       </div>
-      <div class="section">
-        <label for="savedTables">Tablas guardadas</label>
-        <select id="savedTables"></select>
-        <div class="toggle-group" style="margin-top:8px;">
-          <button id="editTableBtn" class="btn-secondary" title="Editar tabla seleccionada">Editar</button>
-          <button id="clearTableBtn" class="btn-danger" title="Limpiar rango de la tabla">Limpiar rango</button>
+      <div class="tab-nav secondary-tab-nav">
+        <button class="tab-btn" data-tab="triggersTab">Triggers</button>
+        <button class="tab-btn" data-tab="templatesTab">
+          <span class="tab-label">Plantillas</span>
+          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="visually-hidden">Favoritas</span>
+        </button>
+        <button class="tab-btn" data-tab="questionsTab">
+          <span class="tab-label">Preguntas</span>
+          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="visually-hidden">Favoritas</span>
+        </button>
+      </div>
+
+      <div id="createTab" class="tab-content">
+        <div class="section">
+          <div class="range-row">
+            <div>
+              <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+            </div>
+            <div class="range-actions">
+              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            </div>
+          </div>
+          <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
+          <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
+          <div class="small-text" style="margin-top:4px;">
+            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+          </div>
         </div>
-        <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
-        <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
-        <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
-        <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
-        <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+        <div class="section">
+          <label for="tableName">Nombre de la tabla</label>
+          <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
+          <label for="tableDesc">Descripción</label>
+          <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <label>Encabezados (puede editar y reordenar)</label>
+          <ul id="headersList" class="header-list"></ul>
+          <div class="toggle-group">
+            <label for="colorHeader">Color encabezado</label>
+            <input type="color" id="colorHeader" />
+          </div>
+          <div class="toggle-group">
+            <label for="colorAlt1">Color filas alternas 1</label>
+            <input type="color" id="colorAlt1" />
+          </div>
+          <div class="toggle-group">
+            <label for="colorAlt2">Color filas alternas 2</label>
+            <input type="color" id="colorAlt2" />
+          </div>
+          <div class="toggle-group">
+            <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
+            <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
+          </div>
+          <div class="action-buttons">
+            <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
+            <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="editTab" class="tab-content">
+        <div class="section">
+          <label for="editSavedTables">Tablas guardadas</label>
+          <div class="edit-saved-container">
+            <div id="editSavedTablesList" aria-label="Tablas guardadas"></div>
+            <select id="editSavedTables" size="8"></select>
+          </div>
+        </div>
+        <div id="editRangeSection" class="section" style="display:none;">
+          <div class="range-row">
+            <div>
+              <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
+            </div>
+            <div class="range-actions range-actions--stacked">
+              <button
+                id="editRefreshApplyBtn"
+                class="btn-secondary"
+                title="Actualizar rango y aplicar formato"
+                disabled
+              >
+                Actualizar rango y formato
+              </button>
+            </div>
+          </div>
+          <div class="toggle-group" style="margin-top:8px;">
+            <label class="checkbox-subtle">
+              <input type="checkbox" id="editUpdateFormulaRefs" checked />
+              Actualizar referencias de fórmulas al mover tabla.
+            </label>
+          </div>
+          <label for="editRangeInput" style="margin-top:12px;">Rango a utilizar</label>
+          <input type="text" id="editRangeInput" placeholder="Ej: Hoja1!A1:D10" />
+          <div class="small-text" style="margin-top:4px;">
+            Puede escribir el rango manualmente o usar "Actualizar rango y formato" para tomar la selección activa.
+          </div>
+        </div>
+        <div id="editMetaSection" class="section" style="display:none;">
+          <label for="editTableName">Nombre de la tabla</label>
+          <input type="text" id="editTableName" placeholder="Ingrese un nombre..." />
+          <label for="editTableDesc">Descripción</label>
+          <textarea id="editTableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <label>Encabezados (puede editar y reordenar)</label>
+          <ul id="editHeadersList" class="header-list"></ul>
+          <div class="toggle-group">
+            <label for="editColorHeader">Color encabezado</label>
+            <input type="color" id="editColorHeader" />
+          </div>
+          <div class="toggle-group">
+            <label for="editColorAlt1">Color filas alternas 1</label>
+            <input type="color" id="editColorAlt1" />
+          </div>
+          <div class="toggle-group">
+            <label for="editColorAlt2">Color filas alternas 2</label>
+            <input type="color" id="editColorAlt2" />
+          </div>
+          <div class="toggle-group">
+            <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
+            <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
+          </div>
+          <div id="editActionsRow" class="action-buttons action-buttons--balanced" style="display:none;">
+            <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar tabla</button>
+            <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="aiTab" class="tab-content active">
+        <div class="section">
+          <label for="aiSavedTables">Tablas disponibles</label>
+          <div class="ai-multi-select">
+            <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
+            <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
+          </div>
+          <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
+          <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
+          <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
+          <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
+          <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+        </div>
+      </div>
+      <div id="triggersTab" class="tab-content">
+        <div class="section">
+          <p>Administra y programa los triggers asociados a TableCrafter.</p>
+        </div>
+      </div>
+      <div id="templatesTab" class="tab-content">
+        <div class="section">
+          <p>Revisa tus plantillas favoritas para reutilizarlas rápidamente.</p>
+        </div>
+      </div>
+      <div id="questionsTab" class="tab-content">
+        <div class="section">
+          <p>Consulta y gestiona tus preguntas marcadas como favoritas.</p>
+        </div>
       </div>
     </div>
-    <script>
-      // Variables globales
-      let currentHeaders = [];
-      let rangeInfo = null;
-      let editingId = '';
 
-      // Renderiza la lista de encabezados para su edición y reordenamiento
-      function renderHeaders() {
-        const list = document.getElementById('headersList');
+    <div id="tcModalOverlay" class="tc-modal-overlay" aria-hidden="true" data-variant="info">
+      <div class="tc-modal" role="dialog" aria-modal="true" aria-labelledby="tcModalTitle" aria-describedby="tcModalMessage">
+        <div id="tcModalIcon" class="tc-modal-icon">ℹ️</div>
+        <h3 id="tcModalTitle" class="tc-modal-title">Aviso</h3>
+        <p id="tcModalMessage" class="tc-modal-message"></p>
+        <div class="tc-modal-actions">
+          <button type="button" id="tcModalSecondary" class="tc-modal-btn secondary">Cancelar</button>
+          <button type="button" id="tcModalPrimary" class="tc-modal-btn primary">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentHeaders = [];
+      let editHeaders = [];
+      const DEFAULT_STYLE = Object.freeze({
+        headerColor: '#CFE8FC',
+        altColor1: '#FFFFFF',
+        altColor2: '#F3F4F6',
+        border: true,
+        bold: true
+      });
+
+      const ALL_TABLES_OPTION_VALUE = '__ALL__';
+
+      let headerKeyCounter = 0;
+
+      function generateHeaderKey() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return 'hdr_' + crypto.randomUUID();
+        }
+        headerKeyCounter += 1;
+        return 'hdr_' + Date.now().toString(36) + '_' + headerKeyCounter.toString(36);
+      }
+
+      function normalizeFormulaPreference(value) {
+        if (typeof value === 'boolean') {
+          return value;
+        }
+        if (value === null || value === undefined) {
+          return true;
+        }
+        const text = String(value).trim().toLowerCase();
+        if (!text) {
+          return true;
+        }
+        if (['false', '0', 'no', 'off'].indexOf(text) !== -1) {
+          return false;
+        }
+        return true;
+      }
+
+      function normalizeHeaderModel(entry) {
+        const normalized = {
+          label: '',
+          description: '',
+          hasDescription: false,
+          key: ''
+        };
+        if (entry && typeof entry === 'object') {
+          const labelValue =
+            entry.label !== undefined && entry.label !== null
+              ? entry.label
+              : entry.text !== undefined && entry.text !== null
+              ? entry.text
+              : '';
+          const descriptionValue = entry.description !== undefined && entry.description !== null ? entry.description : '';
+          const trimmedLabel = String(labelValue || '').trim();
+          const trimmedDescription = String(descriptionValue || '').trim();
+          const explicitHasDescription =
+            Object.prototype.hasOwnProperty.call(entry, 'hasDescription') && entry.hasDescription === true;
+          const hasDescription = explicitHasDescription || trimmedDescription !== '';
+          const keyValue =
+            entry.key !== undefined && entry.key !== null
+              ? entry.key
+              : entry.id !== undefined && entry.id !== null
+              ? entry.id
+              : '';
+          normalized.label = trimmedLabel;
+          normalized.description = hasDescription ? trimmedDescription : '';
+          normalized.hasDescription = hasDescription;
+          normalized.key = String(keyValue || '').trim();
+          if (!normalized.key) {
+            normalized.key = generateHeaderKey();
+          }
+          return normalized;
+        }
+        if (entry !== undefined && entry !== null) {
+          normalized.label = String(entry).trim();
+        }
+        if (!normalized.key) {
+          normalized.key = generateHeaderKey();
+        }
+        return normalized;
+      }
+
+      function toHeaderModelArray(source) {
+        if (!Array.isArray(source)) {
+          return [];
+        }
+        return source.map(function(entry) {
+          return normalizeHeaderModel(entry);
+        });
+      }
+
+      function cloneHeaderModels(source) {
+        return toHeaderModelArray(source).map(function(item) {
+          return {
+            label: item.label,
+            description: item.hasDescription ? item.description : '',
+            hasDescription: item.hasDescription,
+            key: item.key || generateHeaderKey()
+          };
+        });
+      }
+
+      function normalizeStyleModel(style) {
+        const normalized = {
+          headerColor: DEFAULT_STYLE.headerColor,
+          altColor1: DEFAULT_STYLE.altColor1,
+          altColor2: DEFAULT_STYLE.altColor2,
+          border: DEFAULT_STYLE.border,
+          bold: DEFAULT_STYLE.bold
+        };
+        if (style && typeof style === 'object') {
+          if (style.headerColor && String(style.headerColor).trim()) {
+            normalized.headerColor = String(style.headerColor).trim();
+          }
+          if (style.altColor1 && String(style.altColor1).trim()) {
+            normalized.altColor1 = String(style.altColor1).trim();
+          }
+          if (style.altColor2 && String(style.altColor2).trim()) {
+            normalized.altColor2 = String(style.altColor2).trim();
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'border')) {
+            normalized.border = !!style.border;
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'bold')) {
+            normalized.bold = !!style.bold;
+          }
+        }
+        return normalized;
+      }
+
+      function normalizeHexColor(color) {
+        if (typeof color !== 'string') {
+          return '';
+        }
+        const trimmed = color.trim();
+        if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) {
+          return '';
+        }
+        let digits = trimmed.slice(1);
+        if (digits.length === 3) {
+          digits = digits
+            .split('')
+            .map(function(char) {
+              return char + char;
+            })
+            .join('');
+        }
+        return '#' + digits.toUpperCase();
+      }
+
+      function getReadableTextColor(hexColor) {
+        const normalized = normalizeHexColor(hexColor);
+        if (!normalized) {
+          return '#111827';
+        }
+        const r = parseInt(normalized.slice(1, 3), 16) / 255;
+        const g = parseInt(normalized.slice(3, 5), 16) / 255;
+        const b = parseInt(normalized.slice(5, 7), 16) / 255;
+        function channelToLinear(channel) {
+          return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        }
+        const luminance =
+          0.2126 * channelToLinear(r) +
+          0.7152 * channelToLinear(g) +
+          0.0722 * channelToLinear(b);
+        return luminance > 0.55 ? '#111827' : '#FFFFFF';
+      }
+
+      function styleOptionWithHeaderColor(option, entry) {
+        if (!option) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          option.style.removeProperty('background-color');
+          option.style.removeProperty('color');
+          option.style.removeProperty('background-image');
+          option.style.removeProperty('background-size');
+          option.style.removeProperty('background-repeat');
+          if (option.dataset) {
+            delete option.dataset.headerColor;
+          }
+          return;
+        }
+        option.style.backgroundColor = normalizedColor;
+        option.style.color = getReadableTextColor(normalizedColor);
+        option.style.backgroundImage =
+          'linear-gradient(90deg, ' + normalizedColor + ' 0 16px, rgba(255,255,255,0) 16px 100%)';
+        option.style.backgroundSize = '100% 100%';
+        option.style.backgroundRepeat = 'no-repeat';
+        if (option.dataset) {
+          option.dataset.headerColor = normalizedColor;
+        }
+      }
+
+      function styleEditListItem(item, entry) {
+        if (!item) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          item.style.removeProperty('--header-color');
+          item.style.removeProperty('--header-text-color');
+          item.dataset.headerColor = '';
+          return;
+        }
+        item.style.setProperty('--header-color', normalizedColor);
+        item.style.setProperty('--header-text-color', getReadableTextColor(normalizedColor));
+        item.dataset.headerColor = normalizedColor;
+      }
+
+      let savedTablesCache = [];
+      let savedTablesCacheInitialized = false;
+      let allowSidebarUnload = false;
+      let sidebarClosePromptActive = false;
+      const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
+      let editSavedListCollapsed = false;
+
+      function syncEditSavedListCollapseClass() {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl) {
+          return;
+        }
+        const hasSelection = !!(
+          selectEl &&
+          !selectEl.disabled &&
+          selectEl.value &&
+          String(selectEl.value).trim()
+        );
+        const shouldCollapse =
+          hasSelection && editSavedListCollapsed && !listEl.classList.contains('disabled');
+        if (shouldCollapse) {
+          listEl.classList.add('collapsed');
+          listEl.setAttribute('aria-expanded', 'false');
+          listEl.dataset.collapsed = 'true';
+        } else {
+          listEl.classList.remove('collapsed');
+          listEl.setAttribute('aria-expanded', 'true');
+          listEl.dataset.collapsed = 'false';
+        }
+      }
+
+      function setEditSavedListCollapsed(collapsed) {
+        editSavedListCollapsed = !!collapsed;
+        syncEditSavedListCollapseClass();
+      }
+
+      function getLocalStorage() {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            return window.localStorage;
+          }
+        } catch (err) {
+          console.log('El almacenamiento local no está disponible.', err);
+        }
+        return null;
+      }
+
+      function persistSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return;
+        }
+        try {
+          const payload = JSON.stringify(
+            savedTablesCache.map(function(entry) {
+              if (!entry || !entry.id) {
+                return null;
+              }
+              return {
+                id: entry.id,
+                name: entry.name || '',
+                rangeA1: entry.rangeA1 || '',
+                fullRangeA1: entry.fullRangeA1 || (entry.sheetName && entry.rangeA1 ? entry.sheetName + '!' + entry.rangeA1 : ''),
+                description: entry.description || '',
+                sheetName: entry.sheetName || '',
+                cols: entry.cols || 0,
+                rows: entry.rows || 0,
+                style: normalizeStyleModel(entry.style || {}),
+                headers: cloneHeaderModels(entry.headers || []),
+                updateFormulaReferences: normalizeFormulaPreference(entry.updateFormulaReferences)
+              };
+            }).filter(function(item) {
+              return !!item;
+            })
+          );
+          storage.setItem(SAVED_TABLES_STORAGE_KEY, payload);
+        } catch (err) {
+          console.log('No se pudo guardar la caché de tablas guardadas.', err);
+        }
+      }
+
+      function restoreSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          savedTablesCacheInitialized = false;
+          return [];
+        }
+        try {
+          const raw = storage.getItem(SAVED_TABLES_STORAGE_KEY);
+          if (!raw) {
+            savedTablesCache = [];
+            savedTablesCacheInitialized = false;
+            return savedTablesCache.slice();
+          }
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            savedTablesCache = [];
+            savedTablesCacheInitialized = false;
+            return savedTablesCache.slice();
+          }
+          const restored = parsed
+            .map(function(entry) {
+              return normalizeMetaForPopulate(entry);
+            })
+            .filter(function(item) {
+              return !!item;
+            });
+          savedTablesCache = restored;
+          savedTablesCacheInitialized = savedTablesCache.length > 0;
+          return savedTablesCache.slice();
+        } catch (err) {
+          console.log('No se pudo restaurar la caché de tablas guardadas.', err);
+          savedTablesCache = [];
+          savedTablesCacheInitialized = false;
+          return [];
+        }
+      }
+
+      function updateCachedFormulaPreference(tableId, value, options) {
+        if (!tableId) {
+          return;
+        }
+        const normalizedId = String(tableId).trim();
+        if (!normalizedId) {
+          return;
+        }
+        const normalizedValue = !!value;
+        let updated = false;
+        if (Array.isArray(savedTablesCache)) {
+          for (let i = 0; i < savedTablesCache.length; i++) {
+            const entry = savedTablesCache[i];
+            if (entry && entry.id === normalizedId) {
+              entry.updateFormulaReferences = normalizedValue;
+              updated = true;
+              break;
+            }
+          }
+        }
+        const persist = !options || options.persist !== false;
+        if (updated && persist) {
+          persistSavedTablesCache();
+        }
+      }
+
+      function applyEditFormulaPreference(value, options) {
+        const normalized = normalizeFormulaPreference(value);
+        const toggle = document.getElementById('editUpdateFormulaRefs');
+        if (toggle) {
+          toggle.checked = normalized;
+        }
+        if (!editRangeInfo) {
+          editRangeInfo = {};
+        }
+        editRangeInfo.updateFormulaReferences = normalized;
+        if (editingId) {
+          updateCachedFormulaPreference(editingId, normalized, options);
+        }
+        return normalized;
+      }
+
+      function getEditFormulaPreference() {
+        const toggle = document.getElementById('editUpdateFormulaRefs');
+        if (toggle) {
+          return !!toggle.checked;
+        }
+        if (editRangeInfo && typeof editRangeInfo.updateFormulaReferences === 'boolean') {
+          return editRangeInfo.updateFormulaReferences;
+        }
+        return true;
+      }
+
+      function normalizeMetaForPopulate(meta) {
+        if (!meta || typeof meta !== 'object') {
+          return null;
+        }
+        const id = meta.id ? String(meta.id).trim() : '';
+        if (!id) {
+          return null;
+        }
+        const headers = cloneHeaderModels(meta.headers || []);
+        const style = normalizeStyleModel(meta.style || {});
+        const cols = typeof meta.cols === 'number' ? meta.cols : parseInt(meta.cols, 10) || headers.length;
+        const rows = typeof meta.rows === 'number' ? meta.rows : parseInt(meta.rows, 10) || 0;
+        const rawFullRange = meta.fullRangeA1 ? String(meta.fullRangeA1).trim() : '';
+        let sheetName = meta.sheetName ? String(meta.sheetName).trim() : '';
+        let rangeA1 = meta.rangeA1 ? String(meta.rangeA1).trim() : '';
+        if ((!sheetName || !rangeA1) && rawFullRange) {
+          const bangIndex = rawFullRange.lastIndexOf('!');
+          if (bangIndex !== -1) {
+            if (!sheetName) {
+              let candidateSheet = rawFullRange.substring(0, bangIndex);
+              if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+              }
+              sheetName = candidateSheet;
+            }
+            if (!rangeA1) {
+              rangeA1 = rawFullRange.substring(bangIndex + 1);
+            }
+          }
+        }
+        const fullRangeA1 = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
+        return {
+          id: id,
+          name: meta.name ? String(meta.name).trim() : '',
+          description: meta.description ? String(meta.description).trim() : '',
+          sheetName: sheetName,
+          rangeA1: rangeA1,
+          fullRangeA1: fullRangeA1,
+          cols: cols,
+          rows: rows,
+          createdAt: meta.createdAt || '',
+          updatedAt: meta.updatedAt || '',
+          style: style,
+          headers: headers,
+          updateFormulaReferences: normalizeFormulaPreference(meta.updateFormulaReferences)
+        };
+      }
+
+      function upsertSavedTablesCache(entry) {
+        if (!entry || !entry.id) {
+          return;
+        }
+        const normalized = {
+          id: entry.id,
+          name: entry.name ? String(entry.name).trim() : '',
+          rangeA1: entry.rangeA1 ? String(entry.rangeA1).trim() : '',
+          fullRangeA1:
+            entry.fullRangeA1
+              ? String(entry.fullRangeA1).trim()
+              : entry.sheetName && entry.rangeA1
+              ? entry.sheetName + '!' + entry.rangeA1
+              : '',
+          description: entry.description ? String(entry.description).trim() : '',
+          sheetName: entry.sheetName ? String(entry.sheetName).trim() : '',
+          cols: typeof entry.cols === 'number' ? entry.cols : parseInt(entry.cols, 10) || 0,
+          rows: typeof entry.rows === 'number' ? entry.rows : parseInt(entry.rows, 10) || 0,
+          style: normalizeStyleModel(entry.style),
+          headers: cloneHeaderModels(entry.headers || []),
+          updateFormulaReferences: normalizeFormulaPreference(entry.updateFormulaReferences)
+        };
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalized.id;
+        });
+        if (index >= 0) {
+          savedTablesCache[index] = normalized;
+        } else {
+          savedTablesCache.push(normalized);
+        }
+        savedTablesCacheInitialized = true;
+        persistSavedTablesCache();
+      }
+
+      function removeSavedTableFromCache(id) {
+        if (!id) {
+          return;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return;
+        }
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (index >= 0) {
+          savedTablesCache.splice(index, 1);
+          persistSavedTablesCache();
+        }
+        savedTablesCacheInitialized = true;
+      }
+
+      function buildSavedTableCacheEntry(id, values, rangeInfo, style, headers) {
+        if (!id) {
+          return null;
+        }
+        const info = rangeInfo || {};
+        const normalizedHeaders = cloneHeaderModels(headers || []);
+        const normalizedStyle = normalizeStyleModel(style || {});
+        const preferenceFromValues =
+          values && typeof values.updateFormulaReferences === 'boolean'
+            ? values.updateFormulaReferences
+            : undefined;
+        const preferenceFromInfo =
+          typeof info.updateFormulaReferences === 'boolean'
+            ? info.updateFormulaReferences
+            : undefined;
+        const updateFormulaReferences =
+          preferenceFromValues !== undefined
+            ? preferenceFromValues
+            : preferenceFromInfo !== undefined
+            ? preferenceFromInfo
+            : true;
+        const sheetName = info.sheetName || (values && values.sheetName) || '';
+        const a1Notation = info.a1Notation || (values && values.rangeA1) || '';
+        const fullRangeA1 = sheetName && a1Notation ? sheetName + '!' + a1Notation : (values && values.fullRangeA1) || '';
+        return {
+          id: id,
+          name: values && values.name ? values.name : '',
+          description: values && values.description ? values.description : '',
+          sheetName: sheetName,
+          rangeA1: a1Notation,
+          fullRangeA1: fullRangeA1,
+          cols: typeof info.cols === 'number' ? info.cols : normalizedHeaders.length,
+          rows: typeof info.rows === 'number' ? info.rows : 0,
+          style: normalizedStyle,
+          headers: normalizedHeaders,
+          updateFormulaReferences: normalizeFormulaPreference(updateFormulaReferences)
+        };
+      }
+
+      function getSavedTableFromCache(id) {
+        if (!id) {
+          return null;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return null;
+        }
+        const found = savedTablesCache.find(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (!found) {
+          return null;
+        }
+        return normalizeMetaForPopulate(found);
+      }
+
+      function resolveSelectOption(options, id, key, fallback) {
+        if (!options || typeof options !== 'object') {
+          return fallback;
+        }
+        const value = options[key];
+        if (value === undefined) {
+          return fallback;
+        }
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.prototype.hasOwnProperty.call(value, id)) {
+            return value[id];
+          }
+          return fallback;
+        }
+        return value;
+      }
+
+      function updateSavedTableSelects(targetIds, list, config) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        const entries = Array.isArray(list) ? list : [];
+        const options = config || {};
+        const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+
+        ids.forEach(function(id) {
+          const select = document.getElementById(id);
+          if (!select) {
+            return;
+          }
+
+          const previousValues = [];
+          if (select.options && select.options.length) {
+            for (let idx = 0; idx < select.options.length; idx++) {
+              const opt = select.options[idx];
+              if (opt && opt.selected && opt.value) {
+                previousValues.push(opt.value);
+              }
+            }
+          }
+
+          let defaultSettings = {
+            placeholder: '-- Seleccione --',
+            multi: false,
+            groupBySheet: false,
+            includeAllOption: false,
+            allOptionLabel: 'Todas las tablas',
+            size: null
+          };
+
+          if (id === 'aiSavedTables') {
+            const totalOptions = entries.length + 1;
+            defaultSettings = {
+              placeholder: '-- Seleccione una o más tablas --',
+              multi: true,
+              groupBySheet: true,
+              includeAllOption: true,
+              allOptionLabel: 'Todas las tablas',
+              size: Math.min(Math.max(totalOptions, 4), 12)
+            };
+          } else if (id === 'editSavedTables') {
+            defaultSettings.groupBySheet = true;
+          }
+
+          const isMulti = !!resolveSelectOption(options, id, 'multi', defaultSettings.multi);
+          const groupBySheet = !!resolveSelectOption(options, id, 'groupBySheet', defaultSettings.groupBySheet);
+          const includeAll = !!resolveSelectOption(options, id, 'includeAllOption', defaultSettings.includeAllOption);
+          const allOptionLabel = resolveSelectOption(options, id, 'allOptionLabel', defaultSettings.allOptionLabel) || 'Todas las tablas';
+          const placeholder = resolveSelectOption(options, id, 'placeholder', defaultSettings.placeholder);
+          const customSize = resolveSelectOption(options, id, 'size', defaultSettings.size);
+
+          select.multiple = isMulti;
+          if (isMulti) {
+            const total = entries.length + (includeAll ? 1 : 0);
+            const computedSize = customSize || Math.min(Math.max(total, 4), 12);
+            select.size = computedSize;
+          } else {
+            select.size = 1;
+          }
+
+          select.innerHTML = '';
+
+          if (!isMulti) {
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = placeholder || '-- Seleccione --';
+            select.appendChild(defaultOption);
+          } else if (placeholder) {
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = placeholder;
+            placeholderOption.disabled = true;
+            select.appendChild(placeholderOption);
+          }
+
+          const validValues = {};
+          entries.forEach(function(entry) {
+            if (entry && entry.id) {
+              validValues[entry.id] = true;
+            }
+          });
+
+          if (includeAll) {
+            validValues[ALL_TABLES_OPTION_VALUE] = true;
+            const allOption = document.createElement('option');
+            allOption.value = ALL_TABLES_OPTION_VALUE;
+            allOption.textContent = allOptionLabel;
+            select.appendChild(allOption);
+          }
+
+          if (groupBySheet) {
+            const grouped = Object.create(null);
+            const order = [];
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+              if (!grouped[sheetLabel]) {
+                grouped[sheetLabel] = [];
+                order.push(sheetLabel);
+              }
+              grouped[sheetLabel].push(entry);
+            });
+            order.forEach(function(sheetLabel) {
+              const optgroup = document.createElement('optgroup');
+              optgroup.label = sheetLabel;
+              grouped[sheetLabel].forEach(function(entry) {
+                const opt = document.createElement('option');
+                opt.value = entry.id;
+                opt.textContent = entry.name || entry.id;
+                styleOptionWithHeaderColor(opt, entry);
+                optgroup.appendChild(opt);
+              });
+              select.appendChild(optgroup);
+            });
+          } else {
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const opt = document.createElement('option');
+              opt.value = entry.id;
+              opt.textContent = entry.name || entry.id;
+              styleOptionWithHeaderColor(opt, entry);
+              select.appendChild(opt);
+            });
+          }
+
+          const configuredSelectId = resolveSelectOption(options, id, 'selectId', '');
+          const configuredSelectedIds = resolveSelectOption(options, id, 'selectedIds', []);
+          let targetValues = [];
+
+          if (isMulti) {
+            let candidate = [];
+            if (Array.isArray(configuredSelectedIds) && configuredSelectedIds.length) {
+              candidate = configuredSelectedIds;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidate = configuredSelectId;
+            } else if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidate = [configuredSelectId];
+            } else {
+              candidate = previousValues;
+            }
+            targetValues = candidate
+              .map(function(value) {
+                return String(value);
+              })
+              .filter(function(value) {
+                return !!validValues[value];
+              });
+            if (includeAll && targetValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+              targetValues = [ALL_TABLES_OPTION_VALUE];
+            }
+          } else {
+            let candidateValue = '';
+            if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidateValue = configuredSelectId;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidateValue = configuredSelectId[0];
+            } else if (id === 'editSavedTables' && activeEditingId && validValues[activeEditingId]) {
+              candidateValue = activeEditingId;
+            } else if (previousValues.length && validValues[previousValues[0]]) {
+              candidateValue = previousValues[0];
+            }
+            targetValues = candidateValue ? [String(candidateValue)] : [];
+          }
+
+          const valueSet = Object.create(null);
+          targetValues.forEach(function(value) {
+            valueSet[value] = true;
+          });
+
+          let hasSelection = false;
+          const optionList = Array.prototype.slice.call(select.options);
+          optionList.forEach(function(option) {
+            if (!option.value) {
+              option.selected = false;
+              return;
+            }
+            if (valueSet[option.value]) {
+              option.selected = true;
+              hasSelection = true;
+            } else if (!isMulti) {
+              option.selected = false;
+            } else if (option.selected) {
+              option.selected = false;
+            }
+          });
+
+          if (!isMulti) {
+            if (hasSelection) {
+              select.value = targetValues[0];
+            } else if (select.options.length > 0) {
+              select.selectedIndex = 0;
+            }
+          } else if (!hasSelection) {
+            optionList.forEach(function(option) {
+              if (option.value === '' && option.disabled) {
+                option.selected = true;
+              }
+            });
+          }
+
+          if (entries.length === 0) {
+            if (isMulti) {
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '';
+              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.disabled = true;
+              emptyOption.selected = true;
+              select.appendChild(emptyOption);
+            }
+            select.disabled = true;
+          } else {
+            select.disabled = false;
+          }
+
+          if (id === 'editSavedTables') {
+            renderEditSavedTablesList(entries, {
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValue: !select.disabled ? select.value : ''
+            });
+            syncEditSavedTablesHighlight();
+          }
+
+          if (id === 'aiSavedTables') {
+            select.dataset.allValue = includeAll ? ALL_TABLES_OPTION_VALUE : '';
+            renderAiSavedTablesList(entries, {
+              includeAll: includeAll,
+              allValue: includeAll ? ALL_TABLES_OPTION_VALUE : '',
+              allLabel: allOptionLabel,
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValues: getSelectedOptionValues(select)
+            });
+          }
+        });
+      }
+
+      function applySavedTablesFromCache(targetIds, config) {
+        updateSavedTableSelects(targetIds, savedTablesCache, config || {});
+      }
+
+      function getSelectedOptionValues(select) {
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+      function createAiMultiItem(entry, selected, options) {
+        const config = options || {};
+        const hasOverride = Object.prototype.hasOwnProperty.call(config, 'valueOverride');
+        const value = hasOverride
+          ? String(config.valueOverride || '')
+          : entry && entry.id
+          ? String(entry.id)
+          : '';
+        if (!value) {
+          return null;
+        }
+        const labelText = config.labelOverride
+          ? String(config.labelOverride)
+          : entry && entry.name
+          ? entry.name
+          : value;
+        const item = document.createElement('div');
+        item.className = 'ai-multi-item';
+        if (config.allOption) {
+          item.classList.add('all-option');
+        }
+        item.dataset.value = value;
+        item.setAttribute('role', 'option');
+        item.tabIndex = 0;
+        if (selected) {
+          item.classList.add('selected');
+        }
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+
+        if (entry) {
+          styleEditListItem(item, entry);
+        } else {
+          item.style.removeProperty('--header-color');
+          item.style.removeProperty('--header-text-color');
+          item.dataset.headerColor = '';
+        }
+
+        const label = document.createElement('span');
+        label.className = 'ai-label';
+        label.textContent = labelText;
+        item.appendChild(label);
+
+        const check = document.createElement('span');
+        check.className = 'ai-check';
+        item.appendChild(check);
+
+        return item;
+      }
+
+      function createEditSavedItem(entry, selected, disabled) {
+        const item = document.createElement('div');
+        item.className = 'edit-saved-item';
+        if (selected) {
+          item.classList.add('selected');
+        }
+        if (disabled) {
+          item.classList.add('disabled');
+          item.tabIndex = -1;
+          item.setAttribute('aria-disabled', 'true');
+        } else {
+          item.tabIndex = 0;
+          item.setAttribute('aria-disabled', 'false');
+        }
+        item.dataset.value = entry.id;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        styleEditListItem(item, entry);
+
+        const label = document.createElement('span');
+        label.className = 'edit-saved-label';
+        label.textContent = entry.name || entry.id;
+        item.appendChild(label);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'edit-saved-locate';
+        btn.dataset.value = entry.id;
+        btn.title = 'Ir a la tabla';
+        if (disabled) {
+          btn.disabled = true;
+          btn.tabIndex = -1;
+        }
+        const icon = document.createElement('span');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '📍';
+        btn.appendChild(icon);
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = 'Ir a la tabla';
+        btn.appendChild(sr);
+        item.appendChild(btn);
+        return item;
+      }
+
+      function renderEditSavedTablesList(entries, config) {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const data = Array.isArray(entries) ? entries : [];
+        const options = config || {};
+        const disabled = !!options.disabled;
+        const groupBySheet = !!options.groupBySheet;
+        const selectedValue = options.selectedValue ? String(options.selectedValue) : '';
+        listEl.innerHTML = '';
+        listEl.setAttribute('role', 'listbox');
+        listEl.setAttribute('aria-multiselectable', 'false');
+        listEl.classList.toggle('disabled', disabled);
+        listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+        if (disabled || data.length === 0) {
+          setEditSavedListCollapsed(false);
+          const empty = document.createElement('div');
+          empty.className = 'edit-saved-empty';
+          empty.textContent = 'No hay tablas guardadas';
+          listEl.appendChild(empty);
+          syncEditSavedListCollapseClass();
+          return;
+        }
+
+        if (groupBySheet) {
+          const grouped = Object.create(null);
+          const order = [];
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+            if (!grouped[sheetLabel]) {
+              grouped[sheetLabel] = [];
+              order.push(sheetLabel);
+            }
+            grouped[sheetLabel].push(entry);
+          });
+          order.forEach(function(sheetLabel) {
+            const groupWrapper = document.createElement('div');
+            groupWrapper.className = 'edit-saved-group';
+            const labelEl = document.createElement('div');
+            labelEl.className = 'edit-saved-group-label';
+            labelEl.textContent = sheetLabel;
+            groupWrapper.appendChild(labelEl);
+            grouped[sheetLabel].forEach(function(entry) {
+              const isSelected = entry.id === selectedValue;
+              const item = createEditSavedItem(entry, isSelected, disabled);
+              groupWrapper.appendChild(item);
+            });
+            listEl.appendChild(groupWrapper);
+          });
+        } else {
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const isSelected = entry.id === selectedValue;
+            const item = createEditSavedItem(entry, isSelected, disabled);
+            listEl.appendChild(item);
+          });
+        }
+        syncEditSavedListCollapseClass();
+      }
+
+      function syncEditSavedTablesHighlight() {
+        const listEl = document.getElementById('editSavedTablesList');
+        const selectEl = document.getElementById('editSavedTables');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const selectedValue = !selectEl.disabled && selectEl.value ? String(selectEl.value) : '';
+        listEl.querySelectorAll('.edit-saved-item').forEach(function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedValue && value === selectedValue) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+        syncEditSavedListCollapseClass();
+      }
+
+      function renderAiSavedTablesList(entries, config) {
+        const listEl = document.getElementById('aiSavedTablesList');
+        const selectEl = document.getElementById('aiSavedTables');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const data = Array.isArray(entries) ? entries : [];
+        const options = config || {};
+        const includeAll = !!options.includeAll;
+        const allValue = options.allValue || '';
+        const allLabel = options.allLabel || 'Todas las tablas';
+        const groupBySheet = !!options.groupBySheet;
+        const disabled = !!options.disabled;
+        const selectedValues = Array.isArray(options.selectedValues) ? options.selectedValues : [];
+        const selectedSet = Object.create(null);
+        selectedValues.forEach(function(value) {
+          selectedSet[String(value)] = true;
+        });
+
+        listEl.innerHTML = '';
+        listEl.setAttribute('role', 'listbox');
+        listEl.setAttribute('aria-multiselectable', 'true');
+        listEl.dataset.allValue = includeAll ? allValue : '';
+        listEl.classList.toggle('disabled', disabled);
+        listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+        if (disabled || data.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'ai-multi-empty';
+          empty.textContent = 'No hay tablas guardadas';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        if (includeAll && allValue) {
+          const allItem = createAiMultiItem(null, !!selectedSet[allValue], {
+            valueOverride: allValue,
+            labelOverride: allLabel,
+            allOption: true
+          });
+          if (allItem) {
+            listEl.appendChild(allItem);
+          }
+        }
+
+        if (groupBySheet) {
+          const grouped = Object.create(null);
+          const order = [];
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+            if (!grouped[sheetLabel]) {
+              grouped[sheetLabel] = [];
+              order.push(sheetLabel);
+            }
+            grouped[sheetLabel].push(entry);
+          });
+          order.forEach(function(sheetLabel) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ai-multi-group';
+            const labelEl = document.createElement('div');
+            labelEl.className = 'ai-multi-group-label';
+            labelEl.textContent = sheetLabel;
+            wrapper.appendChild(labelEl);
+            grouped[sheetLabel].forEach(function(entry) {
+              const item = createAiMultiItem(entry, !!selectedSet[entry.id]);
+              if (item) {
+                wrapper.appendChild(item);
+              }
+            });
+            listEl.appendChild(wrapper);
+          });
+        } else {
+          data.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const item = createAiMultiItem(entry, !!selectedSet[entry.id]);
+            if (item) {
+              listEl.appendChild(item);
+            }
+          });
+        }
+        updateAiListSelectionUI(selectEl);
+      }
+
+      function updateAiListSelectionUI(select) {
+        const listEl = document.getElementById('aiSavedTablesList');
+        if (!listEl || !select) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        if (select.options) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value && option.selected && !option.disabled) {
+              selectedSet[option.value] = true;
+            }
+          });
+        }
+        const items = listEl.querySelectorAll('.ai-multi-item');
+        Array.prototype.forEach.call(items, function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedSet[value]) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+      }
+
+      function toggleAiListValue(value) {
+        const selectEl = document.getElementById('aiSavedTables');
+        const listEl = document.getElementById('aiSavedTablesList');
+        if (!selectEl || !listEl || selectEl.disabled) {
+          return;
+        }
+        const options = selectEl.options ? Array.prototype.slice.call(selectEl.options) : [];
+        if (!options.length) {
+          return;
+        }
+        const allValue = listEl.dataset.allValue || selectEl.dataset.allValue || '';
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        if (allValue && targetValue === allValue) {
+          let currentlySelected = false;
+          options.forEach(function(option) {
+            if (option && option.value === allValue && option.selected) {
+              currentlySelected = true;
+            }
+          });
+          const newState = !currentlySelected;
+          options.forEach(function(option) {
+            if (!option || option.disabled || !option.value) {
+              return;
+            }
+            if (option.value === allValue) {
+              option.selected = newState;
+            } else {
+              option.selected = false;
+            }
+          });
+        } else {
+          let targetOption = null;
+          options.forEach(function(option) {
+            if (option && option.value === targetValue) {
+              targetOption = option;
+            }
+          });
+          if (!targetOption) {
+            return;
+          }
+          const newState = !targetOption.selected;
+          targetOption.selected = newState;
+          if (newState && allValue) {
+            options.forEach(function(option) {
+              if (option && option.value === allValue) {
+                option.selected = false;
+              }
+            });
+          }
+        }
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        updateAiListSelectionUI(selectEl);
+      }
+
+      function normalizeNameForComparison(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim().toLowerCase();
+      }
+
+      function findDuplicateTableName(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return null;
+        }
+        const opts = options || {};
+        const ignoreId = opts.ignoreId ? String(opts.ignoreId).trim() : '';
+        if (!Array.isArray(savedTablesCache)) {
+          return null;
+        }
+        const duplicate = savedTablesCache.find(function(entry) {
+          if (!entry || !entry.id) {
+            return false;
+          }
+          if (ignoreId && entry.id === ignoreId) {
+            return false;
+          }
+          const entryName = normalizeNameForComparison(entry.name);
+          return entryName && entryName === normalized;
+        });
+        return duplicate || null;
+      }
+
+      async function ensureUniqueTableNameOrAlert(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return true;
+        }
+        const opts = options || {};
+        try {
+          await ensureSavedTablesLoaded();
+        } catch (err) {
+          console.log('No se pudo actualizar la lista de tablas antes de validar duplicados.', err);
+        }
+        const duplicate = findDuplicateTableName(name, { ignoreId: opts.ignoreId });
+        if (duplicate) {
+          await showMessageModal(
+            opts.message || 'Ya existe una tabla guardada con ese nombre. Elija un nombre diferente.',
+            {
+              title: opts.title || 'Nombre duplicado',
+              variant: opts.variant || 'error'
+            }
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function ensureSavedTablesLoaded() {
+        if (savedTablesCacheInitialized) {
+          return Promise.resolve(savedTablesCache.slice());
+        }
+        if (!ensureSavedTablesLoaded._pending) {
+          ensureSavedTablesLoaded._pending = refreshSavedTables([])
+            .then(function(result) {
+              ensureSavedTablesLoaded._pending = null;
+              if (Array.isArray(result)) {
+                return result;
+              }
+              return savedTablesCache.slice();
+            })
+            .catch(function(err) {
+              ensureSavedTablesLoaded._pending = null;
+              throw err;
+            });
+        }
+        return ensureSavedTablesLoaded._pending;
+      }
+
+      let rangeInfo = null;
+      let editRangeInfo = null;
+      let editingId = '';
+      let currentTab = '';
+      let pendingFormatState = { applied: false, range: null };
+      let lastSavedTableId = '';
+      let editFormatDirty = false;
+      let createFormatDirty = false;
+
+      function clearEditFormatDirty() {
+        editFormatDirty = false;
+      }
+
+      function markEditFormatDirty() {
+        editFormatDirty = true;
+      }
+
+      function isEditFormatDirty() {
+        return !!editFormatDirty;
+      }
+
+      function resetPendingFormatState() {
+        pendingFormatState = { applied: false, range: null };
+      }
+
+      function setPendingFormattedRange(info) {
+        if (info && info.sheetName && info.a1Notation) {
+          pendingFormatState = {
+            applied: true,
+            range: {
+              sheetName: info.sheetName,
+              a1Notation: info.a1Notation
+            }
+          };
+        } else {
+          resetPendingFormatState();
+        }
+      }
+
+      function getFullRangeNotation(info) {
+        if (!info || !info.sheetName || !info.a1Notation) {
+          return '';
+        }
+        return info.sheetName + '!' + info.a1Notation;
+      }
+
+      function isFormatLockActive() {
+        return !!(pendingFormatState && pendingFormatState.applied);
+      }
+
+      function clearCreateFormatDirty() {
+        createFormatDirty = false;
+      }
+
+      function markCreateFormatDirty() {
+        createFormatDirty = true;
+      }
+
+      function isCreateFormatDirty() {
+        return !!createFormatDirty;
+      }
+
+      function callServerFunction(functionName) {
+        const args = Array.prototype.slice.call(arguments, 1);
+        return new Promise(function(resolve, reject) {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(function(err) {
+              reject(err);
+            });
+          if (typeof runner[functionName] === 'function') {
+            runner[functionName].apply(runner, args);
+          } else {
+            reject(new Error('Función no disponible: ' + functionName));
+          }
+        });
+      }
+
+      function selectEditSavedTable(value) {
+        const select = document.getElementById('editSavedTables');
+        if (!select) {
+          return;
+        }
+        if (select.disabled) {
+          return;
+        }
+        const normalized = value ? String(value) : '';
+        let hasMatch = false;
+        if (select.options && select.options.length) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value === normalized) {
+              hasMatch = true;
+            }
+          });
+        }
+        if (!normalized || !hasMatch) {
+          select.value = '';
+          const event = new Event('change', { bubbles: true });
+          select.dispatchEvent(event);
+          return;
+        }
+        if (select.value !== normalized) {
+          select.value = normalized;
+        }
+        const event = new Event('change', { bubbles: true });
+        select.dispatchEvent(event);
+      }
+
+      async function locateSavedTable(tableId) {
+        const id = tableId ? String(tableId).trim() : '';
+        if (!id) {
+          return;
+        }
+        let response;
+        try {
+          response = await callServerFunction('focusSavedTableRange', id);
+        } catch (err) {
+          await showMessageModal('No se pudo enfocar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo enfocar',
+            variant: 'error'
+          });
+          return;
+        }
+        if (!response || response.error) {
+          await showMessageModal((response && response.error) || 'No se pudo enfocar la tabla seleccionada.', {
+            title: 'No se pudo enfocar',
+            variant: 'error'
+          });
+        }
+      }
+
+      function resetCreateTabView(options) {
+        options = options || {};
+        if (!options.preserveRange) {
+          resetPendingFormatState();
+          clearRangeUI();
+        }
+        if (!options.preserveFields) {
+          const nameInput = document.getElementById('tableName');
+          if (nameInput) {
+            nameInput.value = '';
+          }
+          const descInput = document.getElementById('tableDesc');
+          if (descInput) {
+            descInput.value = '';
+          }
+          setDefaultStyles();
+        }
+        if (!options.preserveHeaders) {
+          currentHeaders = [];
+          renderCreateHeaders();
+        }
+        clearCreateFormatDirty();
+      }
+
+      function setEditDefaultStyles() {
+        const colorHeader = document.getElementById('editColorHeader');
+        const colorAlt1 = document.getElementById('editColorAlt1');
+        const colorAlt2 = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        if (colorHeader) colorHeader.value = DEFAULT_STYLE.headerColor;
+        if (colorAlt1) colorAlt1.value = DEFAULT_STYLE.altColor1;
+        if (colorAlt2) colorAlt2.value = DEFAULT_STYLE.altColor2;
+        if (borderToggle) borderToggle.checked = DEFAULT_STYLE.border;
+        if (boldToggle) boldToggle.checked = DEFAULT_STYLE.bold;
+      }
+
+      function resetEditTabView(options) {
+        const opts = options || {};
+        clearEditFormatDirty();
+        if (!opts.preserveSelection) {
+          const select = document.getElementById('editSavedTables');
+          if (select) {
+            select.value = '';
+          }
+          if (opts.clearEditingId !== false) {
+            editingId = '';
+          }
+          setEditSavedListCollapsed(false);
+        } else if (opts.clearEditingId) {
+          editingId = '';
+        }
+        editHeaders = [];
+        editRangeInfo = null;
+        renderEditHeaders();
+
+        const rangeSection = document.getElementById('editRangeSection');
+        const metaSection = document.getElementById('editMetaSection');
+        if (rangeSection) {
+          rangeSection.style.display = 'none';
+        }
+        if (metaSection) {
+          metaSection.style.display = 'none';
+        }
+
+        const label = document.getElementById('editRangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = '';
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = '';
+        }
+
+        setEditDefaultStyles();
+
+        const actionsRow = document.getElementById('editActionsRow');
+        if (actionsRow) {
+          actionsRow.style.display = 'none';
+        }
+        const refreshApplyBtn = document.getElementById('editRefreshApplyBtn');
+        if (refreshApplyBtn) {
+          refreshApplyBtn.disabled = true;
+        }
+        const saveBtn = document.getElementById('editSaveTableBtn');
+        if (saveBtn) {
+          saveBtn.disabled = true;
+        }
+        const deleteBtn = document.getElementById('editDeleteTableBtn');
+        if (deleteBtn) {
+          deleteBtn.disabled = true;
+        }
+        const updateFormulasToggle = document.getElementById('editUpdateFormulaRefs');
+        if (updateFormulasToggle) {
+          updateFormulasToggle.checked = true;
+        }
+        syncEditSavedTablesHighlight();
+      }
+
+      function validateTableDetails(config) {
+        const options = config || {};
+        const nameInput = document.getElementById(options.nameInputId || 'tableName');
+        const descInput = document.getElementById(options.descInputId || 'tableDesc');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const description = descInput ? descInput.value.trim() : '';
+        const headerSource = Array.isArray(options.headers) ? options.headers : currentHeaders;
+        const headers = cloneHeaderModels(headerSource);
+        const missingMessages = [];
+        const missingHeaderIndexes = [];
+
+        if (!name) {
+          missingMessages.push('Nombre de la tabla');
+        }
+        if (!description) {
+          missingMessages.push('Descripción');
+        }
+
+        if (headers.length === 0) {
+          missingMessages.push('Al menos un título en la sección de encabezados');
+        } else {
+          headers.forEach(function(header, index) {
+            if (!header.label) {
+              missingHeaderIndexes.push(index + 1);
+            }
+          });
+        }
+
+        if (missingHeaderIndexes.length > 0) {
+          missingMessages.push(
+            'Títulos sin completar: ' +
+              missingHeaderIndexes
+                .map(function(idx) {
+                  return 'Encabezado ' + idx;
+                })
+                .join(', ')
+          );
+        }
+
+        return {
+          valid: missingMessages.length === 0,
+          missing: missingMessages,
+          values: {
+            name: name,
+            description: description,
+            headers: headers
+          }
+        };
+      }
+
+      function buildMissingFieldsMessage(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+          return '';
+        }
+        return (
+          'Complete los siguientes campos antes de continuar:\n' +
+          items
+            .map(function(item) {
+              return '• ' + item;
+            })
+            .join('\n')
+        );
+      }
+
+      function defaultTitleForVariant(variant) {
+        switch (variant) {
+          case 'error':
+            return 'Ocurrió un problema';
+          case 'success':
+            return 'Operación completada';
+          case 'warning':
+            return 'Atención';
+          default:
+            return 'Aviso';
+        }
+      }
+
+      function openModal(options) {
+        const overlay = document.getElementById('tcModalOverlay');
+        const icon = document.getElementById('tcModalIcon');
+        const titleEl = document.getElementById('tcModalTitle');
+        const messageEl = document.getElementById('tcModalMessage');
+        const primaryBtn = document.getElementById('tcModalPrimary');
+        const secondaryBtn = document.getElementById('tcModalSecondary');
+        const variant = options.variant || 'info';
+        const allowEscape = options.allowEscape !== false;
+
+        if (!overlay || !icon || !titleEl || !messageEl || !primaryBtn || !secondaryBtn) {
+          return Promise.resolve('dismissed');
+        }
+
+        overlay.dataset.variant = variant;
+        icon.textContent = options.icon || (variant === 'error' ? '⚠️' : variant === 'success' ? '✅' : variant === 'warning' ? '⚠️' : 'ℹ️');
+        titleEl.textContent = options.title || defaultTitleForVariant(variant);
+        messageEl.textContent = options.message || '';
+
+        primaryBtn.textContent = options.primaryText || 'Aceptar';
+        secondaryBtn.textContent = options.secondaryText || 'Cancelar';
+
+        if (options.secondaryText) {
+          secondaryBtn.style.display = 'inline-flex';
+        } else {
+          secondaryBtn.style.display = 'none';
+        }
+
+        const previouslyFocused = document.activeElement;
+
+        return new Promise(function(resolve) {
+          function cleanup(result) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', keyListener, true);
+            primaryBtn.removeEventListener('click', primaryHandler);
+            secondaryBtn.removeEventListener('click', secondaryHandler);
+            if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+              previouslyFocused.focus();
+            }
+            resolve(result);
+          }
+
+          function primaryHandler() {
+            cleanup('primary');
+          }
+
+          function secondaryHandler() {
+            cleanup('secondary');
+          }
+
+          function keyListener(evt) {
+            if (evt.key === 'Escape' && allowEscape) {
+              evt.preventDefault();
+              cleanup('escape');
+            } else if (evt.key === 'Tab') {
+              const focusables = Array.prototype.filter.call(overlay.querySelectorAll('button'), function(btn) {
+                return btn.offsetParent !== null;
+              });
+              if (focusables.length === 0) {
+                return;
+              }
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              if (evt.shiftKey) {
+                if (document.activeElement === first) {
+                  evt.preventDefault();
+                  last.focus();
+                }
+              } else if (document.activeElement === last) {
+                evt.preventDefault();
+                first.focus();
+              }
+            }
+          }
+
+          overlay.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('show');
+
+          document.addEventListener('keydown', keyListener, true);
+          primaryBtn.addEventListener('click', primaryHandler);
+          secondaryBtn.addEventListener('click', secondaryHandler);
+
+          requestAnimationFrame(function() {
+            primaryBtn.focus();
+          });
+        });
+      }
+
+      function showMessageModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant || 'info');
+        }
+        options.primaryText = options.primaryText || 'Aceptar';
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options);
+      }
+
+      function showConfirmModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        options.primaryText = options.confirmText || 'Aceptar';
+        options.secondaryText = options.cancelText || 'Cancelar';
+        options.variant = options.variant || 'warning';
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant);
+        }
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options).then(function(result) {
+          return result === 'primary';
+        });
+      }
+
+      function clearRangeUI() {
+        const label = document.getElementById('rangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+        rangeInfo = null;
+        clearCreateFormatDirty();
+      }
+
+      function setRangeUI(info, options) {
+        options = options || {};
+        if (!info || !info.sheetName || !info.a1Notation) {
+          clearRangeUI();
+          return;
+        }
+        const rows = typeof info.rows === 'number' ? info.rows : (info.rows || 0);
+        const cols = typeof info.cols === 'number' ? info.cols : (info.cols || 0);
+        const label = document.getElementById('rangeLabel');
+        const input = document.getElementById('rangeInput');
+        const fullA1 = info.sheetName + '!' + info.a1Notation;
+        if (label) {
+          const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+          label.textContent = fullA1 + dims;
+        }
+        if (input && (options.force || input.dataset.manual !== 'true')) {
+          input.value = fullA1;
+          input.dataset.manual = 'false';
+        }
+        const incomingHeaders = Array.isArray(info.headers) ? info.headers : currentHeaders;
+        rangeInfo = {
+          sheetName: info.sheetName,
+          a1Notation: info.a1Notation,
+          rows: rows,
+          cols: cols,
+          headers: cloneHeaderModels(incomingHeaders)
+        };
+        rangeInfo.fullA1 = fullA1;
+      }
+
+      function getRangeInputValue() {
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          const text = input.value.trim();
+          if (text) {
+            return text;
+          }
+        }
+        if (rangeInfo && rangeInfo.sheetName && rangeInfo.a1Notation) {
+          return rangeInfo.sheetName + '!' + rangeInfo.a1Notation;
+        }
+        return '';
+      }
+
+      function clearEditRangeUI() {
+        const label = document.getElementById('editRangeLabel');
+        if (label) {
+          label.textContent = '—';
+        }
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          input.value = '';
+          input.dataset.manual = 'false';
+        }
+        editRangeInfo = null;
+        clearEditFormatDirty();
+      }
+
+      function setEditRangeUI(info, options) {
+        options = options || {};
+        if (!info || !info.sheetName || !info.a1Notation) {
+          clearEditRangeUI();
+          return;
+        }
+        const rows = typeof info.rows === 'number' ? info.rows : (info.rows || 0);
+        const cols = typeof info.cols === 'number' ? info.cols : (info.cols || 0);
+        const label = document.getElementById('editRangeLabel');
+        const input = document.getElementById('editRangeInput');
+        const fullA1 = info.sheetName + '!' + info.a1Notation;
+        if (label) {
+          const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+          label.textContent = fullA1 + dims;
+        }
+        if (input && (options.force || input.dataset.manual !== 'true')) {
+          input.value = fullA1;
+          input.dataset.manual = 'false';
+        }
+        const previousInfo = editRangeInfo;
+        const incomingEditHeaders = Array.isArray(info.headers) ? info.headers : editHeaders;
+        const previousHeadersSource = previousInfo && Array.isArray(previousInfo.headers)
+          ? previousInfo.headers
+          : Array.isArray(editHeaders)
+          ? editHeaders
+          : [];
+        const normalizedPreviousHeaders = cloneHeaderModels(previousHeadersSource);
+        const normalizedHeaders = cloneHeaderModels(incomingEditHeaders);
+        if (normalizedPreviousHeaders.length > 0) {
+          for (let i = 0; i < normalizedHeaders.length; i++) {
+            const header = normalizedHeaders[i];
+            const fallback = normalizedPreviousHeaders[i];
+            if (!fallback) {
+              continue;
+            }
+            const labelText = header.label ? String(header.label).trim() : '';
+            if (!labelText) {
+              header.label = fallback.label || '';
+            }
+            const hasDescriptionText = header.description ? String(header.description).trim() : '';
+            if ((!hasDescriptionText || !header.hasDescription) && fallback.hasDescription) {
+              header.description = fallback.description || '';
+              header.hasDescription = true;
+            }
+            if (fallback.key) {
+              header.key = fallback.key;
+            }
+          }
+        }
+        const incomingPreference =
+          typeof info.updateFormulaReferences === 'boolean'
+            ? info.updateFormulaReferences
+            : previousInfo && typeof previousInfo.updateFormulaReferences === 'boolean'
+            ? previousInfo.updateFormulaReferences
+            : true;
+        info.headers = normalizedHeaders;
+        editRangeInfo = {
+          sheetName: info.sheetName,
+          a1Notation: info.a1Notation,
+          rows: rows,
+          cols: cols,
+          headers: cloneHeaderModels(info.headers),
+          updateFormulaReferences: incomingPreference
+        };
+        editRangeInfo.fullA1 = fullA1;
+        if (options.clearDirty) {
+          clearEditFormatDirty();
+        } else if (options.markDirty) {
+          markEditFormatDirty();
+        }
+      }
+
+      function getEditRangeInputValue() {
+        const input = document.getElementById('editRangeInput');
+        if (input) {
+          const text = input.value.trim();
+          if (text) {
+            return text;
+          }
+        }
+        if (editRangeInfo && editRangeInfo.sheetName && editRangeInfo.a1Notation) {
+          return editRangeInfo.sheetName + '!' + editRangeInfo.a1Notation;
+        }
+        return '';
+      }
+
+      function shouldUpdateEditFormulaReferences() {
+        return getEditFormulaPreference();
+      }
+
+      function renderHeaderList(listId, headers) {
+        const list = document.getElementById(listId);
+        if (!list) {
+          return;
+        }
         list.innerHTML = '';
-        currentHeaders.forEach((header, index) => {
+        if (!Array.isArray(headers)) {
+          return;
+        }
+        for (let i = 0; i < headers.length; i++) {
+          headers[i] = normalizeHeaderModel(headers[i]);
+        }
+        const isEditList = listId === 'editHeadersList';
+        function markHeadersDirty() {
+          if (isEditList) {
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          } else if (listId === 'headersList') {
+            markCreateFormatDirty();
+          }
+        }
+        headers.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
-          // input
+
+          const topRow = document.createElement('div');
+          topRow.className = 'header-item-row';
+
           const inp = document.createElement('input');
           inp.type = 'text';
-          inp.value = header;
+          inp.value = header.label;
+          inp.placeholder = 'Encabezado ' + (index + 1);
           inp.addEventListener('input', function() {
-            currentHeaders[index] = this.value;
+            headers[index].label = this.value;
+            markHeadersDirty();
           });
-          li.appendChild(inp);
-          // up button
+          topRow.appendChild(inp);
+
+          const actions = document.createElement('div');
+          actions.className = 'header-item-actions';
+
           const upBtn = document.createElement('button');
           upBtn.textContent = '↑';
           upBtn.title = 'Subir';
           upBtn.addEventListener('click', function() {
             if (index > 0) {
-              const tmp = currentHeaders[index - 1];
-              currentHeaders[index - 1] = currentHeaders[index];
-              currentHeaders[index] = tmp;
-              renderHeaders();
+              const tmp = headers[index - 1];
+              headers[index - 1] = headers[index];
+              headers[index] = tmp;
+              markHeadersDirty();
+              renderHeaderList(listId, headers);
             }
           });
-          li.appendChild(upBtn);
-          // down button
+          actions.appendChild(upBtn);
+
           const downBtn = document.createElement('button');
           downBtn.textContent = '↓';
           downBtn.title = 'Bajar';
           downBtn.addEventListener('click', function() {
-            if (index < currentHeaders.length - 1) {
-              const tmp = currentHeaders[index + 1];
-              currentHeaders[index + 1] = currentHeaders[index];
-              currentHeaders[index] = tmp;
-              renderHeaders();
+            if (index < headers.length - 1) {
+              const tmp = headers[index + 1];
+              headers[index + 1] = headers[index];
+              headers[index] = tmp;
+              markHeadersDirty();
+              renderHeaderList(listId, headers);
             }
           });
-          li.appendChild(downBtn);
+          actions.appendChild(downBtn);
+
+          topRow.appendChild(actions);
+          li.appendChild(topRow);
+
+          const descField = document.createElement('textarea');
+          descField.className = 'header-desc-field';
+          descField.placeholder = 'Descripción de la columna';
+          descField.rows = 2;
+          descField.value = header.hasDescription ? header.description || '' : '';
+          if (!header.hasDescription) {
+            descField.classList.add('hidden');
+            descField.disabled = true;
+          }
+          descField.addEventListener('input', function() {
+            headers[index].description = this.value;
+            markHeadersDirty();
+          });
+
+          const toggleLabel = document.createElement('label');
+          toggleLabel.className = 'header-desc-toggle';
+          const toggle = document.createElement('input');
+          toggle.type = 'checkbox';
+          toggle.checked = !!header.hasDescription;
+          toggle.addEventListener('change', function() {
+            headers[index].hasDescription = this.checked;
+            if (!this.checked) {
+              headers[index].description = '';
+              descField.value = '';
+              descField.classList.add('hidden');
+              descField.disabled = true;
+            } else {
+              descField.classList.remove('hidden');
+              descField.disabled = false;
+              descField.focus();
+            }
+            markHeadersDirty();
+          });
+          toggleLabel.appendChild(toggle);
+          toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
+
+          li.appendChild(toggleLabel);
+          li.appendChild(descField);
+
           list.appendChild(li);
         });
       }
 
-      // Cargar rango activo y tablas guardadas
-      function initialize() {
+      function renderCreateHeaders() {
+        renderHeaderList('headersList', currentHeaders);
+      }
+
+      function renderEditHeaders() {
+        renderHeaderList('editHeadersList', editHeaders);
+      }
+
+      function setDefaultStyles() {
+        const colorHeader = document.getElementById('colorHeader');
+        const colorAlt1 = document.getElementById('colorAlt1');
+        const colorAlt2 = document.getElementById('colorAlt2');
+        const borderToggle = document.getElementById('toggleBorder');
+        const boldToggle = document.getElementById('toggleBold');
+        if (colorHeader) colorHeader.value = DEFAULT_STYLE.headerColor;
+        if (colorAlt1) colorAlt1.value = DEFAULT_STYLE.altColor1;
+        if (colorAlt2) colorAlt2.value = DEFAULT_STYLE.altColor2;
+        if (borderToggle) borderToggle.checked = DEFAULT_STYLE.border;
+        if (boldToggle) boldToggle.checked = DEFAULT_STYLE.bold;
+      }
+
+      function loadActiveRange(updateHeaders = true) {
         google.script.run.withSuccessHandler(function(info) {
+          const label = document.getElementById('rangeLabel');
           if (info.error) {
-            document.getElementById('rangeLabel').textContent = info.error;
+            clearRangeUI();
+            if (label) {
+              label.textContent = '—';
+            }
+            showMessageModal(info.error, {
+              title: 'Rango no disponible',
+              variant: 'error'
+            });
             return;
           }
-          rangeInfo = info;
-          document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
-          currentHeaders = info.headers;
-          renderHeaders();
+          const infoForUi = Object.assign({}, info);
+          if (!updateHeaders) {
+            infoForUi.headers = cloneHeaderModels(currentHeaders);
+          }
+          setRangeUI(infoForUi, { force: editingId === '' || !document.getElementById('rangeInput') || document.getElementById('rangeInput').value === '' });
+          if (updateHeaders) {
+            currentHeaders = cloneHeaderModels(info.headers);
+          }
+          renderCreateHeaders();
+          markCreateFormatDirty();
+          resetPendingFormatState();
         }).getActiveRangeInfo();
-        // Colores por defecto
-        document.getElementById('colorHeader').value = '#CFE8FC';
-        document.getElementById('colorAlt1').value = '#FFFFFF';
-        document.getElementById('colorAlt2').value = '#F3F4F6';
-        // Listado de tablas
-        refreshSavedTables();
-        // Comprobar API Key
+      }
+
+      function loadEditActiveRange(updateHeaders = true, options) {
+        const opts = options || {};
+        return new Promise(function(resolve) {
+          google.script.run
+            .withSuccessHandler(function(info) {
+              const label = document.getElementById('editRangeLabel');
+              if (info.error) {
+                clearEditRangeUI();
+                if (label) {
+                  label.textContent = '—';
+                }
+                showMessageModal(info.error, {
+                  title: 'Rango no disponible',
+                  variant: 'error'
+                });
+                resolve({ ok: false, error: info.error });
+                return;
+              }
+              const infoForUi = Object.assign({}, info);
+              if (!updateHeaders) {
+                infoForUi.headers = cloneHeaderModels(editHeaders);
+              }
+              const input = document.getElementById('editRangeInput');
+              const shouldForce = !input || input.dataset.manual !== 'true';
+              setEditRangeUI(infoForUi, { force: shouldForce, markDirty: !!opts.markDirty });
+              if (updateHeaders) {
+                editHeaders = cloneHeaderModels(infoForUi.headers);
+              }
+              renderEditHeaders();
+              resolve({ ok: true, info: infoForUi });
+            })
+            .withFailureHandler(function(err) {
+              const message = err && err.message ? err.message : err;
+              showMessageModal('No se pudo obtener el rango activo: ' + message, {
+                title: 'Rango no disponible',
+                variant: 'error'
+              });
+              resolve({ ok: false, error: message });
+            })
+            .getActiveRangeInfo();
+        });
+      }
+
+      function populateEditForm(meta) {
+        const normalizedMeta = normalizeMetaForPopulate(meta);
+        if (!normalizedMeta) {
+          resetEditTabView({ preserveSelection: true, clearEditingId: false });
+          showMessageModal('No se encontraron metadatos para la tabla seleccionada.', {
+            title: 'Metadatos no disponibles',
+            variant: 'error'
+          });
+          return;
+        }
+
+        upsertSavedTablesCache(normalizedMeta);
+        lastSavedTableId = normalizedMeta.id;
+        clearEditFormatDirty();
+
+        const rangeSection = document.getElementById('editRangeSection');
+        const metaSection = document.getElementById('editMetaSection');
+        if (rangeSection) {
+          rangeSection.style.display = 'block';
+        }
+        if (metaSection) {
+          metaSection.style.display = 'block';
+        }
+
+        const actionsRow = document.getElementById('editActionsRow');
+        if (actionsRow) {
+          actionsRow.style.display = 'flex';
+        }
+        const refreshApplyBtn = document.getElementById('editRefreshApplyBtn');
+        if (refreshApplyBtn) {
+          refreshApplyBtn.disabled = false;
+        }
+        const saveBtn = document.getElementById('editSaveTableBtn');
+        if (saveBtn) {
+          saveBtn.disabled = false;
+        }
+        const deleteBtn = document.getElementById('editDeleteTableBtn');
+        if (deleteBtn) {
+          deleteBtn.disabled = false;
+        }
+
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = normalizedMeta.name || '';
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = normalizedMeta.description || '';
+        }
+
+        const style = normalizedMeta.style || {};
+        const headerColor = typeof style.headerColor === 'string' ? style.headerColor : DEFAULT_STYLE.headerColor;
+        const alt1 = typeof style.altColor1 === 'string' ? style.altColor1 : DEFAULT_STYLE.altColor1;
+        const alt2 = typeof style.altColor2 === 'string' ? style.altColor2 : DEFAULT_STYLE.altColor2;
+        const border = Object.prototype.hasOwnProperty.call(style, 'border')
+          ? !!style.border
+          : DEFAULT_STYLE.border;
+        const bold = Object.prototype.hasOwnProperty.call(style, 'bold') ? !!style.bold : DEFAULT_STYLE.bold;
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        if (headerColorInput) {
+          headerColorInput.value = headerColor;
+        }
+        const alt1Input = document.getElementById('editColorAlt1');
+        if (alt1Input) {
+          alt1Input.value = alt1;
+        }
+        const alt2Input = document.getElementById('editColorAlt2');
+        if (alt2Input) {
+          alt2Input.value = alt2;
+        }
+        const borderToggle = document.getElementById('editToggleBorder');
+        if (borderToggle) {
+          borderToggle.checked = border;
+        }
+        const boldToggle = document.getElementById('editToggleBold');
+        if (boldToggle) {
+          boldToggle.checked = bold;
+        }
+
+        const preference = normalizeFormulaPreference(normalizedMeta.updateFormulaReferences);
+
+        editHeaders = cloneHeaderModels(normalizedMeta.headers);
+        if (editHeaders.length === 0 && normalizedMeta.id) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && Array.isArray(res.headers)) {
+                editHeaders = cloneHeaderModels(res.headers);
+                renderEditHeaders();
+              }
+            })
+            .getTableHeaders(normalizedMeta.id);
+        }
+        renderEditHeaders();
+
+        if (normalizedMeta.sheetName && normalizedMeta.rangeA1) {
+          setEditRangeUI(
+            {
+              sheetName: normalizedMeta.sheetName,
+              a1Notation: normalizedMeta.rangeA1,
+              rows: normalizedMeta.rows || 0,
+              cols: normalizedMeta.cols || 0,
+              headers: cloneHeaderModels(editHeaders),
+              updateFormulaReferences: preference
+            },
+            { force: true, clearDirty: true }
+          );
+        } else {
+          clearEditRangeUI();
+        }
+
+        applyEditFormulaPreference(preference, { persist: false });
+      }
+
+      function refreshSavedTables(targetIds, config) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        const options = config || {};
+        return callServerFunction('listSavedTables')
+          .then(function(tables) {
+            const list = Array.isArray(tables) ? tables : [];
+            const previousCache = Array.isArray(savedTablesCache) ? savedTablesCache.slice() : [];
+            const normalizedList = list
+              .map(function(item) {
+                if (!item || !item.id) {
+                  return null;
+                }
+                const rawFullRange = item.fullRangeA1 ? String(item.fullRangeA1).trim() : '';
+                let sheetName = item.sheetName ? String(item.sheetName).trim() : '';
+                let rangeA1 = item.rangeA1 ? String(item.rangeA1).trim() : '';
+                if ((!sheetName || !rangeA1) && rawFullRange) {
+                  const bangIndex = rawFullRange.lastIndexOf('!');
+                  if (bangIndex !== -1) {
+                    if (!sheetName) {
+                      let candidateSheet = rawFullRange.substring(0, bangIndex);
+                      if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                        candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+                      }
+                      sheetName = candidateSheet;
+                    }
+                    if (!rangeA1) {
+                      rangeA1 = rawFullRange.substring(bangIndex + 1);
+                    }
+                  }
+                }
+                const normalizedFullRange = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
+                return {
+                  id: item.id,
+                  name: item.name ? String(item.name).trim() : '',
+                  rangeA1: rangeA1,
+                  fullRangeA1: normalizedFullRange,
+                  description: item.description ? String(item.description).trim() : '',
+                  sheetName: sheetName,
+                  cols: item.cols || 0,
+                  rows: item.rows || 0,
+                  style: normalizeStyleModel(item.style || {}),
+                  headers: cloneHeaderModels(item.headers || []),
+                  updateFormulaReferences: normalizeFormulaPreference(item.updateFormulaReferences)
+                };
+              })
+              .filter(function(entry) {
+                return !!entry;
+              });
+            if (normalizedList.length === 0 && previousCache.length > 0) {
+              savedTablesCacheInitialized = true;
+              updateSavedTableSelects(ids, previousCache, options);
+              return previousCache.slice();
+            }
+            savedTablesCache = normalizedList;
+            savedTablesCacheInitialized = true;
+            persistSavedTablesCache();
+            updateSavedTableSelects(ids, savedTablesCache, options);
+            return savedTablesCache.slice();
+          })
+          .catch(function(err) {
+            const message = err && err.message ? err.message : err;
+            showMessageModal('No se pudieron obtener las tablas guardadas: ' + message, {
+              title: 'No se pudo cargar',
+              variant: 'error'
+            });
+          });
+      }
+
+      function checkApiKey() {
         google.script.run.withSuccessHandler(function(res) {
           const warn = document.getElementById('apiWarning');
+          if (!warn) return;
           if (!res || !res.key) {
             warn.innerHTML = 'Configure su API Key para usar la IA (menú Configurar API).';
           } else {
@@ -285,149 +3051,1081 @@
         }).getApiKey();
       }
 
-      // Actualiza el listado de tablas guardadas
-      function refreshSavedTables() {
-        google.script.run.withSuccessHandler(function(tables) {
-          const select = document.getElementById('savedTables');
-          select.innerHTML = '';
-          const defaultOption = document.createElement('option');
-          defaultOption.value = '';
-          defaultOption.textContent = '-- Seleccione --';
-          select.appendChild(defaultOption);
-          tables.forEach(function(t) {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.name || t.id;
-            select.appendChild(opt);
-          });
-        }).listSavedTables();
-      }
-
-      // Botón Actualizar rango
-      document.getElementById('refreshRangeBtn').addEventListener('click', function() {
-        google.script.run.withSuccessHandler(function(info) {
-          if (info.error) {
-            document.getElementById('rangeLabel').textContent = info.error;
-            return;
-          }
-          rangeInfo = info;
-          document.getElementById('rangeLabel').textContent = info.sheetName + '!' + info.a1Notation + ' (' + info.cols + '×' + info.rows + ')';
-          currentHeaders = info.headers;
-          renderHeaders();
-        }).getActiveRangeInfo();
-      });
-
-      // Botón Aplicar formato
-      document.getElementById('applyBtn').addEventListener('click', function() {
-        if (!rangeInfo) {
-          alert('No hay rango activo.');
+      function setActiveTab(tabId, options) {
+        options = options || {};
+        if (currentTab === tabId && !options.force) {
           return;
         }
-        const name = document.getElementById('tableName').value.trim();
-        const desc = document.getElementById('tableDesc').value.trim();
+        const previousTab = currentTab;
+        currentTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+          if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+          if (content.id === tabId) {
+            content.classList.add('active');
+          } else {
+            content.classList.remove('active');
+          }
+        });
+
+        if (previousTab === 'editTab' && tabId !== 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
+        }
+
+        if (previousTab === 'createTab' && tabId !== 'createTab') {
+          resetCreateTabView({
+            preserveRange: false,
+            preserveFields: false,
+            preserveHeaders: false
+          });
+        }
+
+        if (tabId === 'createTab') {
+          if (!options.preserveForm) {
+            const preserveHeaders = options && options.keepHeaders === true;
+            resetCreateTabView({
+              preserveRange: false,
+              preserveFields: false,
+              preserveHeaders: preserveHeaders
+            });
+          }
+        } else if (tabId === 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
+          applySavedTablesFromCache('editSavedTables');
+          refreshSavedTables('editSavedTables');
+        } else if (tabId === 'aiTab') {
+          applySavedTablesFromCache('aiSavedTables', { selectId: lastSavedTableId });
+          refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
+          checkApiKey();
+        }
+      }
+
+      async function attemptTabChange(tabId, options) {
+        options = options || {};
+        const leavingCreate = currentTab === 'createTab' && tabId !== 'createTab';
+        if (leavingCreate && isFormatLockActive() && !options.force) {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            setActiveTab(tabId, options);
+          }
+          return;
+        }
+        setActiveTab(tabId, options);
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          attemptTabChange(btn.dataset.tab);
+        });
+      });
+
+      document.getElementById('refreshRangeBtn').addEventListener('click', async function() {
+        if (isFormatLockActive()) {
+          const resolved = await resolvePendingFormatting();
+          if (resolved !== 'saved' && resolved !== 'cleared') {
+            return;
+          }
+        }
+        const input = document.getElementById('rangeInput');
+        if (input) {
+          input.dataset.manual = 'false';
+        }
+        loadActiveRange(editingId === '');
+      });
+
+      document.getElementById('editRefreshApplyBtn').addEventListener('click', async function() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla antes de actualizar el rango.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return;
+        }
+        const loadResult = await loadEditActiveRange(true, { markDirty: true });
+        if (!loadResult || !loadResult.ok) {
+          return;
+        }
+        await handleEditApplyFormat();
+      });
+
+      async function handleApplyFormat() {
+        const rangeA1 = getRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de aplicar el formato.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails();
+        if (!validation.valid) {
+          const msg = buildMissingFieldsMessage(validation.missing);
+          await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+            title: 'Información incompleta',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        currentHeaders = cloneHeaderModels(validation.values.headers);
+        renderCreateHeaders();
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('tableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
         const headerColor = document.getElementById('colorHeader').value;
         const alt1 = document.getElementById('colorAlt1').value;
         const alt2 = document.getElementById('colorAlt2').value;
         const border = document.getElementById('toggleBorder').checked;
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
-        // Determine tableId: if editingId set, use it; else empty string
         const tableId = editingId;
-        const rangeA1 = rangeInfo.a1Notation;
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.error) {
-            // Do nothing; error handled by server via popup
-            return;
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            tableId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            cloneHeaderModels(currentHeaders),
+            style,
+            { skipSaving: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
+            renderCreateHeaders();
           }
-          editingId = res.id;
-          refreshSavedTables();
-          alert('Formato aplicado correctamente.');
-        }).applyTableFormatting(tableId, rangeA1, name, desc, currentHeaders, style);
-      });
-
-      // Al seleccionar una tabla del desplegable
-      document.getElementById('savedTables').addEventListener('change', function() {
-        const val = this.value;
-        editingId = '';
-        if (val) {
-          // Cargar metadatos para pre‑poblar nombre y descripción
-          google.script.run.withSuccessHandler(function(meta) {
-            if (meta) {
-              document.getElementById('tableName').value = meta.name || '';
-              document.getElementById('tableDesc').value = meta.description || '';
-            }
-          }).getTableMeta(val);
-          // Cargar encabezados de la tabla
-          google.script.run.withSuccessHandler(function(res) {
-            if (res && res.headers) {
-              currentHeaders = res.headers;
-              renderHeaders();
-            }
-          }).getTableHeaders(val);
-          editingId = val;
-        }
-      });
-
-      // Botón Editar: asigna editingId sin cambiar campos
-      document.getElementById('editTableBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
-        const val = select.value;
-        if (val) {
-          editingId = val;
-          alert('Tabla seleccionada para actualizar. Seleccione un nuevo rango y aplique el formato.');
+          setPendingFormattedRange(response.rangeInfo);
         } else {
-          alert('Seleccione una tabla para editar.');
+          const parts = rangeA1.split('!');
+          if (parts.length === 2) {
+            setPendingFormattedRange({ sheetName: parts[0], a1Notation: parts[1] });
+          } else {
+            resetPendingFormatState();
+          }
         }
+
+        clearCreateFormatDirty();
+
+        await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
+          title: 'Formato aplicado',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      document.getElementById('applyFormatBtn').addEventListener('click', function() {
+        handleApplyFormat();
       });
 
-      // Botón Limpiar rango
-      document.getElementById('clearTableBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
-        const val = select.value;
-        if (!val) {
-          alert('Seleccione una tabla para limpiar.');
+      async function handleEditApplyFormat() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de aplicar el formato.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const rangeA1 = getEditRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de aplicar el formato.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails({
+          nameInputId: 'editTableName',
+          descInputId: 'editTableDesc',
+          headers: editHeaders
+        });
+        if (!validation.valid) {
+          const msg = buildMissingFieldsMessage(validation.missing);
+          await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+            title: 'Información incompleta',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        editHeaders = cloneHeaderModels(validation.values.headers);
+        renderEditHeaders();
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        const alt1Input = document.getElementById('editColorAlt1');
+        const alt2Input = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        const style = {
+          headerColor: headerColorInput ? headerColorInput.value : DEFAULT_STYLE.headerColor,
+          altColor1: alt1Input ? alt1Input.value : DEFAULT_STYLE.altColor1,
+          altColor2: alt2Input ? alt2Input.value : DEFAULT_STYLE.altColor2,
+          border: borderToggle ? !!borderToggle.checked : DEFAULT_STYLE.border,
+          bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
+        };
+
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
+        }
+
+        const updateFormulaReferences = shouldUpdateEditFormulaReferences();
+        const entryValues = Object.assign({}, validation.values, {
+          updateFormulaReferences: updateFormulaReferences
+        });
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            editingId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            cloneHeaderModels(editHeaders),
+            style,
+            { updateFormulaReferences: updateFormulaReferences, formulaPreference: updateFormulaReferences }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo aplicar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setEditRangeUI(response.rangeInfo, { force: true, clearDirty: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            editHeaders = cloneHeaderModels(response.rangeInfo.headers);
+            renderEditHeaders();
+          }
+          const appliedPreference =
+            typeof response.rangeInfo.updateFormulaReferences === 'boolean'
+              ? response.rangeInfo.updateFormulaReferences
+              : updateFormulaReferences;
+          applyEditFormulaPreference(appliedPreference);
+          entryValues.updateFormulaReferences = appliedPreference;
+        } else {
+          applyEditFormulaPreference(updateFormulaReferences);
+        }
+
+        if (response && response.id) {
+          editingId = response.id;
+          lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            entryValues,
+            (response && response.rangeInfo) || editRangeInfo,
+            style,
+            editHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
+        }
+
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: editingId
+        });
+
+        clearEditFormatDirty();
+
+        await showMessageModal((response && response.message) || 'Formato aplicado correctamente.', {
+          title: 'Formato aplicado',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      async function handleSaveAction(options) {
+        options = options || {};
+        const rangeA1 = getRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de guardar la tabla.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails();
+        if (validation.missing.length > 0) {
+          const missingExcludingName = validation.missing.filter(function(item) {
+            return item !== 'Nombre de la tabla';
+          });
+
+          if (missingExcludingName.length > 0) {
+            const msg = buildMissingFieldsMessage(validation.missing);
+            await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+              title: 'Información incompleta',
+              variant: 'error'
+            });
+            return false;
+          }
+
+          if (validation.missing.indexOf('Nombre de la tabla') !== -1) {
+            const continueWithoutName = await showConfirmModal('Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?', {
+              title: 'Guardar sin nombre',
+              variant: 'warning',
+              confirmText: 'Continuar',
+              cancelText: 'Cancelar'
+            });
+            if (!continueWithoutName) {
+              return false;
+            }
+          }
+        }
+
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
+        }
+
+        currentHeaders = cloneHeaderModels(validation.values.headers);
+        renderCreateHeaders();
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('tableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
+        const headerColor = document.getElementById('colorHeader').value;
+        const alt1 = document.getElementById('colorAlt1').value;
+        const alt2 = document.getElementById('colorAlt2').value;
+        const border = document.getElementById('toggleBorder').checked;
+        const bold = document.getElementById('toggleBold').checked;
+        const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
+        const tableId = editingId;
+        const entryValues = Object.assign({}, validation.values, {
+          updateFormulaReferences: true
+        });
+
+        if (isCreateFormatDirty() && !options.skipFormatCheck) {
+          await showMessageModal('Debe aplicar el formato al rango actual antes de guardar la tabla.', {
+            title: 'Formato pendiente',
+            variant: 'warning'
+          });
+          return false;
+        }
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            tableId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            cloneHeaderModels(currentHeaders),
+            style,
+            { skipFormatting: true, formulaPreference: true }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setRangeUI(response.rangeInfo, { force: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
+            renderCreateHeaders();
+          }
+        }
+
+        if (response && response.id) {
+          lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            entryValues,
+            (response && response.rangeInfo) || rangeInfo,
+            style,
+            currentHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
+        }
+
+        editingId = '';
+
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: lastSavedTableId
+        });
+
+        resetCreateTabView({
+          preserveRange: false,
+          preserveFields: false,
+          preserveHeaders: false
+        });
+
+        await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
+          title: 'Tabla guardada',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      document.getElementById('saveTableBtn').addEventListener('click', function() {
+        handleSaveAction();
+      });
+
+      document.getElementById('editSaveTableBtn').addEventListener('click', function() {
+        handleEditSaveAction();
+      });
+
+      async function handleEditSaveAction(options) {
+        const opts = options || {};
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de guardar los cambios.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const rangeA1 = getEditRangeInputValue();
+        if (!rangeA1) {
+          await showMessageModal('Indique un rango válido antes de guardar la tabla.', {
+            title: 'Rango requerido',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        const validation = validateTableDetails({
+          nameInputId: 'editTableName',
+          descInputId: 'editTableDesc',
+          headers: editHeaders
+        });
+
+        if (validation.missing.length > 0) {
+          const missingExcludingName = validation.missing.filter(function(item) {
+            return item !== 'Nombre de la tabla';
+          });
+
+          if (missingExcludingName.length > 0) {
+            const msg = buildMissingFieldsMessage(validation.missing);
+            await showMessageModal(msg || 'Complete todos los campos obligatorios antes de continuar.', {
+              title: 'Información incompleta',
+              variant: 'error'
+            });
+            return false;
+          }
+
+          if (validation.missing.indexOf('Nombre de la tabla') !== -1) {
+            const continueWithoutName = await showConfirmModal(
+              'Guardar sin nombre hará que la tabla sea difícil de identificar. ¿Desea continuar?',
+              {
+                title: 'Guardar sin nombre',
+                variant: 'warning',
+                confirmText: 'Continuar',
+                cancelText: 'Cancelar'
+              }
+            );
+            if (!continueWithoutName) {
+              return false;
+            }
+          }
+        }
+
+        const uniqueName = await ensureUniqueTableNameOrAlert(validation.values.name, {
+          ignoreId: editingId
+        });
+        if (!uniqueName) {
+          return false;
+        }
+
+        editHeaders = cloneHeaderModels(validation.values.headers);
+        renderEditHeaders();
+        const nameInput = document.getElementById('editTableName');
+        if (nameInput) {
+          nameInput.value = validation.values.name;
+        }
+        const descInput = document.getElementById('editTableDesc');
+        if (descInput) {
+          descInput.value = validation.values.description;
+        }
+
+        const headerColorInput = document.getElementById('editColorHeader');
+        const alt1Input = document.getElementById('editColorAlt1');
+        const alt2Input = document.getElementById('editColorAlt2');
+        const borderToggle = document.getElementById('editToggleBorder');
+        const boldToggle = document.getElementById('editToggleBold');
+        const style = {
+          headerColor: headerColorInput ? headerColorInput.value : DEFAULT_STYLE.headerColor,
+          altColor1: alt1Input ? alt1Input.value : DEFAULT_STYLE.altColor1,
+          altColor2: alt2Input ? alt2Input.value : DEFAULT_STYLE.altColor2,
+          border: borderToggle ? !!borderToggle.checked : DEFAULT_STYLE.border,
+          bold: boldToggle ? !!boldToggle.checked : DEFAULT_STYLE.bold
+        };
+
+        const updateFormulaReferences = shouldUpdateEditFormulaReferences();
+        const entryValues = Object.assign({}, validation.values, {
+          updateFormulaReferences: updateFormulaReferences
+        });
+
+        if (isEditFormatDirty() && !opts.skipFormatPrompt) {
+          const decision = await openModal({
+            title: 'Formato pendiente',
+            message: 'Debe aplicar formato antes de guardar.',
+            variant: 'warning',
+            primaryText: 'Aplicar formato y guardar',
+            secondaryText: 'Cancelar'
+          });
+          if (decision === 'primary') {
+            const applied = await handleEditApplyFormat();
+            if (!applied) {
+              return false;
+            }
+            return handleEditSaveAction(Object.assign({}, opts, { skipFormatPrompt: true }));
+          }
+          return false;
+        }
+
+        let response;
+        try {
+          response = await callServerFunction(
+            'applyTableFormatting',
+            editingId,
+            rangeA1,
+            validation.values.name,
+            validation.values.description,
+            cloneHeaderModels(editHeaders),
+            style,
+            { skipFormatting: true, formulaPreference: updateFormulaReferences }
+          );
+        } catch (err) {
+          await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo guardar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.rangeInfo) {
+          setEditRangeUI(response.rangeInfo, { force: true, clearDirty: true });
+          if (Array.isArray(response.rangeInfo.headers)) {
+            editHeaders = cloneHeaderModels(response.rangeInfo.headers);
+            renderEditHeaders();
+          }
+          const appliedPreference =
+            typeof response.rangeInfo.updateFormulaReferences === 'boolean'
+              ? response.rangeInfo.updateFormulaReferences
+              : updateFormulaReferences;
+          applyEditFormulaPreference(appliedPreference);
+          entryValues.updateFormulaReferences = appliedPreference;
+        } else {
+          applyEditFormulaPreference(updateFormulaReferences);
+        }
+
+        if (response && response.id) {
+          editingId = response.id;
+          lastSavedTableId = response.id;
+          const cachedEntry = buildSavedTableCacheEntry(
+            response.id,
+            entryValues,
+            (response && response.rangeInfo) || editRangeInfo,
+            style,
+            editHeaders
+          );
+          if (cachedEntry) {
+            upsertSavedTablesCache(cachedEntry);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables'], {
+              selectId: response.id
+            });
+          }
+        }
+
+        await refreshSavedTables(['editSavedTables', 'aiSavedTables'], {
+          selectId: editingId
+        });
+
+        await showMessageModal((response && response.message) || 'Tabla guardada correctamente.', {
+          title: 'Tabla guardada',
+          variant: 'success'
+        });
+        return true;
+      }
+
+      async function clearPendingFormattedRange() {
+        const targetInfo = (pendingFormatState && pendingFormatState.range) || rangeInfo;
+        const rangeNotation = getFullRangeNotation(targetInfo);
+        if (!rangeNotation) {
+          await showMessageModal('No se pudo identificar el rango a limpiar. Actualice el rango e inténtelo nuevamente.', {
+            title: 'Rango no disponible',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        let response;
+        try {
+          response = await callServerFunction('clearRangeByNotation', rangeNotation);
+        } catch (err) {
+          await showMessageModal('No se pudo borrar el rango: ' + (err && err.message ? err.message : err), {
+            title: 'No se pudo borrar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        if (response && response.error) {
+          await showMessageModal(response.error, {
+            title: 'No se pudo borrar',
+            variant: 'error'
+          });
+          return false;
+        }
+
+        resetPendingFormatState();
+        clearRangeUI();
+        return true;
+      }
+
+      function handleSidebarBeforeUnload(event) {
+        if (allowSidebarUnload || !isFormatLockActive()) {
           return;
         }
-        if (confirm('¿Seguro que desea limpiar el rango y formato de la tabla seleccionada?')) {
-          google.script.run.withSuccessHandler(function(res) {
-            if (res && res.error) {
-              alert(res.error);
-            } else {
-              alert('Rango limpiado.');
-            }
-            refreshSavedTables();
-          }).clearTable(val);
+        event.preventDefault();
+        event.returnValue = '';
+        if (sidebarClosePromptActive) {
+          return '';
         }
+        sidebarClosePromptActive = true;
+        setTimeout(function() {
+          processSidebarCloseRequest();
+        }, 0);
+        return '';
+      }
+
+      async function processSidebarCloseRequest() {
+        try {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            allowSidebarUnload = true;
+            if (
+              typeof google !== 'undefined' &&
+              google.script &&
+              google.script.host &&
+              typeof google.script.host.close === 'function'
+            ) {
+              google.script.host.close();
+            }
+          } else {
+            allowSidebarUnload = false;
+          }
+        } finally {
+          sidebarClosePromptActive = false;
+        }
+      }
+
+      async function resolvePendingFormatting() {
+        if (!isFormatLockActive()) {
+          return 'none';
+        }
+        const result = await openModal({
+          title: 'Cambios pendientes',
+          message: 'Se aplicó un formato que aún no se guardó. Elija guardar la tabla o borrar el formato para continuar.',
+          variant: 'warning',
+          primaryText: 'Guardar tabla',
+          secondaryText: 'Borrar tabla',
+          allowEscape: false
+        });
+
+        if (result === 'primary') {
+          const saved = await handleSaveAction({ triggeredByGuard: true });
+          if (saved) {
+            return 'saved';
+          }
+          return 'blocked';
+        }
+        if (result === 'secondary') {
+          const cleared = await clearPendingFormattedRange();
+          if (cleared) {
+            await showMessageModal('Se borraron el contenido y formato del rango seleccionado.', {
+              title: 'Tabla borrada',
+              variant: 'success'
+            });
+            return 'cleared';
+          }
+          return 'blocked';
+        }
+        return 'blocked';
+      }
+
+      document.getElementById('editSavedTables').addEventListener('change', function() {
+        syncEditSavedTablesHighlight();
+        const val = this.value;
+        if (!val) {
+          setEditSavedListCollapsed(false);
+          resetEditTabView();
+          return;
+        }
+        setEditSavedListCollapsed(true);
+        resetEditTabView({ preserveSelection: true, clearEditingId: false });
+        editingId = val;
+        const cachedMeta = getSavedTableFromCache(val);
+        if (cachedMeta) {
+          populateEditForm(cachedMeta);
+        }
+        google.script.run
+          .withSuccessHandler(function(meta) {
+            if (!meta) {
+              if (!cachedMeta) {
+                populateEditForm(meta);
+              }
+              return;
+            }
+            populateEditForm(meta);
+          })
+          .withFailureHandler(function(err) {
+            const message = err && err.message ? err.message : err;
+            showMessageModal('No se pudo obtener la tabla seleccionada: ' + message, {
+              title: 'Error al cargar tabla',
+              variant: 'error'
+            });
+          })
+          .getTableMeta(val);
       });
 
-      // Botón Preguntar a IA
+      const editSavedList = document.getElementById('editSavedTablesList');
+      if (editSavedList) {
+        editSavedList.addEventListener('click', function(event) {
+          if (editSavedList.classList.contains('disabled')) {
+            return;
+          }
+          const locateBtn = event.target.closest('.edit-saved-locate');
+          if (locateBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            const tableId = locateBtn.dataset ? locateBtn.dataset.value : '';
+            if (tableId) {
+              locateSavedTable(tableId);
+            }
+            return;
+          }
+          const item = event.target.closest('.edit-saved-item');
+          if (item && item.dataset && item.dataset.value) {
+            if (editSavedList.classList.contains('collapsed')) {
+              event.preventDefault();
+              setEditSavedListCollapsed(false);
+              return;
+            }
+            event.preventDefault();
+            selectEditSavedTable(item.dataset.value);
+          }
+        });
+        editSavedList.addEventListener('keydown', function(event) {
+          if (editSavedList.classList.contains('disabled')) {
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            const item = event.target.closest('.edit-saved-item');
+            if (item && item.dataset && item.dataset.value) {
+              if (editSavedList.classList.contains('collapsed')) {
+                event.preventDefault();
+                setEditSavedListCollapsed(false);
+                return;
+              }
+              event.preventDefault();
+              selectEditSavedTable(item.dataset.value);
+            }
+          }
+        });
+      }
+
+      document.getElementById('editDeleteTableBtn').addEventListener('click', async function() {
+        if (!editingId) {
+          await showMessageModal('Seleccione una tabla guardada antes de borrarla.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
+          return;
+        }
+        const targetId = editingId;
+        const cached = getSavedTableFromCache(targetId);
+        const nameSuffix = cached && cached.name ? ' "' + cached.name + '"' : '';
+        const confirmed = await showConfirmModal(
+          'Se eliminará la tabla' +
+            nameSuffix +
+            '. Se borrarán el contenido y formato del rango asociado y sus metadatos guardados. ¿Desea continuar?',
+          {
+            title: 'Confirmar borrado',
+            variant: 'warning',
+            confirmText: 'Borrar tabla',
+            cancelText: 'Cancelar'
+          }
+        );
+        if (!confirmed) {
+          return;
+        }
+        google.script.run
+          .withSuccessHandler(async function(res) {
+            if (res && res.error) {
+              await showMessageModal(res.error, {
+                title: 'No se pudo borrar',
+                variant: 'error'
+              });
+              return;
+            }
+            const removedOnly = res && res.removed && !(res && res.warning);
+            editingId = '';
+            lastSavedTableId = '';
+            removeSavedTableFromCache(targetId);
+            applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
+            await refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+            resetEditTabView();
+            const hasWarning = res && res.warning;
+            let message;
+            let title;
+            let variant;
+            if (removedOnly) {
+              message = (res && res.message) || 'Se ha retirado de la lista.';
+              title = 'Tabla no encontrada';
+              variant = 'info';
+            } else if (hasWarning) {
+              message = 'Tabla borrada. ' + res.warning;
+              title = 'Tabla borrada con advertencias';
+              variant = 'warning';
+            } else {
+              message = 'Tabla borrada correctamente.';
+              title = 'Tabla borrada';
+              variant = 'success';
+            }
+            await showMessageModal(message, {
+              title: title,
+              variant: variant
+            });
+          })
+          .withFailureHandler(async function(err) {
+            const message = err && err.message ? err.message : err;
+            await showMessageModal('No se pudo borrar la tabla: ' + message, {
+              title: 'No se pudo borrar',
+              variant: 'error'
+            });
+          })
+          .deleteSavedTable(targetId);
+      });
+
       document.getElementById('askBtn').addEventListener('click', function() {
-        const select = document.getElementById('savedTables');
-        const val = select.value;
+        const select = document.getElementById('aiSavedTables');
+        const selectedValues = Array.prototype.slice
+          .call(select && select.options ? select.options : [])
+          .filter(function(option) {
+            return option.selected && option.value;
+          })
+          .map(function(option) {
+            return option.value;
+          });
         const question = document.getElementById('questionInput').value.trim();
-        if (!val) {
-          alert('Seleccione una tabla para realizar la consulta.');
+        if (selectedValues.length === 0) {
+          showMessageModal('Seleccione al menos una tabla para realizar la consulta.', {
+            title: 'Seleccione una tabla',
+            variant: 'error'
+          });
           return;
         }
         if (!question) {
-          alert('Escriba una pregunta.');
+          showMessageModal('Escriba una pregunta.', {
+            title: 'Pregunta requerida',
+            variant: 'error'
+          });
           return;
         }
+        const payload = selectedValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1 ? ALL_TABLES_OPTION_VALUE : selectedValues;
         const pre = document.getElementById('answerBox');
         pre.style.display = 'none';
         pre.textContent = '';
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.error) {
-            alert(res.error);
+            showMessageModal(res.error, {
+              title: 'Consulta no disponible',
+              variant: 'error'
+            });
           } else {
             pre.textContent = res.answer || '';
             pre.style.display = 'block';
           }
-        }).askQuestion(val, question);
+        }).askQuestion(payload, question);
       });
 
-      // Inicializar al cargar
-      document.addEventListener('DOMContentLoaded', initialize);
+      document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('beforeunload', handleSidebarBeforeUnload);
+        setDefaultStyles();
+        setEditDefaultStyles();
+        const aiSelect = document.getElementById('aiSavedTables');
+        const aiList = document.getElementById('aiSavedTablesList');
+        if (aiSelect) {
+          aiSelect.addEventListener('change', function() {
+            updateAiListSelectionUI(aiSelect);
+          });
+        }
+        if (aiList) {
+          aiList.addEventListener('click', function(event) {
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiList.classList.contains('disabled')) {
+              return;
+            }
+            toggleAiListValue(item.dataset.value);
+          });
+          aiList.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiList.classList.contains('disabled')) {
+              return;
+            }
+            event.preventDefault();
+            toggleAiListValue(item.dataset.value);
+          });
+        }
+        const rangeInput = document.getElementById('rangeInput');
+        if (rangeInput) {
+          rangeInput.dataset.manual = 'false';
+          rangeInput.addEventListener('input', function() {
+            this.dataset.manual = this.value.trim() ? 'true' : 'false';
+            if (this.dataset.manual === 'true') {
+              rangeInfo = null;
+              markCreateFormatDirty();
+              resetPendingFormatState();
+            } else {
+              clearCreateFormatDirty();
+            }
+          });
+        }
+        const editRangeInput = document.getElementById('editRangeInput');
+        if (editRangeInput) {
+          editRangeInput.dataset.manual = 'false';
+          editRangeInput.addEventListener('input', function() {
+            this.dataset.manual = this.value.trim() ? 'true' : 'false';
+            if (this.dataset.manual === 'true') {
+              editRangeInfo = null;
+            }
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          });
+        }
+        const editStyleInputs = [
+          { id: 'editColorHeader', event: 'input' },
+          { id: 'editColorAlt1', event: 'input' },
+          { id: 'editColorAlt2', event: 'input' },
+          { id: 'editToggleBorder', event: 'change' },
+          { id: 'editToggleBold', event: 'change' },
+          { id: 'editUpdateFormulaRefs', event: 'change' }
+        ];
+        editStyleInputs.forEach(function(cfg) {
+          const el = document.getElementById(cfg.id);
+          if (!el) {
+            return;
+          }
+          el.addEventListener(cfg.event || 'change', function() {
+            if (cfg.id === 'editUpdateFormulaRefs') {
+              applyEditFormulaPreference(this.checked);
+            }
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          });
+        });
+        resetEditTabView();
+        restoreSavedTablesCache();
+        applySavedTablesFromCache(['editSavedTables', 'aiSavedTables']);
+        refreshSavedTables(['editSavedTables', 'aiSavedTables']);
+        setActiveTab('aiTab', { force: true });
+      });
     </script>
   </body>
 </html>
