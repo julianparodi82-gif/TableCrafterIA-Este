@@ -11,6 +11,7 @@
         background-color: #F9FAFB;
         color: #111827;
         line-height: 1.4;
+        overflow-x: hidden;
       }
       h2 {
         margin-top: 0;
@@ -23,20 +24,29 @@
         background: transparent;
       }
       .tab-nav {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+      }
+      .secondary-tab-nav {
+        margin-top: 0;
       }
       .tab-btn {
-        flex: 1;
         border: 1px solid #D1D5DB;
         background-color: #FFFFFF;
         color: #111827;
-        padding: 10px 12px;
+        padding: 10px;
         border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
         transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
+        width: 100%;
       }
       .tab-btn:hover {
         background-color: #EFF6FF;
@@ -53,6 +63,11 @@
       }
       .tab-content.active {
         display: block;
+      }
+      .tab-btn .favorite-icon {
+        color: #FBBF24;
+        font-size: 16px;
+        line-height: 1;
       }
       .section {
         margin-bottom: 20px;
@@ -198,6 +213,9 @@
       textarea {
         min-height: 60px;
         resize: vertical;
+      }
+      .ai-question-input {
+        min-height: 90px;
       }
       input[type="color"] {
         width: 100%;
@@ -601,6 +619,19 @@
         <button class="tab-btn" data-tab="editTab">Editar tabla</button>
         <button class="tab-btn" data-tab="createTab">Crear tabla</button>
       </div>
+      <div class="tab-nav secondary-tab-nav">
+        <button class="tab-btn" data-tab="triggersTab">Triggers</button>
+        <button class="tab-btn" data-tab="templatesTab">
+          <span class="tab-label">Plantillas</span>
+          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="visually-hidden">Favoritas</span>
+        </button>
+        <button class="tab-btn" data-tab="questionsTab">
+          <span class="tab-label">Preguntas</span>
+          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="visually-hidden">Favoritas</span>
+        </button>
+      </div>
 
       <div id="createTab" class="tab-content">
         <div class="section">
@@ -722,10 +753,29 @@
             <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
           </div>
           <label for="questionInput" style="margin-top:12px;">Pregunta a IA</label>
-          <input type="text" id="questionInput" placeholder="Escribe tu pregunta..." />
+          <textarea
+            id="questionInput"
+            class="ai-question-input"
+            placeholder="Escribe tu pregunta..."
+          ></textarea>
           <button id="askBtn" class="btn-secondary" style="margin-top:8px;">Preguntar</button>
           <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
           <pre id="answerBox" class="answer-box" style="display:none;"></pre>
+        </div>
+      </div>
+      <div id="triggersTab" class="tab-content">
+        <div class="section">
+          <p>Administra y programa los triggers asociados a TableCrafter.</p>
+        </div>
+      </div>
+      <div id="templatesTab" class="tab-content">
+        <div class="section">
+          <p>Revisa tus plantillas favoritas para reutilizarlas rápidamente.</p>
+        </div>
+      </div>
+      <div id="questionsTab" class="tab-content">
+        <div class="section">
+          <p>Consulta y gestiona tus preguntas marcadas como favoritas.</p>
         </div>
       </div>
     </div>
