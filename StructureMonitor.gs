@@ -180,6 +180,191 @@ function coerceNumber() {
   return null;
 }
 
+function cloneHeadersForMutation(rawHeaders, targetWidth) {
+  var normalized = normalizeHeaderArray(rawHeaders);
+  var cloned = [];
+  for (var i = 0; i < normalized.length; i++) {
+    var item = normalizeHeaderEntry(normalized[i]);
+    cloned.push({
+      label: item.label || '',
+      description: item.description || '',
+      hasDescription: !!item.hasDescription,
+      key: normalizeHeaderKey(item.key)
+    });
+  }
+  if (typeof targetWidth === 'number' && targetWidth >= 0) {
+    while (cloned.length < targetWidth) {
+      cloned.push(normalizeHeaderEntry(''));
+    }
+    if (cloned.length > targetWidth) {
+      cloned = cloned.slice(0, targetWidth);
+    }
+  }
+  return cloned;
+}
+
+function finalizeHeaderArray(headers, targetWidth) {
+  var adjusted = Array.isArray(headers) ? headers.slice() : [];
+  if (typeof targetWidth === 'number' && targetWidth >= 0) {
+    while (adjusted.length < targetWidth) {
+      adjusted.push(normalizeHeaderEntry(''));
+    }
+    if (adjusted.length > targetWidth) {
+      adjusted = adjusted.slice(0, targetWidth);
+    }
+  }
+  return ensureHeaderKeys(adjusted);
+}
+
+function adjustColumnsForInsertion(parsed, headers, insertStart, insertEnd) {
+  if (!parsed) {
+    return { changed: false, startColumn: null, cols: 0, headers: headers };
+  }
+  var currentStart = parsed.startColumn;
+  var currentWidth = parsed.cols;
+  var workingHeaders = Array.isArray(headers) ? headers.slice() : [];
+  var changed = false;
+  if (insertStart > insertEnd) {
+    var tmp = insertStart;
+    insertStart = insertEnd;
+    insertEnd = tmp;
+  }
+  for (var col = insertStart; col <= insertEnd; col++) {
+    if (col <= currentStart) {
+      currentStart += 1;
+      changed = true;
+    } else if (col <= currentStart + currentWidth) {
+      var relativeIndex = col - currentStart;
+      if (relativeIndex < 0) {
+        relativeIndex = 0;
+      }
+      if (relativeIndex > workingHeaders.length) {
+        relativeIndex = workingHeaders.length;
+      }
+      workingHeaders.splice(relativeIndex, 0, normalizeHeaderEntry(''));
+      currentWidth += 1;
+      changed = true;
+    }
+  }
+  return {
+    changed: changed,
+    startColumn: currentStart,
+    cols: currentWidth,
+    headers: workingHeaders
+  };
+}
+
+function adjustColumnsForRemoval(parsed, headers, removeStart, removeEnd) {
+  if (!parsed) {
+    return { changed: false, startColumn: null, cols: 0, headers: headers };
+  }
+  var currentStart = parsed.startColumn;
+  var currentWidth = parsed.cols;
+  var workingHeaders = Array.isArray(headers) ? headers.slice() : [];
+  var changed = false;
+  if (removeStart > removeEnd) {
+    var tmp = removeStart;
+    removeStart = removeEnd;
+    removeEnd = tmp;
+  }
+  for (var col = removeStart; col <= removeEnd; col++) {
+    if (col < currentStart) {
+      currentStart = Math.max(1, currentStart - 1);
+      changed = true;
+    } else if (col >= currentStart && col < currentStart + currentWidth) {
+      var relativeIndex = col - currentStart;
+      if (relativeIndex < 0) {
+        relativeIndex = 0;
+      }
+      if (relativeIndex >= workingHeaders.length) {
+        relativeIndex = workingHeaders.length - 1;
+      }
+      if (relativeIndex >= 0 && workingHeaders.length > 0) {
+        workingHeaders.splice(relativeIndex, 1);
+      }
+      if (currentWidth > 0) {
+        currentWidth -= 1;
+      }
+      changed = true;
+    }
+  }
+  if (currentWidth < 0) {
+    currentWidth = 0;
+  }
+  return {
+    changed: changed,
+    startColumn: currentStart,
+    cols: currentWidth,
+    headers: workingHeaders
+  };
+}
+
+function adjustRowsForInsertion(parsed, insertStart, insertEnd) {
+  if (!parsed) {
+    return { changed: false, startRow: null, rows: 0 };
+  }
+  var currentStart = parsed.startRow;
+  var currentHeight = parsed.rows;
+  var changed = false;
+  if (insertStart > insertEnd) {
+    var tmp = insertStart;
+    insertStart = insertEnd;
+    insertEnd = tmp;
+  }
+  for (var row = insertStart; row <= insertEnd; row++) {
+    if (row <= currentStart) {
+      currentStart += 1;
+      changed = true;
+    } else if (row <= currentStart + currentHeight) {
+      currentHeight += 1;
+      changed = true;
+    }
+  }
+  return {
+    changed: changed,
+    startRow: currentStart,
+    rows: currentHeight
+  };
+}
+
+function adjustRowsForRemoval(parsed, removeStart, removeEnd) {
+  if (!parsed) {
+    return { changed: false, startRow: null, rows: 0, headerRemoved: false };
+  }
+  var currentStart = parsed.startRow;
+  var currentHeight = parsed.rows;
+  var headerRemoved = false;
+  var changed = false;
+  if (removeStart > removeEnd) {
+    var tmp = removeStart;
+    removeStart = removeEnd;
+    removeEnd = tmp;
+  }
+  for (var row = removeStart; row <= removeEnd; row++) {
+    if (row < currentStart) {
+      currentStart = Math.max(1, currentStart - 1);
+      changed = true;
+    } else if (row >= currentStart && row < currentStart + currentHeight) {
+      if (row === currentStart) {
+        headerRemoved = true;
+      }
+      if (currentHeight > 0) {
+        currentHeight -= 1;
+      }
+      changed = true;
+    }
+  }
+  if (currentHeight < 0) {
+    currentHeight = 0;
+  }
+  return {
+    changed: changed,
+    startRow: currentStart,
+    rows: currentHeight,
+    headerRemoved: headerRemoved
+  };
+}
+
 function filterEntriesByBounds(entries, bounds) {
   if (!entries || entries.length === 0 || !bounds || bounds.length === 0) {
     return [];
@@ -323,11 +508,6 @@ function handleInsertedColumnsChange(e) {
   if (startColumn === null || endColumn === null) {
     return;
   }
-  if (endColumn < startColumn) {
-    var temp = startColumn;
-    startColumn = endColumn;
-    endColumn = temp;
-  }
   var metaSheet = getMetaSheet();
   var data = metaSheet.getDataRange().getValues();
   if (!data || data.length <= 1) {
@@ -357,63 +537,22 @@ function handleInsertedColumnsChange(e) {
       continue;
     }
 
-    var currentStart = parsed.startColumn;
-    var currentEnd = parsed.endColumn;
-    var headerInsertions = [];
-    for (var colIndex = startColumn; colIndex <= endColumn; colIndex++) {
-      if (colIndex <= currentStart) {
-        currentStart += 1;
-        currentEnd += 1;
-      } else if (colIndex <= currentEnd + 1) {
-        headerInsertions.push(colIndex - currentStart);
-        currentEnd += 1;
-      }
-    }
-
-    if (currentStart === parsed.startColumn && currentEnd === parsed.endColumn) {
+    var headers = cloneHeadersForMutation(parseJsonValue(row[META_INDEX.headers], []), parsed.cols);
+    var result = adjustColumnsForInsertion(parsed, headers, startColumn, endColumn);
+    if (!result.changed) {
       continue;
     }
 
-    var newCols = currentEnd - currentStart + 1;
+    var newCols = result.cols;
     if (newCols <= 0) {
       continue;
     }
-    var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], []));
-    if (headers.length < parsed.cols) {
-      while (headers.length < parsed.cols) {
-        headers.push(normalizeHeaderEntry(''));
-      }
-    }
-    headers = ensureHeaderKeys(headers);
-    if (headerInsertions.length > 0) {
-      headerInsertions.sort(function(a, b) {
-        return a - b;
-      });
-      for (var h = 0; h < headerInsertions.length; h++) {
-        var insertionIndex = headerInsertions[h] + h;
-        if (insertionIndex < 0) {
-          insertionIndex = 0;
-        }
-        if (insertionIndex > headers.length) {
-          insertionIndex = headers.length;
-        }
-        headers.splice(insertionIndex, 0, normalizeHeaderEntry(''));
-      }
-    }
-    if (headers.length > newCols) {
-      headers = headers.slice(0, newCols);
-    } else if (headers.length < newCols) {
-      while (headers.length < newCols) {
-        headers.push(normalizeHeaderEntry(''));
-      }
-    }
-    headers = ensureHeaderKeys(headers);
-
-    var newRange = buildA1Notation(currentStart, parsed.startRow, newCols, parsed.rows);
+    var finalHeaders = finalizeHeaderArray(result.headers, newCols);
+    var newRange = buildA1Notation(result.startColumn, parsed.startRow, newCols, parsed.rows);
     var updatedRow = row.slice();
     updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRow[META_INDEX.cols] = newCols;
-    updatedRow[META_INDEX.headers] = stringifyJsonValue(headers);
+    updatedRow[META_INDEX.headers] = stringifyJsonValue(finalHeaders);
     updatedRow[META_INDEX.updatedAt] = now;
     updates.push({
       rowNumber: i + 1,
@@ -449,12 +588,6 @@ function handleInsertedRowsChange(e) {
   if (startRow === null || endRow === null) {
     return;
   }
-  if (endRow < startRow) {
-    var temp = startRow;
-    startRow = endRow;
-    endRow = temp;
-  }
-
   var metaSheet = getMetaSheet();
   var data = metaSheet.getDataRange().getValues();
   if (!data || data.length <= 1) {
@@ -484,27 +617,17 @@ function handleInsertedRowsChange(e) {
       continue;
     }
 
-    var currentStart = parsed.startRow;
-    var currentEnd = parsed.endRow;
-    for (var rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
-      if (rowIndex <= currentStart) {
-        currentStart += 1;
-        currentEnd += 1;
-      } else if (rowIndex <= currentEnd + 1) {
-        currentEnd += 1;
-      }
-    }
-
-    if (currentStart === parsed.startRow && currentEnd === parsed.endRow) {
+    var result = adjustRowsForInsertion(parsed, startRow, endRow);
+    if (!result.changed) {
       continue;
     }
 
-    var newRows = currentEnd - currentStart + 1;
+    var newRows = result.rows;
     if (newRows <= 0) {
       continue;
     }
 
-    var newRange = buildA1Notation(parsed.startColumn, currentStart, parsed.cols, newRows);
+    var newRange = buildA1Notation(parsed.startColumn, result.startRow, parsed.cols, newRows);
     var updatedRow = row.slice();
     updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
     updatedRow[META_INDEX.rows] = newRows;
@@ -543,16 +666,6 @@ function handleRemovedColumnsChange(e) {
   if (columnStart === null || columnEnd === null) {
     return;
   }
-  if (columnEnd < columnStart) {
-    var temp = columnStart;
-    columnStart = columnEnd;
-    columnEnd = temp;
-  }
-  var removedCount = columnEnd - columnStart + 1;
-  if (removedCount <= 0) {
-    return;
-  }
-
   var metaSheet = getMetaSheet();
   var data = metaSheet.getDataRange().getValues();
   if (!data || data.length <= 1) {
@@ -582,65 +695,26 @@ function handleRemovedColumnsChange(e) {
     if (!parsed) {
       continue;
     }
-    var tableStartCol = parsed.startColumn;
-    var tableEndCol = parsed.endColumn;
-    var tableCols = parsed.cols;
-    var tableStartRow = parsed.startRow;
-    var tableRows = parsed.rows;
-    if (columnStart > tableEndCol) {
-      continue;
-    }
-    if (columnEnd < tableStartCol) {
-      var shiftedStartCol = tableStartCol - removedCount;
-      if (shiftedStartCol < 1) {
-        shiftedStartCol = 1;
-      }
-      var shiftedRange = buildA1Notation(shiftedStartCol, tableStartRow, tableCols, tableRows);
-      var updatedRow = row.slice();
-      updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, shiftedRange);
-      updatedRow[META_INDEX.cols] = tableCols;
-      updatedRow[META_INDEX.updatedAt] = now;
-      updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
+
+    var headers = cloneHeadersForMutation(parseJsonValue(row[META_INDEX.headers], []), parsed.cols);
+    var result = adjustColumnsForRemoval(parsed, headers, columnStart, columnEnd);
+    if (!result.changed) {
       continue;
     }
 
-    var beforeStart = Math.max(0, Math.min(columnEnd, tableStartCol - 1) - columnStart + 1);
-    var overlap = Math.max(0, Math.min(columnEnd, tableEndCol) - Math.max(columnStart, tableStartCol) + 1);
-    var newStartCol = tableStartCol - beforeStart;
-    if (newStartCol < 1) {
-      newStartCol = 1;
-    }
-    var newCols = tableCols - overlap;
-    if (newCols <= 0) {
+    if (result.cols <= 0) {
       deletions.push(entryId);
       continue;
     }
-    var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], []));
-    if (overlap > 0) {
-      var removeIndex = Math.max(columnStart, tableStartCol) - tableStartCol;
-      if (removeIndex < 0) {
-        removeIndex = 0;
-      }
-      var availableToRemove = Math.max(0, headers.length - removeIndex);
-      var removeCount = Math.min(overlap, availableToRemove);
-      if (removeCount > 0) {
-        headers.splice(removeIndex, removeCount);
-      }
-    }
-    while (headers.length > newCols) {
-      headers.pop();
-    }
-    while (headers.length < newCols) {
-      headers.push(normalizeHeaderEntry(''));
-    }
-    headers = ensureHeaderKeys(headers);
-    var newRange = buildA1Notation(newStartCol, tableStartRow, newCols, tableRows);
-    var updatedRowWithOverlap = row.slice();
-    updatedRowWithOverlap[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
-    updatedRowWithOverlap[META_INDEX.cols] = newCols;
-    updatedRowWithOverlap[META_INDEX.headers] = stringifyJsonValue(headers);
-    updatedRowWithOverlap[META_INDEX.updatedAt] = now;
-    updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
+
+    var finalHeaders = finalizeHeaderArray(result.headers, result.cols);
+    var newRange = buildA1Notation(result.startColumn, parsed.startRow, result.cols, parsed.rows);
+    var updatedRow = row.slice();
+    updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
+    updatedRow[META_INDEX.cols] = result.cols;
+    updatedRow[META_INDEX.headers] = stringifyJsonValue(finalHeaders);
+    updatedRow[META_INDEX.updatedAt] = now;
+    updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: newRange });
   }
 
   applyStructuralUpdates(updates, sheet);
@@ -671,16 +745,6 @@ function handleRemovedRowsChange(e) {
   if (rowStart === null || rowEnd === null) {
     return;
   }
-  if (rowEnd < rowStart) {
-    var tmp = rowStart;
-    rowStart = rowEnd;
-    rowEnd = tmp;
-  }
-  var removedCount = rowEnd - rowStart + 1;
-  if (removedCount <= 0) {
-    return;
-  }
-
   var metaSheet = getMetaSheet();
   var data = metaSheet.getDataRange().getValues();
   if (!data || data.length <= 1) {
@@ -713,68 +777,36 @@ function handleRemovedRowsChange(e) {
       continue;
     }
 
-    var tableStartRow = parsed.startRow;
-    var tableEndRow = parsed.endRow;
-    var tableRows = parsed.rows;
-    var tableStartCol = parsed.startColumn;
-    var tableCols = parsed.cols;
-
-    if (rowStart > tableEndRow) {
+    var result = adjustRowsForRemoval(parsed, rowStart, rowEnd);
+    if (!result.changed) {
       continue;
     }
 
-    if (rowEnd < tableStartRow) {
-      var shiftedStartRow = tableStartRow - removedCount;
-      if (shiftedStartRow < 1) {
-        shiftedStartRow = 1;
-      }
-      var shiftedRange = buildA1Notation(tableStartCol, shiftedStartRow, tableCols, tableRows);
-      var updatedRow = row.slice();
-      updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, shiftedRange);
-      updatedRow[META_INDEX.rows] = tableRows;
-      updatedRow[META_INDEX.updatedAt] = now;
-      updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: shiftedRange });
-      continue;
-    }
-
-    var beforeStart = Math.max(0, Math.min(rowEnd, tableStartRow - 1) - rowStart + 1);
-    var overlap = Math.max(0, Math.min(rowEnd, tableEndRow) - Math.max(rowStart, tableStartRow) + 1);
-    var headerRemoved = rowStart <= tableStartRow && rowEnd >= tableStartRow;
-
-    var newStartRow = tableStartRow - beforeStart;
-    if (newStartRow < 1) {
-      newStartRow = 1;
-    }
-
-    var effectiveOverlap = overlap;
+    var headerRemoved = result.headerRemoved;
+    var currentRows = result.rows;
     if (headerRemoved) {
-      effectiveOverlap = Math.max(0, overlap - 1);
-    }
-
-    var newRows = tableRows - effectiveOverlap;
-    if (headerRemoved) {
-      newRows = Math.max(1, newRows);
+      currentRows = Math.max(1, currentRows + 1);
       if (!restoredHeaders[entryId]) {
-        restoreTableHeaderRow(sheet, tableStartCol, newStartRow, tableCols, row);
+        restoreTableHeaderRow(sheet, parsed.startColumn, result.startRow, parsed.cols, row);
         restoredHeaders[entryId] = true;
       }
     }
 
-    if (!headerRemoved && newRows <= 0) {
+    if (!headerRemoved && currentRows <= 0) {
       deletions.push(entryId);
       continue;
     }
 
-    if (headerRemoved && newRows <= 0) {
-      newRows = 1;
+    if (currentRows <= 0) {
+      currentRows = 1;
     }
 
-    var newRange = buildA1Notation(tableStartCol, newStartRow, tableCols, newRows);
-    var updatedRowWithOverlap = row.slice();
-    updatedRowWithOverlap[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
-    updatedRowWithOverlap[META_INDEX.rows] = newRows;
-    updatedRowWithOverlap[META_INDEX.updatedAt] = now;
-    updates.push({ rowNumber: i + 1, values: updatedRowWithOverlap, id: entryId, newRange: newRange });
+    var newRange = buildA1Notation(parsed.startColumn, result.startRow, parsed.cols, currentRows);
+    var updatedRow = row.slice();
+    updatedRow[META_INDEX.rangeA1] = buildFullRangeNotation(sheetName, newRange);
+    updatedRow[META_INDEX.rows] = currentRows;
+    updatedRow[META_INDEX.updatedAt] = now;
+    updates.push({ rowNumber: i + 1, values: updatedRow, id: entryId, newRange: newRange });
   }
 
   applyStructuralUpdates(updates, sheet);
