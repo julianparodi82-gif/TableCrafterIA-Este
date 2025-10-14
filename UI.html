@@ -247,9 +247,165 @@
         background-color: #2563EB;
         color: #FFFFFF;
       }
+      .ai-report-btn.selected {
+        background-color: #2563EB;
+        color: #FFFFFF;
+      }
       .ai-report-btn:disabled {
         opacity: 0.65;
         cursor: not-allowed;
+      }
+      .ai-report-helper {
+        margin-top: 12px;
+        color: #374151;
+        font-size: 14px;
+      }
+      .ai-report-description-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        font-size: 14px;
+        color: #374151;
+      }
+      .ai-report-description-toggle input {
+        margin: 0;
+      }
+      .ai-report-description-field {
+        margin-top: 8px;
+        min-height: 68px;
+        resize: vertical;
+      }
+      .ai-hidden {
+        display: none !important;
+      }
+      .ai-report-delivery {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-delivery-config {
+        padding: 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ai-delivery-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1D4ED8;
+      }
+      .ai-delivery-description {
+        margin: 0;
+        color: #4B5563;
+        font-size: 13px;
+      }
+      .ai-inline-input {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .ai-inline-input input {
+        flex: 1 1 220px;
+      }
+      .ai-inline-input button {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        background-color: #2563EB;
+        color: #FFFFFF;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .ai-inline-input button:hover {
+        background-color: #1D4ED8;
+      }
+      .ai-helper-text {
+        font-size: 12px;
+        color: #6B7280;
+      }
+      .ai-helper-text.success {
+        color: #047857;
+      }
+      .ai-helper-text.error {
+        color: #B91C1C;
+      }
+      .ai-delivery-selector {
+        position: relative;
+      }
+      .ai-delivery-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        color: #1F2937;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .ai-delivery-toggle:hover {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+      .ai-delivery-toggle-icon {
+        font-size: 14px;
+        color: #6B7280;
+      }
+      .ai-delivery-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        box-shadow: 0 14px 32px rgba(17, 24, 39, 0.12);
+        padding: 8px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 30;
+      }
+      .ai-delivery-selector[data-open='true'] .ai-delivery-menu {
+        display: flex;
+      }
+      .ai-delivery-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #1F2937;
+      }
+      .ai-delivery-option input {
+        margin: 0;
+      }
+      .ai-delivery-badge {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .ai-delivery-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background-color: rgba(37, 99, 235, 0.15);
+        color: #1D4ED8;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
       }
       .ai-action-title {
         font-size: 18px;
@@ -827,12 +983,69 @@
             <p class="ai-action-description">
               Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
             </p>
+            <p class="ai-report-helper">Elige el formato en el que deseas generar el reporte.</p>
             <div class="ai-report-options">
-              <button type="button" class="ai-report-btn" disabled>PDF</button>
-              <button type="button" class="ai-report-btn" disabled>Excel</button>
-              <button type="button" class="ai-report-btn" disabled>Google Sheets</button>
-              <button type="button" class="ai-report-btn" disabled>CSV</button>
-              <button type="button" class="ai-report-btn" disabled>Power BI</button>
+              <button type="button" class="ai-report-btn" data-format="pdf">PDF</button>
+              <button type="button" class="ai-report-btn" data-format="excel">Excel</button>
+              <button type="button" class="ai-report-btn" data-format="sheets">Google Sheets</button>
+            </div>
+            <label class="ai-report-description-toggle">
+              <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
+            </label>
+            <textarea
+              id="aiReportDescription"
+              class="ai-report-description-field ai-hidden"
+              placeholder="Describe el objetivo o contenido del reporte"
+            ></textarea>
+            <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
+              <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
+              <p class="ai-report-helper" style="margin-top:0;">
+                Selecciona uno o varios canales para distribuir el reporte.
+              </p>
+              <div class="ai-delivery-selector" id="aiReportDeliverySelector" data-open="false">
+                <button type="button" class="ai-delivery-toggle" id="aiReportDeliveryToggle">
+                  <span id="aiReportDeliveryToggleLabel">Seleccionar canales</span>
+                  <span class="ai-delivery-toggle-icon">▾</span>
+                </button>
+                <div class="ai-delivery-menu" id="aiReportDeliveryMenu">
+                  <label class="ai-delivery-option">
+                    <input type="checkbox" value="download" /> Descargar
+                  </label>
+                  <label class="ai-delivery-option">
+                    <input type="checkbox" value="email" /> Email
+                  </label>
+                  <label class="ai-delivery-option">
+                    <input type="checkbox" value="whatsapp" /> WhatsApp
+                  </label>
+                </div>
+              </div>
+              <div id="aiReportDeliverySummary" class="ai-delivery-badge ai-hidden"></div>
+              <div class="ai-delivery-config" data-channel="download">
+                <h4 class="ai-delivery-title">Descargar</h4>
+                <p class="ai-delivery-description">
+                  El reporte se generará y descargará directamente en tu dispositivo.
+                </p>
+              </div>
+              <div class="ai-delivery-config" data-channel="email">
+                <h4 class="ai-delivery-title">Enviar por correo</h4>
+                <label for="aiReportEmailSelect">Selecciona un correo guardado</label>
+                <select id="aiReportEmailSelect"></select>
+                <div class="ai-inline-input">
+                  <input type="email" id="aiReportEmailInput" placeholder="Agregar nuevo correo electrónico" />
+                  <button type="button" id="aiReportEmailSaveBtn">Guardar correo</button>
+                </div>
+                <div id="aiReportEmailMessage" class="ai-helper-text"></div>
+              </div>
+              <div class="ai-delivery-config" data-channel="whatsapp">
+                <h4 class="ai-delivery-title">Enviar por WhatsApp</h4>
+                <label for="aiReportPhoneSelect">Selecciona un número guardado</label>
+                <select id="aiReportPhoneSelect"></select>
+                <div class="ai-inline-input">
+                  <input type="tel" id="aiReportPhoneInput" placeholder="Agregar nuevo número de contacto" />
+                  <button type="button" id="aiReportPhoneSaveBtn">Guardar número</button>
+                </div>
+                <div id="aiReportPhoneMessage" class="ai-helper-text"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -878,6 +1091,18 @@
       });
 
       const ALL_TABLES_OPTION_VALUE = '__ALL__';
+
+      const REPORT_STORAGE_KEYS = Object.freeze({
+        emails: 'tc_report_emails',
+        phones: 'tc_report_phones'
+      });
+
+      let savedReportEmails = [];
+      let savedReportPhones = [];
+      let selectedReportFormat = '';
+      let reportSectionInitialized = false;
+      let selectedReportChannels = [];
+      let reportDeliveryOutsideListenerAttached = false;
 
       let headerKeyCounter = 0;
 
@@ -3118,6 +3343,381 @@
         }).getApiKey();
       }
 
+      function loadReportContactList(key) {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return [];
+        }
+        try {
+          const raw = storage.getItem(REPORT_STORAGE_KEYS[key]);
+          if (!raw) {
+            return [];
+          }
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map(function(entry) {
+                return typeof entry === 'string' ? entry.trim() : '';
+              })
+              .filter(function(entry) {
+                return !!entry;
+              });
+          }
+        } catch (err) {
+          console.log('No se pudieron cargar los contactos guardados para reportes.', err);
+        }
+        return [];
+      }
+
+      function persistReportContactList(key, list) {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return;
+        }
+        try {
+          storage.setItem(REPORT_STORAGE_KEYS[key], JSON.stringify(list || []));
+        } catch (err) {
+          console.log('No se pudieron guardar los contactos de reportes.', err);
+        }
+      }
+
+      function populateReportContactSelect(selectId, values, placeholder) {
+        const select = document.getElementById(selectId);
+        if (!select) {
+          return;
+        }
+        const currentValue = select.value || '';
+        select.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = placeholder || 'Selecciona una opción';
+        select.appendChild(defaultOption);
+        (values || []).forEach(function(value) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+        if (values && values.indexOf(currentValue) !== -1) {
+          select.value = currentValue;
+        } else {
+          select.value = '';
+        }
+      }
+
+      function setReportHelperMessage(id, message, variant) {
+        const el = document.getElementById(id);
+        if (!el) {
+          return;
+        }
+        el.textContent = message || '';
+        el.classList.remove('success', 'error');
+        if (message && variant) {
+          el.classList.add(variant);
+        }
+      }
+
+      function getReportDeliveryCheckboxes() {
+        const menu = document.getElementById('aiReportDeliveryMenu');
+        if (!menu) {
+          return [];
+        }
+        return Array.prototype.slice.call(menu.querySelectorAll('input[type="checkbox"]'));
+      }
+
+      function getReportDeliveryChannelLabel(value) {
+        if (value === 'download') {
+          return 'Descargar';
+        }
+        if (value === 'email') {
+          return 'Email';
+        }
+        if (value === 'whatsapp') {
+          return 'WhatsApp';
+        }
+        return value || '';
+      }
+
+      function updateReportDeliverySummary() {
+        const summary = document.getElementById('aiReportDeliverySummary');
+        const label = document.getElementById('aiReportDeliveryToggleLabel');
+        if (summary) {
+          summary.innerHTML = '';
+          if (!selectedReportChannels || selectedReportChannels.length === 0) {
+            summary.classList.add('ai-hidden');
+          } else {
+            summary.classList.remove('ai-hidden');
+            selectedReportChannels.forEach(function(channel) {
+              const chip = document.createElement('span');
+              chip.className = 'ai-delivery-chip';
+              chip.textContent = getReportDeliveryChannelLabel(channel);
+              summary.appendChild(chip);
+            });
+          }
+        }
+        if (label) {
+          label.textContent =
+            selectedReportChannels && selectedReportChannels.length > 0
+              ? selectedReportChannels.length + ' canal(es) seleccionados'
+              : 'Seleccionar canales';
+        }
+      }
+
+      function setReportDeliveryOpen(open) {
+        const selector = document.getElementById('aiReportDeliverySelector');
+        if (!selector) {
+          return;
+        }
+        selector.dataset.open = open ? 'true' : 'false';
+      }
+
+      function handleReportDeliveryToggle() {
+        const selector = document.getElementById('aiReportDeliverySelector');
+        if (!selector) {
+          return;
+        }
+        const isOpen = selector.dataset.open === 'true';
+        setReportDeliveryOpen(!isOpen);
+      }
+
+      function handleReportDeliveryOutsideClick(event) {
+        const selector = document.getElementById('aiReportDeliverySelector');
+        if (!selector || selector.dataset.open !== 'true') {
+          return;
+        }
+        if (!selector.contains(event.target)) {
+          setReportDeliveryOpen(false);
+        }
+      }
+
+      function updateSelectedReportChannels() {
+        const checkboxes = getReportDeliveryCheckboxes();
+        selectedReportChannels = checkboxes
+          .filter(function(cb) {
+            return cb && cb.checked;
+          })
+          .map(function(cb) {
+            return cb.value;
+          });
+        updateReportDeliverySummary();
+        updateReportDeliverySections();
+      }
+
+      function handleReportFormatSelection(format) {
+        selectedReportFormat = format || '';
+        const buttons = document.querySelectorAll('#aiReportSection .ai-report-btn');
+        buttons.forEach(function(btn) {
+          if (!btn.dataset) {
+            return;
+          }
+          if (btn.dataset.format === selectedReportFormat) {
+            btn.classList.add('selected');
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
+        const deliverySection = document.getElementById('aiReportDeliverySection');
+        if (deliverySection) {
+          if (selectedReportFormat) {
+            deliverySection.classList.remove('ai-hidden');
+          } else {
+            deliverySection.classList.add('ai-hidden');
+          }
+        }
+        setReportDeliveryOpen(false);
+        if (!selectedReportFormat) {
+          selectedReportChannels = [];
+          const checkboxes = getReportDeliveryCheckboxes();
+          checkboxes.forEach(function(cb) {
+            cb.checked = false;
+          });
+          updateReportDeliverySummary();
+          updateReportDeliverySections();
+        }
+      }
+
+      function toggleReportDescriptionField(visible) {
+        const descriptionField = document.getElementById('aiReportDescription');
+        if (!descriptionField) {
+          return;
+        }
+        if (visible) {
+          descriptionField.classList.remove('ai-hidden');
+        } else {
+          descriptionField.classList.add('ai-hidden');
+          descriptionField.value = '';
+        }
+      }
+
+      function updateReportDeliverySections() {
+        const values = Array.isArray(selectedReportChannels) ? selectedReportChannels : [];
+        document.querySelectorAll('.ai-delivery-config').forEach(function(section) {
+          const channel = section.dataset ? section.dataset.channel : '';
+          if (channel && values.indexOf(channel) !== -1) {
+            section.style.display = 'flex';
+          } else {
+            section.style.display = 'none';
+          }
+        });
+      }
+
+      function resetReportSection() {
+        selectedReportFormat = '';
+        document.querySelectorAll('#aiReportSection .ai-report-btn').forEach(function(btn) {
+          btn.classList.remove('selected');
+        });
+        const descToggle = document.getElementById('aiReportDescriptionToggle');
+        if (descToggle) {
+          descToggle.checked = false;
+        }
+        toggleReportDescriptionField(false);
+        const deliverySection = document.getElementById('aiReportDeliverySection');
+        if (deliverySection) {
+          deliverySection.classList.add('ai-hidden');
+        }
+        selectedReportChannels = [];
+        const checkboxes = getReportDeliveryCheckboxes();
+        checkboxes.forEach(function(cb) {
+          cb.checked = false;
+        });
+        setReportDeliveryOpen(false);
+        updateReportDeliverySummary();
+        updateReportDeliverySections();
+        const emailInput = document.getElementById('aiReportEmailInput');
+        if (emailInput) {
+          emailInput.value = '';
+        }
+        const phoneInput = document.getElementById('aiReportPhoneInput');
+        if (phoneInput) {
+          phoneInput.value = '';
+        }
+        const emailSelect = document.getElementById('aiReportEmailSelect');
+        if (emailSelect) {
+          emailSelect.value = '';
+        }
+        const phoneSelect = document.getElementById('aiReportPhoneSelect');
+        if (phoneSelect) {
+          phoneSelect.value = '';
+        }
+        setReportHelperMessage('aiReportEmailMessage', '');
+        setReportHelperMessage('aiReportPhoneMessage', '');
+      }
+
+      function saveReportEmail() {
+        const input = document.getElementById('aiReportEmailInput');
+        const select = document.getElementById('aiReportEmailSelect');
+        if (!input || !select) {
+          return;
+        }
+        const value = (input.value || '').trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value) {
+          setReportHelperMessage('aiReportEmailMessage', 'Ingrese un correo electrónico válido para guardarlo.', 'error');
+          return;
+        }
+        if (!emailRegex.test(value)) {
+          setReportHelperMessage('aiReportEmailMessage', 'El formato del correo no es válido.', 'error');
+          return;
+        }
+        if (savedReportEmails.indexOf(value) === -1) {
+          savedReportEmails.push(value);
+          persistReportContactList('emails', savedReportEmails);
+          populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona un correo guardado');
+          setReportHelperMessage('aiReportEmailMessage', 'Correo guardado correctamente.', 'success');
+        } else {
+          setReportHelperMessage('aiReportEmailMessage', 'El correo ya estaba guardado. Se seleccionó automáticamente.', 'success');
+        }
+        select.value = value;
+        input.value = '';
+      }
+
+      function saveReportPhone() {
+        const input = document.getElementById('aiReportPhoneInput');
+        const select = document.getElementById('aiReportPhoneSelect');
+        if (!input || !select) {
+          return;
+        }
+        const value = (input.value || '').trim();
+        const phoneRegex = /^[+]?[-()\d\s]{6,}$/;
+        if (!value) {
+          setReportHelperMessage('aiReportPhoneMessage', 'Ingrese un número de contacto para guardarlo.', 'error');
+          return;
+        }
+        if (!phoneRegex.test(value)) {
+          setReportHelperMessage('aiReportPhoneMessage', 'El número ingresado no parece válido.', 'error');
+          return;
+        }
+        if (savedReportPhones.indexOf(value) === -1) {
+          savedReportPhones.push(value);
+          persistReportContactList('phones', savedReportPhones);
+          populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona un número guardado');
+          setReportHelperMessage('aiReportPhoneMessage', 'Número guardado correctamente.', 'success');
+        } else {
+          setReportHelperMessage('aiReportPhoneMessage', 'El número ya estaba guardado. Se seleccionó automáticamente.', 'success');
+        }
+        select.value = value;
+        input.value = '';
+      }
+
+      function initializeReportSection() {
+        if (reportSectionInitialized) {
+          return;
+        }
+        savedReportEmails = loadReportContactList('emails');
+        savedReportPhones = loadReportContactList('phones');
+        populateReportContactSelect('aiReportEmailSelect', savedReportEmails, 'Selecciona un correo guardado');
+        populateReportContactSelect('aiReportPhoneSelect', savedReportPhones, 'Selecciona un número guardado');
+        const formatButtons = document.querySelectorAll('#aiReportSection .ai-report-btn');
+        formatButtons.forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (!btn.dataset || !btn.dataset.format) {
+              return;
+            }
+            handleReportFormatSelection(btn.dataset.format);
+          });
+        });
+        const descToggle = document.getElementById('aiReportDescriptionToggle');
+        if (descToggle) {
+          descToggle.addEventListener('change', function() {
+            toggleReportDescriptionField(descToggle.checked);
+          });
+          toggleReportDescriptionField(descToggle.checked);
+        }
+        const deliverySelector = document.getElementById('aiReportDeliverySelector');
+        if (deliverySelector) {
+          const toggle = document.getElementById('aiReportDeliveryToggle');
+          if (toggle) {
+            toggle.addEventListener('click', handleReportDeliveryToggle);
+          }
+          const menu = document.getElementById('aiReportDeliveryMenu');
+          if (menu) {
+            menu.addEventListener('change', function(event) {
+              const target = event.target;
+              if (!target || target.type !== 'checkbox') {
+                return;
+              }
+              updateSelectedReportChannels();
+            });
+          }
+          setReportDeliveryOpen(false);
+          updateReportDeliverySummary();
+          if (!reportDeliveryOutsideListenerAttached) {
+            document.addEventListener('click', handleReportDeliveryOutsideClick);
+            reportDeliveryOutsideListenerAttached = true;
+          }
+        }
+        const emailSaveBtn = document.getElementById('aiReportEmailSaveBtn');
+        if (emailSaveBtn) {
+          emailSaveBtn.addEventListener('click', saveReportEmail);
+        }
+        const phoneSaveBtn = document.getElementById('aiReportPhoneSaveBtn');
+        if (phoneSaveBtn) {
+          phoneSaveBtn.addEventListener('click', saveReportPhone);
+        }
+        updateSelectedReportChannels();
+        reportSectionInitialized = true;
+      }
+
       function updateAiActionState() {
         const select = document.getElementById('aiActionSelect');
         const askSection = document.getElementById('aiAskSection');
@@ -3141,6 +3741,7 @@
             askBtn.disabled = false;
           }
         } else if (action === 'report') {
+          initializeReportSection();
           askSection.style.display = 'none';
           if (reportSection) {
             reportSection.style.display = 'block';
@@ -3160,6 +3761,7 @@
           if (reportSection) {
             reportSection.style.display = 'none';
           }
+          resetReportSection();
           if (questionInput) {
             questionInput.value = '';
             questionInput.disabled = true;
