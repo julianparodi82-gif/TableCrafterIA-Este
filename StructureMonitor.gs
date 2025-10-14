@@ -1666,24 +1666,50 @@ function determineTableRowCount(sheet, startRow, startColumn, columnCount, store
   if (!sheet || !startRow || !startColumn || !columnCount) {
     return storedRows > 0 ? storedRows : 1;
   }
-  var lastRow = sheet.getLastRow();
-  if (lastRow < startRow) {
-    return storedRows > 0 ? storedRows : 1;
+
+  var hintedRows = storedRows > 0 ? storedRows : 1;
+  var padding = Math.max(5, Math.min(100, Math.ceil(hintedRows * 0.25)));
+  var desiredHeight = hintedRows + padding;
+
+  var maxRowsAvailable = null;
+  if (typeof sheet.getMaxRows === 'function') {
+    try {
+      maxRowsAvailable = sheet.getMaxRows();
+    } catch (errMaxRows) {
+      maxRowsAvailable = null;
+    }
   }
-  var maxHeight = Math.max(1, lastRow - startRow + 1);
+  if (maxRowsAvailable === null && typeof sheet.getLastRow === 'function') {
+    try {
+      maxRowsAvailable = sheet.getLastRow();
+    } catch (errLastRow) {
+      maxRowsAvailable = null;
+    }
+  }
+
+  var availableHeight = desiredHeight;
+  if (maxRowsAvailable !== null && maxRowsAvailable >= startRow) {
+    availableHeight = Math.min(desiredHeight, Math.max(1, maxRowsAvailable - startRow + 1));
+  }
+  if (availableHeight < hintedRows) {
+    availableHeight = hintedRows;
+  }
+
   var range;
   try {
-    range = sheet.getRange(startRow, startColumn, maxHeight, columnCount);
-  } catch (err) {
-    return storedRows > 0 ? storedRows : 1;
+    range = sheet.getRange(startRow, startColumn, availableHeight, columnCount);
+  } catch (errRange) {
+    return hintedRows;
   }
+
   var values;
   try {
     values = range.getDisplayValues();
-  } catch (err2) {
+  } catch (errValues) {
     values = [];
   }
-  var rowCount = storedRows > 0 ? storedRows : 1;
+
+  var rowCount = hintedRows;
   for (var r = values.length - 1; r >= 0; r--) {
     var rowValues = values[r];
     var hasContent = false;
@@ -1698,9 +1724,11 @@ function determineTableRowCount(sheet, startRow, startColumn, columnCount, store
       break;
     }
   }
+
   if (storedRows > 0) {
     rowCount = Math.max(rowCount, storedRows);
   }
+
   return rowCount;
 }
 
