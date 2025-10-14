@@ -62,6 +62,60 @@ function showHelp() {
 }
 
 /**
+ * Trigger instalable "al cambiar". Detecta inserciones y eliminaciones de
+ * filas/columnas y delega el ajuste automático de las tablas registradas.
+ *
+ * @param {Object} e Evento de cambio proporcionado por Apps Script.
+ * @returns {Object|undefined} Resumen del ajuste realizado.
+ */
+function onChange(e) {
+  var change = inferChange_(e);
+  if (!change) {
+    return;
+  }
+  var lock = LockService.getDocumentLock();
+  var summary;
+  try {
+    lock.waitLock(30000);
+    summary = handleStructuralChange_(change, e);
+  } catch (err) {
+    console.error('Error en onChange:', err);
+    throw err;
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (releaseErr) {
+      console.error('No se pudo liberar el lock en onChange:', releaseErr);
+    }
+  }
+  if (summary) {
+    try {
+      console.log('[TableCrafterAI][onChange] ' + JSON.stringify(summary));
+    } catch (logErr) {
+      // Ignorar fallos de serialización en el log.
+    }
+  }
+  return summary;
+}
+
+/**
+ * Trigger instalable "al cambiar de selección". Conserva la última posición
+ * seleccionada para ayudar a inferir el contexto de eventos estructurales.
+ *
+ * @param {Object} e Evento de selección de Apps Script.
+ */
+function onSelectionChange(e) {
+  if (!e || !e.range) {
+    return;
+  }
+  try {
+    recordSelectionContext_(e.range);
+  } catch (err) {
+    console.error('Error al registrar la selección:', err);
+  }
+}
+
+/**
  * Devuelve información sobre el rango activo.  Incluye nombre de la hoja,
  * notación A1, número de filas y columnas y los encabezados detectados en
  * la primera fila del rango.  Se utiliza para pre‑poblar la UI.
