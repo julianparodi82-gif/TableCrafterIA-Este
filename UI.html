@@ -345,7 +345,7 @@
       }
       .ai-contact-item {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 10px;
         padding: 6px 8px;
         border-radius: 6px;
@@ -357,6 +357,26 @@
       }
       .ai-contact-checkbox {
         margin-top: 2px;
+      }
+      .ai-contact-remove {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #DC2626;
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+      .ai-contact-remove:hover {
+        background-color: rgba(220, 38, 38, 0.12);
+      }
+      .ai-contact-remove:focus-visible {
+        outline: 2px solid rgba(220, 38, 38, 0.4);
+        outline-offset: 2px;
       }
       .ai-contact-details {
         display: flex;
@@ -3555,8 +3575,19 @@
           valueEl.className = 'ai-contact-value';
           valueEl.textContent = email;
           details.appendChild(valueEl);
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'ai-contact-remove';
+          removeBtn.setAttribute('aria-label', 'Eliminar correo ' + email);
+          removeBtn.textContent = '×';
+          removeBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            removeReportEmail(email);
+          });
           item.appendChild(checkbox);
           item.appendChild(details);
+          item.appendChild(removeBtn);
           list.appendChild(item);
         });
       }
@@ -3623,10 +3654,69 @@
           valueEl.className = 'ai-contact-value';
           valueEl.textContent = trimmedNumber;
           details.appendChild(valueEl);
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'ai-contact-remove';
+          removeBtn.setAttribute('aria-label', 'Eliminar número ' + trimmedNumber);
+          removeBtn.textContent = '×';
+          removeBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            removeReportPhone(trimmedNumber);
+          });
           item.appendChild(checkbox);
           item.appendChild(details);
+          item.appendChild(removeBtn);
           list.appendChild(item);
         });
+      }
+
+      function removeReportEmail(value) {
+        const email = (value || '').trim();
+        if (!email) {
+          return;
+        }
+        const previouslySelected = getCheckedValuesFromList('aiReportEmailList').filter(function(entry) {
+          return entry !== email;
+        });
+        const nextEmails = savedReportEmails.filter(function(entry) {
+          return entry && entry !== email;
+        });
+        if (nextEmails.length === savedReportEmails.length) {
+          return;
+        }
+        savedReportEmails = nextEmails;
+        persistReportContactList('emails', savedReportEmails);
+        renderReportEmailList(previouslySelected);
+        setReportHelperMessage('aiReportEmailMessage', 'Correo eliminado correctamente.', 'success');
+      }
+
+      function removeReportPhone(value) {
+        const phone = (value || '').trim();
+        if (!phone) {
+          return;
+        }
+        const previouslySelected = getCheckedValuesFromList('aiReportPhoneList').filter(function(entry) {
+          return entry !== phone;
+        });
+        const nextPhones = savedReportPhones.filter(function(entry) {
+          if (!entry) {
+            return false;
+          }
+          const entryNumber = typeof entry.number === 'string'
+            ? entry.number.trim()
+            : typeof entry.phone === 'string'
+            ? entry.phone.trim()
+            : '';
+          return entryNumber && entryNumber !== phone;
+        });
+        if (nextPhones.length === savedReportPhones.length) {
+          return;
+        }
+        savedReportPhones = nextPhones;
+        persistReportContactList('phones', savedReportPhones);
+        renderReportPhoneList(previouslySelected);
+        setReportHelperMessage('aiReportPhoneMessage', 'Número eliminado correctamente.', 'success');
       }
 
       function setReportHelperMessage(id, message, variant) {
