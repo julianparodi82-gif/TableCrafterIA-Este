@@ -133,7 +133,22 @@ var META_INDEX = {
 var REPORT_FEATURE_MAX_QUANTITY = 3;
 var REPORT_FEATURES_WITHOUT_QUANTITY = {
   summary: true,
-  comments: true
+  comments: true,
+  metrics: true
+};
+var REPORT_FEATURE_FIXED_QUANTITY = {
+  summary: 1,
+  comments: 1,
+  metrics: 3
+};
+var REPORT_CHART_TYPE_DEFAULT = 'auto';
+var REPORT_CHART_TYPE_ALLOWED = {
+  auto: true,
+  line: true,
+  bar: true,
+  column: true,
+  pie: true,
+  area: true
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
@@ -833,10 +848,12 @@ function buildReportFavoriteResponse(entry) {
         instanceDescriptions[index] = entry !== null && entry !== undefined ? String(entry) : '';
       });
     }
+    var instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
-      instanceDescriptions: instanceDescriptions
+      instanceDescriptions: instanceDescriptions,
+      instanceChartTypes: instanceChartTypes
     });
     detailMap[featureId] = true;
   });
@@ -847,8 +864,9 @@ function buildReportFavoriteResponse(entry) {
     }
     normalizedDetails.push({
       feature: featureId,
-      quantity: 1,
-      instanceDescriptions: ['', '', '']
+      quantity: getReportFeatureDefaultQuantity(featureId),
+      instanceDescriptions: ['', '', ''],
+      instanceChartTypes: normalizeFeatureChartTypeArray([])
     });
     detailMap[featureId] = true;
   });
@@ -1926,6 +1944,31 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
   SpreadsheetApp.flush();
 }
 
+function getReportFeatureFixedQuantity(featureId) {
+  if (!featureId) {
+    return 0;
+  }
+  var fixed = REPORT_FEATURE_FIXED_QUANTITY[featureId];
+  if (!fixed) {
+    return 0;
+  }
+  if (fixed < 1) {
+    return 1;
+  }
+  if (fixed > REPORT_FEATURE_MAX_QUANTITY) {
+    return REPORT_FEATURE_MAX_QUANTITY;
+  }
+  return fixed;
+}
+
+function getReportFeatureDefaultQuantity(featureId) {
+  var fixed = getReportFeatureFixedQuantity(featureId);
+  if (fixed > 0) {
+    return fixed;
+  }
+  return 1;
+}
+
 function reportFeatureAllowsQuantity(featureId) {
   if (!featureId) {
     return true;
@@ -1935,7 +1978,7 @@ function reportFeatureAllowsQuantity(featureId) {
 
 function clampReportFeatureQuantityValue(featureId, value) {
   if (!reportFeatureAllowsQuantity(featureId)) {
-    return 1;
+    return getReportFeatureDefaultQuantity(featureId);
   }
   var parsed = parseInt(value, 10);
   if (isNaN(parsed) || parsed < 1) {
@@ -1945,6 +1988,34 @@ function clampReportFeatureQuantityValue(featureId, value) {
     return REPORT_FEATURE_MAX_QUANTITY;
   }
   return parsed;
+}
+
+function normalizeChartTypeValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_CHART_TYPE_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_CHART_TYPE_DEFAULT;
+  }
+  if (REPORT_CHART_TYPE_ALLOWED[text]) {
+    return text;
+  }
+  return REPORT_CHART_TYPE_DEFAULT;
+}
+
+function normalizeFeatureChartTypeArray(source) {
+  var base = [
+    REPORT_CHART_TYPE_DEFAULT,
+    REPORT_CHART_TYPE_DEFAULT,
+    REPORT_CHART_TYPE_DEFAULT
+  ];
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = normalizeChartTypeValue(entry);
+    });
+  }
+  return base;
 }
 
 function saveReportFavorite(payload) {
@@ -2019,6 +2090,8 @@ function saveReportFavorite(payload) {
     rawInstances.slice(0, 3).forEach(function(value, index) {
       normalizedInstances[index] = value !== null && value !== undefined ? String(value).trim() : '';
     });
+    var rawChartTypes = Array.isArray(entry.instanceChartTypes) ? entry.instanceChartTypes : [];
+    var normalizedChartTypes = normalizeFeatureChartTypeArray(rawChartTypes);
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
@@ -2030,7 +2103,8 @@ function saveReportFavorite(payload) {
     normalizedFeatureDetails.push({
       feature: featureId,
       quantity: quantityValue,
-      instanceDescriptions: normalizedInstances
+      instanceDescriptions: normalizedInstances,
+      instanceChartTypes: normalizedChartTypes
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2041,6 +2115,13 @@ function saveReportFavorite(payload) {
       if (missingFeatureDescriptions.indexOf(message) === -1) {
         missingFeatureDescriptions.push(message);
       }
+      normalizedFeatureDetails.push({
+        feature: featureId,
+        quantity: getReportFeatureDefaultQuantity(featureId),
+        instanceDescriptions: ['', '', ''],
+        instanceChartTypes: normalizeFeatureChartTypeArray([])
+      });
+      seenFeatureDetails[featureId] = true;
     }
   });
   var channels = Array.isArray(payload.channels) ? payload.channels : [];

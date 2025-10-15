@@ -627,6 +627,29 @@
         border: 1px solid #D1D5DB;
         padding: 6px 8px;
       }
+      .ai-feature-chart-select {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 6px;
+      }
+      .ai-feature-chart-select label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #6B7280;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-feature-chart-select select {
+        width: 100%;
+        min-height: 28px;
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        font-size: 11px;
+        padding: 4px 8px;
+        color: #374151;
+      }
       .ai-actions-header {
         display: flex;
         align-items: center;
@@ -1673,6 +1696,21 @@
                           data-feature-instance="chart"
                           data-instance-index="0"
                         >
+                          <div class="ai-feature-chart-select">
+                            <label for="aiFeatureChartType-chart-1">Tipo de gráfico</label>
+                            <select
+                              id="aiFeatureChartType-chart-1"
+                              data-feature-instance-type="chart"
+                              data-instance-index="0"
+                            >
+                              <option value="auto">Selección inteligente de la IA</option>
+                              <option value="line">Líneas de tendencia</option>
+                              <option value="bar">Barras comparativas</option>
+                              <option value="column">Columnas destacadas</option>
+                              <option value="pie">Distribución circular</option>
+                              <option value="area">Áreas apiladas</option>
+                            </select>
+                          </div>
                           <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-chart-1"
@@ -1686,6 +1724,21 @@
                           data-feature-instance="chart"
                           data-instance-index="1"
                         >
+                          <div class="ai-feature-chart-select">
+                            <label for="aiFeatureChartType-chart-2">Tipo de gráfico</label>
+                            <select
+                              id="aiFeatureChartType-chart-2"
+                              data-feature-instance-type="chart"
+                              data-instance-index="1"
+                            >
+                              <option value="auto">Selección inteligente de la IA</option>
+                              <option value="line">Líneas de tendencia</option>
+                              <option value="bar">Barras comparativas</option>
+                              <option value="column">Columnas destacadas</option>
+                              <option value="pie">Distribución circular</option>
+                              <option value="area">Áreas apiladas</option>
+                            </select>
+                          </div>
                           <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-chart-2"
@@ -1699,6 +1752,21 @@
                           data-feature-instance="chart"
                           data-instance-index="2"
                         >
+                          <div class="ai-feature-chart-select">
+                            <label for="aiFeatureChartType-chart-3">Tipo de gráfico</label>
+                            <select
+                              id="aiFeatureChartType-chart-3"
+                              data-feature-instance-type="chart"
+                              data-instance-index="2"
+                            >
+                              <option value="auto">Selección inteligente de la IA</option>
+                              <option value="line">Líneas de tendencia</option>
+                              <option value="bar">Barras comparativas</option>
+                              <option value="column">Columnas destacadas</option>
+                              <option value="pie">Distribución circular</option>
+                              <option value="area">Áreas apiladas</option>
+                            </select>
+                          </div>
                           <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-chart-3"
@@ -1917,17 +1985,6 @@
                         <span class="ai-feature-chip-label">Datos destacados</span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
-                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="metrics">
-                        <label for="aiFeatureQuantity-metrics">Cantidad</label>
-                        <input
-                          type="number"
-                          id="aiFeatureQuantity-metrics"
-                          data-feature-quantity-input="metrics"
-                          min="1"
-                          max="3"
-                          value="1"
-                        />
-                      </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="metrics">
@@ -2240,8 +2297,27 @@
       });
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
         summary: true,
-        comments: true
+        comments: true,
+        metrics: true
       });
+      const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
+        summary: 1,
+        comments: 1,
+        metrics: 3
+      });
+      const REPORT_CHART_TYPE_DEFAULT = 'auto';
+      const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
+        { value: 'auto', label: 'Selección inteligente de la IA' },
+        { value: 'line', label: 'Líneas de tendencia' },
+        { value: 'bar', label: 'Barras comparativas' },
+        { value: 'column', label: 'Columnas destacadas' },
+        { value: 'pie', label: 'Distribución circular' },
+        { value: 'area', label: 'Áreas apiladas' }
+      ]);
+      const REPORT_CHART_TYPE_SET = REPORT_CHART_TYPE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -5207,6 +5283,31 @@
         summary.classList.remove('ai-hidden');
       }
 
+      function getReportFeatureFixedQuantity(feature) {
+        if (!feature) {
+          return 0;
+        }
+        const fixed = REPORT_FEATURE_FIXED_QUANTITY[feature];
+        if (!fixed) {
+          return 0;
+        }
+        if (fixed < 1) {
+          return 1;
+        }
+        if (fixed > REPORT_FEATURE_MAX_QUANTITY) {
+          return REPORT_FEATURE_MAX_QUANTITY;
+        }
+        return fixed;
+      }
+
+      function getReportFeatureDefaultQuantity(feature) {
+        const fixed = getReportFeatureFixedQuantity(feature);
+        if (fixed > 0) {
+          return fixed;
+        }
+        return 1;
+      }
+
       function reportFeatureAllowsQuantity(feature) {
         if (!feature) {
           return true;
@@ -5216,7 +5317,7 @@
 
       function clampReportFeatureQuantity(value, feature) {
         if (!reportFeatureAllowsQuantity(feature)) {
-          return 1;
+          return getReportFeatureDefaultQuantity(feature);
         }
         const parsed = parseInt(value, 10);
         if (isNaN(parsed) || parsed < 1) {
@@ -5232,11 +5333,39 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
       }
 
+      function createEmptyFeatureChartTypeArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_CHART_TYPE_DEFAULT);
+      }
+
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
         if (Array.isArray(source)) {
           source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
             base[index] = entry === null || entry === undefined ? '' : String(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeChartTypeValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_CHART_TYPE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_CHART_TYPE_DEFAULT;
+        }
+        if (REPORT_CHART_TYPE_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_CHART_TYPE_DEFAULT;
+      }
+
+      function normalizeFeatureChartTypeArray(source) {
+        const base = createEmptyFeatureChartTypeArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = normalizeChartTypeValue(entry);
           });
         }
         return base;
@@ -5250,11 +5379,23 @@
         if (!reportFeatureState[key]) {
           reportFeatureState[key] = {
             selected: false,
-            quantity: 1,
-            instanceDescriptions: createEmptyFeatureInstanceArray()
+            quantity: getReportFeatureDefaultQuantity(key),
+            instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceChartTypes: createEmptyFeatureChartTypeArray()
           };
+          return reportFeatureState[key];
         }
-        return reportFeatureState[key];
+        const state = reportFeatureState[key];
+        if (typeof state.quantity !== 'number') {
+          state.quantity = getReportFeatureDefaultQuantity(key);
+        }
+        if (!Array.isArray(state.instanceDescriptions)) {
+          state.instanceDescriptions = createEmptyFeatureInstanceArray();
+        }
+        if (!Array.isArray(state.instanceChartTypes)) {
+          state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+        }
+        return state;
       }
 
       function applyReportFeatureTooltips() {
@@ -5383,7 +5524,7 @@
         if (quantityWrapper) {
           const allowsQuantity = reportFeatureAllowsQuantity(feature);
           if (!allowsQuantity) {
-            state.quantity = 1;
+            state.quantity = getReportFeatureDefaultQuantity(feature);
           }
           const shouldShowQuantity = allowsQuantity && !!state.selected;
           const quantityInput = quantityWrapper.querySelector(
@@ -5402,6 +5543,8 @@
           const shouldShowInstances = !!state.selected;
           const normalizedDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceDescriptions = normalizedDescriptions.slice();
+          const normalizedChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+          state.instanceChartTypes = normalizedChartTypes.slice();
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -5416,6 +5559,9 @@
             const textarea = item.querySelector(
               '[data-feature-instance-input="' + feature + '"]'
             );
+            const typeSelect = item.querySelector(
+              '[data-feature-instance-type="' + feature + '"]'
+            );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
             if (textarea) {
@@ -5426,6 +5572,11 @@
               } else {
                 textarea.value = normalizedDescriptions[index] || '';
               }
+            }
+            if (typeSelect) {
+              const chartValue = normalizedChartTypes[index] || REPORT_CHART_TYPE_DEFAULT;
+              typeSelect.value = chartValue;
+              typeSelect.disabled = !withinRange;
             }
           });
         }
@@ -5449,9 +5600,11 @@
         if (isChecked) {
           state.quantity = clampReportFeatureQuantity(state.quantity, feature);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+          state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
         } else {
-          state.quantity = 1;
+          state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
+          state.instanceChartTypes = createEmptyFeatureChartTypeArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -5468,6 +5621,7 @@
         const quantity = clampReportFeatureQuantity(value, feature);
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
         refreshReportFeatureOption(feature);
       }
 
@@ -5481,6 +5635,21 @@
         const descriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         descriptions[safeIndex] = value === null || value === undefined ? '' : String(value);
         state.instanceDescriptions = descriptions;
+      }
+
+      function handleReportFeatureInstanceTypeChange(feature, index, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const chartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+        chartTypes[safeIndex] = normalizeChartTypeValue(value);
+        state.instanceChartTypes = chartTypes;
       }
 
       function initializeReportFeatureControls() {
@@ -5518,6 +5687,17 @@
               handleReportFeatureInstanceInput(feature, index, field.value);
             });
             field.dataset.bound = 'true';
+          });
+          const typeSelectors = option.querySelectorAll('[data-feature-instance-type="' + feature + '"]');
+          typeSelectors.forEach(function(selector) {
+            if (!selector || selector.dataset.bound) {
+              return;
+            }
+            selector.addEventListener('change', function() {
+              const index = parseInt(selector.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTypeChange(feature, index, selector.value);
+            });
+            selector.dataset.bound = 'true';
           });
           refreshReportFeatureOption(feature);
         });
@@ -5560,9 +5740,11 @@
             }
             const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            const instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
             detailMap[featureId] = {
               quantity: quantityValue,
-              instanceDescriptions: instanceDescriptions
+              instanceDescriptions: instanceDescriptions,
+              instanceChartTypes: instanceChartTypes
             };
           });
         }
@@ -5572,13 +5754,19 @@
           state.selected = isSelected;
           if (isSelected) {
             const detail = detailMap[feature];
-            state.quantity = detail ? clampReportFeatureQuantity(detail.quantity, feature) : 1;
+            state.quantity = detail
+              ? clampReportFeatureQuantity(detail.quantity, feature)
+              : getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = detail
               ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
               : createEmptyFeatureInstanceArray();
+            state.instanceChartTypes = detail
+              ? normalizeFeatureChartTypeArray(detail.instanceChartTypes)
+              : createEmptyFeatureChartTypeArray();
           } else {
-            state.quantity = 1;
+            state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
+            state.instanceChartTypes = createEmptyFeatureChartTypeArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -6096,6 +6284,7 @@
           const label = REPORT_FEATURE_LABELS[feature] || feature;
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
+          const baseChartTypes = normalizeFeatureChartTypeArray(state ? state.instanceChartTypes : []);
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
@@ -6107,10 +6296,12 @@
           if (state) {
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
+            state.instanceChartTypes = baseChartTypes.slice();
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
-            instanceDescriptions: trimmedDescriptions.slice()
+            instanceDescriptions: trimmedDescriptions.slice(),
+            instanceChartTypes: baseChartTypes.slice()
           };
         });
 
@@ -6192,13 +6383,15 @@
           descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
         const featureDetails = selectedFeatures.map(function(feature) {
           const detail = featureDetailMap[feature] || {
-            quantity: 1,
-            instanceDescriptions: createEmptyFeatureInstanceArray()
+            quantity: getReportFeatureDefaultQuantity(feature),
+            instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceChartTypes: createEmptyFeatureChartTypeArray()
           };
           return {
             feature: feature,
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
-            instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions)
+            instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
+            instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes)
           };
         });
         const payload = {
