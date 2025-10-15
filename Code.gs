@@ -109,7 +109,9 @@ var META_HEADERS = [
   'updatedAt',
   'style',
   'headers',
-  'formulaRefs'
+  'formulaRefs',
+  'type',
+  'reportConfig'
 ];
 var META_INDEX = {
   id: 0,
@@ -123,7 +125,9 @@ var META_INDEX = {
   updatedAt: 8,
   style: 9,
   headers: 10,
-  formulaRefs: 11
+  formulaRefs: 11,
+  recordType: 12,
+  reportConfig: 13
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
@@ -133,6 +137,23 @@ function normalizeMetaId(value) {
     return '';
   }
   return String(value).trim();
+}
+
+function normalizeMetaRecordType(value) {
+  if (value === null || value === undefined) {
+    return 'table';
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return 'table';
+  }
+  if (text === 'reportfavorite' || text === 'report_favorite' || text === 'report-favorite') {
+    return 'reportFavorite';
+  }
+  if (text === 'table') {
+    return 'table';
+  }
+  return 'table';
 }
 
 function parseBooleanValue(value, defaultValue) {
@@ -687,6 +708,9 @@ function listSavedTables() {
     var row = data[i];
     var entryId = normalizeMetaId(row[META_INDEX.id]);
     if (entryId) {
+      if (normalizeMetaRecordType(row[META_INDEX.recordType]) !== 'table') {
+        continue;
+      }
       var style = parseJsonValue(row[META_INDEX.style], null);
       var headers = normalizeHeaderArray(parseJsonValue(row[META_INDEX.headers], null));
       var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
@@ -720,6 +744,9 @@ function focusSavedTableRange(tableId) {
   }
   var entry = findMetaById(id);
   if (!entry) {
+    return { error: 'Tabla no encontrada.' };
+  }
+  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
     return { error: 'Tabla no encontrada.' };
   }
   var rowData = entry.data || [];
@@ -770,6 +797,9 @@ function clearTable(tableId) {
   if (!entry) {
     return { error: 'Tabla no encontrada' };
   }
+  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
+    return { error: 'Tabla no encontrada' };
+  }
   var row = entry.row;
   var data = entry.data;
   var rangeParts = splitRangeNotation(data[META_INDEX.rangeA1]);
@@ -814,6 +844,9 @@ function deleteSavedTable(tableId) {
       removed: true,
       message: 'Se ha retirado de la lista.'
     };
+  }
+  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
+    return { error: 'Tabla no encontrada.' };
   }
 
   var data = entry.data;
@@ -1619,6 +1652,9 @@ function findMetaByName(name, options) {
     if (!entryId) {
       continue;
     }
+    if (normalizeMetaRecordType(row[META_INDEX.recordType]) !== 'table') {
+      continue;
+    }
     if (ignoreId && entryId === ignoreId) {
       continue;
     }
@@ -1660,6 +1696,7 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
     // Actualizar
     var row = meta.row;
     var createdAt = meta.data[META_INDEX.createdAt] || now;
+    var storedConfig = meta.data.length > META_INDEX.reportConfig ? meta.data[META_INDEX.reportConfig] : '';
     sheet
       .getRange(row, 1, 1, META_HEADERS.length)
       .setValues([
@@ -1675,7 +1712,9 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
           now,
           styleValue,
           headersValue,
-          formulaPreferenceValue
+          formulaPreferenceValue,
+          'table',
+          storedConfig
         ]
       ]);
   } else {
@@ -1692,12 +1731,120 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
       now,
       styleValue,
       headersValue,
-      formulaPreferenceValue
+      formulaPreferenceValue,
+      'table',
+      ''
     ]);
   }
 
   syncNamedRangeForTable(normalizedId, sheetName, storedRange || normalizedRangeOnly);
   SpreadsheetApp.flush();
+}
+
+function saveReportFavorite(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('No se recibieron datos del reporte.');
+  }
+  var name = payload.name ? String(payload.name).trim() : '';
+  if (!name) {
+    throw new Error('Debe indicar un nombre para el reporte favorito.');
+  }
+  var format = normalizeMetaId(payload.format);
+  if (!format) {
+    throw new Error('Debe seleccionar un formato para el reporte favorito.');
+  }
+  var features = Array.isArray(payload.features) ? payload.features : [];
+  var seenFeatures = {};
+  var normalizedFeatures = [];
+  features.forEach(function(value) {
+    var normalized = normalizeMetaId(value);
+    if (normalized && !seenFeatures[normalized]) {
+      seenFeatures[normalized] = true;
+      normalizedFeatures.push(normalized);
+    }
+  });
+  if (normalizedFeatures.length === 0) {
+    throw new Error('Debe seleccionar al menos una característica para el reporte.');
+  }
+  var tables = Array.isArray(payload.tables) ? payload.tables : [];
+  var seenTables = {};
+  var normalizedTables = [];
+  tables.forEach(function(value) {
+    var normalized = normalizeMetaId(value);
+    if (normalized && !seenTables[normalized]) {
+      seenTables[normalized] = true;
+      normalizedTables.push(normalized);
+    }
+  });
+  if (normalizedTables.length === 0) {
+    throw new Error('Debe asociar al menos una tabla al reporte favorito.');
+  }
+  var channels = Array.isArray(payload.channels) ? payload.channels : [];
+  var seenChannels = {};
+  var normalizedChannels = [];
+  channels.forEach(function(value) {
+    var normalized = normalizeMetaId(value);
+    if (normalized && !seenChannels[normalized]) {
+      seenChannels[normalized] = true;
+      normalizedChannels.push(normalized);
+    }
+  });
+  var emails = Array.isArray(payload.emails) ? payload.emails : [];
+  var seenEmails = {};
+  var normalizedEmails = [];
+  emails.forEach(function(value) {
+    var text = value === null || value === undefined ? '' : String(value).trim();
+    if (text && !seenEmails[text]) {
+      seenEmails[text] = true;
+      normalizedEmails.push(text);
+    }
+  });
+  var phones = Array.isArray(payload.phones) ? payload.phones : [];
+  var seenPhones = {};
+  var normalizedPhones = [];
+  phones.forEach(function(value) {
+    var text = value === null || value === undefined ? '' : String(value).trim();
+    if (text && !seenPhones[text]) {
+      seenPhones[text] = true;
+      normalizedPhones.push(text);
+    }
+  });
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var config = {
+    format: format,
+    fileName: payload.fileName ? String(payload.fileName).trim() : '',
+    fileExtension: payload.fileExtension ? String(payload.fileExtension).trim() : '',
+    tables: normalizedTables,
+    channels: normalizedChannels,
+    descriptionEnabled: !!payload.descriptionEnabled,
+    description: payload.description ? String(payload.description) : '',
+    features: normalizedFeatures,
+    featureDescriptionsEnabled: !!payload.featureDescriptionsEnabled,
+    featureDescriptions: payload.featureDescriptions ? String(payload.featureDescriptions) : '',
+    emails: normalizedEmails,
+    phones: normalizedPhones,
+    savedAt: now
+  };
+  var favoriteId = 'reportFavorite:' + Utilities.getUuid();
+  var sheet = getMetaSheet();
+  sheet.appendRow([
+    favoriteId,
+    name,
+    '',
+    config.descriptionEnabled ? config.description : '',
+    '',
+    '',
+    '',
+    now,
+    now,
+    '',
+    '',
+    '',
+    'reportFavorite',
+    stringifyJsonValue(config)
+  ]);
+  SpreadsheetApp.flush();
+  return { ok: true, id: favoriteId };
 }
 
 /**
@@ -1903,6 +2050,9 @@ function getTableMeta(tableId) {
   SpreadsheetApp.flush();
   var meta = findMetaById(tableId);
   if (!meta) return null;
+  if (normalizeMetaRecordType(meta.data[META_INDEX.recordType]) !== 'table') {
+    return null;
+  }
   var d = meta.data;
   var style = parseJsonValue(d[META_INDEX.style], null);
   var headers = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
@@ -1937,6 +2087,9 @@ function getTableMeta(tableId) {
 function getTableHeaders(tableId) {
   var meta = findMetaById(tableId);
   if (!meta) return { error: 'Tabla no encontrada' };
+  if (normalizeMetaRecordType(meta.data[META_INDEX.recordType]) !== 'table') {
+    return { error: 'Tabla no encontrada' };
+  }
   var d = meta.data;
   var storedHeaders = normalizeHeaderArray(parseJsonValue(d[META_INDEX.headers], null));
   if (storedHeaders && storedHeaders.length) {

@@ -294,28 +294,41 @@
       .ai-collapse-toggle {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 4px 8px;
-        border-radius: 4px;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 50%;
         border: none;
         background-color: transparent;
-        color: #2563EB;
+        color: #111827;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .ai-collapse-toggle:hover {
-        background-color: rgba(37, 99, 235, 0.12);
+        background-color: rgba(17, 24, 39, 0.08);
+        box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
       }
       .ai-collapse-toggle:focus-visible {
         outline: 2px solid #93C5FD;
         outline-offset: 2px;
       }
       .ai-collapse-toggle-icon {
-        font-size: 12px;
+        font-size: 18px;
+        line-height: 1;
       }
       .ai-collapse-toggle-text {
-        line-height: 1;
+        display: inline-block;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       .ai-collapsible-header .ai-action-title,
       .ai-collapsible-header .ai-delivery-title {
@@ -337,6 +350,117 @@
         margin-bottom: 16px;
         min-height: 68px;
         resize: vertical;
+      }
+      .ai-report-filename-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .ai-report-filename-input {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ai-report-filename-input input[type="text"] {
+        flex: 1 1 auto;
+      }
+      .ai-report-file-extension {
+        min-width: 64px;
+        text-align: center;
+        font-weight: 600;
+        color: #1F2937;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #D1D5DB;
+        background-color: #F9FAFB;
+      }
+      .ai-report-file-extension[data-empty='true'] {
+        color: #6B7280;
+      }
+      .ai-report-features {
+        margin-top: 12px;
+      }
+      .ai-feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 8px;
+      }
+      .ai-feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #E5E7EB;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        font-size: 14px;
+        color: #1F2937;
+      }
+      .ai-feature-item input {
+        margin-top: 2px;
+      }
+      .ai-feature-descriptions-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #374151;
+      }
+      .ai-feature-descriptions-toggle input {
+        margin: 0;
+      }
+      .ai-feature-descriptions-field {
+        min-height: 64px;
+        resize: vertical;
+        margin-top: 4px;
+      }
+      .ai-report-favorite-row {
+        margin-top: 16px;
+        display: flex;
+        justify-content: flex-end;
+      }
+      .ai-report-favorite-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .ai-report-favorite-btn:hover {
+        background-color: #F3F4F6;
+        border-color: #9CA3AF;
+      }
+      .ai-report-favorite-btn .ai-favorite-icon {
+        color: #F59E0B;
+        font-size: 16px;
+        line-height: 1;
+      }
+      .ai-report-favorite-panel {
+        margin-top: 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        padding: 12px;
+        background-color: #F9FAFB;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-report-favorite-panel label {
+        font-weight: 600;
+      }
+      .ai-report-favorite-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
       }
       .ai-hidden {
         display: none !important;
@@ -1119,6 +1243,13 @@
             <label class="ai-report-description-toggle">
               <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
             </label>
+            <div class="ai-report-filename-group">
+              <label for="aiReportFileName">Nombre del archivo</label>
+              <div class="ai-report-filename-input">
+                <input type="text" id="aiReportFileName" placeholder="Ej. Reporte trimestral" />
+                <span id="aiReportFileExtension" class="ai-report-file-extension" data-empty="true">.???</span>
+              </div>
+            </div>
             <textarea
               id="aiReportDescription"
               class="ai-report-description-field ai-hidden"
@@ -1154,6 +1285,69 @@
                   <button type="button" class="ai-report-btn" data-format="excel">Excel</button>
                   <button type="button" class="ai-report-btn" data-format="sheets">Google Sheets</button>
                 </div>
+              </div>
+            </div>
+            <div
+              id="aiReportFeaturesWrapper"
+              class="ai-collapsible ai-report-features ai-hidden"
+              data-open="true"
+            >
+              <div class="ai-collapsible-header">
+                <div class="ai-collapsible-title">
+                  <h3 class="ai-action-title">Características del reporte</h3>
+                  <span id="aiReportFeaturesSummary" class="ai-collapsible-badge ai-hidden"></span>
+                </div>
+                <button
+                  type="button"
+                  class="ai-collapse-toggle"
+                  data-target="aiReportFeaturesWrapper"
+                  data-open-text="Replegar"
+                  data-closed-text="Desplegar"
+                  aria-expanded="true"
+                  aria-controls="aiReportFeaturesBody"
+                >
+                  <span class="ai-collapse-toggle-text">Replegar</span>
+                  <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                </button>
+              </div>
+              <div class="ai-collapsible-body" id="aiReportFeaturesBody">
+                <p class="ai-report-helper" style="margin-top:0;">
+                  Selecciona los componentes que debe incluir tu reporte final.
+                </p>
+                <div class="ai-feature-list">
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="chart" />
+                    <span>Gráfico</span>
+                  </label>
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="table" />
+                    <span>Tabla</span>
+                  </label>
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="list" />
+                    <span>Lista</span>
+                  </label>
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="summary" />
+                    <span>Resumen</span>
+                  </label>
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="comments" />
+                    <span>Comentarios</span>
+                  </label>
+                  <label class="ai-feature-item">
+                    <input type="checkbox" name="aiReportFeatures" value="metrics" />
+                    <span>Indicadores clave</span>
+                  </label>
+                </div>
+                <label class="ai-feature-descriptions-toggle">
+                  <input type="checkbox" id="aiReportFeatureDescriptionsToggle" /> Agregar descripción por característica
+                </label>
+                <textarea
+                  id="aiReportFeatureDescriptions"
+                  class="ai-feature-descriptions-field ai-hidden"
+                  placeholder="Detalla qué debe incluir cada característica seleccionada"
+                ></textarea>
               </div>
             </div>
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
@@ -1276,6 +1470,26 @@
                 </div>
               </div>
             </div>
+            <div class="ai-report-favorite-row">
+              <button
+                type="button"
+                id="aiReportFavoriteBtn"
+                class="ai-report-favorite-btn"
+                aria-expanded="false"
+                aria-controls="aiReportFavoritePanel"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                Agregar a favoritos
+              </button>
+            </div>
+            <div id="aiReportFavoritePanel" class="ai-report-favorite-panel ai-hidden">
+              <label for="aiReportFavoriteName">Nombre del reporte favorito</label>
+              <input type="text" id="aiReportFavoriteName" placeholder="Ej. Reporte mensual de ventas" />
+              <div class="ai-report-favorite-actions">
+                <button type="button" id="aiReportFavoriteCancelBtn" class="btn-secondary">Cancelar</button>
+                <button type="button" id="aiReportFavoriteSaveBtn" class="btn-primary">Guardar</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1333,12 +1547,33 @@
         excel: 'Excel',
         sheets: 'Google Sheets'
       });
+      const REPORT_FORMAT_EXTENSIONS = Object.freeze({
+        pdf: 'pdf',
+        excel: 'xlsx',
+        sheets: 'gsheet'
+      });
+      const REPORT_FEATURE_OPTIONS = Object.freeze([
+        { value: 'chart', label: 'Gráfico' },
+        { value: 'table', label: 'Tabla' },
+        { value: 'list', label: 'Lista' },
+        { value: 'summary', label: 'Resumen' },
+        { value: 'comments', label: 'Comentarios' },
+        { value: 'metrics', label: 'Indicadores clave' }
+      ]);
+      const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
 
       let savedReportEmails = [];
       let savedReportPhones = [];
       let selectedReportFormat = '';
       let reportSectionInitialized = false;
       let selectedReportChannels = [];
+      let selectedReportFeatures = [];
+      let reportFeatureDescriptionsEnabled = false;
+      let reportFavoritePanelVisible = false;
+      let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
 
       let headerKeyCounter = 0;
@@ -4129,6 +4364,7 @@
           iconSpan.textContent = isOpen ? '▴' : '▾';
         }
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        toggle.setAttribute('aria-label', isOpen ? openText : closedText);
       }
 
       function setCollapsibleOpen(element, open) {
@@ -4187,6 +4423,229 @@
         }
       }
 
+      function getCurrentReportExtension() {
+        if (!selectedReportFormat) {
+          return '';
+        }
+        const ext = REPORT_FORMAT_EXTENSIONS[selectedReportFormat];
+        if (ext) {
+          return ext;
+        }
+        return selectedReportFormat;
+      }
+
+      function updateReportFileExtension() {
+        const label = document.getElementById('aiReportFileExtension');
+        if (!label) {
+          return;
+        }
+        const ext = getCurrentReportExtension();
+        if (ext) {
+          label.textContent = '.' + ext;
+          label.dataset.empty = 'false';
+        } else {
+          label.textContent = '.???';
+          label.dataset.empty = 'true';
+        }
+      }
+
+      function updateReportFeaturesSummary() {
+        const summary = document.getElementById('aiReportFeaturesSummary');
+        if (!summary) {
+          return;
+        }
+        if (!selectedReportFeatures || selectedReportFeatures.length === 0) {
+          summary.textContent = '';
+          summary.classList.add('ai-hidden');
+          return;
+        }
+        const labels = selectedReportFeatures
+          .map(function(value) {
+            return REPORT_FEATURE_LABELS[value] || value;
+          })
+          .filter(function(label) {
+            return !!label;
+          });
+        if (labels.length === 0) {
+          summary.textContent = '';
+          summary.classList.add('ai-hidden');
+          return;
+        }
+        if (labels.length <= 3) {
+          summary.textContent = 'Incluye: ' + labels.join(', ');
+        } else {
+          summary.textContent =
+            'Incluye: ' + labels.slice(0, 2).join(', ') + ' +' + (labels.length - 2);
+        }
+        summary.classList.remove('ai-hidden');
+      }
+
+      function toggleFeatureDescriptionsField(visible) {
+        const field = document.getElementById('aiReportFeatureDescriptions');
+        if (!field) {
+          reportFeatureDescriptionsEnabled = false;
+          return;
+        }
+        reportFeatureDescriptionsEnabled = !!visible;
+        if (visible) {
+          field.classList.remove('ai-hidden');
+        } else {
+          field.classList.add('ai-hidden');
+          field.value = '';
+        }
+      }
+
+      function handleReportFeatureChange() {
+        const checkboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
+        const values = [];
+        checkboxes.forEach(function(cb) {
+          if (cb && cb.checked && cb.value) {
+            values.push(cb.value);
+          }
+        });
+        selectedReportFeatures = values;
+        updateReportFeaturesSummary();
+      }
+
+      function getSelectedAiTableIds() {
+        const select = document.getElementById('aiSavedTables');
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+      function setReportFavoritePanelVisible(visible) {
+        const panel = document.getElementById('aiReportFavoritePanel');
+        const trigger = document.getElementById('aiReportFavoriteBtn');
+        reportFavoritePanelVisible = !!visible;
+        if (panel) {
+          panel.classList.toggle('ai-hidden', !visible);
+        }
+        if (trigger) {
+          trigger.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        }
+        if (!visible) {
+          savingReportFavorite = false;
+          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+          if (saveBtn) {
+            saveBtn.disabled = false;
+          }
+        }
+      }
+
+      async function handleReportFavoriteSave() {
+        if (savingReportFavorite) {
+          return;
+        }
+        const nameInput = document.getElementById('aiReportFavoriteName');
+        const favoriteName = nameInput ? nameInput.value.trim() : '';
+        if (!favoriteName) {
+          await showMessageModal('Ingresa un nombre para el reporte favorito.', {
+            title: 'Nombre requerido',
+            variant: 'warning'
+          });
+          return;
+        }
+        if (!selectedReportFormat) {
+          await showMessageModal('Selecciona un formato antes de guardar como favorito.', {
+            title: 'Formato requerido',
+            variant: 'warning'
+          });
+          return;
+        }
+        if (!selectedReportFeatures || selectedReportFeatures.length === 0) {
+          await showMessageModal('Elige al menos una característica para el reporte.', {
+            title: 'Características requeridas',
+            variant: 'warning'
+          });
+          return;
+        }
+        const selectedTables = getSelectedAiTableIds();
+        if (!selectedTables || selectedTables.length === 0) {
+          await showMessageModal('Selecciona al menos una tabla para asociar el reporte.', {
+            title: 'Tablas requeridas',
+            variant: 'warning'
+          });
+          return;
+        }
+        const descriptionToggle = document.getElementById('aiReportDescriptionToggle');
+        const descriptionField = document.getElementById('aiReportDescription');
+        const descriptionEnabled = descriptionToggle ? !!descriptionToggle.checked : false;
+        const descriptionText =
+          descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
+        const featureDescriptionField = document.getElementById('aiReportFeatureDescriptions');
+        const featureDescriptionsText =
+          reportFeatureDescriptionsEnabled && featureDescriptionField
+            ? featureDescriptionField.value || ''
+            : '';
+        const fileNameInput = document.getElementById('aiReportFileName');
+        const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
+        const payload = {
+          name: favoriteName,
+          format: selectedReportFormat,
+          fileName: fileNameValue,
+          fileExtension: getCurrentReportExtension(),
+          tables: selectedTables,
+          channels: Array.isArray(selectedReportChannels)
+            ? selectedReportChannels.slice()
+            : [],
+          descriptionEnabled: descriptionEnabled,
+          description: descriptionText,
+          features: Array.isArray(selectedReportFeatures)
+            ? selectedReportFeatures.slice()
+            : [],
+          featureDescriptionsEnabled: !!reportFeatureDescriptionsEnabled,
+          featureDescriptions: featureDescriptionsText,
+          emails: sanitizeContactSelection(
+            getCheckedValuesFromList('aiReportEmailList'),
+            REPORT_ALL_EMAILS_VALUE
+          ),
+          phones: sanitizeContactSelection(
+            getCheckedValuesFromList('aiReportPhoneList'),
+            REPORT_ALL_PHONES_VALUE
+          )
+        };
+        const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        try {
+          savingReportFavorite = true;
+          if (saveBtn) {
+            saveBtn.disabled = true;
+          }
+          const result = await callServerFunction('saveReportFavorite', payload);
+          if (result && result.error) {
+            throw new Error(result.error);
+          }
+          await showMessageModal('Reporte guardado en favoritos.', {
+            title: 'Favorito guardado',
+            variant: 'success'
+          });
+          if (nameInput) {
+            nameInput.value = '';
+          }
+          setReportFavoritePanelVisible(false);
+        } catch (err) {
+          await showMessageModal(
+            'No se pudo guardar el reporte favorito: ' + (err && err.message ? err.message : err),
+            {
+              title: 'No se pudo guardar',
+              variant: 'error'
+            }
+          );
+        } finally {
+          savingReportFavorite = false;
+          if (saveBtn) {
+            saveBtn.disabled = false;
+          }
+        }
+      }
+
       function updateSelectedReportChannels() {
         const checkboxes = getReportDeliveryCheckboxes();
         selectedReportChannels = checkboxes
@@ -4214,6 +4673,17 @@
           }
         });
         updateReportFormatSummary();
+        updateReportFileExtension();
+        const featuresWrapper = document.getElementById('aiReportFeaturesWrapper');
+        if (featuresWrapper) {
+          if (selectedReportFormat) {
+            featuresWrapper.classList.remove('ai-hidden');
+            setCollapsibleOpen(featuresWrapper, true);
+          } else {
+            featuresWrapper.classList.add('ai-hidden');
+          }
+        }
+        updateReportFeaturesSummary();
         const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
         if (formatsWrapper) {
           if (selectedReportFormat) {
@@ -4276,6 +4746,7 @@
       function resetReportSection() {
         selectedReportFormat = '';
         updateReportFormatSummary();
+        updateReportFileExtension();
         const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
         if (formatsWrapper) {
           setCollapsibleOpen(formatsWrapper, true);
@@ -4283,11 +4754,31 @@
         document.querySelectorAll('#aiReportSection .ai-report-btn').forEach(function(btn) {
           btn.classList.remove('selected');
         });
+        selectedReportFeatures = [];
+        const featureCheckboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
+        featureCheckboxes.forEach(function(cb) {
+          cb.checked = false;
+        });
+        const featuresWrapper = document.getElementById('aiReportFeaturesWrapper');
+        if (featuresWrapper) {
+          featuresWrapper.classList.add('ai-hidden');
+          setCollapsibleOpen(featuresWrapper, true);
+        }
+        updateReportFeaturesSummary();
+        const featureDescToggle = document.getElementById('aiReportFeatureDescriptionsToggle');
+        if (featureDescToggle) {
+          featureDescToggle.checked = false;
+        }
+        toggleFeatureDescriptionsField(false);
         const descToggle = document.getElementById('aiReportDescriptionToggle');
         if (descToggle) {
           descToggle.checked = false;
         }
         toggleReportDescriptionField(false);
+        const fileNameInput = document.getElementById('aiReportFileName');
+        if (fileNameInput) {
+          fileNameInput.value = '';
+        }
         const deliverySection = document.getElementById('aiReportDeliverySection');
         if (deliverySection) {
           deliverySection.classList.add('ai-hidden');
@@ -4323,6 +4814,16 @@
         renderReportPhoneList([]);
         setReportHelperMessage('aiReportEmailMessage', '');
         setReportHelperMessage('aiReportPhoneMessage', '');
+        const favoriteNameInput = document.getElementById('aiReportFavoriteName');
+        if (favoriteNameInput) {
+          favoriteNameInput.value = '';
+        }
+        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (favoriteSaveBtn) {
+          favoriteSaveBtn.disabled = false;
+        }
+        savingReportFavorite = false;
+        setReportFavoritePanelVisible(false);
       }
 
       function saveReportEmail() {
@@ -4455,6 +4956,8 @@
         renderReportPhoneList([]);
         setupCollapsibleControls(document.getElementById('aiReportSection'));
         updateReportFormatSummary();
+        updateReportFileExtension();
+        updateReportFeaturesSummary();
         const formatButtons = document.querySelectorAll('#aiReportSection .ai-report-btn');
         formatButtons.forEach(function(btn) {
           btn.addEventListener('click', function() {
@@ -4470,6 +4973,18 @@
             toggleReportDescriptionField(descToggle.checked);
           });
           toggleReportDescriptionField(descToggle.checked);
+        }
+        const featureCheckboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
+        featureCheckboxes.forEach(function(cb) {
+          cb.addEventListener('change', handleReportFeatureChange);
+        });
+        handleReportFeatureChange();
+        const featureDescToggle = document.getElementById('aiReportFeatureDescriptionsToggle');
+        if (featureDescToggle) {
+          featureDescToggle.addEventListener('change', function() {
+            toggleFeatureDescriptionsField(featureDescToggle.checked);
+          });
+          toggleFeatureDescriptionsField(featureDescToggle.checked);
         }
         const deliverySelector = document.getElementById('aiReportDeliverySelector');
         if (deliverySelector) {
@@ -4502,6 +5017,29 @@
         if (phoneSaveBtn) {
           phoneSaveBtn.addEventListener('click', saveReportPhone);
         }
+        const favoriteBtn = document.getElementById('aiReportFavoriteBtn');
+        if (favoriteBtn) {
+          favoriteBtn.addEventListener('click', function() {
+            setReportFavoritePanelVisible(!reportFavoritePanelVisible);
+          });
+        }
+        const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
+        if (favoriteCancelBtn) {
+          favoriteCancelBtn.addEventListener('click', function() {
+            const nameInput = document.getElementById('aiReportFavoriteName');
+            if (nameInput) {
+              nameInput.value = '';
+            }
+            setReportFavoritePanelVisible(false);
+          });
+        }
+        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (favoriteSaveBtn) {
+          favoriteSaveBtn.addEventListener('click', function() {
+            handleReportFavoriteSave();
+          });
+        }
+        setReportFavoritePanelVisible(false);
         updateSelectedReportChannels();
         reportSectionInitialized = true;
       }
