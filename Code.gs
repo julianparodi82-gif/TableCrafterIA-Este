@@ -798,13 +798,13 @@ function buildReportFavoriteResponse(entry) {
     }
     var commentEnabled = parseBooleanValue(detail.commentEnabled, false);
     var commentText = '';
-    if (commentEnabled && detail.comment !== null && detail.comment !== undefined) {
+    if (detail.comment !== null && detail.comment !== undefined) {
       commentText = String(detail.comment);
     }
     normalizedDetails.push({
       feature: featureId,
-      commentEnabled: commentEnabled,
-      comment: commentEnabled ? commentText : ''
+      commentEnabled: true,
+      comment: commentText
     });
     detailMap[featureId] = true;
   });
@@ -813,7 +813,7 @@ function buildReportFavoriteResponse(entry) {
     if (!featureId || detailMap[featureId]) {
       return;
     }
-    normalizedDetails.push({ feature: featureId, commentEnabled: false, comment: '' });
+    normalizedDetails.push({ feature: featureId, commentEnabled: true, comment: '' });
     detailMap[featureId] = true;
   });
   return {
@@ -826,6 +826,7 @@ function buildReportFavoriteResponse(entry) {
     format: config.format || '',
     fileName: config.fileName || '',
     fileExtension: config.fileExtension || '',
+    appendDateToFile: parseBooleanValue(config.appendDateToFile, false),
     tables: Array.isArray(config.tables) ? config.tables : [],
     channels: Array.isArray(config.channels) ? config.channels : [],
     descriptionEnabled: parseBooleanValue(config.descriptionEnabled, false),
@@ -1901,6 +1902,14 @@ function saveReportFavorite(payload) {
   if (normalizedFeatures.length === 0) {
     throw new Error('Debe seleccionar al menos una característica para el reporte.');
   }
+  var featureLabelMap = {
+    chart: 'Gráfico',
+    table: 'Tabla',
+    list: 'Lista',
+    summary: 'Resumen',
+    comments: 'Comentarios',
+    metrics: 'Indicadores clave'
+  };
   var tables = Array.isArray(payload.tables) ? payload.tables : [];
   var seenTables = {};
   var normalizedTables = [];
@@ -1931,17 +1940,26 @@ function saveReportFavorite(payload) {
     if (!seenFeatures[featureId] && normalizedFeatures.indexOf(featureId) === -1) {
       return;
     }
-    var commentEnabled = !!entry.commentEnabled;
     var commentText = '';
-    if (commentEnabled && entry.comment !== null && entry.comment !== undefined) {
-      commentText = String(entry.comment);
+    if (entry.comment !== null && entry.comment !== undefined) {
+      commentText = String(entry.comment).trim();
+    }
+    if (!commentText) {
+      var featureLabel = featureLabelMap[featureId] || featureId;
+      throw new Error('Debe ingresar un comentario para la característica "' + featureLabel + '".');
     }
     normalizedFeatureDetails.push({
       feature: featureId,
-      commentEnabled: commentEnabled,
-      comment: commentEnabled ? commentText : ''
+      commentEnabled: true,
+      comment: commentText
     });
     seenFeatureDetails[featureId] = true;
+  });
+  normalizedFeatures.forEach(function(featureId) {
+    if (!seenFeatureDetails[featureId]) {
+      var featureLabel = featureLabelMap[featureId] || featureId;
+      throw new Error('Debe ingresar un comentario para la característica "' + featureLabel + '".');
+    }
   });
   var channels = Array.isArray(payload.channels) ? payload.channels : [];
   var seenChannels = {};
@@ -1978,6 +1996,7 @@ function saveReportFavorite(payload) {
     format: format,
     fileName: payload.fileName ? String(payload.fileName).trim() : '',
     fileExtension: payload.fileExtension ? String(payload.fileExtension).trim() : '',
+    appendDateToFile: !!payload.appendDateToFile,
     tables: normalizedTables,
     channels: normalizedChannels,
     descriptionEnabled: !!payload.descriptionEnabled,

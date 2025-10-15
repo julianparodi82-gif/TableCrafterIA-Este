@@ -365,6 +365,17 @@
       .ai-report-filename-input input[type="text"] {
         flex: 1 1 auto;
       }
+      .ai-report-date-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: -4px;
+        font-size: 12px;
+        color: #4B5563;
+      }
+      .ai-report-date-toggle input {
+        margin: 0;
+      }
       .ai-report-file-extension {
         min-width: 64px;
         text-align: center;
@@ -454,10 +465,12 @@
         align-items: center;
         gap: 8px;
         font-size: 12px;
-        color: #374151;
+        color: #1F2937;
+        font-weight: 600;
       }
       .ai-feature-comment-toggle input {
         margin: 0;
+        cursor: not-allowed;
       }
       .ai-feature-comment-field {
         margin-top: 6px;
@@ -465,6 +478,11 @@
         min-height: 54px;
         font-size: 12px;
         resize: vertical;
+      }
+      .ai-feature-comment-hint {
+        font-size: 11px;
+        color: #6B7280;
+        margin-top: 4px;
       }
       .ai-actions-header {
         display: flex;
@@ -576,24 +594,45 @@
         font-size: 16px;
         line-height: 1;
       }
-      .ai-report-favorite-panel {
-        margin-top: 12px;
-        border: 1px solid #D1D5DB;
-        border-radius: 8px;
-        padding: 12px;
-        background-color: #F9FAFB;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .ai-report-favorite-panel label {
-        font-weight: 600;
-      }
       .ai-report-favorite-actions {
         display: flex;
         justify-content: flex-end;
         gap: 8px;
         flex-wrap: wrap;
+      }
+      .ai-favorite-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 16px;
+      }
+      .ai-favorite-modal-overlay.show {
+        display: flex;
+      }
+      .ai-favorite-modal {
+        background: #FFFFFF;
+        border-radius: 12px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+        max-width: 360px;
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ai-favorite-modal h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #111827;
+      }
+      .ai-favorite-modal p {
+        margin: 0;
+        font-size: 13px;
+        color: #4B5563;
       }
       .ai-hidden {
         display: none !important;
@@ -1382,6 +1421,9 @@
                 <input type="text" id="aiReportFileName" placeholder="Ej. Reporte trimestral" />
                 <span id="aiReportFileExtension" class="ai-report-file-extension" data-empty="true">.???</span>
               </div>
+              <label class="ai-report-date-toggle" for="aiReportFileDateToggle">
+                <input type="checkbox" id="aiReportFileDateToggle" /> Agregar fecha al nombre
+              </label>
             </div>
             <textarea
               id="aiReportDescription"
@@ -1456,13 +1498,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="chart" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="chart" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="chart"
                         placeholder="Describe qué debe incluir el gráfico"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Indica la narrativa o los puntos clave que debe resaltar el gráfico.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="table">
@@ -1473,13 +1517,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="table" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="table" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="table"
                         placeholder="Detalla el contenido esperado de la tabla"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Especifica filtros, columnas o totales indispensables.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="list">
@@ -1490,13 +1536,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="list" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="list" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="list"
                         placeholder="Indica la información que debe listar"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Aclara el orden o la prioridad de los elementos listados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="summary">
@@ -1507,13 +1555,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="summary" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="summary" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="summary"
                         placeholder="Especifica los puntos clave del resumen"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Resume conclusiones, insights o próximos pasos esperados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="comments">
@@ -1524,13 +1574,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="comments" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="comments" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="comments"
                         placeholder="Indica cómo deben redactarse los comentarios"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Detalla instrucciones o matices para los comentarios del equipo.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="metrics">
@@ -1541,13 +1593,15 @@
                     </label>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
                       <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="metrics" /> Agregar comentario
+                        <input type="checkbox" data-feature-comment-toggle="metrics" disabled /> Comentario obligatorio
                       </label>
                       <textarea
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="metrics"
                         placeholder="Define los KPIs o métricas a resaltar"
+                        required
                       ></textarea>
+                      <p class="ai-feature-comment-hint ai-hidden">Incluye metas, umbrales o contextos para interpretar los indicadores.</p>
                     </div>
                   </div>
                 </div>
@@ -1678,20 +1732,13 @@
                 type="button"
                 id="aiReportFavoriteBtn"
                 class="ai-report-favorite-btn"
+                aria-haspopup="dialog"
                 aria-expanded="false"
-                aria-controls="aiReportFavoritePanel"
+                aria-controls="aiFavoriteModalOverlay"
               >
                 <span class="ai-favorite-icon" aria-hidden="true">★</span>
                 Agregar a favoritos
               </button>
-            </div>
-            <div id="aiReportFavoritePanel" class="ai-report-favorite-panel ai-hidden">
-              <label for="aiReportFavoriteName">Nombre del reporte favorito</label>
-              <input type="text" id="aiReportFavoriteName" placeholder="Ej. Reporte mensual de ventas" />
-              <div class="ai-report-favorite-actions">
-                <button type="button" id="aiReportFavoriteCancelBtn" class="btn-secondary">Cancelar</button>
-                <button type="button" id="aiReportFavoriteSaveBtn" class="btn-primary">Guardar</button>
-              </div>
             </div>
           </div>
         </div>
@@ -1740,6 +1787,30 @@
         <div class="tc-modal-actions">
           <button type="button" id="tcModalSecondary" class="tc-modal-btn secondary">Cancelar</button>
           <button type="button" id="tcModalPrimary" class="tc-modal-btn primary">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="aiFavoriteModalOverlay"
+      class="ai-favorite-modal-overlay"
+      aria-hidden="true"
+      role="presentation"
+    >
+      <div
+        class="ai-favorite-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="aiFavoriteModalTitle"
+        aria-describedby="aiFavoriteModalDescription"
+      >
+        <h3 id="aiFavoriteModalTitle">Guardar en favoritos</h3>
+        <p id="aiFavoriteModalDescription">Asigna un nombre para identificar este reporte más adelante.</p>
+        <label for="aiReportFavoriteName">Nombre del reporte</label>
+        <input type="text" id="aiReportFavoriteName" placeholder="Ej. Reporte mensual de ventas" />
+        <div class="ai-report-favorite-actions">
+          <button type="button" id="aiReportFavoriteCancelBtn" class="btn-secondary">Cancelar</button>
+          <button type="button" id="aiReportFavoriteSaveBtn" class="btn-primary">Guardar</button>
         </div>
       </div>
     </div>
@@ -1794,12 +1865,14 @@
       let selectedReportChannels = [];
       let selectedReportFeatures = [];
       let reportFeatureState = {};
-      let reportFavoritePanelVisible = false;
+      let reportFavoriteModalVisible = false;
       let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
       let savedActionsCache = [];
       let loadingSavedActions = false;
       let currentSavedActionId = '';
+      let reportFileDateEnabled = false;
+      let favoriteModalEscapeListenerAttached = false;
 
       let headerKeyCounter = 0;
 
@@ -4659,19 +4732,33 @@
         return selectedReportFormat;
       }
 
+      function getReportDateSuffix() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        return '_' + day + '_' + month + '_' + year;
+      }
+
       function updateReportFileExtension() {
         const label = document.getElementById('aiReportFileExtension');
         if (!label) {
           return;
         }
         const ext = getCurrentReportExtension();
+        const suffix = reportFileDateEnabled ? getReportDateSuffix() : '';
         if (ext) {
-          label.textContent = '.' + ext;
+          label.textContent = reportFileDateEnabled ? suffix + '.' + ext : '.' + ext;
           label.dataset.empty = 'false';
         } else {
-          label.textContent = '.???';
+          label.textContent = reportFileDateEnabled ? suffix + '.???' : '.???';
           label.dataset.empty = 'true';
         }
+      }
+
+      function handleReportFileDateToggle(checked) {
+        reportFileDateEnabled = !!checked;
+        updateReportFileExtension();
       }
 
       function updateReportFeaturesSummary() {
@@ -4745,19 +4832,24 @@
         }
         const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
         if (toggle) {
-          toggle.checked = !!state.selected && !!state.commentEnabled;
-          toggle.disabled = !state.selected;
+          toggle.checked = !!state.selected;
+          toggle.disabled = true;
         }
         const commentField = option.querySelector('[data-feature-comment-input="' + feature + '"]');
         if (commentField) {
-          const shouldShow = !!state.selected && !!state.commentEnabled;
+          const shouldShow = !!state.selected;
           commentField.classList.toggle('ai-hidden', !shouldShow);
           commentField.disabled = !shouldShow;
+          commentField.required = shouldShow;
           if (shouldShow) {
             commentField.value = state.comment || '';
           } else {
             commentField.value = '';
           }
+        }
+        const hint = option.querySelector('.ai-feature-comment-hint');
+        if (hint) {
+          hint.classList.toggle('ai-hidden', !state.selected);
         }
       }
 
@@ -4776,8 +4868,8 @@
         }
         const isChecked = !!checked;
         state.selected = isChecked;
+        state.commentEnabled = isChecked;
         if (!isChecked) {
-          state.commentEnabled = false;
           state.comment = '';
         }
         refreshReportFeatureOption(feature);
@@ -4789,16 +4881,17 @@
         if (!state || !state.selected) {
           return;
         }
-        state.commentEnabled = !!checked;
-        if (!state.commentEnabled) {
-          state.comment = '';
+        state.commentEnabled = true;
+        const toggle = document.querySelector('[data-feature-comment-toggle="' + feature + '"]');
+        if (toggle) {
+          toggle.checked = true;
         }
         refreshReportFeatureOption(feature);
       }
 
       function handleReportFeatureCommentInput(feature, value) {
         const state = ensureReportFeatureState(feature);
-        if (!state || !state.selected || !state.commentEnabled) {
+        if (!state || !state.selected) {
           return;
         }
         state.comment = value === null || value === undefined ? '' : String(value);
@@ -4873,13 +4966,11 @@
             if (detailMap[featureId]) {
               return;
             }
-            const commentEnabled = detail.commentEnabled === true || detail.commentEnabled === 'true' || detail.commentEnabled === 1;
-            const commentText = commentEnabled && detail.comment !== null && detail.comment !== undefined
+            const commentText = detail.comment !== null && detail.comment !== undefined
               ? String(detail.comment)
               : '';
             detailMap[featureId] = {
-              commentEnabled: commentEnabled,
-              comment: commentEnabled ? commentText : ''
+              comment: commentText
             };
           });
         }
@@ -4887,9 +4978,10 @@
           const state = ensureReportFeatureState(feature);
           const isSelected = !!selectedSet[feature];
           state.selected = isSelected;
-          if (isSelected && detailMap[feature]) {
-            state.commentEnabled = !!detailMap[feature].commentEnabled;
-            state.comment = detailMap[feature].commentEnabled ? detailMap[feature].comment : '';
+          if (isSelected) {
+            const detail = detailMap[feature];
+            state.commentEnabled = true;
+            state.comment = detail ? detail.comment || '' : '';
           } else {
             state.commentEnabled = false;
             state.comment = '';
@@ -5233,6 +5325,11 @@
         if (fileNameInput) {
           fileNameInput.value = action.fileName || '';
         }
+        const fileDateToggle = document.getElementById('aiReportFileDateToggle');
+        reportFileDateEnabled = !!action.appendDateToFile;
+        if (fileDateToggle) {
+          fileDateToggle.checked = reportFileDateEnabled;
+        }
         updateReportFileExtension();
         selectedReportChannels = Array.isArray(action.channels) ? action.channels.slice() : [];
         const channelSet = Object.create(null);
@@ -5257,10 +5354,7 @@
         renderReportPhoneList(action.phones || []);
         setReportHelperMessage('aiReportEmailMessage', '');
         setReportHelperMessage('aiReportPhoneMessage', '');
-        const favoritePanel = document.getElementById('aiReportFavoritePanel');
-        if (favoritePanel) {
-          setReportFavoritePanelVisible(false);
-        }
+        closeReportFavoriteModal({ resetName: false });
         await showMessageModal('El reporte favorito se cargó en el Panel IA. Ajusta los valores y guarda los cambios si es necesario.', {
           title: 'Reporte cargado',
           variant: 'info',
@@ -5301,22 +5395,54 @@
         return values;
       }
 
-      function setReportFavoritePanelVisible(visible) {
-        const panel = document.getElementById('aiReportFavoritePanel');
+      function openReportFavoriteModal() {
+        if (savingReportFavorite) {
+          return;
+        }
+        const overlay = document.getElementById('aiFavoriteModalOverlay');
         const trigger = document.getElementById('aiReportFavoriteBtn');
-        reportFavoritePanelVisible = !!visible;
-        if (panel) {
-          panel.classList.toggle('ai-hidden', !visible);
+        reportFavoriteModalVisible = true;
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
         }
         if (trigger) {
-          trigger.setAttribute('aria-expanded', visible ? 'true' : 'false');
+          trigger.setAttribute('aria-expanded', 'true');
         }
-        if (!visible) {
-          savingReportFavorite = false;
-          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
-          if (saveBtn) {
-            saveBtn.disabled = false;
+        const nameInput = document.getElementById('aiReportFavoriteName');
+        if (nameInput) {
+          window.setTimeout(function() {
+            nameInput.focus();
+            nameInput.select();
+          }, 0);
+        }
+      }
+
+      function closeReportFavoriteModal(options) {
+        options = options || {};
+        const overlay = document.getElementById('aiFavoriteModalOverlay');
+        const trigger = document.getElementById('aiReportFavoriteBtn');
+        reportFavoriteModalVisible = false;
+        if (overlay) {
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+        if (trigger) {
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+        if (options.resetName) {
+          const nameInput = document.getElementById('aiReportFavoriteName');
+          if (nameInput) {
+            nameInput.value = '';
           }
+        }
+        if (options.focusTrigger && trigger) {
+          trigger.focus();
+        }
+        savingReportFavorite = false;
+        const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (saveBtn) {
+          saveBtn.disabled = false;
         }
       }
 
@@ -5347,6 +5473,23 @@
           });
           return;
         }
+        for (let i = 0; i < selectedReportFeatures.length; i++) {
+          const feature = selectedReportFeatures[i];
+          const state = ensureReportFeatureState(feature);
+          const commentText = state && state.comment ? String(state.comment).trim() : '';
+          if (!commentText) {
+            const label = REPORT_FEATURE_LABELS[feature] || feature;
+            await showMessageModal('Agrega un comentario para "' + label + '".', {
+              title: 'Comentario requerido',
+              variant: 'warning'
+            });
+            return;
+          }
+          if (state) {
+            state.comment = commentText;
+            state.commentEnabled = true;
+          }
+        }
         const selectedTables = getSelectedAiTableIds();
         if (!selectedTables || selectedTables.length === 0) {
           await showMessageModal('Selecciona al menos una tabla para asociar el reporte.', {
@@ -5368,14 +5511,14 @@
               if (!state) {
                 return {
                   feature: feature,
-                  commentEnabled: false,
+                  commentEnabled: true,
                   comment: ''
                 };
               }
               return {
                 feature: feature,
-                commentEnabled: !!state.commentEnabled,
-                comment: state.commentEnabled ? state.comment || '' : ''
+                commentEnabled: true,
+                comment: state.comment ? String(state.comment).trim() : ''
               };
             })
           : [];
@@ -5384,6 +5527,7 @@
           format: selectedReportFormat,
           fileName: fileNameValue,
           fileExtension: getCurrentReportExtension(),
+          appendDateToFile: !!reportFileDateEnabled,
           tables: selectedTables,
           channels: Array.isArray(selectedReportChannels)
             ? selectedReportChannels.slice()
@@ -5413,14 +5557,11 @@
           if (result && result.error) {
             throw new Error(result.error);
           }
+          closeReportFavoriteModal({ resetName: true });
           await showMessageModal('Reporte guardado en favoritos.', {
             title: 'Favorito guardado',
             variant: 'success'
           });
-          if (nameInput) {
-            nameInput.value = '';
-          }
-          setReportFavoritePanelVisible(false);
         } catch (err) {
           await showMessageModal(
             'No se pudo guardar el reporte favorito: ' + (err && err.message ? err.message : err),
@@ -5537,6 +5678,11 @@
       function resetReportSection() {
         selectedReportFormat = '';
         updateReportFormatSummary();
+        reportFileDateEnabled = false;
+        const fileDateToggle = document.getElementById('aiReportFileDateToggle');
+        if (fileDateToggle) {
+          fileDateToggle.checked = false;
+        }
         updateReportFileExtension();
         const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
         if (formatsWrapper) {
@@ -5605,7 +5751,7 @@
           favoriteSaveBtn.disabled = false;
         }
         savingReportFavorite = false;
-        setReportFavoritePanelVisible(false);
+        closeReportFavoriteModal({ resetName: true });
       }
 
       function saveReportEmail() {
@@ -5756,6 +5902,16 @@
           });
           toggleReportDescriptionField(descToggle.checked);
         }
+        const fileDateToggle = document.getElementById('aiReportFileDateToggle');
+        if (fileDateToggle) {
+          fileDateToggle.addEventListener('change', function() {
+            handleReportFileDateToggle(fileDateToggle.checked);
+          });
+          handleReportFileDateToggle(fileDateToggle.checked);
+        } else {
+          reportFileDateEnabled = false;
+          updateReportFileExtension();
+        }
         initializeReportFeatureControls();
         const deliverySelector = document.getElementById('aiReportDeliverySelector');
         if (deliverySelector) {
@@ -5791,17 +5947,13 @@
         const favoriteBtn = document.getElementById('aiReportFavoriteBtn');
         if (favoriteBtn) {
           favoriteBtn.addEventListener('click', function() {
-            setReportFavoritePanelVisible(!reportFavoritePanelVisible);
+            openReportFavoriteModal();
           });
         }
         const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
         if (favoriteCancelBtn) {
           favoriteCancelBtn.addEventListener('click', function() {
-            const nameInput = document.getElementById('aiReportFavoriteName');
-            if (nameInput) {
-              nameInput.value = '';
-            }
-            setReportFavoritePanelVisible(false);
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
           });
         }
         const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
@@ -5810,7 +5962,24 @@
             handleReportFavoriteSave();
           });
         }
-        setReportFavoritePanelVisible(false);
+        const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
+        if (favoriteOverlay && !favoriteOverlay.dataset.bound) {
+          favoriteOverlay.addEventListener('click', function(event) {
+            if (event.target === favoriteOverlay) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteOverlay.dataset.bound = 'true';
+        }
+        if (!favoriteModalEscapeListenerAttached) {
+          document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && reportFavoriteModalVisible) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteModalEscapeListenerAttached = true;
+        }
+        closeReportFavoriteModal({ resetName: true });
         updateSelectedReportChannels();
         reportSectionInitialized = true;
       }
