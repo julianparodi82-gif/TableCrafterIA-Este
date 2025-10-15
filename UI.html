@@ -396,17 +396,24 @@
       .ai-feature-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 12px;
       }
       .ai-feature-option {
-        flex: 0 0 auto;
+        flex: 1 1 240px;
+        max-width: 320px;
+      }
+      .ai-feature-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
       .ai-feature-chip {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        min-width: 132px;
+        gap: 10px;
+        width: 100%;
         padding: 6px 12px;
         border-radius: 12px;
         border: 1px solid #D1D5DB;
@@ -454,12 +461,77 @@
         border-color: #1D4ED8;
         color: #FFFFFF;
       }
+      .ai-feature-quantity {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #1F2937;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .ai-feature-quantity label {
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .ai-feature-quantity input {
+        width: 42px;
+        min-height: 28px;
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1F2937;
+        background-color: #FFFFFF;
+      }
       .ai-feature-extra {
         margin-top: 6px;
         padding: 8px 12px;
         border-radius: 10px;
         border: 1px dashed #CBD5F5;
         background-color: #F8FAFF;
+      }
+      .ai-feature-example-select {
+        margin-top: 6px;
+        width: 100%;
+        min-height: 32px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        font-size: 12px;
+        color: #1F2937;
+      }
+      .ai-feature-instances {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-feature-instance {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid #E5E7EB;
+        background-color: #FFFFFF;
+      }
+      .ai-feature-instance label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #4B5563;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+      .ai-feature-instance textarea {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+        font-size: 12px;
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        padding: 6px 8px;
       }
       .ai-feature-comment-toggle {
         display: flex;
@@ -572,6 +644,11 @@
         display: flex;
         justify-content: flex-end;
       }
+      .ai-report-generate-row {
+        margin-top: 12px;
+        display: flex;
+        justify-content: flex-end;
+      }
       .ai-report-favorite-btn {
         display: inline-flex;
         align-items: center;
@@ -594,6 +671,9 @@
         color: #F59E0B;
         font-size: 16px;
         line-height: 1;
+      }
+      .ai-report-generate-btn {
+        min-width: 200px;
       }
       .ai-report-favorite-actions {
         display: flex;
@@ -1492,11 +1572,24 @@
                 </p>
                 <div class="ai-feature-list" id="aiReportFeatureList">
                   <div class="ai-feature-option" data-feature="chart">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="chart" />
-                      <span class="ai-feature-chip-label">Gráfico</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="chart" />
+                        <span class="ai-feature-chip-label">Gráfico</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="chart">
+                        <label for="aiFeatureQuantity-chart">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-chart"
+                          data-feature-quantity-input="chart"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="chart" disabled /> Comentario obligatorio
@@ -1505,17 +1598,66 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="chart"
                         placeholder="Describe qué debe incluir el gráfico"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="chart">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="tendencias">Tendencia general de resultados</option>
+                        <option value="comparativo">Comparativo entre periodos</option>
+                        <option value="ranking">Ranking de elementos destacados</option>
+                        <option value="evolucion">Evolución histórica resumida</option>
+                        <option value="distribucion">Distribución por categoría</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="0">
+                          <label for="aiFeatureInstance-chart-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-chart-1"
+                            data-feature-instance-input="chart"
+                            data-instance-index="0"
+                            placeholder="Detalla el primer gráfico que necesitas"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="1">
+                          <label for="aiFeatureInstance-chart-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-chart-2"
+                            data-feature-instance-input="chart"
+                            data-instance-index="1"
+                            placeholder="Describe el segundo gráfico a incluir"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="2">
+                          <label for="aiFeatureInstance-chart-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-chart-3"
+                            data-feature-instance-input="chart"
+                            data-instance-index="2"
+                            placeholder="Especifica detalles para un tercer gráfico"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Indica la narrativa o los puntos clave que debe resaltar el gráfico.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="table">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="table" />
-                      <span class="ai-feature-chip-label">Tabla</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="table" />
+                        <span class="ai-feature-chip-label">Tabla</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="table">
+                        <label for="aiFeatureQuantity-table">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-table"
+                          data-feature-quantity-input="table"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="table" disabled /> Comentario obligatorio
@@ -1524,17 +1666,66 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="table"
                         placeholder="Detalla el contenido esperado de la tabla"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="table">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="resumen">Resumen de métricas principales</option>
+                        <option value="comparativa">Comparativa entre segmentos</option>
+                        <option value="top">Top registros relevantes</option>
+                        <option value="detalle">Detalle transaccional resumido</option>
+                        <option value="frecuencia">Frecuencias por categoría</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="0">
+                          <label for="aiFeatureInstance-table-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-table-1"
+                            data-feature-instance-input="table"
+                            data-instance-index="0"
+                            placeholder="Define la primera tabla o matriz requerida"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="1">
+                          <label for="aiFeatureInstance-table-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-table-2"
+                            data-feature-instance-input="table"
+                            data-instance-index="1"
+                            placeholder="Explica la segunda tabla a incluir"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="2">
+                          <label for="aiFeatureInstance-table-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-table-3"
+                            data-feature-instance-input="table"
+                            data-instance-index="2"
+                            placeholder="Describe una tercera tabla opcional"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Especifica filtros, columnas o totales indispensables.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="list">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="list" />
-                      <span class="ai-feature-chip-label">Lista</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="list" />
+                        <span class="ai-feature-chip-label">Lista</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="list">
+                        <label for="aiFeatureQuantity-list">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-list"
+                          data-feature-quantity-input="list"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="list" disabled /> Comentario obligatorio
@@ -1543,17 +1734,66 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="list"
                         placeholder="Indica la información que debe listar"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="list">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="prioridades">Prioridades o pendientes clave</option>
+                        <option value="checklist">Checklist de verificación</option>
+                        <option value="acciones">Acciones siguientes por responsable</option>
+                        <option value="inventario">Elementos de inventario destacados</option>
+                        <option value="resumen">Resumen de hallazgos principales</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="0">
+                          <label for="aiFeatureInstance-list-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-list-1"
+                            data-feature-instance-input="list"
+                            data-instance-index="0"
+                            placeholder="Especifica la primera lista a generar"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="1">
+                          <label for="aiFeatureInstance-list-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-list-2"
+                            data-feature-instance-input="list"
+                            data-instance-index="1"
+                            placeholder="Detalla la segunda lista solicitada"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="2">
+                          <label for="aiFeatureInstance-list-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-list-3"
+                            data-feature-instance-input="list"
+                            data-instance-index="2"
+                            placeholder="Describe una tercera lista si aplica"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Aclara el orden o la prioridad de los elementos listados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="summary">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="summary" />
-                      <span class="ai-feature-chip-label">Resumen</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="summary" />
+                        <span class="ai-feature-chip-label">Resumen</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="summary">
+                        <label for="aiFeatureQuantity-summary">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-summary"
+                          data-feature-quantity-input="summary"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="summary" disabled /> Comentario obligatorio
@@ -1562,17 +1802,66 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="summary"
                         placeholder="Especifica los puntos clave del resumen"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="summary">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="directivos">Resumen ejecutivo para directivos</option>
+                        <option value="hallazgos">Hallazgos principales del periodo</option>
+                        <option value="alertas">Alertas o riesgos relevantes</option>
+                        <option value="logros">Logros destacados recientes</option>
+                        <option value="recomendaciones">Recomendaciones inmediatas</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="0">
+                          <label for="aiFeatureInstance-summary-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-summary-1"
+                            data-feature-instance-input="summary"
+                            data-instance-index="0"
+                            placeholder="Detalla el primer apartado del resumen"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="1">
+                          <label for="aiFeatureInstance-summary-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-summary-2"
+                            data-feature-instance-input="summary"
+                            data-instance-index="1"
+                            placeholder="Describe un segundo bloque del resumen"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="2">
+                          <label for="aiFeatureInstance-summary-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-summary-3"
+                            data-feature-instance-input="summary"
+                            data-instance-index="2"
+                            placeholder="Indica detalles para un tercer bloque"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Resume conclusiones, insights o próximos pasos esperados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="comments">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="comments" />
-                      <span class="ai-feature-chip-label">Comentarios</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="comments" />
+                        <span class="ai-feature-chip-label">Comentarios</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="comments">
+                        <label for="aiFeatureQuantity-comments">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-comments"
+                          data-feature-quantity-input="comments"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="comments" disabled /> Comentario obligatorio
@@ -1581,17 +1870,66 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="comments"
                         placeholder="Indica cómo deben redactarse los comentarios"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="comments">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="seguimiento">Seguimiento de tareas pendientes</option>
+                        <option value="retroalimentacion">Retroalimentación del equipo</option>
+                        <option value="alertas">Alertas o incidencias registradas</option>
+                        <option value="resumen">Resumen de comentarios positivos</option>
+                        <option value="notas">Notas internas para el equipo</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="comments">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="0">
+                          <label for="aiFeatureInstance-comments-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-comments-1"
+                            data-feature-instance-input="comments"
+                            data-instance-index="0"
+                            placeholder="Describe el primer bloque de comentarios"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="1">
+                          <label for="aiFeatureInstance-comments-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-comments-2"
+                            data-feature-instance-input="comments"
+                            data-instance-index="1"
+                            placeholder="Especifica un segundo bloque de comentarios"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="2">
+                          <label for="aiFeatureInstance-comments-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-comments-3"
+                            data-feature-instance-input="comments"
+                            data-instance-index="2"
+                            placeholder="Añade detalles para un tercer bloque"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Detalla instrucciones o matices para los comentarios del equipo.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="metrics">
-                    <label class="ai-feature-chip">
-                      <input type="checkbox" name="aiReportFeatures" value="metrics" />
-                      <span class="ai-feature-chip-label">Indicadores clave</span>
-                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                    </label>
+                    <div class="ai-feature-top">
+                      <label class="ai-feature-chip">
+                        <input type="checkbox" name="aiReportFeatures" value="metrics" />
+                        <span class="ai-feature-chip-label">Indicadores clave</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="metrics">
+                        <label for="aiFeatureQuantity-metrics">Cantidad</label>
+                        <input
+                          type="number"
+                          id="aiFeatureQuantity-metrics"
+                          data-feature-quantity-input="metrics"
+                          min="1"
+                          max="3"
+                          value="1"
+                        />
+                      </div>
+                    </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
                       <label class="ai-feature-comment-toggle">
                         <input type="checkbox" data-feature-comment-toggle="metrics" disabled /> Comentario obligatorio
@@ -1600,8 +1938,44 @@
                         class="ai-feature-comment-field ai-hidden"
                         data-feature-comment-input="metrics"
                         placeholder="Define los KPIs o métricas a resaltar"
-                        required
                       ></textarea>
+                      <select class="ai-feature-example-select ai-hidden" data-feature-example="metrics">
+                        <option value="">Selecciona un ejemplo...</option>
+                        <option value="rendimiento">Indicadores de rendimiento</option>
+                        <option value="finanzas">KPIs financieros clave</option>
+                        <option value="servicio">Métricas de servicio o soporte</option>
+                        <option value="marketing">Indicadores de marketing y alcance</option>
+                        <option value="calidad">Métricas de calidad o cumplimiento</option>
+                      </select>
+                      <div class="ai-feature-instances ai-hidden" data-feature-instances="metrics">
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="0">
+                          <label for="aiFeatureInstance-metrics-1">Descripción 1</label>
+                          <textarea
+                            id="aiFeatureInstance-metrics-1"
+                            data-feature-instance-input="metrics"
+                            data-instance-index="0"
+                            placeholder="Describe el primer indicador o panel"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="1">
+                          <label for="aiFeatureInstance-metrics-2">Descripción 2</label>
+                          <textarea
+                            id="aiFeatureInstance-metrics-2"
+                            data-feature-instance-input="metrics"
+                            data-instance-index="1"
+                            placeholder="Detalla un segundo indicador a seguir"
+                          ></textarea>
+                        </div>
+                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="2">
+                          <label for="aiFeatureInstance-metrics-3">Descripción 3</label>
+                          <textarea
+                            id="aiFeatureInstance-metrics-3"
+                            data-feature-instance-input="metrics"
+                            data-instance-index="2"
+                            placeholder="Agrega información para un tercer indicador"
+                          ></textarea>
+                        </div>
+                      </div>
                       <p class="ai-feature-comment-hint ai-hidden">Incluye metas, umbrales o contextos para interpretar los indicadores.</p>
                     </div>
                   </div>
@@ -1741,6 +2115,11 @@
                 Agregar a favoritos
               </button>
             </div>
+            <div class="ai-report-generate-row">
+              <button type="button" id="aiReportGenerateBtn" class="btn-primary ai-report-generate-btn">
+                Generar y enviar reporte
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1858,6 +2237,7 @@
         map[option.value] = option.label;
         return map;
       }, {});
+      const REPORT_FEATURE_MAX_QUANTITY = 3;
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -4793,6 +5173,31 @@
         summary.classList.remove('ai-hidden');
       }
 
+      function clampReportFeatureQuantity(value) {
+        const parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed < 1) {
+          return 1;
+        }
+        if (parsed > REPORT_FEATURE_MAX_QUANTITY) {
+          return REPORT_FEATURE_MAX_QUANTITY;
+        }
+        return parsed;
+      }
+
+      function createEmptyFeatureInstanceArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
+      }
+
+      function normalizeFeatureInstanceArray(source) {
+        const base = createEmptyFeatureInstanceArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = entry === null || entry === undefined ? '' : String(entry);
+          });
+        }
+        return base;
+      }
+
       function ensureReportFeatureState(feature) {
         const key = feature || '';
         if (!key) {
@@ -4802,7 +5207,10 @@
           reportFeatureState[key] = {
             selected: false,
             commentEnabled: false,
-            comment: ''
+            comment: '',
+            example: '',
+            quantity: 1,
+            instanceDescriptions: createEmptyFeatureInstanceArray()
           };
         }
         return reportFeatureState[key];
@@ -4831,6 +5239,20 @@
         if (extra) {
           extra.classList.toggle('ai-hidden', !state.selected);
         }
+        const quantityWrapper = option.querySelector('[data-feature-quantity="' + feature + '"]');
+        if (quantityWrapper) {
+          const shouldShowQuantity = !!state.selected;
+          const quantityInput = quantityWrapper.querySelector(
+            '[data-feature-quantity-input="' + feature + '"]'
+          );
+          quantityWrapper.classList.toggle('ai-hidden', !shouldShowQuantity);
+          if (quantityInput) {
+            const clampedQuantity = clampReportFeatureQuantity(state.quantity);
+            state.quantity = clampedQuantity;
+            quantityInput.value = clampedQuantity;
+            quantityInput.disabled = !shouldShowQuantity;
+          }
+        }
         const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
         if (toggle) {
           toggle.checked = !!state.selected;
@@ -4847,6 +5269,49 @@
           } else {
             commentField.value = '';
           }
+        }
+        const exampleSelect = option.querySelector('[data-feature-example="' + feature + '"]');
+        if (exampleSelect) {
+          const shouldShowExample = !!state.selected;
+          exampleSelect.classList.toggle('ai-hidden', !shouldShowExample);
+          exampleSelect.disabled = !shouldShowExample;
+          if (shouldShowExample) {
+            exampleSelect.value = state.example || '';
+          } else {
+            exampleSelect.value = '';
+          }
+        }
+        const instancesWrapper = option.querySelector('[data-feature-instances="' + feature + '"]');
+        if (instancesWrapper) {
+          const shouldShowInstances = !!state.selected;
+          const normalizedDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+          state.instanceDescriptions = normalizedDescriptions.slice();
+          const quantityValue = clampReportFeatureQuantity(state.quantity);
+          state.quantity = quantityValue;
+          instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
+          const instanceItems = instancesWrapper.querySelectorAll(
+            '[data-feature-instance="' + feature + '"]'
+          );
+          instanceItems.forEach(function(item) {
+            if (!item || !item.dataset) {
+              return;
+            }
+            const index = parseInt(item.dataset.instanceIndex, 10);
+            const textarea = item.querySelector(
+              '[data-feature-instance-input="' + feature + '"]'
+            );
+            const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
+            item.classList.toggle('ai-hidden', !withinRange);
+            if (textarea) {
+              textarea.disabled = !withinRange;
+              textarea.required = withinRange;
+              if (withinRange) {
+                textarea.value = normalizedDescriptions[index] || '';
+              } else {
+                textarea.value = normalizedDescriptions[index] || '';
+              }
+            }
+          });
         }
         const hint = option.querySelector('.ai-feature-comment-hint');
         if (hint) {
@@ -4870,8 +5335,14 @@
         const isChecked = !!checked;
         state.selected = isChecked;
         state.commentEnabled = isChecked;
-        if (!isChecked) {
+        if (isChecked) {
+          state.quantity = clampReportFeatureQuantity(state.quantity);
+          state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        } else {
           state.comment = '';
+          state.example = '';
+          state.quantity = 1;
+          state.instanceDescriptions = createEmptyFeatureInstanceArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -4896,6 +5367,37 @@
           return;
         }
         state.comment = value === null || value === undefined ? '' : String(value);
+      }
+
+      function handleReportFeatureQuantityChange(feature, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const quantity = clampReportFeatureQuantity(value);
+        state.quantity = quantity;
+        state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        refreshReportFeatureOption(feature);
+      }
+
+      function handleReportFeatureExampleChange(feature, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        state.example = value === null || value === undefined ? '' : String(value);
+      }
+
+      function handleReportFeatureInstanceInput(feature, index, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const normalizedIndex = typeof index === 'number' && !isNaN(index) ? index : 0;
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, normalizedIndex));
+        const descriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        descriptions[safeIndex] = value === null || value === undefined ? '' : String(value);
+        state.instanceDescriptions = descriptions;
       }
 
       function initializeReportFeatureControls() {
@@ -4928,6 +5430,33 @@
             });
             commentField.dataset.bound = 'true';
           }
+          const quantityInput = option.querySelector('[data-feature-quantity-input="' + feature + '"]');
+          if (quantityInput && !quantityInput.dataset.bound) {
+            const quantityListener = function() {
+              handleReportFeatureQuantityChange(feature, quantityInput.value);
+            };
+            quantityInput.addEventListener('change', quantityListener);
+            quantityInput.addEventListener('input', quantityListener);
+            quantityInput.dataset.bound = 'true';
+          }
+          const exampleSelect = option.querySelector('[data-feature-example="' + feature + '"]');
+          if (exampleSelect && !exampleSelect.dataset.bound) {
+            exampleSelect.addEventListener('change', function() {
+              handleReportFeatureExampleChange(feature, exampleSelect.value);
+            });
+            exampleSelect.dataset.bound = 'true';
+          }
+          const instanceFields = option.querySelectorAll('[data-feature-instance-input="' + feature + '"]');
+          instanceFields.forEach(function(field) {
+            if (!field || field.dataset.bound) {
+              return;
+            }
+            field.addEventListener('input', function() {
+              const index = parseInt(field.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceInput(feature, index, field.value);
+            });
+            field.dataset.bound = 'true';
+          });
           refreshReportFeatureOption(feature);
         });
         updateSelectedReportFeatures();
@@ -4970,8 +5499,16 @@
             const commentText = detail.comment !== null && detail.comment !== undefined
               ? String(detail.comment)
               : '';
+            const exampleValue = detail.example !== null && detail.example !== undefined
+              ? String(detail.example)
+              : '';
+            const quantityValue = clampReportFeatureQuantity(detail.quantity);
+            const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             detailMap[featureId] = {
-              comment: commentText
+              comment: commentText,
+              example: exampleValue,
+              quantity: quantityValue,
+              instanceDescriptions: instanceDescriptions
             };
           });
         }
@@ -4983,9 +5520,17 @@
             const detail = detailMap[feature];
             state.commentEnabled = true;
             state.comment = detail ? detail.comment || '' : '';
+            state.example = detail ? detail.example || '' : '';
+            state.quantity = detail ? clampReportFeatureQuantity(detail.quantity) : 1;
+            state.instanceDescriptions = detail
+              ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
+              : createEmptyFeatureInstanceArray();
           } else {
             state.commentEnabled = false;
             state.comment = '';
+            state.example = '';
+            state.quantity = 1;
+            state.instanceDescriptions = createEmptyFeatureInstanceArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -5476,20 +6021,43 @@
           missingItems.push('Al menos una característica con comentario');
         }
 
-        const featureCommentMap = {};
         const featureCommentIssues = [];
+        const featureDetailMap = {};
+        const featureDescriptionIssues = [];
 
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
+          const label = REPORT_FEATURE_LABELS[feature] || feature;
           const commentText = state && state.comment ? String(state.comment).trim() : '';
+          const exampleText = state && state.example ? String(state.example).trim() : '';
+          const quantityValue = state ? clampReportFeatureQuantity(state.quantity) : 1;
+          const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
+          const trimmedDescriptions = baseDescriptions.map(function(text) {
+            return text ? String(text).trim() : '';
+          });
           if (!commentText) {
-            const label = REPORT_FEATURE_LABELS[feature] || feature;
             if (featureCommentIssues.indexOf(label) === -1) {
               featureCommentIssues.push(label);
             }
-          } else if (state) {
-            featureCommentMap[feature] = commentText;
           }
+          for (var idx = 0; idx < quantityValue; idx++) {
+            if (!trimmedDescriptions[idx]) {
+              featureDescriptionIssues.push({ feature: label, index: idx });
+            }
+          }
+          if (state) {
+            state.comment = commentText;
+            state.commentEnabled = true;
+            state.example = exampleText;
+            state.quantity = quantityValue;
+            state.instanceDescriptions = trimmedDescriptions.slice();
+          }
+          featureDetailMap[feature] = {
+            comment: commentText,
+            example: exampleText,
+            quantity: quantityValue,
+            instanceDescriptions: trimmedDescriptions.slice()
+          };
         });
 
         if (featureCommentIssues.length > 0) {
@@ -5498,6 +6066,12 @@
           } else {
             missingItems.push('Comentario para: ' + featureCommentIssues.join(', '));
           }
+        }
+
+        if (featureDescriptionIssues.length > 0) {
+          featureDescriptionIssues.forEach(function(issue) {
+            missingItems.push('Descripción ' + (issue.index + 1) + ' para ' + issue.feature);
+          });
         }
 
         if (selectedChannels.length === 0) {
@@ -5517,9 +6091,14 @@
           if (!state) {
             return;
           }
-          if (Object.prototype.hasOwnProperty.call(featureCommentMap, feature)) {
-            state.comment = featureCommentMap[feature];
+          const detail = featureDetailMap[feature];
+          if (detail) {
+            state.comment = detail.comment || '';
             state.commentEnabled = true;
+            state.example = detail.example || '';
+            state.quantity = clampReportFeatureQuantity(detail.quantity);
+            state.instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            refreshReportFeatureOption(feature);
           }
         });
 
@@ -5538,10 +6117,19 @@
         const descriptionText =
           descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
         const featureDetails = selectedFeatures.map(function(feature) {
+          const detail = featureDetailMap[feature] || {
+            comment: '',
+            example: '',
+            quantity: 1,
+            instanceDescriptions: createEmptyFeatureInstanceArray()
+          };
           return {
             feature: feature,
             commentEnabled: true,
-            comment: featureCommentMap[feature] || ''
+            comment: detail.comment || '',
+            example: detail.example || '',
+            quantity: clampReportFeatureQuantity(detail.quantity),
+            instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions)
           };
         });
         const payload = {
@@ -5594,6 +6182,13 @@
             saveBtn.disabled = false;
           }
         }
+      }
+
+      async function handleReportGenerate() {
+        await showMessageModal('La generación y envío de reportes estará disponible próximamente.', {
+          title: 'Generar reporte',
+          variant: 'info'
+        });
       }
 
       function updateSelectedReportChannels() {
@@ -5979,6 +6574,13 @@
           favoriteSaveBtn.addEventListener('click', function() {
             handleReportFavoriteSave();
           });
+        }
+        const generateBtn = document.getElementById('aiReportGenerateBtn');
+        if (generateBtn && !generateBtn.dataset.bound) {
+          generateBtn.addEventListener('click', function() {
+            handleReportGenerate();
+          });
+          generateBtn.dataset.bound = 'true';
         }
         const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
         if (favoriteOverlay && !favoriteOverlay.dataset.bound) {

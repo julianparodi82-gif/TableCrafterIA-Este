@@ -801,10 +801,30 @@ function buildReportFavoriteResponse(entry) {
     if (detail.comment !== null && detail.comment !== undefined) {
       commentText = String(detail.comment);
     }
+    var exampleText = '';
+    if (detail.example !== null && detail.example !== undefined) {
+      exampleText = String(detail.example);
+    }
+    var quantityValue = parseInt(detail.quantity, 10);
+    if (isNaN(quantityValue) || quantityValue < 1) {
+      quantityValue = 1;
+    }
+    if (quantityValue > 3) {
+      quantityValue = 3;
+    }
+    var instanceDescriptions = ['', '', ''];
+    if (Array.isArray(detail.instanceDescriptions)) {
+      detail.instanceDescriptions.slice(0, 3).forEach(function(entry, index) {
+        instanceDescriptions[index] = entry !== null && entry !== undefined ? String(entry) : '';
+      });
+    }
     normalizedDetails.push({
       feature: featureId,
       commentEnabled: true,
-      comment: commentText
+      comment: commentText,
+      example: exampleText,
+      quantity: quantityValue,
+      instanceDescriptions: instanceDescriptions
     });
     detailMap[featureId] = true;
   });
@@ -813,7 +833,14 @@ function buildReportFavoriteResponse(entry) {
     if (!featureId || detailMap[featureId]) {
       return;
     }
-    normalizedDetails.push({ feature: featureId, commentEnabled: true, comment: '' });
+    normalizedDetails.push({
+      feature: featureId,
+      commentEnabled: true,
+      comment: '',
+      example: '',
+      quantity: 1,
+      instanceDescriptions: ['', '', '']
+    });
     detailMap[featureId] = true;
   });
   return {
@@ -1929,6 +1956,7 @@ function saveReportFavorite(payload) {
   var normalizedFeatureDetails = [];
   var seenFeatureDetails = {};
   var missingFeatureComments = [];
+  var missingFeatureDescriptions = [];
   featureDetails.forEach(function(entry) {
     if (!entry) {
       return;
@@ -1947,6 +1975,22 @@ function saveReportFavorite(payload) {
     if (entry.comment !== null && entry.comment !== undefined) {
       commentText = String(entry.comment).trim();
     }
+    var exampleText = '';
+    if (entry.example !== null && entry.example !== undefined) {
+      exampleText = String(entry.example).trim();
+    }
+    var quantityValue = parseInt(entry.quantity, 10);
+    if (isNaN(quantityValue) || quantityValue < 1) {
+      quantityValue = 1;
+    }
+    if (quantityValue > 3) {
+      quantityValue = 3;
+    }
+    var rawInstances = Array.isArray(entry.instanceDescriptions) ? entry.instanceDescriptions : [];
+    var normalizedInstances = ['', '', ''];
+    rawInstances.slice(0, 3).forEach(function(value, index) {
+      normalizedInstances[index] = value !== null && value !== undefined ? String(value).trim() : '';
+    });
     if (!commentText) {
       var missingLabel = featureLabelMap[featureId] || featureId;
       if (missingFeatureComments.indexOf(missingLabel) === -1) {
@@ -1954,10 +1998,21 @@ function saveReportFavorite(payload) {
       }
       return;
     }
+    for (var idx = 0; idx < quantityValue; idx++) {
+      if (!normalizedInstances[idx]) {
+        var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
+        if (missingFeatureDescriptions.indexOf(descLabel) === -1) {
+          missingFeatureDescriptions.push(descLabel);
+        }
+      }
+    }
     normalizedFeatureDetails.push({
       feature: featureId,
       commentEnabled: true,
-      comment: commentText
+      comment: commentText,
+      example: exampleText,
+      quantity: quantityValue,
+      instanceDescriptions: normalizedInstances
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -1988,6 +2043,13 @@ function saveReportFavorite(payload) {
     } else {
       missing.push('comentario para: ' + missingFeatureComments.join(', '));
     }
+  }
+  if (missingFeatureDescriptions.length > 0) {
+    missingFeatureDescriptions.forEach(function(message) {
+      if (missing.indexOf(message) === -1) {
+        missing.push(message);
+      }
+    });
   }
   if (missing.length > 0) {
     throw new Error('Faltan datos para guardar el reporte favorito:\n- ' + missing.join('\n- '));
