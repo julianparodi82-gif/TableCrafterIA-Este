@@ -737,6 +737,141 @@ function listSavedTables() {
   return result;
 }
 
+function listSavedActions() {
+  SpreadsheetApp.flush();
+  var meta = getMetaSheet();
+  var data = meta.getDataRange().getValues();
+  var actions = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId) {
+      continue;
+    }
+    var type = normalizeMetaRecordType(row[META_INDEX.recordType]);
+    if (type !== 'table' && type !== 'reportFavorite') {
+      continue;
+    }
+    actions.push({
+      id: entryId,
+      type: type,
+      name: row[META_INDEX.name] || '',
+      description: row[META_INDEX.description] || '',
+      createdAt: row[META_INDEX.createdAt] || '',
+      updatedAt: row[META_INDEX.updatedAt] || ''
+    });
+  }
+  actions.sort(function(a, b) {
+    var nameA = (a && a.name ? String(a.name) : '').toLowerCase();
+    var nameB = (b && b.name ? String(b.name) : '').toLowerCase();
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+    return 0;
+  });
+  return actions;
+}
+
+function buildReportFavoriteResponse(entry) {
+  var data = entry && entry.data ? entry.data : [];
+  var config = parseJsonValue(data[META_INDEX.reportConfig], {});
+  if (!config || typeof config !== 'object') {
+    config = {};
+  }
+  var features = Array.isArray(config.features) ? config.features : [];
+  var featureDetails = Array.isArray(config.featureDetails) ? config.featureDetails : [];
+  var detailMap = {};
+  var normalizedDetails = [];
+  featureDetails.forEach(function(detail) {
+    if (!detail) {
+      return;
+    }
+    var featureId = normalizeMetaId(detail.feature);
+    if (!featureId) {
+      return;
+    }
+    if (detailMap[featureId]) {
+      return;
+    }
+    var commentEnabled = parseBooleanValue(detail.commentEnabled, false);
+    var commentText = '';
+    if (commentEnabled && detail.comment !== null && detail.comment !== undefined) {
+      commentText = String(detail.comment);
+    }
+    normalizedDetails.push({
+      feature: featureId,
+      commentEnabled: commentEnabled,
+      comment: commentEnabled ? commentText : ''
+    });
+    detailMap[featureId] = true;
+  });
+  features.forEach(function(feature) {
+    var featureId = normalizeMetaId(feature);
+    if (!featureId || detailMap[featureId]) {
+      return;
+    }
+    normalizedDetails.push({ feature: featureId, commentEnabled: false, comment: '' });
+    detailMap[featureId] = true;
+  });
+  return {
+    id: normalizeMetaId(data[META_INDEX.id]),
+    type: 'reportFavorite',
+    name: data[META_INDEX.name] || '',
+    description: data[META_INDEX.description] || '',
+    createdAt: data[META_INDEX.createdAt] || '',
+    updatedAt: data[META_INDEX.updatedAt] || '',
+    format: config.format || '',
+    fileName: config.fileName || '',
+    fileExtension: config.fileExtension || '',
+    tables: Array.isArray(config.tables) ? config.tables : [],
+    channels: Array.isArray(config.channels) ? config.channels : [],
+    descriptionEnabled: parseBooleanValue(config.descriptionEnabled, false),
+    descriptionText: config.description || '',
+    features: features,
+    featureDetails: normalizedDetails,
+    emails: Array.isArray(config.emails) ? config.emails : [],
+    phones: Array.isArray(config.phones) ? config.phones : []
+  };
+}
+
+function getSavedActionDetails(actionId) {
+  var id = normalizeMetaId(actionId);
+  if (!id) {
+    return { error: 'Acción no encontrada.' };
+  }
+  var entry = findMetaById(id);
+  if (!entry || !entry.data) {
+    return { error: 'Acción no encontrada.' };
+  }
+  var type = normalizeMetaRecordType(entry.data[META_INDEX.recordType]);
+  if (type === 'table') {
+    var row = entry.data;
+    var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
+    var sheetName = row[META_INDEX.sheet] || rangeParts.sheet;
+    var pureRange = rangeParts.range || '';
+    return {
+      id: normalizeMetaId(row[META_INDEX.id]),
+      type: 'table',
+      name: row[META_INDEX.name] || '',
+      description: row[META_INDEX.description] || '',
+      sheetName: sheetName || '',
+      rangeA1: pureRange,
+      fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
+      cols: row[META_INDEX.cols] || '',
+      rows: row[META_INDEX.rows] || '',
+      createdAt: row[META_INDEX.createdAt] || '',
+      updatedAt: row[META_INDEX.updatedAt] || ''
+    };
+  }
+  if (type === 'reportFavorite') {
+    return buildReportFavoriteResponse(entry);
+  }
+  return { error: 'Acción no soportada.' };
+}
+
 function focusSavedTableRange(tableId) {
   var id = normalizeMetaId(tableId);
   if (!id) {
@@ -1779,6 +1914,35 @@ function saveReportFavorite(payload) {
   if (normalizedTables.length === 0) {
     throw new Error('Debe asociar al menos una tabla al reporte favorito.');
   }
+  var featureDetails = Array.isArray(payload.featureDetails) ? payload.featureDetails : [];
+  var normalizedFeatureDetails = [];
+  var seenFeatureDetails = {};
+  featureDetails.forEach(function(entry) {
+    if (!entry) {
+      return;
+    }
+    var featureId = normalizeMetaId(entry.feature);
+    if (!featureId) {
+      return;
+    }
+    if (seenFeatureDetails[featureId]) {
+      return;
+    }
+    if (!seenFeatures[featureId] && normalizedFeatures.indexOf(featureId) === -1) {
+      return;
+    }
+    var commentEnabled = !!entry.commentEnabled;
+    var commentText = '';
+    if (commentEnabled && entry.comment !== null && entry.comment !== undefined) {
+      commentText = String(entry.comment);
+    }
+    normalizedFeatureDetails.push({
+      feature: featureId,
+      commentEnabled: commentEnabled,
+      comment: commentEnabled ? commentText : ''
+    });
+    seenFeatureDetails[featureId] = true;
+  });
   var channels = Array.isArray(payload.channels) ? payload.channels : [];
   var seenChannels = {};
   var normalizedChannels = [];
@@ -1819,8 +1983,9 @@ function saveReportFavorite(payload) {
     descriptionEnabled: !!payload.descriptionEnabled,
     description: payload.description ? String(payload.description) : '',
     features: normalizedFeatures,
-    featureDescriptionsEnabled: !!payload.featureDescriptionsEnabled,
-    featureDescriptions: payload.featureDescriptions ? String(payload.featureDescriptions) : '',
+    featureDetails: normalizedFeatureDetails,
+    featureDescriptionsEnabled: false,
+    featureDescriptions: '',
     emails: normalizedEmails,
     phones: normalizedPhones,
     savedAt: now

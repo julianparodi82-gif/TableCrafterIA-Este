@@ -382,38 +382,171 @@
         margin-top: 12px;
       }
       .ai-feature-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 8px;
-      }
-      .ai-feature-item {
         display: flex;
-        align-items: flex-start;
+        flex-wrap: wrap;
         gap: 8px;
-        padding: 8px 10px;
-        border: 1px solid #E5E7EB;
-        border-radius: 6px;
+      }
+      .ai-feature-option {
+        flex: 0 0 auto;
+      }
+      .ai-feature-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 132px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        border: 1px solid #D1D5DB;
         background-color: #FFFFFF;
-        font-size: 14px;
+        font-size: 13px;
         color: #1F2937;
+        cursor: pointer;
+        position: relative;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
-      .ai-feature-item input {
-        margin-top: 2px;
+      .ai-feature-chip:hover {
+        border-color: #9CA3AF;
+        background-color: #F3F4F6;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
       }
-      .ai-feature-descriptions-toggle {
+      .ai-feature-chip input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .ai-feature-chip-label {
+        flex: 1 1 auto;
+      }
+      .ai-feature-chip-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1px solid #9CA3AF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: transparent;
+        transition: all 0.2s ease;
+      }
+      .ai-feature-chip.is-selected {
+        border-color: #2563EB;
+        background-color: #EFF6FF;
+        color: #1D4ED8;
+        box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+      }
+      .ai-feature-chip.is-selected .ai-feature-chip-check {
+        background-color: #2563EB;
+        border-color: #1D4ED8;
+        color: #FFFFFF;
+      }
+      .ai-feature-extra {
+        margin-top: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px dashed #CBD5F5;
+        background-color: #F8FAFF;
+      }
+      .ai-feature-comment-toggle {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 14px;
+        font-size: 12px;
         color: #374151;
       }
-      .ai-feature-descriptions-toggle input {
+      .ai-feature-comment-toggle input {
         margin: 0;
       }
-      .ai-feature-descriptions-field {
-        min-height: 64px;
+      .ai-feature-comment-field {
+        margin-top: 6px;
+        width: 100%;
+        min-height: 54px;
+        font-size: 12px;
         resize: vertical;
+      }
+      .ai-actions-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .ai-actions-icon {
+        font-size: 24px;
+        color: #F59E0B;
+      }
+      .ai-actions-title {
+        margin: 0;
+        font-size: 18px;
+      }
+      .ai-actions-description {
+        margin: 4px 0 0;
+        color: #4B5563;
+        font-size: 13px;
+      }
+      .ai-actions-select-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .ai-actions-select-row label {
+        font-weight: 600;
+      }
+      .ai-actions-selectors {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ai-actions-dropdown {
+        flex: 1 1 auto;
+        min-height: 38px;
+      }
+      .ai-action-details {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-action-card {
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 16px;
+        background-color: #FFFFFF;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+      .ai-action-card h4 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .ai-action-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 12px;
+        color: #6B7280;
+      }
+      .ai-action-summary {
+        margin: 8px 0 0;
+        color: #374151;
+        font-size: 13px;
+        white-space: pre-line;
+      }
+      .ai-action-buttons {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .ai-action-empty {
+        color: #6B7280;
+        font-size: 13px;
         margin-top: 4px;
+      }
+      .ai-action-highlight {
+        font-weight: 600;
+        color: #111827;
       }
       .ai-report-favorite-row {
         margin-top: 16px;
@@ -1083,8 +1216,8 @@
           <span class="favorite-icon" aria-hidden="true">★</span>
           <span class="visually-hidden">Favoritas</span>
         </button>
-        <button class="tab-btn" data-tab="questionsTab">
-          <span class="tab-label">Preguntas</span>
+        <button class="tab-btn" data-tab="actionsTab">
+          <span class="tab-label">Acciones</span>
           <span class="favorite-icon" aria-hidden="true">★</span>
           <span class="visually-hidden">Favoritas</span>
         </button>
@@ -1314,40 +1447,110 @@
                 <p class="ai-report-helper" style="margin-top:0;">
                   Selecciona los componentes que debe incluir tu reporte final.
                 </p>
-                <div class="ai-feature-list">
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="chart" />
-                    <span>Gráfico</span>
-                  </label>
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="table" />
-                    <span>Tabla</span>
-                  </label>
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="list" />
-                    <span>Lista</span>
-                  </label>
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="summary" />
-                    <span>Resumen</span>
-                  </label>
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="comments" />
-                    <span>Comentarios</span>
-                  </label>
-                  <label class="ai-feature-item">
-                    <input type="checkbox" name="aiReportFeatures" value="metrics" />
-                    <span>Indicadores clave</span>
-                  </label>
+                <div class="ai-feature-list" id="aiReportFeatureList">
+                  <div class="ai-feature-option" data-feature="chart">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="chart" />
+                      <span class="ai-feature-chip-label">Gráfico</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="chart" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="chart"
+                        placeholder="Describe qué debe incluir el gráfico"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="ai-feature-option" data-feature="table">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="table" />
+                      <span class="ai-feature-chip-label">Tabla</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="table" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="table"
+                        placeholder="Detalla el contenido esperado de la tabla"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="ai-feature-option" data-feature="list">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="list" />
+                      <span class="ai-feature-chip-label">Lista</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="list" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="list"
+                        placeholder="Indica la información que debe listar"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="ai-feature-option" data-feature="summary">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="summary" />
+                      <span class="ai-feature-chip-label">Resumen</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="summary" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="summary"
+                        placeholder="Especifica los puntos clave del resumen"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="ai-feature-option" data-feature="comments">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="comments" />
+                      <span class="ai-feature-chip-label">Comentarios</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="comments" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="comments"
+                        placeholder="Indica cómo deben redactarse los comentarios"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="ai-feature-option" data-feature="metrics">
+                    <label class="ai-feature-chip">
+                      <input type="checkbox" name="aiReportFeatures" value="metrics" />
+                      <span class="ai-feature-chip-label">Indicadores clave</span>
+                      <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                    </label>
+                    <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
+                      <label class="ai-feature-comment-toggle">
+                        <input type="checkbox" data-feature-comment-toggle="metrics" /> Agregar comentario
+                      </label>
+                      <textarea
+                        class="ai-feature-comment-field ai-hidden"
+                        data-feature-comment-input="metrics"
+                        placeholder="Define los KPIs o métricas a resaltar"
+                      ></textarea>
+                    </div>
+                  </div>
                 </div>
-                <label class="ai-feature-descriptions-toggle">
-                  <input type="checkbox" id="aiReportFeatureDescriptionsToggle" /> Agregar descripción por característica
-                </label>
-                <textarea
-                  id="aiReportFeatureDescriptions"
-                  class="ai-feature-descriptions-field ai-hidden"
-                  placeholder="Detalla qué debe incluir cada característica seleccionada"
-                ></textarea>
               </div>
             </div>
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
@@ -1503,9 +1706,28 @@
           <p>Revisa tus plantillas favoritas para reutilizarlas rápidamente.</p>
         </div>
       </div>
-      <div id="questionsTab" class="tab-content">
+      <div id="actionsTab" class="tab-content">
         <div class="section">
-          <p>Consulta y gestiona tus preguntas marcadas como favoritas.</p>
+          <div class="ai-actions-header">
+            <span class="ai-actions-icon" aria-hidden="true">★</span>
+            <div>
+              <h3 class="ai-actions-title">Acciones guardadas</h3>
+              <p class="ai-actions-description">
+                Selecciona y gestiona los reportes, tablas y consultas que hayas marcado como favoritas.
+              </p>
+            </div>
+          </div>
+          <div class="ai-actions-select-row">
+            <label for="aiSavedActions">Lista de acciones</label>
+            <div class="ai-actions-selectors">
+              <select id="aiSavedActions" class="ai-actions-dropdown">
+                <option value="">Seleccionar...</option>
+              </select>
+              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
+          </div>
+          <div id="aiActionsEmptyMessage" class="ai-action-empty">No hay acciones guardadas todavía.</div>
+          <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite"></div>
         </div>
       </div>
     </div>
@@ -1571,10 +1793,13 @@
       let reportSectionInitialized = false;
       let selectedReportChannels = [];
       let selectedReportFeatures = [];
-      let reportFeatureDescriptionsEnabled = false;
+      let reportFeatureState = {};
       let reportFavoritePanelVisible = false;
       let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
+      let savedActionsCache = [];
+      let loadingSavedActions = false;
+      let currentSavedActionId = '';
 
       let headerKeyCounter = 0;
 
@@ -4480,31 +4705,586 @@
         summary.classList.remove('ai-hidden');
       }
 
-      function toggleFeatureDescriptionsField(visible) {
-        const field = document.getElementById('aiReportFeatureDescriptions');
-        if (!field) {
-          reportFeatureDescriptionsEnabled = false;
+      function ensureReportFeatureState(feature) {
+        const key = feature || '';
+        if (!key) {
+          return null;
+        }
+        if (!reportFeatureState[key]) {
+          reportFeatureState[key] = {
+            selected: false,
+            commentEnabled: false,
+            comment: ''
+          };
+        }
+        return reportFeatureState[key];
+      }
+
+      function refreshReportFeatureOption(feature) {
+        if (!feature) {
           return;
         }
-        reportFeatureDescriptionsEnabled = !!visible;
-        if (visible) {
-          field.classList.remove('ai-hidden');
-        } else {
-          field.classList.add('ai-hidden');
-          field.value = '';
+        const state = ensureReportFeatureState(feature);
+        const option = document.querySelector(
+          '#aiReportFeatureList .ai-feature-option[data-feature="' + feature + '"]'
+        );
+        if (!option || !state) {
+          return;
+        }
+        const chip = option.querySelector('.ai-feature-chip');
+        if (chip) {
+          chip.classList.toggle('is-selected', !!state.selected);
+        }
+        const checkbox = option.querySelector('input[name="aiReportFeatures"][value="' + feature + '"]');
+        if (checkbox) {
+          checkbox.checked = !!state.selected;
+        }
+        const extra = option.querySelector('[data-feature-extra="' + feature + '"]');
+        if (extra) {
+          extra.classList.toggle('ai-hidden', !state.selected);
+        }
+        const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
+        if (toggle) {
+          toggle.checked = !!state.selected && !!state.commentEnabled;
+          toggle.disabled = !state.selected;
+        }
+        const commentField = option.querySelector('[data-feature-comment-input="' + feature + '"]');
+        if (commentField) {
+          const shouldShow = !!state.selected && !!state.commentEnabled;
+          commentField.classList.toggle('ai-hidden', !shouldShow);
+          commentField.disabled = !shouldShow;
+          if (shouldShow) {
+            commentField.value = state.comment || '';
+          } else {
+            commentField.value = '';
+          }
         }
       }
 
-      function handleReportFeatureChange() {
-        const checkboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
-        const values = [];
-        checkboxes.forEach(function(cb) {
-          if (cb && cb.checked && cb.value) {
-            values.push(cb.value);
+      function updateSelectedReportFeatures() {
+        selectedReportFeatures = Object.keys(reportFeatureState).filter(function(key) {
+          const state = reportFeatureState[key];
+          return state && state.selected;
+        });
+        updateReportFeaturesSummary();
+      }
+
+      function handleReportFeatureSelection(feature, checked) {
+        const state = ensureReportFeatureState(feature);
+        if (!state) {
+          return;
+        }
+        const isChecked = !!checked;
+        state.selected = isChecked;
+        if (!isChecked) {
+          state.commentEnabled = false;
+          state.comment = '';
+        }
+        refreshReportFeatureOption(feature);
+        updateSelectedReportFeatures();
+      }
+
+      function handleReportFeatureCommentToggle(feature, checked) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        state.commentEnabled = !!checked;
+        if (!state.commentEnabled) {
+          state.comment = '';
+        }
+        refreshReportFeatureOption(feature);
+      }
+
+      function handleReportFeatureCommentInput(feature, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected || !state.commentEnabled) {
+          return;
+        }
+        state.comment = value === null || value === undefined ? '' : String(value);
+      }
+
+      function initializeReportFeatureControls() {
+        reportFeatureState = {};
+        const featureOptions = document.querySelectorAll('#aiReportFeatureList .ai-feature-option');
+        featureOptions.forEach(function(option) {
+          const feature = option.dataset ? option.dataset.feature : '';
+          if (!feature) {
+            return;
+          }
+          ensureReportFeatureState(feature);
+          const checkbox = option.querySelector('input[name="aiReportFeatures"][value="' + feature + '"]');
+          if (checkbox && !checkbox.dataset.bound) {
+            checkbox.addEventListener('change', function() {
+              handleReportFeatureSelection(feature, checkbox.checked);
+            });
+            checkbox.dataset.bound = 'true';
+          }
+          const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
+          if (toggle && !toggle.dataset.bound) {
+            toggle.addEventListener('change', function() {
+              handleReportFeatureCommentToggle(feature, toggle.checked);
+            });
+            toggle.dataset.bound = 'true';
+          }
+          const commentField = option.querySelector('[data-feature-comment-input="' + feature + '"]');
+          if (commentField && !commentField.dataset.bound) {
+            commentField.addEventListener('input', function() {
+              handleReportFeatureCommentInput(feature, commentField.value);
+            });
+            commentField.dataset.bound = 'true';
+          }
+          refreshReportFeatureOption(feature);
+        });
+        updateSelectedReportFeatures();
+      }
+
+      function normalizeFeatureId(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
+      function applyReportFeatureSelections(features, featureDetails) {
+        initializeReportFeatureControls();
+        const selectedSet = Object.create(null);
+        if (Array.isArray(features)) {
+          features.forEach(function(value) {
+            const id = normalizeFeatureId(value);
+            if (id) {
+              selectedSet[id] = true;
+            }
+          });
+        }
+        const detailMap = Object.create(null);
+        if (Array.isArray(featureDetails)) {
+          featureDetails.forEach(function(detail) {
+            if (!detail) {
+              return;
+            }
+            const featureId = normalizeFeatureId(detail.feature);
+            if (!featureId) {
+              return;
+            }
+            if (!selectedSet[featureId]) {
+              return;
+            }
+            if (detailMap[featureId]) {
+              return;
+            }
+            const commentEnabled = detail.commentEnabled === true || detail.commentEnabled === 'true' || detail.commentEnabled === 1;
+            const commentText = commentEnabled && detail.comment !== null && detail.comment !== undefined
+              ? String(detail.comment)
+              : '';
+            detailMap[featureId] = {
+              commentEnabled: commentEnabled,
+              comment: commentEnabled ? commentText : ''
+            };
+          });
+        }
+        Object.keys(reportFeatureState).forEach(function(feature) {
+          const state = ensureReportFeatureState(feature);
+          const isSelected = !!selectedSet[feature];
+          state.selected = isSelected;
+          if (isSelected && detailMap[feature]) {
+            state.commentEnabled = !!detailMap[feature].commentEnabled;
+            state.comment = detailMap[feature].commentEnabled ? detailMap[feature].comment : '';
+          } else {
+            state.commentEnabled = false;
+            state.comment = '';
+          }
+          refreshReportFeatureOption(feature);
+        });
+        updateSelectedReportFeatures();
+      }
+
+      function getActionTypeLabel(type) {
+        const normalized = (type || '').toLowerCase();
+        if (normalized === 'reportfavorite') {
+          return 'Reporte favorito';
+        }
+        if (normalized === 'table') {
+          return 'Tabla';
+        }
+        return 'Acción';
+      }
+
+      function renderSavedActionsSelect(actions, selectedId) {
+        const select = document.getElementById('aiSavedActions');
+        const emptyMessage = document.getElementById('aiActionsEmptyMessage');
+        if (!select) {
+          return;
+        }
+        const list = Array.isArray(actions) ? actions.slice() : [];
+        select.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Seleccionar...';
+        select.appendChild(defaultOption);
+        if (list.length === 0) {
+          select.disabled = true;
+          if (emptyMessage) {
+            emptyMessage.textContent = 'No hay acciones guardadas todavía.';
+            emptyMessage.classList.remove('ai-hidden');
+          }
+          clearSavedActionDetails();
+          return;
+        }
+        list.sort(function(a, b) {
+          const nameA = (a && a.name ? a.name : '').toLowerCase();
+          const nameB = (b && b.name ? b.name : '').toLowerCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        list.forEach(function(action) {
+          if (!action || !action.id) {
+            return;
+          }
+          const option = document.createElement('option');
+          option.value = action.id;
+          const label = action.name ? action.name : 'Acción sin nombre';
+          option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+          select.appendChild(option);
+        });
+        select.disabled = false;
+        if (emptyMessage) {
+          emptyMessage.classList.add('ai-hidden');
+        }
+        if (selectedId) {
+          const normalized = String(selectedId);
+          const option = Array.prototype.find.call(select.options, function(item) {
+            return item && item.value === normalized;
+          });
+          if (option) {
+            select.value = normalized;
+          } else {
+            select.value = '';
+            currentSavedActionId = '';
+          }
+        } else {
+          select.value = '';
+        }
+      }
+
+      function clearSavedActionDetails() {
+        const container = document.getElementById('aiActionDetails');
+        if (!container) {
+          return;
+        }
+        container.innerHTML = '';
+        container.classList.add('ai-hidden');
+      }
+
+      function buildReportFavoriteSummary(action) {
+        if (!action) {
+          return '';
+        }
+        const parts = [];
+        if (action.format) {
+          const formatLabel = REPORT_FORMAT_LABELS[action.format] || action.format;
+          parts.push('Formato: ' + formatLabel);
+        }
+        if (Array.isArray(action.features) && action.features.length > 0) {
+          const labels = action.features
+            .map(function(feature) {
+              return REPORT_FEATURE_LABELS[feature] || feature;
+            })
+            .filter(function(label) {
+              return !!label;
+            });
+          if (labels.length) {
+            parts.push('Características: ' + labels.join(', '));
+          }
+        }
+        if (Array.isArray(action.channels) && action.channels.length > 0) {
+          parts.push('Canales: ' + action.channels.join(', '));
+        }
+        if (action.fileName) {
+          parts.push('Archivo: ' + action.fileName + (action.fileExtension ? '.' + action.fileExtension : ''));
+        }
+        if (action.descriptionEnabled && action.descriptionText) {
+          parts.push('Descripción del reporte incluida.');
+        }
+        return parts.join('\n');
+      }
+
+      function renderSavedActionDetails(action) {
+        const container = document.getElementById('aiActionDetails');
+        if (!container) {
+          return;
+        }
+        container.innerHTML = '';
+        if (!action || !action.id) {
+          container.classList.add('ai-hidden');
+          return;
+        }
+        const card = document.createElement('div');
+        card.className = 'ai-action-card';
+        const title = document.createElement('h4');
+        title.textContent = action.name || 'Acción sin nombre';
+        card.appendChild(title);
+        const meta = document.createElement('div');
+        meta.className = 'ai-action-meta';
+        const typeBadge = document.createElement('span');
+        typeBadge.textContent = getActionTypeLabel(action.type);
+        meta.appendChild(typeBadge);
+        if (action.updatedAt) {
+          const updated = document.createElement('span');
+          updated.textContent = 'Actualizado: ' + action.updatedAt;
+          meta.appendChild(updated);
+        }
+        if (action.createdAt) {
+          const created = document.createElement('span');
+          created.textContent = 'Creado: ' + action.createdAt;
+          meta.appendChild(created);
+        }
+        card.appendChild(meta);
+        if (action.type === 'table') {
+          if (action.description) {
+            const description = document.createElement('p');
+            description.className = 'ai-action-summary';
+            description.textContent = action.description;
+            card.appendChild(description);
+          }
+          const extra = document.createElement('p');
+          extra.className = 'ai-action-summary';
+          const rangeInfo = [];
+          if (action.sheetName) {
+            rangeInfo.push('Hoja: ' + action.sheetName);
+          }
+          if (action.rangeA1) {
+            rangeInfo.push('Rango: ' + action.rangeA1);
+          }
+          if (action.rows) {
+            rangeInfo.push('Filas: ' + action.rows);
+          }
+          if (action.cols) {
+            rangeInfo.push('Columnas: ' + action.cols);
+          }
+          extra.textContent = rangeInfo.join(' • ');
+          card.appendChild(extra);
+        } else if (action.type === 'reportFavorite') {
+          const summaryText = buildReportFavoriteSummary(action);
+          if (summaryText) {
+            const summary = document.createElement('p');
+            summary.className = 'ai-action-summary';
+            summary.textContent = summaryText;
+            card.appendChild(summary);
+          }
+          if (Array.isArray(action.tables) && action.tables.length > 0) {
+            const tablesInfo = document.createElement('p');
+            tablesInfo.className = 'ai-action-summary';
+            tablesInfo.textContent = 'Tablas vinculadas: ' + action.tables.join(', ');
+            card.appendChild(tablesInfo);
+          }
+        }
+        const buttons = document.createElement('div');
+        buttons.className = 'ai-action-buttons';
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-secondary';
+        editBtn.textContent = action.type === 'table' ? 'Editar tabla' : 'Editar reporte';
+        editBtn.addEventListener('click', function() {
+          openActionForEditing(action);
+        });
+        buttons.appendChild(editBtn);
+        card.appendChild(buttons);
+        container.appendChild(card);
+        container.classList.remove('ai-hidden');
+      }
+
+      async function loadSavedActionDetails(actionId) {
+        if (!actionId) {
+          clearSavedActionDetails();
+          currentSavedActionId = '';
+          return;
+        }
+        let response;
+        try {
+          response = await callServerFunction('getSavedActionDetails', actionId);
+        } catch (err) {
+          await showMessageModal('No se pudo cargar la acción seleccionada: ' + (err && err.message ? err.message : err), {
+            title: 'Error al cargar',
+            variant: 'error'
+          });
+          return;
+        }
+        if (!response || response.error) {
+          await showMessageModal((response && response.error) || 'No se encontró la acción seleccionada.', {
+            title: 'Acción no disponible',
+            variant: 'warning'
+          });
+          clearSavedActionDetails();
+          currentSavedActionId = '';
+          return;
+        }
+        currentSavedActionId = actionId;
+        renderSavedActionDetails(response);
+      }
+
+      async function refreshSavedActions(options) {
+        const opts = options || {};
+        if (loadingSavedActions) {
+          return;
+        }
+        loadingSavedActions = true;
+        try {
+          const result = await callServerFunction('listSavedActions');
+          savedActionsCache = Array.isArray(result) ? result.slice() : [];
+          renderSavedActionsSelect(savedActionsCache, opts.selectId || currentSavedActionId);
+          const targetId = opts.selectId || currentSavedActionId;
+          if (targetId) {
+            const exists = savedActionsCache.some(function(entry) {
+              return entry && entry.id === targetId;
+            });
+            if (exists) {
+              await loadSavedActionDetails(targetId);
+            } else {
+              clearSavedActionDetails();
+              currentSavedActionId = '';
+            }
+          } else {
+            clearSavedActionDetails();
+          }
+        } catch (err) {
+          savedActionsCache = [];
+          renderSavedActionsSelect([], '');
+          await showMessageModal('No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err), {
+            title: 'Error al listar acciones',
+            variant: 'error'
+          });
+        } finally {
+          loadingSavedActions = false;
+        }
+      }
+
+      function setAiTablesSelection(values) {
+        const select = document.getElementById('aiSavedTables');
+        const list = document.getElementById('aiSavedTablesList');
+        if (!select || !list) {
+          return;
+        }
+        const normalizedValues = Array.isArray(values)
+          ? values.map(function(value) {
+              return String(value);
+            })
+          : [];
+        const selectedMap = Object.create(null);
+        normalizedValues.forEach(function(value) {
+          selectedMap[value] = true;
+        });
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option || !option.value || option.disabled) {
+            option.selected = false;
+            return;
+          }
+          option.selected = !!selectedMap[option.value];
+        });
+        renderAiSavedTablesList(savedTablesCache, {
+          includeAll: list.dataset && list.dataset.allValue === ALL_TABLES_OPTION_VALUE,
+          allValue: list.dataset && list.dataset.allValue === ALL_TABLES_OPTION_VALUE ? ALL_TABLES_OPTION_VALUE : '',
+          allLabel: 'Todas las tablas',
+          groupBySheet: list.dataset && list.dataset.groupBySheet === 'true',
+          disabled: select.disabled,
+          selectedValues: getSelectedOptionValues(select)
+        });
+      }
+
+      async function loadReportFavoriteIntoPanel(action) {
+        if (!action) {
+          return;
+        }
+        await attemptTabChange('aiTab', { force: true });
+        const aiActionSelect = document.getElementById('aiActionSelect');
+        if (aiActionSelect) {
+          aiActionSelect.value = 'report';
+        }
+        updateAiActionState();
+        if (Array.isArray(action.tables) && action.tables.length > 0) {
+          try {
+            await refreshSavedTables(['aiSavedTables'], {});
+          } catch (err) {
+            console.log('No se pudieron actualizar las tablas para el reporte favorito.', err);
+          }
+          setAiTablesSelection(action.tables);
+        }
+        if (action.format) {
+          handleReportFormatSelection(action.format);
+        } else {
+          handleReportFormatSelection('');
+        }
+        applyReportFeatureSelections(action.features || [], action.featureDetails || []);
+        const descToggle = document.getElementById('aiReportDescriptionToggle');
+        if (descToggle) {
+          descToggle.checked = !!action.descriptionEnabled;
+        }
+        toggleReportDescriptionField(action.descriptionEnabled);
+        const descField = document.getElementById('aiReportDescription');
+        if (descField) {
+          descField.value = action.descriptionEnabled ? action.descriptionText || '' : '';
+        }
+        const fileNameInput = document.getElementById('aiReportFileName');
+        if (fileNameInput) {
+          fileNameInput.value = action.fileName || '';
+        }
+        updateReportFileExtension();
+        selectedReportChannels = Array.isArray(action.channels) ? action.channels.slice() : [];
+        const channelSet = Object.create(null);
+        selectedReportChannels.forEach(function(channel) {
+          if (channel) {
+            channelSet[channel] = true;
           }
         });
-        selectedReportFeatures = values;
-        updateReportFeaturesSummary();
+        const channelCheckboxes = getReportDeliveryCheckboxes();
+        channelCheckboxes.forEach(function(cb) {
+          if (cb && cb.value) {
+            cb.checked = !!channelSet[cb.value];
+          }
+        });
+        updateReportDeliverySummary();
+        updateReportDeliverySections();
+        const deliverySection = document.getElementById('aiReportDeliverySection');
+        if (deliverySection) {
+          deliverySection.classList.remove('ai-hidden');
+        }
+        renderReportEmailList(action.emails || []);
+        renderReportPhoneList(action.phones || []);
+        setReportHelperMessage('aiReportEmailMessage', '');
+        setReportHelperMessage('aiReportPhoneMessage', '');
+        const favoritePanel = document.getElementById('aiReportFavoritePanel');
+        if (favoritePanel) {
+          setReportFavoritePanelVisible(false);
+        }
+        await showMessageModal('El reporte favorito se cargó en el Panel IA. Ajusta los valores y guarda los cambios si es necesario.', {
+          title: 'Reporte cargado',
+          variant: 'info',
+          primaryText: 'Aceptar',
+          secondaryText: ''
+        });
+      }
+
+      async function openActionForEditing(action) {
+        if (!action || !action.id) {
+          return;
+        }
+        if (action.type === 'table') {
+          await refreshSavedTables(['editSavedTables', 'aiSavedTables'], { selectId: action.id });
+          await attemptTabChange('editTab', { force: true });
+          selectEditSavedTable(action.id);
+        } else if (action.type === 'reportFavorite') {
+          await loadReportFavoriteIntoPanel(action);
+        } else {
+          await showMessageModal('Esta acción todavía no se puede editar desde el panel.', {
+            title: 'Acción no soportada',
+            variant: 'warning'
+          });
+        }
       }
 
       function getSelectedAiTableIds() {
@@ -4580,13 +5360,25 @@
         const descriptionEnabled = descriptionToggle ? !!descriptionToggle.checked : false;
         const descriptionText =
           descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
-        const featureDescriptionField = document.getElementById('aiReportFeatureDescriptions');
-        const featureDescriptionsText =
-          reportFeatureDescriptionsEnabled && featureDescriptionField
-            ? featureDescriptionField.value || ''
-            : '';
         const fileNameInput = document.getElementById('aiReportFileName');
         const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
+        const featureDetails = Array.isArray(selectedReportFeatures)
+          ? selectedReportFeatures.map(function(feature) {
+              const state = ensureReportFeatureState(feature);
+              if (!state) {
+                return {
+                  feature: feature,
+                  commentEnabled: false,
+                  comment: ''
+                };
+              }
+              return {
+                feature: feature,
+                commentEnabled: !!state.commentEnabled,
+                comment: state.commentEnabled ? state.comment || '' : ''
+              };
+            })
+          : [];
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,
@@ -4601,8 +5393,7 @@
           features: Array.isArray(selectedReportFeatures)
             ? selectedReportFeatures.slice()
             : [],
-          featureDescriptionsEnabled: !!reportFeatureDescriptionsEnabled,
-          featureDescriptions: featureDescriptionsText,
+          featureDetails: featureDetails,
           emails: sanitizeContactSelection(
             getCheckedValuesFromList('aiReportEmailList'),
             REPORT_ALL_EMAILS_VALUE
@@ -4754,22 +5545,13 @@
         document.querySelectorAll('#aiReportSection .ai-report-btn').forEach(function(btn) {
           btn.classList.remove('selected');
         });
-        selectedReportFeatures = [];
-        const featureCheckboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
-        featureCheckboxes.forEach(function(cb) {
-          cb.checked = false;
-        });
+        initializeReportFeatureControls();
         const featuresWrapper = document.getElementById('aiReportFeaturesWrapper');
         if (featuresWrapper) {
           featuresWrapper.classList.add('ai-hidden');
           setCollapsibleOpen(featuresWrapper, true);
         }
         updateReportFeaturesSummary();
-        const featureDescToggle = document.getElementById('aiReportFeatureDescriptionsToggle');
-        if (featureDescToggle) {
-          featureDescToggle.checked = false;
-        }
-        toggleFeatureDescriptionsField(false);
         const descToggle = document.getElementById('aiReportDescriptionToggle');
         if (descToggle) {
           descToggle.checked = false;
@@ -4974,18 +5756,7 @@
           });
           toggleReportDescriptionField(descToggle.checked);
         }
-        const featureCheckboxes = document.querySelectorAll('#aiReportSection input[name="aiReportFeatures"]');
-        featureCheckboxes.forEach(function(cb) {
-          cb.addEventListener('change', handleReportFeatureChange);
-        });
-        handleReportFeatureChange();
-        const featureDescToggle = document.getElementById('aiReportFeatureDescriptionsToggle');
-        if (featureDescToggle) {
-          featureDescToggle.addEventListener('change', function() {
-            toggleFeatureDescriptionsField(featureDescToggle.checked);
-          });
-          toggleFeatureDescriptionsField(featureDescToggle.checked);
-        }
+        initializeReportFeatureControls();
         const deliverySelector = document.getElementById('aiReportDeliverySelector');
         if (deliverySelector) {
           const toggle = document.getElementById('aiReportDeliveryToggle');
@@ -5153,6 +5924,8 @@
           refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
           updateAiActionState();
           checkApiKey();
+        } else if (tabId === 'actionsTab') {
+          refreshSavedActions({ selectId: currentSavedActionId });
         }
       }
 
@@ -6133,6 +6906,18 @@
         if (aiActionSelect) {
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
+        }
+        const savedActionsSelect = document.getElementById('aiSavedActions');
+        if (savedActionsSelect) {
+          savedActionsSelect.addEventListener('change', function() {
+            loadSavedActionDetails(savedActionsSelect.value);
+          });
+        }
+        const savedActionsRefreshBtn = document.getElementById('aiSavedActionsRefreshBtn');
+        if (savedActionsRefreshBtn) {
+          savedActionsRefreshBtn.addEventListener('click', function() {
+            refreshSavedActions({ selectId: currentSavedActionId });
+          });
         }
         const rangeInput = document.getElementById('rangeInput');
         if (rangeInput) {
