@@ -485,15 +485,14 @@
         outline: 2px solid #2563EB;
         outline-offset: 2px;
       }
-      .ai-optional-comment {
-        position: relative;
-        display: block;
-      }
       .ai-optional-comment textarea {
         width: 100%;
       }
-      .ai-optional-comment[data-comment-hint]::before,
-      .ai-optional-comment[data-comment-hint]::after {
+      .ai-comment-hint {
+        position: relative;
+      }
+      .ai-comment-hint[data-comment-hint]::before,
+      .ai-comment-hint[data-comment-hint]::after {
         position: absolute;
         right: 0;
         bottom: calc(100% + 8px);
@@ -503,13 +502,13 @@
         transition: opacity 0.2s ease, transform 0.2s ease;
         z-index: 15;
       }
-      .ai-optional-comment[data-comment-hint]::before {
+      .ai-comment-hint[data-comment-hint]::before {
         content: '💡';
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         line-height: 1;
         transform: translateY(6px);
       }
-      .ai-optional-comment[data-comment-hint]::after {
+      .ai-comment-hint[data-comment-hint]::after {
         content: attr(data-comment-hint);
         max-width: 240px;
         background: rgba(17, 24, 39, 0.94);
@@ -524,18 +523,23 @@
         text-align: left;
         white-space: normal;
       }
-      .ai-optional-comment[data-comment-hint]:hover::before,
-      .ai-optional-comment[data-comment-hint]:hover::after,
-      .ai-optional-comment[data-comment-hint]:focus-within::before,
-      .ai-optional-comment[data-comment-hint]:focus-within::after {
+      .ai-comment-hint[data-comment-hint][data-comment-visible='true']::before,
+      .ai-comment-hint[data-comment-hint][data-comment-visible='true']::after {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
       }
       @media (prefers-reduced-motion: reduce) {
-        .ai-optional-comment[data-comment-hint]::before,
-        .ai-optional-comment[data-comment-hint]::after {
+        .ai-comment-hint[data-comment-hint]::before,
+        .ai-comment-hint[data-comment-hint]::after {
           transition: none;
+        }
+      }
+      @media (max-width: 480px) {
+        .ai-comment-hint[data-comment-hint]::before,
+        .ai-comment-hint[data-comment-hint]::after {
+          right: auto;
+          left: 0;
         }
       }
       .ai-feature-chip-check {
@@ -1559,10 +1563,10 @@
             ></textarea>
           </div>
           <div id="aiReportSection" class="ai-action-section">
-            <label class="ai-report-description-toggle">
+            <label class="ai-report-description-toggle js-comment-hint-trigger">
               <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
             </label>
-            <div class="ai-optional-comment js-optional-comment ai-hidden">
+            <div class="ai-optional-comment ai-hidden">
               <textarea
                 id="aiReportDescription"
                 class="ai-report-description-field ai-hidden"
@@ -1661,7 +1665,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="chart"
                           data-instance-index="0"
                         >
@@ -1674,7 +1678,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="chart"
                           data-instance-index="1"
                         >
@@ -1687,7 +1691,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="chart"
                           data-instance-index="2"
                         >
@@ -1724,7 +1728,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="table"
                           data-instance-index="0"
                         >
@@ -1737,7 +1741,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="table"
                           data-instance-index="1"
                         >
@@ -1750,7 +1754,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="table"
                           data-instance-index="2"
                         >
@@ -1787,7 +1791,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="list"
                           data-instance-index="0"
                         >
@@ -1800,7 +1804,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="list"
                           data-instance-index="1"
                         >
@@ -1813,7 +1817,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="list"
                           data-instance-index="2"
                         >
@@ -1850,7 +1854,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
@@ -1863,7 +1867,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="1"
                         >
@@ -1876,7 +1880,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="2"
                         >
@@ -1913,7 +1917,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="comments">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="comments"
                           data-instance-index="0"
                         >
@@ -1926,7 +1930,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="comments"
                           data-instance-index="1"
                         >
@@ -1939,7 +1943,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="comments"
                           data-instance-index="2"
                         >
@@ -1976,7 +1980,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="metrics">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="metrics"
                           data-instance-index="0"
                         >
@@ -1989,7 +1993,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="metrics"
                           data-instance-index="1"
                         >
@@ -2002,7 +2006,7 @@
                           ></textarea>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="metrics"
                           data-instance-index="2"
                         >
@@ -4229,7 +4233,7 @@
           });
 
           const toggleLabel = document.createElement('label');
-          toggleLabel.className = 'header-desc-toggle';
+          toggleLabel.className = 'header-desc-toggle js-comment-hint-trigger';
           const toggle = document.createElement('input');
           toggle.type = 'checkbox';
           toggle.checked = !!header.hasDescription;
@@ -4255,6 +4259,7 @@
 
           list.appendChild(li);
         });
+        applyOptionalCommentHints();
       }
 
       function renderCreateHeaders() {
@@ -5306,20 +5311,79 @@
       }
 
       function applyOptionalCommentHints() {
-        const targets = document.querySelectorAll('.js-optional-comment');
-        targets.forEach(function(target) {
-          if (!target) {
+        const hintText = OPTIONAL_COMMENT_HINT_TEXT;
+        const triggers = document.querySelectorAll('.js-comment-hint-trigger');
+        triggers.forEach(function(trigger) {
+          if (!trigger) {
             return;
           }
-          if (target.classList && !target.classList.contains('ai-optional-comment')) {
-            target.classList.add('ai-optional-comment');
+          if (trigger.classList && !trigger.classList.contains('ai-comment-hint')) {
+            trigger.classList.add('ai-comment-hint');
           }
-          if (!target.dataset) {
+          if (!trigger.dataset) {
             return;
           }
-          if (!target.dataset.commentHint) {
-            target.setAttribute('data-comment-hint', OPTIONAL_COMMENT_HINT_TEXT);
+          if (!trigger.dataset.commentHint) {
+            trigger.setAttribute('data-comment-hint', hintText);
           }
+          if (!trigger.dataset.commentVisible) {
+            trigger.setAttribute('data-comment-visible', 'false');
+          }
+          if (trigger.dataset.commentHintBound === 'true') {
+            return;
+          }
+          const showHint = function() {
+            trigger.setAttribute('data-comment-visible', 'true');
+          };
+          const hideHint = function() {
+            trigger.setAttribute('data-comment-visible', 'false');
+          };
+          trigger.addEventListener('mouseenter', showHint);
+          trigger.addEventListener('mouseleave', hideHint);
+          trigger.addEventListener('focusin', showHint);
+          trigger.addEventListener('focusout', hideHint);
+          const focusables = trigger.querySelectorAll('input, textarea, select, button');
+          focusables.forEach(function(element) {
+            element.addEventListener('focus', showHint);
+            element.addEventListener('blur', hideHint);
+          });
+          trigger.dataset.commentHintBound = 'true';
+        });
+
+        const fields = document.querySelectorAll('.js-comment-hint-field');
+        fields.forEach(function(field) {
+          if (!field) {
+            return;
+          }
+          if (field.classList && !field.classList.contains('ai-comment-hint')) {
+            field.classList.add('ai-comment-hint');
+          }
+          if (!field.dataset) {
+            return;
+          }
+          if (!field.dataset.commentHint) {
+            field.setAttribute('data-comment-hint', hintText);
+          }
+          if (!field.dataset.commentVisible) {
+            field.setAttribute('data-comment-visible', 'false');
+          }
+          if (field.dataset.commentHintBound === 'true') {
+            return;
+          }
+          const showHint = function() {
+            field.setAttribute('data-comment-visible', 'true');
+          };
+          const hideHint = function() {
+            field.setAttribute('data-comment-visible', 'false');
+          };
+          const inputs = field.querySelectorAll('textarea');
+          inputs.forEach(function(input) {
+            input.addEventListener('focus', showHint);
+            input.addEventListener('blur', hideHint);
+            input.addEventListener('mouseenter', showHint);
+            input.addEventListener('mouseleave', hideHint);
+          });
+          field.dataset.commentHintBound = 'true';
         });
       }
 
