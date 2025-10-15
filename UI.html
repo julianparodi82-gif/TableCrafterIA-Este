@@ -431,6 +431,60 @@
       .ai-feature-chip-label {
         flex: 1 1 auto;
       }
+      .ai-feature-chip-label[data-tooltip] {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+      }
+      .ai-feature-chip-label[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%);
+        background-color: rgba(17, 24, 39, 0.92);
+        color: #F9FAFB;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.3;
+        max-width: 220px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        z-index: 10;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+        white-space: normal;
+      }
+      .ai-feature-chip-label[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: rgba(17, 24, 39, 0.92) transparent transparent transparent;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .ai-feature-chip-label[data-tooltip]:hover::after,
+      .ai-feature-chip-label[data-tooltip]:hover::before,
+      .ai-feature-chip-label[data-tooltip]:focus::after,
+      .ai-feature-chip-label[data-tooltip]:focus::before,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::after,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::before {
+        opacity: 1;
+      }
+      .ai-feature-chip-label[data-tooltip]:focus-visible {
+        outline: 2px solid #2563EB;
+        outline-offset: 2px;
+      }
       .ai-feature-chip-check {
         width: 18px;
         height: 18px;
@@ -2090,6 +2144,14 @@
         { value: 'comments', label: 'Comentarios' },
         { value: 'metrics', label: 'Indicadores clave' }
       ]);
+      const REPORT_FEATURE_TOOLTIPS = Object.freeze({
+        chart: 'Generará gráficos comparativos o de tendencia. Ej: "Ventas mensuales vs objetivo".',
+        table: 'Generará tablas detalladas para comparar datos. Ej: "Resumen de ventas por producto".',
+        list: 'Generará listados claros de elementos clave. Ej: "Tareas prioritarias del equipo".',
+        summary: 'Generará resúmenes ejecutivos con hallazgos clave. Ej: "Conclusiones del trimestre".',
+        comments: 'Generará secciones de comentarios destacados. Ej: "Notas del equipo comercial".',
+        metrics: 'Generará indicadores con cifras clave. Ej: "KPIs de conversión semanal".'
+      });
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
         map[option.value] = option.label;
         return map;
@@ -5092,6 +5154,28 @@
         return reportFeatureState[key];
       }
 
+      function applyReportFeatureTooltips() {
+        const featureOptions = document.querySelectorAll('#aiReportFeatureList .ai-feature-option');
+        featureOptions.forEach(function(option) {
+          if (!option || !option.dataset) {
+            return;
+          }
+          const feature = option.dataset.feature || '';
+          const tooltip = feature ? REPORT_FEATURE_TOOLTIPS[feature] : '';
+          const label = option.querySelector('.ai-feature-chip-label');
+          if (!label) {
+            return;
+          }
+          if (tooltip) {
+            label.setAttribute('data-tooltip', tooltip);
+            label.setAttribute('tabindex', '0');
+          } else {
+            label.removeAttribute('data-tooltip');
+            label.removeAttribute('tabindex');
+          }
+        });
+      }
+
       function refreshReportFeatureOption(feature) {
         if (!feature) {
           return;
@@ -7495,6 +7579,7 @@
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
         }
+        applyReportFeatureTooltips();
         updateReportFileExtension();
         const reportFileNameInput = document.getElementById('aiReportFileName');
         if (reportFileNameInput) {
