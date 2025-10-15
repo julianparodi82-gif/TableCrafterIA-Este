@@ -139,7 +139,7 @@ var REPORT_FEATURES_WITHOUT_QUANTITY = {
 var REPORT_FEATURE_FIXED_QUANTITY = {
   summary: 1,
   comments: 1,
-  metrics: 3
+  metrics: 1
 };
 var REPORT_CHART_TYPE_DEFAULT = 'auto';
 var REPORT_CHART_TYPE_ALLOWED = {

@@ -48,6 +48,8 @@
         gap: 6px;
         min-width: 0;
         width: 100%;
+        position: relative;
+        overflow: visible;
       }
       .tab-btn:hover {
         background-color: #EFF6FF;
@@ -58,6 +60,50 @@
         background-color: #2563EB;
         border-color: #2563EB;
         color: #FFFFFF;
+      }
+      .tab-btn[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%);
+        background: rgba(17, 24, 39, 0.92);
+        color: #F9FAFB;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.3;
+        max-width: 220px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        z-index: 12;
+        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
+        white-space: normal;
+      }
+      .tab-btn[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: rgba(17, 24, 39, 0.92) transparent transparent transparent;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+        z-index: 12;
+      }
+      .tab-btn[data-tooltip]:hover::after,
+      .tab-btn[data-tooltip]:hover::before,
+      .tab-btn[data-tooltip]:focus::after,
+      .tab-btn[data-tooltip]:focus::before,
+      .tab-btn[data-tooltip]:focus-visible::after,
+      .tab-btn[data-tooltip]:focus-visible::before {
+        opacity: 1;
       }
       .tab-content {
         display: none;
@@ -632,6 +678,7 @@
         flex-direction: column;
         gap: 2px;
         margin-bottom: 6px;
+        position: relative;
       }
       .ai-feature-chart-select label {
         font-size: 10px;
@@ -649,6 +696,48 @@
         font-size: 11px;
         padding: 4px 8px;
         color: #374151;
+      }
+      .ai-feature-chart-select[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 6px);
+        transform: translateX(-50%);
+        background: rgba(17, 24, 39, 0.92);
+        color: #F9FAFB;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.3;
+        text-align: center;
+        max-width: 220px;
+        pointer-events: none;
+        opacity: 0;
+        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        white-space: normal;
+        z-index: 11;
+      }
+      .ai-feature-chart-select[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 2px);
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: rgba(17, 24, 39, 0.92) transparent transparent transparent;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 11;
+      }
+      .ai-feature-chart-select[data-tooltip]:hover::after,
+      .ai-feature-chart-select[data-tooltip]:hover::before,
+      .ai-feature-chart-select[data-tooltip]:focus-within::after,
+      .ai-feature-chart-select[data-tooltip]:focus-within::before {
+        opacity: 1;
       }
       .ai-actions-header {
         display: flex;
@@ -1418,18 +1507,50 @@
     <div class="container">
       <h2>TableCrafter AI</h2>
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="aiTab">Panel IA</button>
-        <button class="tab-btn" data-tab="editTab">Editar tabla</button>
-        <button class="tab-btn" data-tab="createTab">Crear tabla</button>
+        <button
+          class="tab-btn active"
+          data-tab="aiTab"
+          data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
+        >
+          Panel IA
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="editTab"
+          data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
+        >
+          Editar tabla
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="createTab"
+          data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
+        >
+          Crear tabla
+        </button>
       </div>
       <div class="tab-nav secondary-tab-nav">
-        <button class="tab-btn" data-tab="triggersTab">Triggers</button>
-        <button class="tab-btn" data-tab="templatesTab">
+        <button
+          class="tab-btn"
+          data-tab="triggersTab"
+          data-tooltip="Configura automatizaciones que mantengan tus datos al día."
+        >
+          Triggers
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="templatesTab"
+          data-tooltip="Organiza y reutiliza tus plantillas y recursos favoritos."
+        >
           <span class="tab-label">Plantillas</span>
           <span class="favorite-icon" aria-hidden="true">★</span>
           <span class="visually-hidden">Favoritas</span>
         </button>
-        <button class="tab-btn" data-tab="actionsTab">
+        <button
+          class="tab-btn"
+          data-tab="actionsTab"
+          data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
+        >
           <span class="tab-label">Acciones</span>
           <span class="favorite-icon" aria-hidden="true">★</span>
           <span class="visually-hidden">Favoritas</span>
@@ -1993,38 +2114,12 @@
                           data-feature-instance="metrics"
                           data-instance-index="0"
                         >
-                          <label for="aiFeatureInstance-metrics-1">Descripción 1 del dato destacado</label>
+                          <label for="aiFeatureInstance-metrics-1">Descripción del dato destacado</label>
                           <textarea
                             id="aiFeatureInstance-metrics-1"
                             data-feature-instance-input="metrics"
                             data-instance-index="0"
-                            placeholder="Describe el primer dato destacado que debe mostrar la IA"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="metrics"
-                          data-instance-index="1"
-                        >
-                          <label for="aiFeatureInstance-metrics-2">Descripción 2 del dato destacado</label>
-                          <textarea
-                            id="aiFeatureInstance-metrics-2"
-                            data-feature-instance-input="metrics"
-                            data-instance-index="1"
-                            placeholder="Describe el segundo dato destacado que debe mostrar la IA"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="metrics"
-                          data-instance-index="2"
-                        >
-                          <label for="aiFeatureInstance-metrics-3">Descripción 3 del dato destacado</label>
-                          <textarea
-                            id="aiFeatureInstance-metrics-3"
-                            data-feature-instance-input="metrics"
-                            data-instance-index="2"
-                            placeholder="Describe el tercer dato destacado que debe mostrar la IA"
+                            placeholder="Describe el dato destacado que debe resaltar la IA"
                           ></textarea>
                         </div>
                       </div>
@@ -2303,7 +2398,7 @@
       const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
         summary: 1,
         comments: 1,
-        metrics: 3
+        metrics: 1
       });
       const REPORT_CHART_TYPE_DEFAULT = 'auto';
       const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
@@ -2314,6 +2409,14 @@
         { value: 'pie', label: 'Distribución circular' },
         { value: 'area', label: 'Áreas apiladas' }
       ]);
+      const REPORT_CHART_TYPE_TOOLTIPS = Object.freeze({
+        auto: 'La IA elige el tipo de gráfico más claro según tus datos.',
+        line: 'Ideal para ver tendencias en el tiempo. Ej: ventas semanales.',
+        bar: 'Compara categorías lado a lado. Ej: resultados por equipo.',
+        column: 'Resalta comparaciones verticales. Ej: ventas por producto.',
+        pie: 'Muestra proporciones de un total. Ej: participación por canal.',
+        area: 'Destaca acumulados y evolución. Ej: crecimiento trimestral.'
+      });
       const REPORT_CHART_TYPE_SET = REPORT_CHART_TYPE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
         return map;
@@ -5420,6 +5523,79 @@
         });
       }
 
+      function getChartTypeTooltip(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        const key = String(value).trim().toLowerCase();
+        return REPORT_CHART_TYPE_TOOLTIPS[key] || '';
+      }
+
+      function applyChartTypeOptionTooltip(select) {
+        if (!select || !select.options) {
+          return;
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option) {
+            return;
+          }
+          const tooltip = getChartTypeTooltip(option.value);
+          if (tooltip) {
+            option.title = tooltip;
+            option.setAttribute('data-chart-tooltip', tooltip);
+          } else {
+            option.removeAttribute('title');
+            option.removeAttribute('data-chart-tooltip');
+          }
+        });
+      }
+
+      function updateChartTypeWrapperTooltip(select) {
+        if (!select) {
+          return;
+        }
+        const tooltip = getChartTypeTooltip(select.value);
+        const wrapper = select.closest('.ai-feature-chart-select');
+        if (wrapper) {
+          if (tooltip) {
+            wrapper.setAttribute('data-tooltip', tooltip);
+          } else {
+            wrapper.removeAttribute('data-tooltip');
+          }
+        }
+        if (tooltip) {
+          select.setAttribute('title', tooltip);
+        } else {
+          select.removeAttribute('title');
+        }
+      }
+
+      function bindChartTypeTooltip(select) {
+        if (!select) {
+          return;
+        }
+        applyChartTypeOptionTooltip(select);
+        updateChartTypeWrapperTooltip(select);
+        if (select.dataset.chartTooltipBound === 'true') {
+          return;
+        }
+        const refreshTooltip = function() {
+          applyChartTypeOptionTooltip(select);
+          updateChartTypeWrapperTooltip(select);
+        };
+        select.addEventListener('change', refreshTooltip);
+        select.addEventListener('focus', refreshTooltip);
+        select.addEventListener('mouseenter', refreshTooltip);
+        select.dataset.chartTooltipBound = 'true';
+      }
+
+      function applyReportChartTypeTooltips() {
+        const selectors = document.querySelectorAll('[data-feature-instance-type="chart"]');
+        selectors.forEach(function(select) {
+          bindChartTypeTooltip(select);
+        });
+      }
+
       function applyOptionalCommentHints() {
         const hintText = OPTIONAL_COMMENT_HINT_TEXT;
         const triggers = document.querySelectorAll('.js-comment-hint-trigger');
@@ -5577,6 +5753,7 @@
               const chartValue = normalizedChartTypes[index] || REPORT_CHART_TYPE_DEFAULT;
               typeSelect.value = chartValue;
               typeSelect.disabled = !withinRange;
+              bindChartTypeTooltip(typeSelect);
             }
           });
         }
@@ -7967,6 +8144,7 @@
           updateAiActionState();
         }
         applyReportFeatureTooltips();
+        applyReportChartTypeTooltips();
         applyOptionalCommentHints();
         updateReportFileExtension();
         const reportFileNameInput = document.getElementById('aiReportFileName');
