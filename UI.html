@@ -673,6 +673,37 @@
         border: 1px solid #D1D5DB;
         padding: 6px 8px;
       }
+      .ai-feature-instance-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: flex-end;
+      }
+      .ai-feature-instance-options .ai-list-control {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 148px;
+      }
+      .ai-feature-instance-options .ai-list-control label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #4B5563;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-feature-instance-options select {
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        font-size: 11px;
+        padding: 4px 8px;
+        color: #374151;
+      }
+      .ai-feature-instance-options select:disabled {
+        opacity: 0.55;
+      }
       .ai-feature-chart-select {
         display: flex;
         flex-direction: column;
@@ -1988,6 +2019,53 @@
                           data-feature-instance="list"
                           data-instance-index="0"
                         >
+                          <div
+                            class="ai-feature-instance-options"
+                            data-feature-instance-options="list"
+                            data-instance-index="0"
+                          >
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListOrder-1">Orden</label>
+                              <select
+                                id="aiFeatureListOrder-1"
+                                data-feature-instance-list-order="list"
+                                data-instance-index="0"
+                              >
+                                <option value="ai" selected>Selección inteligente (IA)</option>
+                                <option value="alphabetical">Alfabético A → Z</option>
+                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="priority">Prioridad personalizada</option>
+                                <option value="original">Como aparecen en la tabla</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListEnumerate-1">Enumerar elementos</label>
+                              <select
+                                id="aiFeatureListEnumerate-1"
+                                data-feature-instance-list-enumerate="list"
+                                data-instance-index="0"
+                              >
+                                <option value="yes">Sí</option>
+                                <option value="no" selected>No</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListStyle-1">Formato de lista</label>
+                              <select
+                                id="aiFeatureListStyle-1"
+                                data-feature-instance-list-style="list"
+                                data-instance-index="0"
+                              >
+                                <option value="auto" selected>Decisión automática (IA)</option>
+                                <option value="numbers">Números (1, 2, 3)</option>
+                                <option value="bullets">Viñetas (•)</option>
+                                <option value="dashes">Guiones (-)</option>
+                                <option value="checks">Tildes (✓)</option>
+                                <option value="letters">Letras (a, b, c)</option>
+                                <option value="roman">Romanos (I, II, III)</option>
+                              </select>
+                            </div>
+                          </div>
                           <label for="aiFeatureInstance-list-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-list-1"
@@ -2001,6 +2079,53 @@
                           data-feature-instance="list"
                           data-instance-index="1"
                         >
+                          <div
+                            class="ai-feature-instance-options"
+                            data-feature-instance-options="list"
+                            data-instance-index="1"
+                          >
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListOrder-2">Orden</label>
+                              <select
+                                id="aiFeatureListOrder-2"
+                                data-feature-instance-list-order="list"
+                                data-instance-index="1"
+                              >
+                                <option value="ai" selected>Selección inteligente (IA)</option>
+                                <option value="alphabetical">Alfabético A → Z</option>
+                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="priority">Prioridad personalizada</option>
+                                <option value="original">Como aparecen en la tabla</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListEnumerate-2">Enumerar elementos</label>
+                              <select
+                                id="aiFeatureListEnumerate-2"
+                                data-feature-instance-list-enumerate="list"
+                                data-instance-index="1"
+                              >
+                                <option value="yes">Sí</option>
+                                <option value="no" selected>No</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListStyle-2">Formato de lista</label>
+                              <select
+                                id="aiFeatureListStyle-2"
+                                data-feature-instance-list-style="list"
+                                data-instance-index="1"
+                              >
+                                <option value="auto" selected>Decisión automática (IA)</option>
+                                <option value="numbers">Números (1, 2, 3)</option>
+                                <option value="bullets">Viñetas (•)</option>
+                                <option value="dashes">Guiones (-)</option>
+                                <option value="checks">Tildes (✓)</option>
+                                <option value="letters">Letras (a, b, c)</option>
+                                <option value="roman">Romanos (I, II, III)</option>
+                              </select>
+                            </div>
+                          </div>
                           <label for="aiFeatureInstance-list-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-list-2"
@@ -2014,6 +2139,53 @@
                           data-feature-instance="list"
                           data-instance-index="2"
                         >
+                          <div
+                            class="ai-feature-instance-options"
+                            data-feature-instance-options="list"
+                            data-instance-index="2"
+                          >
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListOrder-3">Orden</label>
+                              <select
+                                id="aiFeatureListOrder-3"
+                                data-feature-instance-list-order="list"
+                                data-instance-index="2"
+                              >
+                                <option value="ai" selected>Selección inteligente (IA)</option>
+                                <option value="alphabetical">Alfabético A → Z</option>
+                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="priority">Prioridad personalizada</option>
+                                <option value="original">Como aparecen en la tabla</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListEnumerate-3">Enumerar elementos</label>
+                              <select
+                                id="aiFeatureListEnumerate-3"
+                                data-feature-instance-list-enumerate="list"
+                                data-instance-index="2"
+                              >
+                                <option value="yes">Sí</option>
+                                <option value="no" selected>No</option>
+                              </select>
+                            </div>
+                            <div class="ai-list-control">
+                              <label for="aiFeatureListStyle-3">Formato de lista</label>
+                              <select
+                                id="aiFeatureListStyle-3"
+                                data-feature-instance-list-style="list"
+                                data-instance-index="2"
+                              >
+                                <option value="auto" selected>Decisión automática (IA)</option>
+                                <option value="numbers">Números (1, 2, 3)</option>
+                                <option value="bullets">Viñetas (•)</option>
+                                <option value="dashes">Guiones (-)</option>
+                                <option value="checks">Tildes (✓)</option>
+                                <option value="letters">Letras (a, b, c)</option>
+                                <option value="roman">Romanos (I, II, III)</option>
+                              </select>
+                            </div>
+                          </div>
                           <label for="aiFeatureInstance-list-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-list-3"
@@ -2418,6 +2590,41 @@
         area: 'Destaca acumulados y evolución. Ej: crecimiento trimestral.'
       });
       const REPORT_CHART_TYPE_SET = REPORT_CHART_TYPE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_LIST_ORDER_DEFAULT = 'ai';
+      const REPORT_LIST_ORDER_OPTIONS = Object.freeze([
+        { value: 'ai', label: 'Selección inteligente (IA)' },
+        { value: 'alphabetical', label: 'Alfabético A → Z' },
+        { value: 'reverseAlphabetical', label: 'Alfabético Z → A' },
+        { value: 'priority', label: 'Prioridad personalizada' },
+        { value: 'original', label: 'Como aparecen en la tabla' }
+      ]);
+      const REPORT_LIST_ORDER_SET = REPORT_LIST_ORDER_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_LIST_ENUMERATE_DEFAULT = 'no';
+      const REPORT_LIST_ENUMERATE_OPTIONS = Object.freeze([
+        { value: 'yes', label: 'Sí' },
+        { value: 'no', label: 'No' }
+      ]);
+      const REPORT_LIST_ENUMERATE_SET = REPORT_LIST_ENUMERATE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_LIST_ENUM_STYLE_DEFAULT = 'auto';
+      const REPORT_LIST_ENUM_STYLE_OPTIONS = Object.freeze([
+        { value: 'auto', label: 'Decisión automática (IA)' },
+        { value: 'numbers', label: 'Números (1, 2, 3)' },
+        { value: 'bullets', label: 'Viñetas (•)' },
+        { value: 'dashes', label: 'Guiones (-)' },
+        { value: 'checks', label: 'Tildes (✓)' },
+        { value: 'letters', label: 'Letras (a, b, c)' },
+        { value: 'roman', label: 'Romanos (I, II, III)' }
+      ]);
+      const REPORT_LIST_ENUM_STYLE_SET = REPORT_LIST_ENUM_STYLE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
         return map;
       }, {});
@@ -5440,6 +5647,18 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_CHART_TYPE_DEFAULT);
       }
 
+      function createEmptyFeatureListOrderArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ORDER_DEFAULT);
+      }
+
+      function createEmptyFeatureListEnumerateArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUMERATE_DEFAULT);
+      }
+
+      function createEmptyFeatureListEnumStyleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
+      }
+
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
         if (Array.isArray(source)) {
@@ -5474,6 +5693,78 @@
         return base;
       }
 
+      function normalizeListOrderValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        if (REPORT_LIST_ORDER_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ORDER_DEFAULT;
+      }
+
+      function normalizeFeatureListOrderArray(source) {
+        const base = createEmptyFeatureListOrderArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = normalizeListOrderValue(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeListEnumerateValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ENUMERATE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ENUMERATE_DEFAULT;
+        }
+        if (REPORT_LIST_ENUMERATE_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ENUMERATE_DEFAULT;
+      }
+
+      function normalizeFeatureListEnumerateArray(source) {
+        const base = createEmptyFeatureListEnumerateArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = normalizeListEnumerateValue(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeListEnumStyleValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ENUM_STYLE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ENUM_STYLE_DEFAULT;
+        }
+        if (REPORT_LIST_ENUM_STYLE_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ENUM_STYLE_DEFAULT;
+      }
+
+      function normalizeFeatureListEnumStyleArray(source) {
+        const base = createEmptyFeatureListEnumStyleArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = normalizeListEnumStyleValue(entry);
+          });
+        }
+        return base;
+      }
+
       function ensureReportFeatureState(feature) {
         const key = feature || '';
         if (!key) {
@@ -5484,7 +5775,10 @@
             selected: false,
             quantity: getReportFeatureDefaultQuantity(key),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
-            instanceChartTypes: createEmptyFeatureChartTypeArray()
+            instanceChartTypes: createEmptyFeatureChartTypeArray(),
+            instanceListOrders: createEmptyFeatureListOrderArray(),
+            instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
+            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
           };
           return reportFeatureState[key];
         }
@@ -5497,6 +5791,15 @@
         }
         if (!Array.isArray(state.instanceChartTypes)) {
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+        }
+        if (!Array.isArray(state.instanceListOrders)) {
+          state.instanceListOrders = createEmptyFeatureListOrderArray();
+        }
+        if (!Array.isArray(state.instanceListEnumerate)) {
+          state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
+        }
+        if (!Array.isArray(state.instanceListEnumStyles)) {
+          state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
         }
         return state;
       }
@@ -5721,6 +6024,17 @@
           state.instanceDescriptions = normalizedDescriptions.slice();
           const normalizedChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
           state.instanceChartTypes = normalizedChartTypes.slice();
+          let normalizedListOrders = createEmptyFeatureListOrderArray();
+          let normalizedListEnumerate = createEmptyFeatureListEnumerateArray();
+          let normalizedListEnumStyles = createEmptyFeatureListEnumStyleArray();
+          if (feature === 'list') {
+            normalizedListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
+            normalizedListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+            normalizedListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+            state.instanceListOrders = normalizedListOrders.slice();
+            state.instanceListEnumerate = normalizedListEnumerate.slice();
+            state.instanceListEnumStyles = normalizedListEnumStyles.slice();
+          }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -5738,6 +6052,15 @@
             const typeSelect = item.querySelector(
               '[data-feature-instance-type="' + feature + '"]'
             );
+            const orderSelect = item.querySelector(
+              '[data-feature-instance-list-order="' + feature + '"]'
+            );
+            const enumerateSelect = item.querySelector(
+              '[data-feature-instance-list-enumerate="' + feature + '"]'
+            );
+            const enumStyleSelect = item.querySelector(
+              '[data-feature-instance-list-style="' + feature + '"]'
+            );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
             if (textarea) {
@@ -5754,6 +6077,22 @@
               typeSelect.value = chartValue;
               typeSelect.disabled = !withinRange;
               bindChartTypeTooltip(typeSelect);
+            }
+            if (orderSelect) {
+              const orderValue = normalizedListOrders[index] || REPORT_LIST_ORDER_DEFAULT;
+              orderSelect.value = orderValue;
+              orderSelect.disabled = !withinRange;
+            }
+            if (enumerateSelect) {
+              const enumerateValue = normalizedListEnumerate[index] || REPORT_LIST_ENUMERATE_DEFAULT;
+              enumerateSelect.value = enumerateValue;
+              enumerateSelect.disabled = !withinRange;
+            }
+            if (enumStyleSelect) {
+              const styleValue = normalizedListEnumStyles[index] || REPORT_LIST_ENUM_STYLE_DEFAULT;
+              const enumerateValue = normalizedListEnumerate[index] || REPORT_LIST_ENUMERATE_DEFAULT;
+              enumStyleSelect.value = styleValue;
+              enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
           });
         }
@@ -5778,10 +6117,16 @@
           state.quantity = clampReportFeatureQuantity(state.quantity, feature);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+          state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
+          state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+          state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+          state.instanceListOrders = createEmptyFeatureListOrderArray();
+          state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
+          state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -5799,6 +6144,9 @@
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+        state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
+        state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+        state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
         refreshReportFeatureOption(feature);
       }
 
@@ -5827,6 +6175,61 @@
         const chartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
         chartTypes[safeIndex] = normalizeChartTypeValue(value);
         state.instanceChartTypes = chartTypes;
+      }
+
+      function handleReportFeatureInstanceListOrderChange(feature, index, value) {
+        if (feature !== 'list') {
+          return;
+        }
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const orders = normalizeFeatureListOrderArray(state.instanceListOrders);
+        orders[safeIndex] = normalizeListOrderValue(value);
+        state.instanceListOrders = orders;
+      }
+
+      function handleReportFeatureInstanceListEnumerateChange(feature, index, value) {
+        if (feature !== 'list') {
+          return;
+        }
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const enumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+        enumerate[safeIndex] = normalizeListEnumerateValue(value);
+        state.instanceListEnumerate = enumerate;
+        refreshReportFeatureOption(feature);
+      }
+
+      function handleReportFeatureInstanceListStyleChange(feature, index, value) {
+        if (feature !== 'list') {
+          return;
+        }
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const styles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+        styles[safeIndex] = normalizeListEnumStyleValue(value);
+        state.instanceListEnumStyles = styles;
       }
 
       function initializeReportFeatureControls() {
@@ -5876,6 +6279,45 @@
             });
             selector.dataset.bound = 'true';
           });
+          const listOrderSelectors = option.querySelectorAll(
+            '[data-feature-instance-list-order="' + feature + '"]'
+          );
+          listOrderSelectors.forEach(function(selector) {
+            if (!selector || selector.dataset.bound) {
+              return;
+            }
+            selector.addEventListener('change', function() {
+              const index = parseInt(selector.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceListOrderChange(feature, index, selector.value);
+            });
+            selector.dataset.bound = 'true';
+          });
+          const listEnumerateSelectors = option.querySelectorAll(
+            '[data-feature-instance-list-enumerate="' + feature + '"]'
+          );
+          listEnumerateSelectors.forEach(function(selector) {
+            if (!selector || selector.dataset.bound) {
+              return;
+            }
+            selector.addEventListener('change', function() {
+              const index = parseInt(selector.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceListEnumerateChange(feature, index, selector.value);
+            });
+            selector.dataset.bound = 'true';
+          });
+          const listStyleSelectors = option.querySelectorAll(
+            '[data-feature-instance-list-style="' + feature + '"]'
+          );
+          listStyleSelectors.forEach(function(selector) {
+            if (!selector || selector.dataset.bound) {
+              return;
+            }
+            selector.addEventListener('change', function() {
+              const index = parseInt(selector.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceListStyleChange(feature, index, selector.value);
+            });
+            selector.dataset.bound = 'true';
+          });
           refreshReportFeatureOption(feature);
         });
         updateSelectedReportFeatures();
@@ -5918,10 +6360,20 @@
             const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             const instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
+            const instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
+            const instanceListEnumerate = normalizeFeatureListEnumerateArray(
+              detail.instanceListEnumerate
+            );
+            const instanceListEnumStyles = normalizeFeatureListEnumStyleArray(
+              detail.instanceListEnumStyles
+            );
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
-              instanceChartTypes: instanceChartTypes
+              instanceChartTypes: instanceChartTypes,
+              instanceListOrders: instanceListOrders,
+              instanceListEnumerate: instanceListEnumerate,
+              instanceListEnumStyles: instanceListEnumStyles
             };
           });
         }
@@ -5940,10 +6392,22 @@
             state.instanceChartTypes = detail
               ? normalizeFeatureChartTypeArray(detail.instanceChartTypes)
               : createEmptyFeatureChartTypeArray();
+            state.instanceListOrders = detail
+              ? normalizeFeatureListOrderArray(detail.instanceListOrders)
+              : createEmptyFeatureListOrderArray();
+            state.instanceListEnumerate = detail
+              ? normalizeFeatureListEnumerateArray(detail.instanceListEnumerate)
+              : createEmptyFeatureListEnumerateArray();
+            state.instanceListEnumStyles = detail
+              ? normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
+              : createEmptyFeatureListEnumStyleArray();
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
             state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+            state.instanceListOrders = createEmptyFeatureListOrderArray();
+            state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
+            state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -6462,6 +6926,13 @@
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
           const baseChartTypes = normalizeFeatureChartTypeArray(state ? state.instanceChartTypes : []);
+          const baseListOrders = normalizeFeatureListOrderArray(state ? state.instanceListOrders : []);
+          const baseListEnumerate = normalizeFeatureListEnumerateArray(
+            state ? state.instanceListEnumerate : []
+          );
+          const baseListEnumStyles = normalizeFeatureListEnumStyleArray(
+            state ? state.instanceListEnumStyles : []
+          );
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
@@ -6474,11 +6945,17 @@
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
             state.instanceChartTypes = baseChartTypes.slice();
+            state.instanceListOrders = baseListOrders.slice();
+            state.instanceListEnumerate = baseListEnumerate.slice();
+            state.instanceListEnumStyles = baseListEnumStyles.slice();
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice(),
-            instanceChartTypes: baseChartTypes.slice()
+            instanceChartTypes: baseChartTypes.slice(),
+            instanceListOrders: baseListOrders.slice(),
+            instanceListEnumerate: baseListEnumerate.slice(),
+            instanceListEnumStyles: baseListEnumStyles.slice()
           };
         });
 
@@ -6562,13 +7039,19 @@
           const detail = featureDetailMap[feature] || {
             quantity: getReportFeatureDefaultQuantity(feature),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
-            instanceChartTypes: createEmptyFeatureChartTypeArray()
+            instanceChartTypes: createEmptyFeatureChartTypeArray(),
+            instanceListOrders: createEmptyFeatureListOrderArray(),
+            instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
+            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
           };
           return {
             feature: feature,
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
-            instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes)
+            instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes),
+            instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
+            instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
+            instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
           };
         });
         const payload = {

@@ -150,6 +150,29 @@ var REPORT_CHART_TYPE_ALLOWED = {
   pie: true,
   area: true
 };
+var REPORT_LIST_ORDER_DEFAULT = 'ai';
+var REPORT_LIST_ORDER_ALLOWED = {
+  ai: true,
+  alphabetical: true,
+  reversealphabetical: true,
+  priority: true,
+  original: true
+};
+var REPORT_LIST_ENUMERATE_DEFAULT = 'no';
+var REPORT_LIST_ENUMERATE_ALLOWED = {
+  yes: true,
+  no: true
+};
+var REPORT_LIST_ENUM_STYLE_DEFAULT = 'auto';
+var REPORT_LIST_ENUM_STYLE_ALLOWED = {
+  auto: true,
+  numbers: true,
+  bullets: true,
+  dashes: true,
+  checks: true,
+  letters: true,
+  roman: true
+};
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
@@ -849,11 +872,17 @@ function buildReportFavoriteResponse(entry) {
       });
     }
     var instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
+    var instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
+    var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
+    var instanceListEnumStyles = normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: instanceDescriptions,
-      instanceChartTypes: instanceChartTypes
+      instanceChartTypes: instanceChartTypes,
+      instanceListOrders: instanceListOrders,
+      instanceListEnumerate: instanceListEnumerate,
+      instanceListEnumStyles: instanceListEnumStyles
     });
     detailMap[featureId] = true;
   });
@@ -866,7 +895,10 @@ function buildReportFavoriteResponse(entry) {
       feature: featureId,
       quantity: getReportFeatureDefaultQuantity(featureId),
       instanceDescriptions: ['', '', ''],
-      instanceChartTypes: normalizeFeatureChartTypeArray([])
+      instanceChartTypes: normalizeFeatureChartTypeArray([]),
+      instanceListOrders: normalizeFeatureListOrderArray([]),
+      instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
+      instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
     });
     detailMap[featureId] = true;
   });
@@ -2018,6 +2050,102 @@ function normalizeFeatureChartTypeArray(source) {
   return base;
 }
 
+function createEmptyFeatureListOrderArray() {
+  return [
+    REPORT_LIST_ORDER_DEFAULT,
+    REPORT_LIST_ORDER_DEFAULT,
+    REPORT_LIST_ORDER_DEFAULT
+  ];
+}
+
+function createEmptyFeatureListEnumerateArray() {
+  return [
+    REPORT_LIST_ENUMERATE_DEFAULT,
+    REPORT_LIST_ENUMERATE_DEFAULT,
+    REPORT_LIST_ENUMERATE_DEFAULT
+  ];
+}
+
+function createEmptyFeatureListEnumStyleArray() {
+  return [
+    REPORT_LIST_ENUM_STYLE_DEFAULT,
+    REPORT_LIST_ENUM_STYLE_DEFAULT,
+    REPORT_LIST_ENUM_STYLE_DEFAULT
+  ];
+}
+
+function normalizeListOrderValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_LIST_ORDER_DEFAULT;
+  }
+  var normalized = String(value).trim().toLowerCase();
+  if (!normalized) {
+    return REPORT_LIST_ORDER_DEFAULT;
+  }
+  if (REPORT_LIST_ORDER_ALLOWED[normalized]) {
+    return normalized;
+  }
+  return REPORT_LIST_ORDER_DEFAULT;
+}
+
+function normalizeFeatureListOrderArray(source) {
+  var base = createEmptyFeatureListOrderArray();
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = normalizeListOrderValue(entry);
+    });
+  }
+  return base;
+}
+
+function normalizeListEnumerateValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_LIST_ENUMERATE_DEFAULT;
+  }
+  var normalized = String(value).trim().toLowerCase();
+  if (!normalized) {
+    return REPORT_LIST_ENUMERATE_DEFAULT;
+  }
+  if (REPORT_LIST_ENUMERATE_ALLOWED[normalized]) {
+    return normalized;
+  }
+  return REPORT_LIST_ENUMERATE_DEFAULT;
+}
+
+function normalizeFeatureListEnumerateArray(source) {
+  var base = createEmptyFeatureListEnumerateArray();
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = normalizeListEnumerateValue(entry);
+    });
+  }
+  return base;
+}
+
+function normalizeListEnumStyleValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_LIST_ENUM_STYLE_DEFAULT;
+  }
+  var normalized = String(value).trim().toLowerCase();
+  if (!normalized) {
+    return REPORT_LIST_ENUM_STYLE_DEFAULT;
+  }
+  if (REPORT_LIST_ENUM_STYLE_ALLOWED[normalized]) {
+    return normalized;
+  }
+  return REPORT_LIST_ENUM_STYLE_DEFAULT;
+}
+
+function normalizeFeatureListEnumStyleArray(source) {
+  var base = createEmptyFeatureListEnumStyleArray();
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = normalizeListEnumStyleValue(entry);
+    });
+  }
+  return base;
+}
+
 function saveReportFavorite(payload) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
@@ -2092,6 +2220,12 @@ function saveReportFavorite(payload) {
     });
     var rawChartTypes = Array.isArray(entry.instanceChartTypes) ? entry.instanceChartTypes : [];
     var normalizedChartTypes = normalizeFeatureChartTypeArray(rawChartTypes);
+    var rawListOrders = Array.isArray(entry.instanceListOrders) ? entry.instanceListOrders : [];
+    var normalizedListOrders = normalizeFeatureListOrderArray(rawListOrders);
+    var rawListEnumerate = Array.isArray(entry.instanceListEnumerate) ? entry.instanceListEnumerate : [];
+    var normalizedListEnumerate = normalizeFeatureListEnumerateArray(rawListEnumerate);
+    var rawListEnumStyles = Array.isArray(entry.instanceListEnumStyles) ? entry.instanceListEnumStyles : [];
+    var normalizedListEnumStyles = normalizeFeatureListEnumStyleArray(rawListEnumStyles);
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
@@ -2104,7 +2238,10 @@ function saveReportFavorite(payload) {
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: normalizedInstances,
-      instanceChartTypes: normalizedChartTypes
+      instanceChartTypes: normalizedChartTypes,
+      instanceListOrders: normalizedListOrders,
+      instanceListEnumerate: normalizedListEnumerate,
+      instanceListEnumStyles: normalizedListEnumStyles
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2119,7 +2256,10 @@ function saveReportFavorite(payload) {
         feature: featureId,
         quantity: getReportFeatureDefaultQuantity(featureId),
         instanceDescriptions: ['', '', ''],
-        instanceChartTypes: normalizeFeatureChartTypeArray([])
+        instanceChartTypes: normalizeFeatureChartTypeArray([]),
+        instanceListOrders: normalizeFeatureListOrderArray([]),
+        instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
+        instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
       });
       seenFeatureDetails[featureId] = true;
     }
