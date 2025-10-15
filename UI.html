@@ -376,18 +376,12 @@
       .ai-report-date-toggle input {
         margin: 0;
       }
-      .ai-report-file-extension {
-        min-width: 52px;
-        text-align: center;
-        font-weight: 500;
+      .ai-report-file-preview {
         font-size: 12px;
-        color: #4B5563;
-        padding: 4px 8px;
-        border-radius: 6px;
-        border: 1px solid #E5E7EB;
-        background-color: #F3F4F6;
+        color: #6B7280;
+        margin-top: -2px;
       }
-      .ai-report-file-extension[data-empty='true'] {
+      .ai-report-file-preview[data-empty='true'] {
         color: #9CA3AF;
       }
       .ai-report-features {
@@ -492,17 +486,6 @@
         border: 1px dashed #CBD5F5;
         background-color: #F8FAFF;
       }
-      .ai-feature-example-select {
-        margin-top: 6px;
-        width: 100%;
-        min-height: 32px;
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: 1px solid #D1D5DB;
-        background-color: #FFFFFF;
-        font-size: 12px;
-        color: #1F2937;
-      }
       .ai-feature-instances {
         margin-top: 8px;
         display: flex;
@@ -532,30 +515,6 @@
         border-radius: 8px;
         border: 1px solid #D1D5DB;
         padding: 6px 8px;
-      }
-      .ai-feature-comment-toggle {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #1F2937;
-        font-weight: 600;
-      }
-      .ai-feature-comment-toggle input {
-        margin: 0;
-        cursor: not-allowed;
-      }
-      .ai-feature-comment-field {
-        margin-top: 6px;
-        width: 100%;
-        min-height: 54px;
-        font-size: 12px;
-        resize: vertical;
-      }
-      .ai-feature-comment-hint {
-        font-size: 11px;
-        color: #6B7280;
-        margin-top: 4px;
       }
       .ai-actions-header {
         display: flex;
@@ -1500,8 +1459,8 @@
               <label for="aiReportFileName">Nombre del archivo</label>
               <div class="ai-report-filename-input">
                 <input type="text" id="aiReportFileName" placeholder="Ej. Reporte trimestral" />
-                <span id="aiReportFileExtension" class="ai-report-file-extension" data-empty="true">.???</span>
               </div>
+              <p id="aiReportFilePreview" class="ai-report-file-preview" data-empty="true"></p>
               <label class="ai-report-date-toggle" for="aiReportFileDateToggle">
                 <input type="checkbox" id="aiReportFileDateToggle" /> Agregar fecha al nombre
               </label>
@@ -1591,22 +1550,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="chart" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="chart"
-                        placeholder="Describe qué debe incluir el gráfico"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="chart">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="tendencias">Tendencia general de resultados</option>
-                        <option value="comparativo">Comparativo entre periodos</option>
-                        <option value="ranking">Ranking de elementos destacados</option>
-                        <option value="evolucion">Evolución histórica resumida</option>
-                        <option value="distribucion">Distribución por categoría</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="0">
                           <label for="aiFeatureInstance-chart-1">Descripción 1</label>
@@ -1636,7 +1579,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Indica la narrativa o los puntos clave que debe resaltar el gráfico.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="table">
@@ -1659,22 +1601,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="table" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="table"
-                        placeholder="Detalla el contenido esperado de la tabla"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="table">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="resumen">Resumen de métricas principales</option>
-                        <option value="comparativa">Comparativa entre segmentos</option>
-                        <option value="top">Top registros relevantes</option>
-                        <option value="detalle">Detalle transaccional resumido</option>
-                        <option value="frecuencia">Frecuencias por categoría</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="0">
                           <label for="aiFeatureInstance-table-1">Descripción 1</label>
@@ -1704,7 +1630,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Especifica filtros, columnas o totales indispensables.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="list">
@@ -1727,22 +1652,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="list" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="list"
-                        placeholder="Indica la información que debe listar"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="list">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="prioridades">Prioridades o pendientes clave</option>
-                        <option value="checklist">Checklist de verificación</option>
-                        <option value="acciones">Acciones siguientes por responsable</option>
-                        <option value="inventario">Elementos de inventario destacados</option>
-                        <option value="resumen">Resumen de hallazgos principales</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="0">
                           <label for="aiFeatureInstance-list-1">Descripción 1</label>
@@ -1772,7 +1681,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Aclara el orden o la prioridad de los elementos listados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="summary">
@@ -1795,22 +1703,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="summary" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="summary"
-                        placeholder="Especifica los puntos clave del resumen"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="summary">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="directivos">Resumen ejecutivo para directivos</option>
-                        <option value="hallazgos">Hallazgos principales del periodo</option>
-                        <option value="alertas">Alertas o riesgos relevantes</option>
-                        <option value="logros">Logros destacados recientes</option>
-                        <option value="recomendaciones">Recomendaciones inmediatas</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="0">
                           <label for="aiFeatureInstance-summary-1">Descripción 1</label>
@@ -1840,7 +1732,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Resume conclusiones, insights o próximos pasos esperados.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="comments">
@@ -1863,22 +1754,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="comments" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="comments"
-                        placeholder="Indica cómo deben redactarse los comentarios"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="comments">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="seguimiento">Seguimiento de tareas pendientes</option>
-                        <option value="retroalimentacion">Retroalimentación del equipo</option>
-                        <option value="alertas">Alertas o incidencias registradas</option>
-                        <option value="resumen">Resumen de comentarios positivos</option>
-                        <option value="notas">Notas internas para el equipo</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="comments">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="0">
                           <label for="aiFeatureInstance-comments-1">Descripción 1</label>
@@ -1908,7 +1783,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Detalla instrucciones o matices para los comentarios del equipo.</p>
                     </div>
                   </div>
                   <div class="ai-feature-option" data-feature="metrics">
@@ -1931,22 +1805,6 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
-                      <label class="ai-feature-comment-toggle">
-                        <input type="checkbox" data-feature-comment-toggle="metrics" disabled /> Comentario obligatorio
-                      </label>
-                      <textarea
-                        class="ai-feature-comment-field ai-hidden"
-                        data-feature-comment-input="metrics"
-                        placeholder="Define los KPIs o métricas a resaltar"
-                      ></textarea>
-                      <select class="ai-feature-example-select ai-hidden" data-feature-example="metrics">
-                        <option value="">Selecciona un ejemplo...</option>
-                        <option value="rendimiento">Indicadores de rendimiento</option>
-                        <option value="finanzas">KPIs financieros clave</option>
-                        <option value="servicio">Métricas de servicio o soporte</option>
-                        <option value="marketing">Indicadores de marketing y alcance</option>
-                        <option value="calidad">Métricas de calidad o cumplimiento</option>
-                      </select>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="metrics">
                         <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="0">
                           <label for="aiFeatureInstance-metrics-1">Descripción 1</label>
@@ -1976,7 +1834,6 @@
                           ></textarea>
                         </div>
                       </div>
-                      <p class="ai-feature-comment-hint ai-hidden">Incluye metas, umbrales o contextos para interpretar los indicadores.</p>
                     </div>
                   </div>
                 </div>
@@ -2250,6 +2107,7 @@
       let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
       let savedActionsCache = [];
+      let savedActionsLoaded = false;
       let loadingSavedActions = false;
       let currentSavedActionId = '';
       let reportFileDateEnabled = false;
@@ -5121,20 +4979,41 @@
         return '_' + day + '_' + month + '_' + year;
       }
 
+      function sanitizeReportFileName(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        let text = String(value).trim();
+        if (!text) {
+          return '';
+        }
+        if (typeof text.normalize === 'function') {
+          text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+        text = text.replace(/\s+/g, '');
+        text = text.replace(/[^A-Za-z0-9_-]/g, '');
+        return text;
+      }
+
       function updateReportFileExtension() {
-        const label = document.getElementById('aiReportFileExtension');
-        if (!label) {
+        const preview = document.getElementById('aiReportFilePreview');
+        if (!preview) {
           return;
         }
+        const input = document.getElementById('aiReportFileName');
+        const rawValue = input ? input.value : '';
+        const sanitizedBase = sanitizeReportFileName(rawValue);
         const ext = getCurrentReportExtension();
         const suffix = reportFileDateEnabled ? getReportDateSuffix() : '';
-        if (ext) {
-          label.textContent = reportFileDateEnabled ? suffix + '.' + ext : '.' + ext;
-          label.dataset.empty = 'false';
-        } else {
-          label.textContent = reportFileDateEnabled ? suffix + '.???' : '.???';
-          label.dataset.empty = 'true';
+        let finalName = '';
+        if (sanitizedBase) {
+          finalName = sanitizedBase + suffix;
+          if (ext) {
+            finalName += '.' + ext;
+          }
         }
+        preview.textContent = finalName || '—';
+        preview.dataset.empty = finalName ? 'false' : 'true';
       }
 
       function handleReportFileDateToggle(checked) {
@@ -5206,9 +5085,6 @@
         if (!reportFeatureState[key]) {
           reportFeatureState[key] = {
             selected: false,
-            commentEnabled: false,
-            comment: '',
-            example: '',
             quantity: 1,
             instanceDescriptions: createEmptyFeatureInstanceArray()
           };
@@ -5253,34 +5129,6 @@
             quantityInput.disabled = !shouldShowQuantity;
           }
         }
-        const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
-        if (toggle) {
-          toggle.checked = !!state.selected;
-          toggle.disabled = true;
-        }
-        const commentField = option.querySelector('[data-feature-comment-input="' + feature + '"]');
-        if (commentField) {
-          const shouldShow = !!state.selected;
-          commentField.classList.toggle('ai-hidden', !shouldShow);
-          commentField.disabled = !shouldShow;
-          commentField.required = shouldShow;
-          if (shouldShow) {
-            commentField.value = state.comment || '';
-          } else {
-            commentField.value = '';
-          }
-        }
-        const exampleSelect = option.querySelector('[data-feature-example="' + feature + '"]');
-        if (exampleSelect) {
-          const shouldShowExample = !!state.selected;
-          exampleSelect.classList.toggle('ai-hidden', !shouldShowExample);
-          exampleSelect.disabled = !shouldShowExample;
-          if (shouldShowExample) {
-            exampleSelect.value = state.example || '';
-          } else {
-            exampleSelect.value = '';
-          }
-        }
         const instancesWrapper = option.querySelector('[data-feature-instances="' + feature + '"]');
         if (instancesWrapper) {
           const shouldShowInstances = !!state.selected;
@@ -5313,10 +5161,6 @@
             }
           });
         }
-        const hint = option.querySelector('.ai-feature-comment-hint');
-        if (hint) {
-          hint.classList.toggle('ai-hidden', !state.selected);
-        }
       }
 
       function updateSelectedReportFeatures() {
@@ -5334,39 +5178,15 @@
         }
         const isChecked = !!checked;
         state.selected = isChecked;
-        state.commentEnabled = isChecked;
         if (isChecked) {
           state.quantity = clampReportFeatureQuantity(state.quantity);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         } else {
-          state.comment = '';
-          state.example = '';
           state.quantity = 1;
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
-      }
-
-      function handleReportFeatureCommentToggle(feature, checked) {
-        const state = ensureReportFeatureState(feature);
-        if (!state || !state.selected) {
-          return;
-        }
-        state.commentEnabled = true;
-        const toggle = document.querySelector('[data-feature-comment-toggle="' + feature + '"]');
-        if (toggle) {
-          toggle.checked = true;
-        }
-        refreshReportFeatureOption(feature);
-      }
-
-      function handleReportFeatureCommentInput(feature, value) {
-        const state = ensureReportFeatureState(feature);
-        if (!state || !state.selected) {
-          return;
-        }
-        state.comment = value === null || value === undefined ? '' : String(value);
       }
 
       function handleReportFeatureQuantityChange(feature, value) {
@@ -5378,14 +5198,6 @@
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         refreshReportFeatureOption(feature);
-      }
-
-      function handleReportFeatureExampleChange(feature, value) {
-        const state = ensureReportFeatureState(feature);
-        if (!state || !state.selected) {
-          return;
-        }
-        state.example = value === null || value === undefined ? '' : String(value);
       }
 
       function handleReportFeatureInstanceInput(feature, index, value) {
@@ -5416,20 +5228,6 @@
             });
             checkbox.dataset.bound = 'true';
           }
-          const toggle = option.querySelector('[data-feature-comment-toggle="' + feature + '"]');
-          if (toggle && !toggle.dataset.bound) {
-            toggle.addEventListener('change', function() {
-              handleReportFeatureCommentToggle(feature, toggle.checked);
-            });
-            toggle.dataset.bound = 'true';
-          }
-          const commentField = option.querySelector('[data-feature-comment-input="' + feature + '"]');
-          if (commentField && !commentField.dataset.bound) {
-            commentField.addEventListener('input', function() {
-              handleReportFeatureCommentInput(feature, commentField.value);
-            });
-            commentField.dataset.bound = 'true';
-          }
           const quantityInput = option.querySelector('[data-feature-quantity-input="' + feature + '"]');
           if (quantityInput && !quantityInput.dataset.bound) {
             const quantityListener = function() {
@@ -5438,13 +5236,6 @@
             quantityInput.addEventListener('change', quantityListener);
             quantityInput.addEventListener('input', quantityListener);
             quantityInput.dataset.bound = 'true';
-          }
-          const exampleSelect = option.querySelector('[data-feature-example="' + feature + '"]');
-          if (exampleSelect && !exampleSelect.dataset.bound) {
-            exampleSelect.addEventListener('change', function() {
-              handleReportFeatureExampleChange(feature, exampleSelect.value);
-            });
-            exampleSelect.dataset.bound = 'true';
           }
           const instanceFields = option.querySelectorAll('[data-feature-instance-input="' + feature + '"]');
           instanceFields.forEach(function(field) {
@@ -5496,17 +5287,9 @@
             if (detailMap[featureId]) {
               return;
             }
-            const commentText = detail.comment !== null && detail.comment !== undefined
-              ? String(detail.comment)
-              : '';
-            const exampleValue = detail.example !== null && detail.example !== undefined
-              ? String(detail.example)
-              : '';
             const quantityValue = clampReportFeatureQuantity(detail.quantity);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             detailMap[featureId] = {
-              comment: commentText,
-              example: exampleValue,
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions
             };
@@ -5518,17 +5301,11 @@
           state.selected = isSelected;
           if (isSelected) {
             const detail = detailMap[feature];
-            state.commentEnabled = true;
-            state.comment = detail ? detail.comment || '' : '';
-            state.example = detail ? detail.example || '' : '';
             state.quantity = detail ? clampReportFeatureQuantity(detail.quantity) : 1;
             state.instanceDescriptions = detail
               ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
               : createEmptyFeatureInstanceArray();
           } else {
-            state.commentEnabled = false;
-            state.comment = '';
-            state.example = '';
             state.quantity = 1;
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
           }
@@ -5766,6 +5543,23 @@
         renderSavedActionDetails(response);
       }
 
+      async function ensureSavedActionsCache(options) {
+        const opts = options || {};
+        if (!opts.force && savedActionsLoaded) {
+          return savedActionsCache;
+        }
+        let result;
+        try {
+          result = await callServerFunction('listSavedActions');
+        } catch (err) {
+          savedActionsLoaded = false;
+          throw err;
+        }
+        savedActionsCache = Array.isArray(result) ? result.slice() : [];
+        savedActionsLoaded = true;
+        return savedActionsCache;
+      }
+
       async function refreshSavedActions(options) {
         const opts = options || {};
         if (loadingSavedActions) {
@@ -5775,6 +5569,7 @@
         try {
           const result = await callServerFunction('listSavedActions');
           savedActionsCache = Array.isArray(result) ? result.slice() : [];
+          savedActionsLoaded = true;
           renderSavedActionsSelect(savedActionsCache, opts.selectId || currentSavedActionId);
           const targetId = opts.selectId || currentSavedActionId;
           if (targetId) {
@@ -5792,6 +5587,7 @@
           }
         } catch (err) {
           savedActionsCache = [];
+          savedActionsLoaded = false;
           renderSavedActionsSelect([], '');
           await showMessageModal('No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err), {
             title: 'Error al listar acciones',
@@ -6000,6 +5796,7 @@
         const favoriteName = nameInput ? nameInput.value.trim() : '';
         const fileNameInput = document.getElementById('aiReportFileName');
         const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
+        const sanitizedFileName = sanitizeReportFileName(fileNameValue);
         const selectedFeatures = Array.isArray(selectedReportFeatures)
           ? selectedReportFeatures.slice()
           : [];
@@ -6011,62 +5808,40 @@
         if (!favoriteName) {
           missingItems.push('Nombre del reporte favorito');
         }
-        if (!fileNameValue) {
+        if (!sanitizedFileName) {
           missingItems.push('Nombre del archivo');
         }
         if (!selectedReportFormat) {
           missingItems.push('Formato del reporte');
         }
         if (selectedFeatures.length === 0) {
-          missingItems.push('Al menos una característica con comentario');
+          missingItems.push('Al menos una característica configurada');
         }
-
-        const featureCommentIssues = [];
         const featureDetailMap = {};
         const featureDescriptionIssues = [];
 
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
           const label = REPORT_FEATURE_LABELS[feature] || feature;
-          const commentText = state && state.comment ? String(state.comment).trim() : '';
-          const exampleText = state && state.example ? String(state.example).trim() : '';
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
-          if (!commentText) {
-            if (featureCommentIssues.indexOf(label) === -1) {
-              featureCommentIssues.push(label);
-            }
-          }
           for (var idx = 0; idx < quantityValue; idx++) {
             if (!trimmedDescriptions[idx]) {
               featureDescriptionIssues.push({ feature: label, index: idx });
             }
           }
           if (state) {
-            state.comment = commentText;
-            state.commentEnabled = true;
-            state.example = exampleText;
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
           }
           featureDetailMap[feature] = {
-            comment: commentText,
-            example: exampleText,
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice()
           };
         });
-
-        if (featureCommentIssues.length > 0) {
-          if (featureCommentIssues.length === 1) {
-            missingItems.push('Comentario para ' + featureCommentIssues[0]);
-          } else {
-            missingItems.push('Comentario para: ' + featureCommentIssues.join(', '));
-          }
-        }
 
         if (featureDescriptionIssues.length > 0) {
           featureDescriptionIssues.forEach(function(issue) {
@@ -6086,6 +5861,37 @@
           return;
         }
 
+        try {
+          await ensureSavedActionsCache();
+        } catch (err) {
+          await showMessageModal(
+            'No se pudieron validar los favoritos existentes: ' + (err && err.message ? err.message : err),
+            {
+              title: 'Validación pendiente',
+              variant: 'error'
+            }
+          );
+          return;
+        }
+        const normalizedFavoriteName = favoriteName.toLowerCase();
+        const duplicateFavorite = savedActionsCache.some(function(entry) {
+          if (!entry || !entry.name) {
+            return false;
+          }
+          const type = (entry.type || '').toLowerCase();
+          if (type !== 'reportfavorite') {
+            return false;
+          }
+          return entry.name.trim().toLowerCase() === normalizedFavoriteName;
+        });
+        if (duplicateFavorite) {
+          await showMessageModal('Ya existe un favorito con ese nombre. Elige otro nombre para guardarlo.', {
+            title: 'Nombre duplicado',
+            variant: 'warning'
+          });
+          return;
+        }
+
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
           if (!state) {
@@ -6093,9 +5899,6 @@
           }
           const detail = featureDetailMap[feature];
           if (detail) {
-            state.comment = detail.comment || '';
-            state.commentEnabled = true;
-            state.example = detail.example || '';
             state.quantity = clampReportFeatureQuantity(detail.quantity);
             state.instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             refreshReportFeatureOption(feature);
@@ -6118,16 +5921,11 @@
           descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
         const featureDetails = selectedFeatures.map(function(feature) {
           const detail = featureDetailMap[feature] || {
-            comment: '',
-            example: '',
             quantity: 1,
             instanceDescriptions: createEmptyFeatureInstanceArray()
           };
           return {
             feature: feature,
-            commentEnabled: true,
-            comment: detail.comment || '',
-            example: detail.example || '',
             quantity: clampReportFeatureQuantity(detail.quantity),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions)
           };
@@ -6135,7 +5933,7 @@
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,
-          fileName: fileNameValue,
+          fileName: sanitizedFileName,
           fileExtension: getCurrentReportExtension(),
           appendDateToFile: !!reportFileDateEnabled,
           tables: selectedTables,
@@ -6168,6 +5966,7 @@
             title: 'Favorito guardado',
             variant: 'success'
           });
+          await refreshSavedActions({ selectId: result && result.id ? result.id : currentSavedActionId });
         } catch (err) {
           await showMessageModal(
             'No se pudo guardar el reporte favorito: ' + (err && err.message ? err.message : err),
@@ -6296,7 +6095,6 @@
         if (fileDateToggle) {
           fileDateToggle.checked = false;
         }
-        updateReportFileExtension();
         const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
         if (formatsWrapper) {
           setCollapsibleOpen(formatsWrapper, true);
@@ -6320,6 +6118,7 @@
         if (fileNameInput) {
           fileNameInput.value = '';
         }
+        updateReportFileExtension();
         const deliverySection = document.getElementById('aiReportDeliverySection');
         if (deliverySection) {
           deliverySection.classList.add('ai-hidden');
@@ -7695,6 +7494,13 @@
         if (aiActionSelect) {
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
+        }
+        updateReportFileExtension();
+        const reportFileNameInput = document.getElementById('aiReportFileName');
+        if (reportFileNameInput) {
+          reportFileNameInput.addEventListener('input', function() {
+            updateReportFileExtension();
+          });
         }
         const savedActionsSelect = document.getElementById('aiSavedActions');
         if (savedActionsSelect) {
