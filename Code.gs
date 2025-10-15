@@ -130,6 +130,12 @@ var META_INDEX = {
   reportConfig: 13
 };
 
+var REPORT_FEATURE_MAX_QUANTITY = 3;
+var REPORT_FEATURES_WITHOUT_QUANTITY = {
+  summary: true,
+  comments: true
+};
+
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
 function normalizeMetaId(value) {
@@ -1920,6 +1926,27 @@ function saveOrUpdateMeta(id, name, description, rangeA1, sheetName, cols, rows,
   SpreadsheetApp.flush();
 }
 
+function reportFeatureAllowsQuantity(featureId) {
+  if (!featureId) {
+    return true;
+  }
+  return !REPORT_FEATURES_WITHOUT_QUANTITY[featureId];
+}
+
+function clampReportFeatureQuantityValue(featureId, value) {
+  if (!reportFeatureAllowsQuantity(featureId)) {
+    return 1;
+  }
+  var parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 1) {
+    return 1;
+  }
+  if (parsed > REPORT_FEATURE_MAX_QUANTITY) {
+    return REPORT_FEATURE_MAX_QUANTITY;
+  }
+  return parsed;
+}
+
 function saveReportFavorite(payload) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
@@ -1956,7 +1983,7 @@ function saveReportFavorite(payload) {
     list: 'Lista',
     summary: 'Resumen',
     comments: 'Comentarios',
-    metrics: 'Indicadores clave'
+    metrics: 'Datos destacados'
   };
   var tables = Array.isArray(payload.tables) ? payload.tables : [];
   var seenTables = {};
@@ -1986,13 +2013,7 @@ function saveReportFavorite(payload) {
     if (!seenFeatures[featureId] && normalizedFeatures.indexOf(featureId) === -1) {
       return;
     }
-    var quantityValue = parseInt(entry.quantity, 10);
-    if (isNaN(quantityValue) || quantityValue < 1) {
-      quantityValue = 1;
-    }
-    if (quantityValue > 3) {
-      quantityValue = 3;
-    }
+    var quantityValue = clampReportFeatureQuantityValue(featureId, entry.quantity);
     var rawInstances = Array.isArray(entry.instanceDescriptions) ? entry.instanceDescriptions : [];
     var normalizedInstances = ['', '', ''];
     rawInstances.slice(0, 3).forEach(function(value, index) {

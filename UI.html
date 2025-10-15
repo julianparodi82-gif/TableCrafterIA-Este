@@ -1862,38 +1862,12 @@
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
-                          <label for="aiFeatureInstance-summary-1">Descripción 1</label>
+                          <label for="aiFeatureInstance-summary-1">Descripción del resumen</label>
                           <textarea
                             id="aiFeatureInstance-summary-1"
                             data-feature-instance-input="summary"
                             data-instance-index="0"
-                            placeholder="Detalla el primer apartado del resumen"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="summary"
-                          data-instance-index="1"
-                        >
-                          <label for="aiFeatureInstance-summary-2">Descripción 2</label>
-                          <textarea
-                            id="aiFeatureInstance-summary-2"
-                            data-feature-instance-input="summary"
-                            data-instance-index="1"
-                            placeholder="Describe un segundo bloque del resumen"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="summary"
-                          data-instance-index="2"
-                        >
-                          <label for="aiFeatureInstance-summary-3">Descripción 3</label>
-                          <textarea
-                            id="aiFeatureInstance-summary-3"
-                            data-feature-instance-input="summary"
-                            data-instance-index="2"
-                            placeholder="Indica detalles para un tercer bloque"
+                            placeholder="Explica el resumen general que debe redactar la IA"
                           ></textarea>
                         </div>
                       </div>
@@ -1925,38 +1899,12 @@
                           data-feature-instance="comments"
                           data-instance-index="0"
                         >
-                          <label for="aiFeatureInstance-comments-1">Descripción 1</label>
+                          <label for="aiFeatureInstance-comments-1">Descripción de comentarios</label>
                           <textarea
                             id="aiFeatureInstance-comments-1"
                             data-feature-instance-input="comments"
                             data-instance-index="0"
-                            placeholder="Describe el primer bloque de comentarios"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="comments"
-                          data-instance-index="1"
-                        >
-                          <label for="aiFeatureInstance-comments-2">Descripción 2</label>
-                          <textarea
-                            id="aiFeatureInstance-comments-2"
-                            data-feature-instance-input="comments"
-                            data-instance-index="1"
-                            placeholder="Especifica un segundo bloque de comentarios"
-                          ></textarea>
-                        </div>
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="comments"
-                          data-instance-index="2"
-                        >
-                          <label for="aiFeatureInstance-comments-3">Descripción 3</label>
-                          <textarea
-                            id="aiFeatureInstance-comments-3"
-                            data-feature-instance-input="comments"
-                            data-instance-index="2"
-                            placeholder="Añade detalles para un tercer bloque"
+                            placeholder="Indica las notas o recomendaciones que debe incluir el reporte"
                           ></textarea>
                         </div>
                       </div>
@@ -1966,7 +1914,7 @@
                     <div class="ai-feature-top">
                       <label class="ai-feature-chip">
                         <input type="checkbox" name="aiReportFeatures" value="metrics" />
-                        <span class="ai-feature-chip-label">Indicadores clave</span>
+                        <span class="ai-feature-chip-label">Datos destacados</span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="metrics">
@@ -1988,12 +1936,12 @@
                           data-feature-instance="metrics"
                           data-instance-index="0"
                         >
-                          <label for="aiFeatureInstance-metrics-1">Descripción 1</label>
+                          <label for="aiFeatureInstance-metrics-1">Descripción 1 del dato destacado</label>
                           <textarea
                             id="aiFeatureInstance-metrics-1"
                             data-feature-instance-input="metrics"
                             data-instance-index="0"
-                            placeholder="Describe el primer indicador o panel"
+                            placeholder="Describe el primer dato destacado que debe mostrar la IA"
                           ></textarea>
                         </div>
                         <div
@@ -2001,12 +1949,12 @@
                           data-feature-instance="metrics"
                           data-instance-index="1"
                         >
-                          <label for="aiFeatureInstance-metrics-2">Descripción 2</label>
+                          <label for="aiFeatureInstance-metrics-2">Descripción 2 del dato destacado</label>
                           <textarea
                             id="aiFeatureInstance-metrics-2"
                             data-feature-instance-input="metrics"
                             data-instance-index="1"
-                            placeholder="Detalla un segundo indicador a seguir"
+                            placeholder="Describe el segundo dato destacado que debe mostrar la IA"
                           ></textarea>
                         </div>
                         <div
@@ -2014,12 +1962,12 @@
                           data-feature-instance="metrics"
                           data-instance-index="2"
                         >
-                          <label for="aiFeatureInstance-metrics-3">Descripción 3</label>
+                          <label for="aiFeatureInstance-metrics-3">Descripción 3 del dato destacado</label>
                           <textarea
                             id="aiFeatureInstance-metrics-3"
                             data-feature-instance-input="metrics"
                             data-instance-index="2"
-                            placeholder="Agrega información para un tercer indicador"
+                            placeholder="Describe el tercer dato destacado que debe mostrar la IA"
                           ></textarea>
                         </div>
                       </div>
@@ -2277,15 +2225,22 @@
         { value: 'list', label: 'Lista' },
         { value: 'summary', label: 'Resumen' },
         { value: 'comments', label: 'Comentarios' },
-        { value: 'metrics', label: 'Indicadores clave' }
+        { value: 'metrics', label: 'Datos destacados' }
       ]);
       const REPORT_FEATURE_TOOLTIPS = Object.freeze({
         chart: 'Generará gráficos comparativos o de tendencia. Ej: "Ventas mensuales vs objetivo".',
         table: 'Generará tablas detalladas para comparar datos. Ej: "Resumen de ventas por producto".',
         list: 'Generará listados claros de elementos clave. Ej: "Tareas prioritarias del equipo".',
-        summary: 'Generará resúmenes ejecutivos con hallazgos clave. Ej: "Conclusiones del trimestre".',
-        comments: 'Generará secciones de comentarios destacados. Ej: "Notas del equipo comercial".',
-        metrics: 'Generará indicadores con cifras clave. Ej: "KPIs de conversión semanal".'
+        summary:
+          'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".',
+        comments:
+          'Añadirá notas y contexto adicional redactado para el reporte. Ej: "Recomendaciones del equipo comercial".',
+        metrics:
+          'Resaltará cifras puntuales fáciles de leer. Ej: "Ingresos totales y variación semanal".'
+      });
+      const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
+        summary: true,
+        comments: true
       });
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
@@ -5252,7 +5207,17 @@
         summary.classList.remove('ai-hidden');
       }
 
-      function clampReportFeatureQuantity(value) {
+      function reportFeatureAllowsQuantity(feature) {
+        if (!feature) {
+          return true;
+        }
+        return !REPORT_FEATURES_WITHOUT_QUANTITY[feature];
+      }
+
+      function clampReportFeatureQuantity(value, feature) {
+        if (!reportFeatureAllowsQuantity(feature)) {
+          return 1;
+        }
         const parsed = parseInt(value, 10);
         if (isNaN(parsed) || parsed < 1) {
           return 1;
@@ -5416,13 +5381,17 @@
         }
         const quantityWrapper = option.querySelector('[data-feature-quantity="' + feature + '"]');
         if (quantityWrapper) {
-          const shouldShowQuantity = !!state.selected;
+          const allowsQuantity = reportFeatureAllowsQuantity(feature);
+          if (!allowsQuantity) {
+            state.quantity = 1;
+          }
+          const shouldShowQuantity = allowsQuantity && !!state.selected;
           const quantityInput = quantityWrapper.querySelector(
             '[data-feature-quantity-input="' + feature + '"]'
           );
           quantityWrapper.classList.toggle('ai-hidden', !shouldShowQuantity);
           if (quantityInput) {
-            const clampedQuantity = clampReportFeatureQuantity(state.quantity);
+            const clampedQuantity = clampReportFeatureQuantity(state.quantity, feature);
             state.quantity = clampedQuantity;
             quantityInput.value = clampedQuantity;
             quantityInput.disabled = !shouldShowQuantity;
@@ -5433,7 +5402,7 @@
           const shouldShowInstances = !!state.selected;
           const normalizedDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceDescriptions = normalizedDescriptions.slice();
-          const quantityValue = clampReportFeatureQuantity(state.quantity);
+          const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
           const instanceItems = instancesWrapper.querySelectorAll(
@@ -5478,7 +5447,7 @@
         const isChecked = !!checked;
         state.selected = isChecked;
         if (isChecked) {
-          state.quantity = clampReportFeatureQuantity(state.quantity);
+          state.quantity = clampReportFeatureQuantity(state.quantity, feature);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         } else {
           state.quantity = 1;
@@ -5489,11 +5458,14 @@
       }
 
       function handleReportFeatureQuantityChange(feature, value) {
+        if (!reportFeatureAllowsQuantity(feature)) {
+          return;
+        }
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
           return;
         }
-        const quantity = clampReportFeatureQuantity(value);
+        const quantity = clampReportFeatureQuantity(value, feature);
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         refreshReportFeatureOption(feature);
@@ -5586,7 +5558,7 @@
             if (detailMap[featureId]) {
               return;
             }
-            const quantityValue = clampReportFeatureQuantity(detail.quantity);
+            const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             detailMap[featureId] = {
               quantity: quantityValue,
@@ -5600,7 +5572,7 @@
           state.selected = isSelected;
           if (isSelected) {
             const detail = detailMap[feature];
-            state.quantity = detail ? clampReportFeatureQuantity(detail.quantity) : 1;
+            state.quantity = detail ? clampReportFeatureQuantity(detail.quantity, feature) : 1;
             state.instanceDescriptions = detail
               ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
               : createEmptyFeatureInstanceArray();
@@ -6122,7 +6094,7 @@
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
           const label = REPORT_FEATURE_LABELS[feature] || feature;
-          const quantityValue = state ? clampReportFeatureQuantity(state.quantity) : 1;
+          const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
@@ -6198,7 +6170,7 @@
           }
           const detail = featureDetailMap[feature];
           if (detail) {
-            state.quantity = clampReportFeatureQuantity(detail.quantity);
+            state.quantity = clampReportFeatureQuantity(detail.quantity, feature);
             state.instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             refreshReportFeatureOption(feature);
           }
@@ -6225,7 +6197,7 @@
           };
           return {
             feature: feature,
-            quantity: clampReportFeatureQuantity(detail.quantity),
+            quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions)
           };
         });
