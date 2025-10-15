@@ -485,6 +485,59 @@
         outline: 2px solid #2563EB;
         outline-offset: 2px;
       }
+      .ai-optional-comment {
+        position: relative;
+        display: block;
+      }
+      .ai-optional-comment textarea {
+        width: 100%;
+      }
+      .ai-optional-comment[data-comment-hint]::before,
+      .ai-optional-comment[data-comment-hint]::after {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 15;
+      }
+      .ai-optional-comment[data-comment-hint]::before {
+        content: '💡';
+        font-size: 1.2rem;
+        line-height: 1;
+        transform: translateY(6px);
+      }
+      .ai-optional-comment[data-comment-hint]::after {
+        content: attr(data-comment-hint);
+        max-width: 240px;
+        background: rgba(17, 24, 39, 0.94);
+        color: #F9FAFB;
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+        transform: translateY(6px);
+        text-align: left;
+        white-space: normal;
+      }
+      .ai-optional-comment[data-comment-hint]:hover::before,
+      .ai-optional-comment[data-comment-hint]:hover::after,
+      .ai-optional-comment[data-comment-hint]:focus-within::before,
+      .ai-optional-comment[data-comment-hint]:focus-within::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ai-optional-comment[data-comment-hint]::before,
+        .ai-optional-comment[data-comment-hint]::after {
+          transition: none;
+        }
+      }
       .ai-feature-chip-check {
         width: 18px;
         height: 18px;
@@ -1509,11 +1562,13 @@
             <label class="ai-report-description-toggle">
               <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
             </label>
-            <textarea
-              id="aiReportDescription"
-              class="ai-report-description-field ai-hidden"
-              placeholder="Describe el objetivo o contenido del reporte"
-            ></textarea>
+            <div class="ai-optional-comment js-optional-comment ai-hidden">
+              <textarea
+                id="aiReportDescription"
+                class="ai-report-description-field ai-hidden"
+                placeholder="Describe el objetivo o contenido del reporte"
+              ></textarea>
+            </div>
             <div class="ai-report-filename-group">
               <label for="aiReportFileName">Nombre del archivo</label>
               <div class="ai-report-filename-input">
@@ -1605,7 +1660,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="chart"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-chart-1"
@@ -1614,7 +1673,11 @@
                             placeholder="Detalla el primer gráfico que necesitas"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="chart"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-chart-2"
@@ -1623,7 +1686,11 @@
                             placeholder="Describe el segundo gráfico a incluir"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="chart" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="chart"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-chart-3"
@@ -1656,7 +1723,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="table"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-table-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-table-1"
@@ -1665,7 +1736,11 @@
                             placeholder="Define la primera tabla o matriz requerida"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="table"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-table-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-table-2"
@@ -1674,7 +1749,11 @@
                             placeholder="Explica la segunda tabla a incluir"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="table" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="table"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-table-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-table-3"
@@ -1707,7 +1786,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="list"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-list-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-list-1"
@@ -1716,7 +1799,11 @@
                             placeholder="Especifica la primera lista a generar"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="list"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-list-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-list-2"
@@ -1725,7 +1812,11 @@
                             placeholder="Detalla la segunda lista solicitada"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="list" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="list"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-list-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-list-3"
@@ -1758,7 +1849,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="summary"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-summary-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-summary-1"
@@ -1767,7 +1862,11 @@
                             placeholder="Detalla el primer apartado del resumen"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="summary"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-summary-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-summary-2"
@@ -1776,7 +1875,11 @@
                             placeholder="Describe un segundo bloque del resumen"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="summary" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="summary"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-summary-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-summary-3"
@@ -1809,7 +1912,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="comments">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="comments"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-comments-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-comments-1"
@@ -1818,7 +1925,11 @@
                             placeholder="Describe el primer bloque de comentarios"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="comments"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-comments-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-comments-2"
@@ -1827,7 +1938,11 @@
                             placeholder="Especifica un segundo bloque de comentarios"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="comments" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="comments"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-comments-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-comments-3"
@@ -1860,7 +1975,11 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="metrics">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="metrics">
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="0">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="metrics"
+                          data-instance-index="0"
+                        >
                           <label for="aiFeatureInstance-metrics-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-metrics-1"
@@ -1869,7 +1988,11 @@
                             placeholder="Describe el primer indicador o panel"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="1">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="metrics"
+                          data-instance-index="1"
+                        >
                           <label for="aiFeatureInstance-metrics-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-metrics-2"
@@ -1878,7 +2001,11 @@
                             placeholder="Detalla un segundo indicador a seguir"
                           ></textarea>
                         </div>
-                        <div class="ai-feature-instance ai-hidden" data-feature-instance="metrics" data-instance-index="2">
+                        <div
+                          class="ai-feature-instance ai-hidden ai-optional-comment js-optional-comment"
+                          data-feature-instance="metrics"
+                          data-instance-index="2"
+                        >
                           <label for="aiFeatureInstance-metrics-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-metrics-3"
@@ -2152,6 +2279,8 @@
         comments: 'Generará secciones de comentarios destacados. Ej: "Notas del equipo comercial".',
         metrics: 'Generará indicadores con cifras clave. Ej: "KPIs de conversión semanal".'
       });
+      const OPTIONAL_COMMENT_HINT_TEXT =
+        'Completar este comentario de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
         map[option.value] = option.label;
         return map;
@@ -5176,6 +5305,24 @@
         });
       }
 
+      function applyOptionalCommentHints() {
+        const targets = document.querySelectorAll('.js-optional-comment');
+        targets.forEach(function(target) {
+          if (!target) {
+            return;
+          }
+          if (target.classList && !target.classList.contains('ai-optional-comment')) {
+            target.classList.add('ai-optional-comment');
+          }
+          if (!target.dataset) {
+            return;
+          }
+          if (!target.dataset.commentHint) {
+            target.setAttribute('data-comment-hint', OPTIONAL_COMMENT_HINT_TEXT);
+          }
+        });
+      }
+
       function refreshReportFeatureOption(feature) {
         if (!feature) {
           return;
@@ -6142,14 +6289,21 @@
 
       function toggleReportDescriptionField(visible) {
         const descriptionField = document.getElementById('aiReportDescription');
+        const wrapper = descriptionField ? descriptionField.closest('.ai-optional-comment') : null;
         if (!descriptionField) {
           return;
         }
         if (visible) {
           descriptionField.classList.remove('ai-hidden');
+          if (wrapper) {
+            wrapper.classList.remove('ai-hidden');
+          }
         } else {
           descriptionField.classList.add('ai-hidden');
           descriptionField.value = '';
+          if (wrapper) {
+            wrapper.classList.add('ai-hidden');
+          }
         }
       }
 
@@ -7580,6 +7734,7 @@
           updateAiActionState();
         }
         applyReportFeatureTooltips();
+        applyOptionalCommentHints();
         updateReportFileExtension();
         const reportFileNameInput = document.getElementById('aiReportFileName');
         if (reportFileNameInput) {
