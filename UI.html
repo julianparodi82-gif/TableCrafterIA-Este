@@ -1432,8 +1432,10 @@
         <div class="section">
           <label for="tableName">Nombre de la tabla</label>
           <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
-          <label for="tableDesc">Descripción</label>
-          <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <div class="js-comment-hint-field">
+            <label for="tableDesc">Descripción</label>
+            <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
+          </div>
           <label>Encabezados (puede editar y reordenar)</label>
           <ul id="headersList" class="header-list"></ul>
           <div class="toggle-group">
@@ -1498,8 +1500,10 @@
         <div id="editMetaSection" class="section" style="display:none;">
           <label for="editTableName">Nombre de la tabla</label>
           <input type="text" id="editTableName" placeholder="Ingrese un nombre..." />
-          <label for="editTableDesc">Descripción</label>
-          <textarea id="editTableDesc" placeholder="Descripción de la tabla..."></textarea>
+          <div class="js-comment-hint-field">
+            <label for="editTableDesc">Descripción</label>
+            <textarea id="editTableDesc" placeholder="Descripción de la tabla..."></textarea>
+          </div>
           <label>Encabezados (puede editar y reordenar)</label>
           <ul id="editHeadersList" class="header-list"></ul>
           <div class="toggle-group">
@@ -1566,7 +1570,7 @@
             <label class="ai-report-description-toggle js-comment-hint-trigger">
               <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
             </label>
-            <div class="ai-optional-comment ai-hidden">
+            <div class="ai-optional-comment ai-hidden js-comment-hint-field">
               <textarea
                 id="aiReportDescription"
                 class="ai-report-description-field ai-hidden"
@@ -2284,7 +2288,7 @@
         metrics: 'Generará indicadores con cifras clave. Ej: "KPIs de conversión semanal".'
       });
       const OPTIONAL_COMMENT_HINT_TEXT =
-        'Completar este comentario de la mejor forma posible ayuda a que la IA entienda mejor.';
+        'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
         map[option.value] = option.label;
         return map;
