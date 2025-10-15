@@ -377,17 +377,18 @@
         margin: 0;
       }
       .ai-report-file-extension {
-        min-width: 64px;
+        min-width: 52px;
         text-align: center;
-        font-weight: 600;
-        color: #1F2937;
-        padding: 6px 10px;
+        font-weight: 500;
+        font-size: 12px;
+        color: #4B5563;
+        padding: 4px 8px;
         border-radius: 6px;
-        border: 1px solid #D1D5DB;
-        background-color: #F9FAFB;
+        border: 1px solid #E5E7EB;
+        background-color: #F3F4F6;
       }
       .ai-report-file-extension[data-empty='true'] {
-        color: #6B7280;
+        color: #9CA3AF;
       }
       .ai-report-features {
         margin-top: 12px;
@@ -5452,44 +5453,76 @@
         }
         const nameInput = document.getElementById('aiReportFavoriteName');
         const favoriteName = nameInput ? nameInput.value.trim() : '';
+        const fileNameInput = document.getElementById('aiReportFileName');
+        const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
+        const selectedFeatures = Array.isArray(selectedReportFeatures)
+          ? selectedReportFeatures.slice()
+          : [];
+        const selectedChannels = Array.isArray(selectedReportChannels)
+          ? selectedReportChannels.slice()
+          : [];
+        const missingItems = [];
+
         if (!favoriteName) {
-          await showMessageModal('Ingresa un nombre para el reporte favorito.', {
-            title: 'Nombre requerido',
-            variant: 'warning'
-          });
-          return;
+          missingItems.push('Nombre del reporte favorito');
+        }
+        if (!fileNameValue) {
+          missingItems.push('Nombre del archivo');
         }
         if (!selectedReportFormat) {
-          await showMessageModal('Selecciona un formato antes de guardar como favorito.', {
-            title: 'Formato requerido',
-            variant: 'warning'
-          });
-          return;
+          missingItems.push('Formato del reporte');
         }
-        if (!selectedReportFeatures || selectedReportFeatures.length === 0) {
-          await showMessageModal('Elige al menos una característica para el reporte.', {
-            title: 'Características requeridas',
-            variant: 'warning'
-          });
-          return;
+        if (selectedFeatures.length === 0) {
+          missingItems.push('Al menos una característica con comentario');
         }
-        for (let i = 0; i < selectedReportFeatures.length; i++) {
-          const feature = selectedReportFeatures[i];
+
+        const featureCommentMap = {};
+        const featureCommentIssues = [];
+
+        selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
           const commentText = state && state.comment ? String(state.comment).trim() : '';
           if (!commentText) {
             const label = REPORT_FEATURE_LABELS[feature] || feature;
-            await showMessageModal('Agrega un comentario para "' + label + '".', {
-              title: 'Comentario requerido',
-              variant: 'warning'
-            });
-            return;
+            if (featureCommentIssues.indexOf(label) === -1) {
+              featureCommentIssues.push(label);
+            }
+          } else if (state) {
+            featureCommentMap[feature] = commentText;
           }
-          if (state) {
-            state.comment = commentText;
-            state.commentEnabled = true;
+        });
+
+        if (featureCommentIssues.length > 0) {
+          if (featureCommentIssues.length === 1) {
+            missingItems.push('Comentario para ' + featureCommentIssues[0]);
+          } else {
+            missingItems.push('Comentario para: ' + featureCommentIssues.join(', '));
           }
         }
+
+        if (selectedChannels.length === 0) {
+          missingItems.push('Al menos un canal para compartir');
+        }
+
+        if (missingItems.length > 0) {
+          await showMessageModal('Faltan datos para guardar en favoritos:\n• ' + missingItems.join('\n• '), {
+            title: 'Completa los datos requeridos',
+            variant: 'warning'
+          });
+          return;
+        }
+
+        selectedFeatures.forEach(function(feature) {
+          const state = ensureReportFeatureState(feature);
+          if (!state) {
+            return;
+          }
+          if (Object.prototype.hasOwnProperty.call(featureCommentMap, feature)) {
+            state.comment = featureCommentMap[feature];
+            state.commentEnabled = true;
+          }
+        });
+
         const selectedTables = getSelectedAiTableIds();
         if (!selectedTables || selectedTables.length === 0) {
           await showMessageModal('Selecciona al menos una tabla para asociar el reporte.', {
@@ -5498,30 +5531,19 @@
           });
           return;
         }
+
         const descriptionToggle = document.getElementById('aiReportDescriptionToggle');
         const descriptionField = document.getElementById('aiReportDescription');
         const descriptionEnabled = descriptionToggle ? !!descriptionToggle.checked : false;
         const descriptionText =
           descriptionEnabled && descriptionField ? descriptionField.value || '' : '';
-        const fileNameInput = document.getElementById('aiReportFileName');
-        const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
-        const featureDetails = Array.isArray(selectedReportFeatures)
-          ? selectedReportFeatures.map(function(feature) {
-              const state = ensureReportFeatureState(feature);
-              if (!state) {
-                return {
-                  feature: feature,
-                  commentEnabled: true,
-                  comment: ''
-                };
-              }
-              return {
-                feature: feature,
-                commentEnabled: true,
-                comment: state.comment ? String(state.comment).trim() : ''
-              };
-            })
-          : [];
+        const featureDetails = selectedFeatures.map(function(feature) {
+          return {
+            feature: feature,
+            commentEnabled: true,
+            comment: featureCommentMap[feature] || ''
+          };
+        });
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,
@@ -5529,14 +5551,10 @@
           fileExtension: getCurrentReportExtension(),
           appendDateToFile: !!reportFileDateEnabled,
           tables: selectedTables,
-          channels: Array.isArray(selectedReportChannels)
-            ? selectedReportChannels.slice()
-            : [],
+          channels: selectedChannels,
           descriptionEnabled: descriptionEnabled,
           description: descriptionText,
-          features: Array.isArray(selectedReportFeatures)
-            ? selectedReportFeatures.slice()
-            : [],
+          features: selectedFeatures,
           featureDetails: featureDetails,
           emails: sanitizeContactSelection(
             getCheckedValuesFromList('aiReportEmailList'),

@@ -1881,13 +1881,18 @@ function saveReportFavorite(payload) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
   }
+  var missing = [];
   var name = payload.name ? String(payload.name).trim() : '';
   if (!name) {
-    throw new Error('Debe indicar un nombre para el reporte favorito.');
+    missing.push('nombre del reporte favorito');
+  }
+  var fileName = payload.fileName ? String(payload.fileName).trim() : '';
+  if (!fileName) {
+    missing.push('nombre del archivo');
   }
   var format = normalizeMetaId(payload.format);
   if (!format) {
-    throw new Error('Debe seleccionar un formato para el reporte favorito.');
+    missing.push('formato del reporte');
   }
   var features = Array.isArray(payload.features) ? payload.features : [];
   var seenFeatures = {};
@@ -1900,7 +1905,7 @@ function saveReportFavorite(payload) {
     }
   });
   if (normalizedFeatures.length === 0) {
-    throw new Error('Debe seleccionar al menos una característica para el reporte.');
+    missing.push('al menos una característica con comentario');
   }
   var featureLabelMap = {
     chart: 'Gráfico',
@@ -1920,12 +1925,10 @@ function saveReportFavorite(payload) {
       normalizedTables.push(normalized);
     }
   });
-  if (normalizedTables.length === 0) {
-    throw new Error('Debe asociar al menos una tabla al reporte favorito.');
-  }
   var featureDetails = Array.isArray(payload.featureDetails) ? payload.featureDetails : [];
   var normalizedFeatureDetails = [];
   var seenFeatureDetails = {};
+  var missingFeatureComments = [];
   featureDetails.forEach(function(entry) {
     if (!entry) {
       return;
@@ -1945,8 +1948,11 @@ function saveReportFavorite(payload) {
       commentText = String(entry.comment).trim();
     }
     if (!commentText) {
-      var featureLabel = featureLabelMap[featureId] || featureId;
-      throw new Error('Debe ingresar un comentario para la característica "' + featureLabel + '".');
+      var missingLabel = featureLabelMap[featureId] || featureId;
+      if (missingFeatureComments.indexOf(missingLabel) === -1) {
+        missingFeatureComments.push(missingLabel);
+      }
+      return;
     }
     normalizedFeatureDetails.push({
       feature: featureId,
@@ -1957,8 +1963,10 @@ function saveReportFavorite(payload) {
   });
   normalizedFeatures.forEach(function(featureId) {
     if (!seenFeatureDetails[featureId]) {
-      var featureLabel = featureLabelMap[featureId] || featureId;
-      throw new Error('Debe ingresar un comentario para la característica "' + featureLabel + '".');
+      var missingLabel = featureLabelMap[featureId] || featureId;
+      if (missingFeatureComments.indexOf(missingLabel) === -1) {
+        missingFeatureComments.push(missingLabel);
+      }
     }
   });
   var channels = Array.isArray(payload.channels) ? payload.channels : [];
@@ -1971,6 +1979,22 @@ function saveReportFavorite(payload) {
       normalizedChannels.push(normalized);
     }
   });
+  if (normalizedChannels.length === 0) {
+    missing.push('al menos un canal para compartir');
+  }
+  if (missingFeatureComments.length > 0) {
+    if (missingFeatureComments.length === 1) {
+      missing.push('comentario para ' + missingFeatureComments[0]);
+    } else {
+      missing.push('comentario para: ' + missingFeatureComments.join(', '));
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error('Faltan datos para guardar el reporte favorito:\n- ' + missing.join('\n- '));
+  }
+  if (normalizedTables.length === 0) {
+    throw new Error('Debe asociar al menos una tabla al reporte favorito.');
+  }
   var emails = Array.isArray(payload.emails) ? payload.emails : [];
   var seenEmails = {};
   var normalizedEmails = [];
@@ -1994,7 +2018,7 @@ function saveReportFavorite(payload) {
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var config = {
     format: format,
-    fileName: payload.fileName ? String(payload.fileName).trim() : '',
+    fileName: fileName,
     fileExtension: payload.fileExtension ? String(payload.fileExtension).trim() : '',
     appendDateToFile: !!payload.appendDateToFile,
     tables: normalizedTables,
