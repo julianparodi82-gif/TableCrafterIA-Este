@@ -69,12 +69,12 @@
         transform: translateX(-50%);
         background: rgba(17, 24, 39, 0.92);
         color: #F9FAFB;
-        padding: 8px 10px;
+        padding: 6px 8px;
         border-radius: 6px;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 500;
         line-height: 1.3;
-        max-width: 220px;
+        max-width: 180px;
         text-align: center;
         opacity: 0;
         pointer-events: none;
@@ -98,11 +98,7 @@
         z-index: 12;
       }
       .tab-btn[data-tooltip]:hover::after,
-      .tab-btn[data-tooltip]:hover::before,
-      .tab-btn[data-tooltip]:focus::after,
-      .tab-btn[data-tooltip]:focus::before,
-      .tab-btn[data-tooltip]:focus-visible::after,
-      .tab-btn[data-tooltip]:focus-visible::before {
+      .tab-btn[data-tooltip]:hover::before {
         opacity: 1;
       }
       .tab-content {
@@ -736,13 +732,13 @@
         transform: translateX(-50%);
         background: rgba(17, 24, 39, 0.92);
         color: #F9FAFB;
-        padding: 6px 10px;
+        padding: 4px 8px;
         border-radius: 6px;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 500;
         line-height: 1.3;
         text-align: center;
-        max-width: 220px;
+        max-width: 180px;
         pointer-events: none;
         opacity: 0;
         box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
@@ -765,9 +761,7 @@
         z-index: 11;
       }
       .ai-feature-chart-select[data-tooltip]:hover::after,
-      .ai-feature-chart-select[data-tooltip]:hover::before,
-      .ai-feature-chart-select[data-tooltip]:focus-within::after,
-      .ai-feature-chart-select[data-tooltip]:focus-within::before {
+      .ai-feature-chart-select[data-tooltip]:hover::before {
         opacity: 1;
       }
       .ai-actions-header {
@@ -1863,6 +1857,14 @@
                               <option value="area">Áreas apiladas</option>
                             </select>
                           </div>
+                          <label for="aiFeatureChartTitle-chart-1">Nombre del gráfico (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureChartTitle-chart-1"
+                            data-feature-instance-chart-title="chart"
+                            data-instance-index="0"
+                            placeholder="Nombre del gráfico 1 (opcional)"
+                          />
                           <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-chart-1"
@@ -1891,6 +1893,14 @@
                               <option value="area">Áreas apiladas</option>
                             </select>
                           </div>
+                          <label for="aiFeatureChartTitle-chart-2">Nombre del gráfico (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureChartTitle-chart-2"
+                            data-feature-instance-chart-title="chart"
+                            data-instance-index="1"
+                            placeholder="Nombre del gráfico 2 (opcional)"
+                          />
                           <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-chart-2"
@@ -1919,6 +1929,14 @@
                               <option value="area">Áreas apiladas</option>
                             </select>
                           </div>
+                          <label for="aiFeatureChartTitle-chart-3">Nombre del gráfico (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureChartTitle-chart-3"
+                            data-feature-instance-chart-title="chart"
+                            data-instance-index="2"
+                            placeholder="Nombre del gráfico 3 (opcional)"
+                          />
                           <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-chart-3"
@@ -5647,6 +5665,10 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_CHART_TYPE_DEFAULT);
       }
 
+      function createEmptyFeatureChartTitleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
+      }
+
       function createEmptyFeatureListOrderArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ORDER_DEFAULT);
       }
@@ -5661,6 +5683,16 @@
 
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = entry === null || entry === undefined ? '' : String(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeFeatureChartTitleArray(source) {
+        const base = createEmptyFeatureChartTitleArray();
         if (Array.isArray(source)) {
           source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
             base[index] = entry === null || entry === undefined ? '' : String(entry);
@@ -5776,6 +5808,7 @@
             quantity: getReportFeatureDefaultQuantity(key),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
+            instanceChartTitles: createEmptyFeatureChartTitleArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
@@ -5791,6 +5824,9 @@
         }
         if (!Array.isArray(state.instanceChartTypes)) {
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+        }
+        if (!Array.isArray(state.instanceChartTitles)) {
+          state.instanceChartTitles = createEmptyFeatureChartTitleArray();
         }
         if (!Array.isArray(state.instanceListOrders)) {
           state.instanceListOrders = createEmptyFeatureListOrderArray();
@@ -6024,6 +6060,8 @@
           state.instanceDescriptions = normalizedDescriptions.slice();
           const normalizedChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
           state.instanceChartTypes = normalizedChartTypes.slice();
+          const normalizedChartTitles = normalizeFeatureChartTitleArray(state.instanceChartTitles);
+          state.instanceChartTitles = normalizedChartTitles.slice();
           let normalizedListOrders = createEmptyFeatureListOrderArray();
           let normalizedListEnumerate = createEmptyFeatureListEnumerateArray();
           let normalizedListEnumStyles = createEmptyFeatureListEnumStyleArray();
@@ -6052,6 +6090,9 @@
             const typeSelect = item.querySelector(
               '[data-feature-instance-type="' + feature + '"]'
             );
+            const titleInput = item.querySelector(
+              '[data-feature-instance-chart-title="' + feature + '"]'
+            );
             const orderSelect = item.querySelector(
               '[data-feature-instance-list-order="' + feature + '"]'
             );
@@ -6077,6 +6118,14 @@
               typeSelect.value = chartValue;
               typeSelect.disabled = !withinRange;
               bindChartTypeTooltip(typeSelect);
+            }
+            if (titleInput) {
+              titleInput.disabled = !withinRange;
+              if (withinRange) {
+                titleInput.value = normalizedChartTitles[index] || '';
+              } else {
+                titleInput.value = normalizedChartTitles[index] || '';
+              }
             }
             if (orderSelect) {
               const orderValue = normalizedListOrders[index] || REPORT_LIST_ORDER_DEFAULT;
@@ -6117,6 +6166,7 @@
           state.quantity = clampReportFeatureQuantity(state.quantity, feature);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+          state.instanceChartTitles = normalizeFeatureChartTitleArray(state.instanceChartTitles);
           state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
           state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
@@ -6124,6 +6174,7 @@
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+          state.instanceChartTitles = createEmptyFeatureChartTitleArray();
           state.instanceListOrders = createEmptyFeatureListOrderArray();
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
@@ -6144,6 +6195,7 @@
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+        state.instanceChartTitles = normalizeFeatureChartTitleArray(state.instanceChartTitles);
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
         state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
@@ -6175,6 +6227,24 @@
         const chartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
         chartTypes[safeIndex] = normalizeChartTypeValue(value);
         state.instanceChartTypes = chartTypes;
+      }
+
+      function handleReportFeatureInstanceChartTitleChange(feature, index, value) {
+        if (feature !== 'chart') {
+          return;
+        }
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const titles = normalizeFeatureChartTitleArray(state.instanceChartTitles);
+        titles[safeIndex] = value === null || value === undefined ? '' : String(value);
+        state.instanceChartTitles = titles;
       }
 
       function handleReportFeatureInstanceListOrderChange(feature, index, value) {
@@ -6265,6 +6335,19 @@
             field.addEventListener('input', function() {
               const index = parseInt(field.dataset.instanceIndex, 10);
               handleReportFeatureInstanceInput(feature, index, field.value);
+            });
+            field.dataset.bound = 'true';
+          });
+          const titleFields = option.querySelectorAll(
+            '[data-feature-instance-chart-title="' + feature + '"]'
+          );
+          titleFields.forEach(function(field) {
+            if (!field || field.dataset.bound) {
+              return;
+            }
+            field.addEventListener('input', function() {
+              const index = parseInt(field.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceChartTitleChange(feature, index, field.value);
             });
             field.dataset.bound = 'true';
           });
@@ -6360,6 +6443,7 @@
             const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
             const instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
+            const instanceChartTitles = normalizeFeatureChartTitleArray(detail.instanceChartTitles);
             const instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
             const instanceListEnumerate = normalizeFeatureListEnumerateArray(
               detail.instanceListEnumerate
@@ -6371,6 +6455,7 @@
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
               instanceChartTypes: instanceChartTypes,
+              instanceChartTitles: instanceChartTitles,
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles
@@ -6392,6 +6477,9 @@
             state.instanceChartTypes = detail
               ? normalizeFeatureChartTypeArray(detail.instanceChartTypes)
               : createEmptyFeatureChartTypeArray();
+            state.instanceChartTitles = detail
+              ? normalizeFeatureChartTitleArray(detail.instanceChartTitles)
+              : createEmptyFeatureChartTitleArray();
             state.instanceListOrders = detail
               ? normalizeFeatureListOrderArray(detail.instanceListOrders)
               : createEmptyFeatureListOrderArray();
@@ -6405,6 +6493,7 @@
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
             state.instanceChartTypes = createEmptyFeatureChartTypeArray();
+            state.instanceChartTitles = createEmptyFeatureChartTitleArray();
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
@@ -6926,6 +7015,9 @@
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
           const baseChartTypes = normalizeFeatureChartTypeArray(state ? state.instanceChartTypes : []);
+          const baseChartTitles = normalizeFeatureChartTitleArray(
+            state ? state.instanceChartTitles : []
+          );
           const baseListOrders = normalizeFeatureListOrderArray(state ? state.instanceListOrders : []);
           const baseListEnumerate = normalizeFeatureListEnumerateArray(
             state ? state.instanceListEnumerate : []
@@ -6934,6 +7026,9 @@
             state ? state.instanceListEnumStyles : []
           );
           const trimmedDescriptions = baseDescriptions.map(function(text) {
+            return text ? String(text).trim() : '';
+          });
+          const trimmedTitles = baseChartTitles.map(function(text) {
             return text ? String(text).trim() : '';
           });
           for (var idx = 0; idx < quantityValue; idx++) {
@@ -6945,6 +7040,7 @@
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
             state.instanceChartTypes = baseChartTypes.slice();
+            state.instanceChartTitles = trimmedTitles.slice();
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
             state.instanceListEnumStyles = baseListEnumStyles.slice();
@@ -6953,6 +7049,7 @@
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice(),
             instanceChartTypes: baseChartTypes.slice(),
+            instanceChartTitles: trimmedTitles.slice(),
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice()
@@ -7017,6 +7114,8 @@
           if (detail) {
             state.quantity = clampReportFeatureQuantity(detail.quantity, feature);
             state.instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            state.instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
+            state.instanceChartTitles = normalizeFeatureChartTitleArray(detail.instanceChartTitles);
             refreshReportFeatureOption(feature);
           }
         });
@@ -7040,6 +7139,7 @@
             quantity: getReportFeatureDefaultQuantity(feature),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
+            instanceChartTitles: createEmptyFeatureChartTitleArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
@@ -7049,6 +7149,7 @@
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
             instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes),
+            instanceChartTitles: normalizeFeatureChartTitleArray(detail.instanceChartTitles),
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
