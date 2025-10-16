@@ -99,8 +99,6 @@
       }
       .tab-btn[data-tooltip]:hover::after,
       .tab-btn[data-tooltip]:hover::before,
-      .tab-btn[data-tooltip]:focus::after,
-      .tab-btn[data-tooltip]:focus::before,
       .tab-btn[data-tooltip]:focus-visible::after,
       .tab-btn[data-tooltip]:focus-visible::before {
         opacity: 1;
@@ -673,6 +671,20 @@
         border: 1px solid #D1D5DB;
         padding: 6px 8px;
       }
+      .ai-feature-instance-title {
+        margin-bottom: 6px;
+      }
+      .ai-feature-instance-title label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #4B5563;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        display: block;
+      }
+      .ai-feature-instance-title input {
+        margin-top: 2px;
+      }
       .ai-feature-instance-options {
         display: flex;
         flex-wrap: wrap;
@@ -940,9 +952,7 @@
         z-index: 11;
       }
       .ai-feature-chart-select[data-tooltip]:hover::after,
-      .ai-feature-chart-select[data-tooltip]:hover::before,
-      .ai-feature-chart-select[data-tooltip]:focus-within::after,
-      .ai-feature-chart-select[data-tooltip]:focus-within::before {
+      .ai-feature-chart-select[data-tooltip]:hover::before {
         opacity: 1;
       }
       .ai-actions-header {
@@ -1716,21 +1726,21 @@
         <button
           class="tab-btn active"
           data-tab="aiTab"
-          data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
+          data-tooltip="Consultas y reportes asistidos."
         >
           Panel IA
         </button>
         <button
           class="tab-btn"
           data-tab="editTab"
-          data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
+          data-tooltip="Actualiza tablas guardadas."
         >
           Editar tabla
         </button>
         <button
           class="tab-btn"
           data-tab="createTab"
-          data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
+          data-tooltip="Genera tablas con IA."
         >
           Crear tabla
         </button>
@@ -1739,14 +1749,14 @@
         <button
           class="tab-btn"
           data-tab="triggersTab"
-          data-tooltip="Configura automatizaciones que mantengan tus datos al día."
+          data-tooltip="Automatiza procesos."
         >
           Triggers
         </button>
         <button
           class="tab-btn"
           data-tab="templatesTab"
-          data-tooltip="Organiza y reutiliza tus plantillas y recursos favoritos."
+          data-tooltip="Gestiona plantillas."
         >
           <span class="tab-label">Plantillas</span>
           <span class="favorite-icon" aria-hidden="true">★</span>
@@ -1755,7 +1765,7 @@
         <button
           class="tab-btn"
           data-tab="actionsTab"
-          data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
+          data-tooltip="Abre acciones guardadas."
         >
           <span class="tab-label">Acciones</span>
           <span class="favorite-icon" aria-hidden="true">★</span>
@@ -2036,9 +2046,19 @@
                               <option value="column">Columnas destacadas</option>
                               <option value="pie">Distribución circular</option>
                               <option value="area">Áreas apiladas</option>
-                            </select>
-                          </div>
-                          <label for="aiFeatureInstance-chart-1">Descripción 1</label>
+                          </select>
+                        </div>
+                        <div class="ai-feature-instance-title">
+                          <label for="aiFeatureTitle-chart-1">Título (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureTitle-chart-1"
+                            data-feature-instance-title="chart"
+                            data-instance-index="0"
+                            placeholder="Ej. Ventas por mes"
+                          />
+                        </div>
+                        <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-chart-1"
                             data-feature-instance-input="chart"
@@ -2064,9 +2084,19 @@
                               <option value="column">Columnas destacadas</option>
                               <option value="pie">Distribución circular</option>
                               <option value="area">Áreas apiladas</option>
-                            </select>
-                          </div>
-                          <label for="aiFeatureInstance-chart-2">Descripción 2</label>
+                          </select>
+                        </div>
+                        <div class="ai-feature-instance-title">
+                          <label for="aiFeatureTitle-chart-2">Título (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureTitle-chart-2"
+                            data-feature-instance-title="chart"
+                            data-instance-index="1"
+                            placeholder="Ej. Comparativa por equipo"
+                          />
+                        </div>
+                        <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-chart-2"
                             data-feature-instance-input="chart"
@@ -2092,9 +2122,19 @@
                               <option value="column">Columnas destacadas</option>
                               <option value="pie">Distribución circular</option>
                               <option value="area">Áreas apiladas</option>
-                            </select>
-                          </div>
-                          <label for="aiFeatureInstance-chart-3">Descripción 3</label>
+                          </select>
+                        </div>
+                        <div class="ai-feature-instance-title">
+                          <label for="aiFeatureTitle-chart-3">Título (opcional)</label>
+                          <input
+                            type="text"
+                            id="aiFeatureTitle-chart-3"
+                            data-feature-instance-title="chart"
+                            data-instance-index="2"
+                            placeholder="Ej. Evolución acumulada"
+                          />
+                        </div>
+                        <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-chart-3"
                             data-feature-instance-input="chart"
@@ -2131,19 +2171,39 @@
                           data-feature-instance="table"
                           data-instance-index="0"
                         >
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-table-1">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-table-1"
+                              data-feature-instance-title="table"
+                              data-instance-index="0"
+                              placeholder="Ej. Tabla de resultados"
+                            />
+                          </div>
                           <label for="aiFeatureInstance-table-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-table-1"
                             data-feature-instance-input="table"
-                            data-instance-index="0"
-                            placeholder="Define la primera tabla o matriz requerida"
-                          ></textarea>
-                        </div>
+                          data-instance-index="0"
+                          placeholder="Define la primera tabla o matriz requerida"
+                        ></textarea>
+                      </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="table"
                           data-instance-index="1"
                         >
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-table-2">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-table-2"
+                              data-feature-instance-title="table"
+                              data-instance-index="1"
+                              placeholder="Ej. Tabla de seguimiento"
+                            />
+                          </div>
                           <label for="aiFeatureInstance-table-2">Descripción 2</label>
                           <textarea
                             id="aiFeatureInstance-table-2"
@@ -2157,6 +2217,16 @@
                           data-feature-instance="table"
                           data-instance-index="2"
                         >
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-table-3">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-table-3"
+                              data-feature-instance-title="table"
+                              data-instance-index="2"
+                              placeholder="Ej. Tabla adicional"
+                            />
+                          </div>
                           <label for="aiFeatureInstance-table-3">Descripción 3</label>
                           <textarea
                             id="aiFeatureInstance-table-3"
@@ -2241,6 +2311,16 @@
                               </select>
                             </div>
                           </div>
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-list-1">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-list-1"
+                              data-feature-instance-title="list"
+                              data-instance-index="0"
+                              placeholder="Ej. Lista de prioridades"
+                            />
+                          </div>
                           <label for="aiFeatureInstance-list-1">Descripción 1</label>
                           <textarea
                             id="aiFeatureInstance-list-1"
@@ -2300,6 +2380,16 @@
                                 <option value="roman">Romanos (I, II, III)</option>
                               </select>
                             </div>
+                            </div>
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-list-2">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-list-2"
+                              data-feature-instance-title="list"
+                              data-instance-index="1"
+                              placeholder="Ej. Lista complementaria"
+                            />
                           </div>
                           <label for="aiFeatureInstance-list-2">Descripción 2</label>
                           <textarea
@@ -2360,6 +2450,16 @@
                                 <option value="roman">Romanos (I, II, III)</option>
                               </select>
                             </div>
+                            </div>
+                          <div class="ai-feature-instance-title">
+                            <label for="aiFeatureTitle-list-3">Título (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureTitle-list-3"
+                              data-feature-instance-title="list"
+                              data-instance-index="2"
+                              placeholder="Ej. Lista adicional"
+                            />
                           </div>
                           <label for="aiFeatureInstance-list-3">Descripción 3</label>
                           <textarea
@@ -2939,15 +3039,12 @@
         { value: 'metrics', label: 'Datos destacados' }
       ]);
       const REPORT_FEATURE_TOOLTIPS = Object.freeze({
-        chart: 'Generará gráficos comparativos o de tendencia. Ej: "Ventas mensuales vs objetivo".',
-        table: 'Generará tablas detalladas para comparar datos. Ej: "Resumen de ventas por producto".',
-        list: 'Generará listados claros de elementos clave. Ej: "Tareas prioritarias del equipo".',
-        summary:
-          'Generará un resumen adaptable con nivel, tono y contexto personalizados. Ej: "Síntesis del trimestre con conclusiones".',
-        comments:
-          'Añadirá notas y contexto adicional redactado para el reporte. Ej: "Recomendaciones del equipo comercial".',
-        metrics:
-          'Resaltará cifras puntuales fáciles de leer. Ej: "Ingresos totales y variación semanal".'
+        chart: 'Incluye gráficos para tus datos.',
+        table: 'Añade tablas comparativas.',
+        list: 'Genera listas de puntos clave.',
+        summary: 'Resume los hallazgos por escrito.',
+        comments: 'Agrega notas contextuales.',
+        metrics: 'Destaca métricas clave.'
       });
       const REPORT_SUMMARY_DEPTH_OPTIONS = Object.freeze([
         {
@@ -3111,12 +3208,12 @@
         { value: 'area', label: 'Áreas apiladas' }
       ]);
       const REPORT_CHART_TYPE_TOOLTIPS = Object.freeze({
-        auto: 'La IA elige el tipo de gráfico más claro según tus datos.',
-        line: 'Ideal para ver tendencias en el tiempo. Ej: ventas semanales.',
-        bar: 'Compara categorías lado a lado. Ej: resultados por equipo.',
-        column: 'Resalta comparaciones verticales. Ej: ventas por producto.',
-        pie: 'Muestra proporciones de un total. Ej: participación por canal.',
-        area: 'Destaca acumulados y evolución. Ej: crecimiento trimestral.'
+        auto: 'La IA elige el formato más claro.',
+        line: 'Resalta tendencias en el tiempo.',
+        bar: 'Compara categorías lado a lado.',
+        column: 'Enfatiza columnas clave.',
+        pie: 'Muestra proporciones del total.',
+        area: 'Ilustra acumulados y evolución.'
       });
       const REPORT_CHART_TYPE_SET = REPORT_CHART_TYPE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
@@ -6175,6 +6272,10 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
       }
 
+      function createEmptyFeatureInstanceTitleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
+      }
+
       function createEmptyFeatureChartTypeArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_CHART_TYPE_DEFAULT);
       }
@@ -6236,6 +6337,16 @@
 
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = entry === null || entry === undefined ? '' : String(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeFeatureInstanceTitleArray(source) {
+        const base = createEmptyFeatureInstanceTitleArray();
         if (Array.isArray(source)) {
           source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
             base[index] = entry === null || entry === undefined ? '' : String(entry);
@@ -6350,6 +6461,7 @@
             selected: false,
             quantity: getReportFeatureDefaultQuantity(key),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceTitles: createEmptyFeatureInstanceTitleArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
@@ -6363,6 +6475,9 @@
         }
         if (!Array.isArray(state.instanceDescriptions)) {
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
+        }
+        if (!Array.isArray(state.instanceTitles)) {
+          state.instanceTitles = createEmptyFeatureInstanceTitleArray();
         }
         if (!Array.isArray(state.instanceChartTypes)) {
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
@@ -6781,6 +6896,8 @@
           const shouldShowInstances = !!state.selected;
           const normalizedDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceDescriptions = normalizedDescriptions.slice();
+          const normalizedTitles = normalizeFeatureInstanceTitleArray(state.instanceTitles);
+          state.instanceTitles = normalizedTitles.slice();
           const normalizedChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
           state.instanceChartTypes = normalizedChartTypes.slice();
           let normalizedListOrders = createEmptyFeatureListOrderArray();
@@ -6808,6 +6925,9 @@
             const textarea = item.querySelector(
               '[data-feature-instance-input="' + feature + '"]'
             );
+            const titleInput = item.querySelector(
+              '[data-feature-instance-title="' + feature + '"]'
+            );
             const typeSelect = item.querySelector(
               '[data-feature-instance-type="' + feature + '"]'
             );
@@ -6829,6 +6949,14 @@
                 textarea.value = normalizedDescriptions[index] || '';
               } else {
                 textarea.value = normalizedDescriptions[index] || '';
+              }
+            }
+            if (titleInput) {
+              titleInput.disabled = !withinRange;
+              if (withinRange) {
+                titleInput.value = normalizedTitles[index] || '';
+              } else {
+                titleInput.value = normalizedTitles[index] || '';
               }
             }
             if (typeSelect) {
@@ -6966,6 +7094,21 @@
         state.instanceDescriptions = descriptions;
       }
 
+      function handleReportFeatureInstanceTitleInput(feature, index, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const titles = normalizeFeatureInstanceTitleArray(state.instanceTitles);
+        titles[safeIndex] = value === null || value === undefined ? '' : String(value);
+        state.instanceTitles = titles;
+      }
+
       function handleReportFeatureInstanceTypeChange(feature, index, value) {
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
@@ -7072,6 +7215,17 @@
             });
             field.dataset.bound = 'true';
           });
+          const titleFields = option.querySelectorAll('[data-feature-instance-title="' + feature + '"]');
+          titleFields.forEach(function(field) {
+            if (!field || field.dataset.bound) {
+              return;
+            }
+            field.addEventListener('input', function() {
+              const index = parseInt(field.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTitleInput(feature, index, field.value);
+            });
+            field.dataset.bound = 'true';
+          });
           const typeSelectors = option.querySelectorAll('[data-feature-instance-type="' + feature + '"]');
           typeSelectors.forEach(function(selector) {
             if (!selector || selector.dataset.bound) {
@@ -7163,6 +7317,7 @@
             }
             const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            const instanceTitles = normalizeFeatureInstanceTitleArray(detail.instanceTitles);
             const instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
             const instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
             const instanceListEnumerate = normalizeFeatureListEnumerateArray(
@@ -7174,6 +7329,7 @@
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
+              instanceTitles: instanceTitles,
               instanceChartTypes: instanceChartTypes,
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
@@ -7200,6 +7356,9 @@
             state.instanceDescriptions = detail
               ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
               : createEmptyFeatureInstanceArray();
+            state.instanceTitles = detail
+              ? normalizeFeatureInstanceTitleArray(detail.instanceTitles)
+              : createEmptyFeatureInstanceTitleArray();
             state.instanceChartTypes = detail
               ? normalizeFeatureChartTypeArray(detail.instanceChartTypes)
               : createEmptyFeatureChartTypeArray();
@@ -7226,6 +7385,7 @@
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
+            state.instanceTitles = createEmptyFeatureInstanceTitleArray();
             state.instanceChartTypes = createEmptyFeatureChartTypeArray();
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
@@ -7752,6 +7912,7 @@
           const label = REPORT_FEATURE_LABELS[feature] || feature;
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
+          const baseTitles = normalizeFeatureInstanceTitleArray(state ? state.instanceTitles : []);
           const baseChartTypes = normalizeFeatureChartTypeArray(state ? state.instanceChartTypes : []);
           const baseListOrders = normalizeFeatureListOrderArray(state ? state.instanceListOrders : []);
           const baseListEnumerate = normalizeFeatureListEnumerateArray(
@@ -7763,6 +7924,9 @@
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
+          const trimmedTitles = baseTitles.map(function(text) {
+            return text ? String(text).trim() : '';
+          });
           for (var idx = 0; idx < quantityValue; idx++) {
             if (!trimmedDescriptions[idx]) {
               featureDescriptionIssues.push({ feature: label, index: idx });
@@ -7771,6 +7935,7 @@
           if (state) {
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
+            state.instanceTitles = trimmedTitles.slice();
             state.instanceChartTypes = baseChartTypes.slice();
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
@@ -7784,6 +7949,7 @@
           const detailEntry = {
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice(),
+            instanceTitles: trimmedTitles.slice(),
             instanceChartTypes: baseChartTypes.slice(),
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
@@ -7855,6 +8021,7 @@
           if (detail) {
             state.quantity = clampReportFeatureQuantity(detail.quantity, feature);
             state.instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            state.instanceTitles = normalizeFeatureInstanceTitleArray(detail.instanceTitles);
             refreshReportFeatureOption(feature);
           }
         });
@@ -7877,6 +8044,7 @@
           const detail = featureDetailMap[feature] || {
             quantity: getReportFeatureDefaultQuantity(feature),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceTitles: createEmptyFeatureInstanceTitleArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
@@ -7886,6 +8054,7 @@
             feature: feature,
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
+            instanceTitles: normalizeFeatureInstanceTitleArray(detail.instanceTitles),
             instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes),
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),

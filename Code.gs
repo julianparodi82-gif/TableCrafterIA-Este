@@ -906,6 +906,12 @@ function buildReportFavoriteResponse(entry) {
         instanceDescriptions[index] = entry !== null && entry !== undefined ? String(entry) : '';
       });
     }
+    var instanceTitles = ['', '', ''];
+    if (Array.isArray(detail.instanceTitles)) {
+      detail.instanceTitles.slice(0, 3).forEach(function(entryTitle, titleIndex) {
+        instanceTitles[titleIndex] = entryTitle !== null && entryTitle !== undefined ? String(entryTitle) : '';
+      });
+    }
     var instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
     var instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
     var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
@@ -917,6 +923,7 @@ function buildReportFavoriteResponse(entry) {
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: instanceDescriptions,
+      instanceTitles: instanceTitles,
       instanceChartTypes: instanceChartTypes,
       instanceListOrders: instanceListOrders,
       instanceListEnumerate: instanceListEnumerate,
@@ -936,6 +943,7 @@ function buildReportFavoriteResponse(entry) {
       feature: featureId,
       quantity: getReportFeatureDefaultQuantity(featureId),
       instanceDescriptions: ['', '', ''],
+      instanceTitles: ['', '', ''],
       instanceChartTypes: normalizeFeatureChartTypeArray([]),
       instanceListOrders: normalizeFeatureListOrderArray([]),
       instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
@@ -2314,6 +2322,11 @@ function saveReportFavorite(payload) {
     rawInstances.slice(0, 3).forEach(function(value, index) {
       normalizedInstances[index] = value !== null && value !== undefined ? String(value).trim() : '';
     });
+    var rawTitles = Array.isArray(entry.instanceTitles) ? entry.instanceTitles : [];
+    var normalizedTitles = ['', '', ''];
+    rawTitles.slice(0, 3).forEach(function(titleValue, titleIndex) {
+      normalizedTitles[titleIndex] = titleValue !== null && titleValue !== undefined ? String(titleValue).trim() : '';
+    });
     var rawChartTypes = Array.isArray(entry.instanceChartTypes) ? entry.instanceChartTypes : [];
     var normalizedChartTypes = normalizeFeatureChartTypeArray(rawChartTypes);
     var rawListOrders = Array.isArray(entry.instanceListOrders) ? entry.instanceListOrders : [];
@@ -2337,6 +2350,7 @@ function saveReportFavorite(payload) {
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: normalizedInstances,
+      instanceTitles: normalizedTitles,
       instanceChartTypes: normalizedChartTypes,
       instanceListOrders: normalizedListOrders,
       instanceListEnumerate: normalizedListEnumerate,
@@ -2358,6 +2372,7 @@ function saveReportFavorite(payload) {
         feature: featureId,
         quantity: getReportFeatureDefaultQuantity(featureId),
         instanceDescriptions: ['', '', ''],
+        instanceTitles: ['', '', ''],
         instanceChartTypes: normalizeFeatureChartTypeArray([]),
         instanceListOrders: normalizeFeatureListOrderArray([]),
         instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
