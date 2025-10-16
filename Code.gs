@@ -173,6 +173,28 @@ var REPORT_LIST_ENUM_STYLE_ALLOWED = {
   letters: true,
   roman: true
 };
+var REPORT_OUTPUT_LANGUAGE_DEFAULT = 'auto';
+var REPORT_OUTPUT_LANGUAGE_ALLOWED = {
+  auto: true,
+  es: true,
+  en: true,
+  pt: true,
+  fr: true
+};
+var REPORT_TONE_DEFAULT = 'neutral';
+var REPORT_TONE_ALLOWED = {
+  neutral: true,
+  executive: true,
+  friendly: true,
+  analytical: true
+};
+var REPORT_TEMPORAL_REFERENCE_DEFAULT = 'auto';
+var REPORT_TEMPORAL_REFERENCE_ALLOWED = {
+  auto: true,
+  currentPeriod: true,
+  lastPeriod: true,
+  custom: true
+};
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
@@ -871,6 +893,7 @@ function buildReportFavoriteResponse(entry) {
         instanceDescriptions[index] = entry !== null && entry !== undefined ? String(entry) : '';
       });
     }
+    var instanceTitles = normalizeFeatureTitleArray(detail.instanceTitles);
     var instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
     var instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
     var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
@@ -879,6 +902,7 @@ function buildReportFavoriteResponse(entry) {
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: instanceDescriptions,
+      instanceTitles: instanceTitles,
       instanceChartTypes: instanceChartTypes,
       instanceListOrders: instanceListOrders,
       instanceListEnumerate: instanceListEnumerate,
@@ -895,6 +919,7 @@ function buildReportFavoriteResponse(entry) {
       feature: featureId,
       quantity: getReportFeatureDefaultQuantity(featureId),
       instanceDescriptions: ['', '', ''],
+      instanceTitles: createEmptyFeatureTitleArray(),
       instanceChartTypes: normalizeFeatureChartTypeArray([]),
       instanceListOrders: normalizeFeatureListOrderArray([]),
       instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
@@ -920,7 +945,8 @@ function buildReportFavoriteResponse(entry) {
     features: features,
     featureDetails: normalizedDetails,
     emails: Array.isArray(config.emails) ? config.emails : [],
-    phones: Array.isArray(config.phones) ? config.phones : []
+    phones: Array.isArray(config.phones) ? config.phones : [],
+    customization: normalizeReportCustomization(config.customization)
   };
 }
 
@@ -2050,6 +2076,20 @@ function normalizeFeatureChartTypeArray(source) {
   return base;
 }
 
+function createEmptyFeatureTitleArray() {
+  return ['', '', ''];
+}
+
+function normalizeFeatureTitleArray(source) {
+  var base = createEmptyFeatureTitleArray();
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = entry !== null && entry !== undefined ? String(entry).trim() : '';
+    });
+  }
+  return base;
+}
+
 function createEmptyFeatureListOrderArray() {
   return [
     REPORT_LIST_ORDER_DEFAULT,
@@ -2146,6 +2186,92 @@ function normalizeFeatureListEnumStyleArray(source) {
   return base;
 }
 
+function normalizeOutputLanguageValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_OUTPUT_LANGUAGE_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_OUTPUT_LANGUAGE_DEFAULT;
+  }
+  return REPORT_OUTPUT_LANGUAGE_ALLOWED[text]
+    ? text
+    : REPORT_OUTPUT_LANGUAGE_DEFAULT;
+}
+
+function normalizeToneValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_TONE_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_TONE_DEFAULT;
+  }
+  return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
+}
+
+function normalizeTemporalReferenceValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+  }
+  var text = String(value).trim();
+  if (!text) {
+    return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+  }
+  return REPORT_TEMPORAL_REFERENCE_ALLOWED[text]
+    ? text
+    : REPORT_TEMPORAL_REFERENCE_DEFAULT;
+}
+
+function normalizeReportCustomization(source) {
+  var base = {
+    outputLanguage: {
+      enabled: false,
+      value: REPORT_OUTPUT_LANGUAGE_DEFAULT
+    },
+    tone: {
+      enabled: false,
+      value: REPORT_TONE_DEFAULT
+    },
+    temporalReference: {
+      enabled: false,
+      mode: REPORT_TEMPORAL_REFERENCE_DEFAULT,
+      customText: ''
+    }
+  };
+  if (!source || typeof source !== 'object') {
+    return base;
+  }
+  if (source.outputLanguage && typeof source.outputLanguage === 'object') {
+    base.outputLanguage.enabled = !!source.outputLanguage.enabled;
+    base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+  }
+  if (source.tone && typeof source.tone === 'object') {
+    base.tone.enabled = !!source.tone.enabled;
+    base.tone.value = normalizeToneValue(source.tone.value);
+  }
+  if (source.temporalReference && typeof source.temporalReference === 'object') {
+    base.temporalReference.enabled = !!source.temporalReference.enabled;
+    base.temporalReference.mode = normalizeTemporalReferenceValue(source.temporalReference.mode);
+    base.temporalReference.customText = source.temporalReference.customText
+      ? String(source.temporalReference.customText).trim()
+      : '';
+  }
+  if (!base.outputLanguage.enabled) {
+    base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+  }
+  if (!base.tone.enabled) {
+    base.tone.value = REPORT_TONE_DEFAULT;
+  }
+  if (!base.temporalReference.enabled) {
+    base.temporalReference.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+    base.temporalReference.customText = '';
+  } else if (base.temporalReference.mode !== 'custom') {
+    base.temporalReference.customText = '';
+  }
+  return base;
+}
+
 function saveReportFavorite(payload) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
@@ -2218,6 +2344,8 @@ function saveReportFavorite(payload) {
     rawInstances.slice(0, 3).forEach(function(value, index) {
       normalizedInstances[index] = value !== null && value !== undefined ? String(value).trim() : '';
     });
+    var rawTitles = Array.isArray(entry.instanceTitles) ? entry.instanceTitles : [];
+    var normalizedTitles = normalizeFeatureTitleArray(rawTitles);
     var rawChartTypes = Array.isArray(entry.instanceChartTypes) ? entry.instanceChartTypes : [];
     var normalizedChartTypes = normalizeFeatureChartTypeArray(rawChartTypes);
     var rawListOrders = Array.isArray(entry.instanceListOrders) ? entry.instanceListOrders : [];
@@ -2238,6 +2366,7 @@ function saveReportFavorite(payload) {
       feature: featureId,
       quantity: quantityValue,
       instanceDescriptions: normalizedInstances,
+      instanceTitles: normalizedTitles,
       instanceChartTypes: normalizedChartTypes,
       instanceListOrders: normalizedListOrders,
       instanceListEnumerate: normalizedListEnumerate,
@@ -2256,6 +2385,7 @@ function saveReportFavorite(payload) {
         feature: featureId,
         quantity: getReportFeatureDefaultQuantity(featureId),
         instanceDescriptions: ['', '', ''],
+        instanceTitles: createEmptyFeatureTitleArray(),
         instanceChartTypes: normalizeFeatureChartTypeArray([]),
         instanceListOrders: normalizeFeatureListOrderArray([]),
         instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
@@ -2316,6 +2446,7 @@ function saveReportFavorite(payload) {
       normalizedPhones.push(text);
     }
   });
+  var customization = normalizeReportCustomization(payload.customization);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var config = {
     format: format,
@@ -2332,6 +2463,7 @@ function saveReportFavorite(payload) {
     featureDescriptions: '',
     emails: normalizedEmails,
     phones: normalizedPhones,
+    customization: customization,
     savedAt: now
   };
   var favoriteId = 'reportFavorite:' + Utilities.getUuid();

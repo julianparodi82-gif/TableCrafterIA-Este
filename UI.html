@@ -711,6 +711,27 @@
         margin-bottom: 6px;
         position: relative;
       }
+      .ai-feature-chart-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      .ai-feature-chart-title label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #6B7280;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-feature-chart-title input[type="text"] {
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        font-size: 12px;
+        padding: 6px 10px;
+        color: #374151;
+      }
       .ai-feature-chart-select label {
         font-size: 10px;
         font-weight: 600;
@@ -769,6 +790,137 @@
       .ai-feature-chart-select[data-tooltip]:focus-within::after,
       .ai-feature-chart-select[data-tooltip]:focus-within::before {
         opacity: 1;
+      }
+      .ai-report-customization {
+        margin-top: 16px;
+      }
+      .ai-customization-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ai-custom-option {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 16px;
+        background-color: #F9FAFB;
+      }
+      .ai-custom-top {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 116px;
+      }
+      .ai-custom-header-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ai-custom-intro {
+        margin: 0;
+        font-size: 12px;
+        color: #4B5563;
+        line-height: 1.45;
+      }
+      .ai-custom-collapse {
+        position: absolute;
+        top: 0;
+        right: 0;
+        border: none;
+        background: none;
+        color: #2563EB;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 6px;
+      }
+      .ai-custom-collapse[disabled] {
+        color: #9CA3AF;
+        cursor: not-allowed;
+      }
+      .ai-custom-collapse-icon {
+        font-size: 12px;
+        line-height: 1;
+      }
+      .ai-custom-extra {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        background-color: #FFFFFF;
+        padding: 14px;
+      }
+      .ai-custom-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-custom-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-custom-field label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #6B7280;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-custom-field select,
+      .ai-custom-field textarea {
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        background-color: #FFFFFF;
+        font-size: 12px;
+        padding: 6px 10px;
+        color: #374151;
+      }
+      .ai-custom-field textarea {
+        min-height: 70px;
+        resize: vertical;
+      }
+      .ai-custom-helper {
+        font-size: 12px;
+        color: #6B7280;
+        margin: 0;
+        line-height: 1.45;
+      }
+      .ai-custom-hints {
+        margin: 0;
+        padding-left: 18px;
+        color: #4B5563;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-custom-hints li {
+        list-style: disc;
+      }
+      .ai-custom-temporal-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-custom-temporal-custom textarea {
+        min-height: 72px;
+      }
+      @media (max-width: 520px) {
+        .ai-custom-top {
+          padding-right: 0;
+        }
+        .ai-custom-collapse {
+          position: static;
+          align-self: flex-start;
+        }
       }
       .ai-actions-header {
         display: flex;
@@ -1848,6 +2000,16 @@
                           data-feature-instance="chart"
                           data-instance-index="0"
                         >
+                          <div class="ai-feature-chart-title">
+                            <label for="aiFeatureChartTitle-chart-1">Título del gráfico (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureChartTitle-chart-1"
+                              data-feature-instance-title="chart"
+                              data-instance-index="0"
+                              placeholder="Ej. Evolución mensual de ventas"
+                            />
+                          </div>
                           <div class="ai-feature-chart-select">
                             <label for="aiFeatureChartType-chart-1">Tipo de gráfico</label>
                             <select
@@ -1876,6 +2038,16 @@
                           data-feature-instance="chart"
                           data-instance-index="1"
                         >
+                          <div class="ai-feature-chart-title">
+                            <label for="aiFeatureChartTitle-chart-2">Título del gráfico (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureChartTitle-chart-2"
+                              data-feature-instance-title="chart"
+                              data-instance-index="1"
+                              placeholder="Ej. Distribución por categorías"
+                            />
+                          </div>
                           <div class="ai-feature-chart-select">
                             <label for="aiFeatureChartType-chart-2">Tipo de gráfico</label>
                             <select
@@ -1904,6 +2076,16 @@
                           data-feature-instance="chart"
                           data-instance-index="2"
                         >
+                          <div class="ai-feature-chart-title">
+                            <label for="aiFeatureChartTitle-chart-3">Título del gráfico (opcional)</label>
+                            <input
+                              type="text"
+                              id="aiFeatureChartTitle-chart-3"
+                              data-feature-instance-title="chart"
+                              data-instance-index="2"
+                              placeholder="Ej. Comparativo anual proyectado"
+                            />
+                          </div>
                           <div class="ai-feature-chart-select">
                             <label for="aiFeatureChartType-chart-3">Tipo de gráfico</label>
                             <select
@@ -2300,6 +2482,163 @@
                 </div>
               </div>
             </div>
+            <div
+              id="aiReportCustomizationWrapper"
+              class="ai-collapsible ai-report-customization ai-hidden"
+              data-open="true"
+            >
+              <div class="ai-collapsible-header">
+                <div class="ai-collapsible-title">
+                  <h3 class="ai-action-title">Contexto y personalización</h3>
+                  <span id="aiReportCustomizationSummary" class="ai-collapsible-badge ai-hidden"></span>
+                </div>
+                <button
+                  type="button"
+                  class="ai-collapse-toggle"
+                  id="aiReportCustomizationToggle"
+                  data-target="aiReportCustomizationWrapper"
+                  data-open-text="Replegar"
+                  data-closed-text="Desplegar"
+                  aria-expanded="true"
+                  aria-controls="aiReportCustomizationBody"
+                >
+                  <span class="ai-collapse-toggle-text">Replegar</span>
+                  <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                </button>
+              </div>
+              <div class="ai-collapsible-body" id="aiReportCustomizationBody">
+                <p class="ai-report-helper" style="margin-top:0;">
+                  Ajusta cómo debe redactar la IA el reporte final según el público y el contexto temporal.
+                </p>
+                <div class="ai-customization-list" id="aiReportCustomizationList">
+                  <div class="ai-custom-option" data-option="outputLanguage" data-open="false">
+                    <div class="ai-custom-top">
+                      <label class="ai-feature-chip ai-custom-header-label">
+                        <input type="checkbox" data-custom-option="outputLanguage" />
+                        <span class="ai-feature-chip-label">Idioma de salida</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <p class="ai-custom-intro">
+                        Indica el idioma final del reporte para mantener la comunicación alineada a tu audiencia.
+                      </p>
+                      <button
+                        type="button"
+                        class="ai-custom-collapse"
+                        data-option-toggle="outputLanguage"
+                        aria-expanded="false"
+                      >
+                        <span class="ai-custom-collapse-text">Desplegar opciones</span>
+                        <span class="ai-custom-collapse-icon" aria-hidden="true">▾</span>
+                      </button>
+                    </div>
+                    <div class="ai-custom-extra ai-hidden" data-option-extra="outputLanguage">
+                      <div class="ai-custom-fields">
+                        <div class="ai-custom-field">
+                          <label for="aiReportOutputLanguage">Idioma del reporte generado</label>
+                          <select id="aiReportOutputLanguage" data-custom-select="outputLanguage">
+                            <option value="auto">Detección automática (IA)</option>
+                            <option value="es">Español</option>
+                            <option value="en">Inglés</option>
+                            <option value="pt">Portugués</option>
+                            <option value="fr">Francés</option>
+                          </select>
+                        </div>
+                        <p class="ai-custom-helper">
+                          La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ai-custom-option" data-option="tone" data-open="false">
+                    <div class="ai-custom-top">
+                      <label class="ai-feature-chip ai-custom-header-label">
+                        <input type="checkbox" data-custom-option="tone" />
+                        <span class="ai-feature-chip-label">Tono del reporte</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <p class="ai-custom-intro">
+                        Ajusta la voz narrativa con la que se presentarán resultados, hallazgos y llamados a la acción.
+                      </p>
+                      <button
+                        type="button"
+                        class="ai-custom-collapse"
+                        data-option-toggle="tone"
+                        aria-expanded="false"
+                      >
+                        <span class="ai-custom-collapse-text">Desplegar opciones</span>
+                        <span class="ai-custom-collapse-icon" aria-hidden="true">▾</span>
+                      </button>
+                    </div>
+                    <div class="ai-custom-extra ai-hidden" data-option-extra="tone">
+                      <div class="ai-custom-fields">
+                        <div class="ai-custom-field">
+                          <label for="aiReportTone">Estilo de comunicación</label>
+                          <select id="aiReportTone" data-custom-select="tone">
+                            <option value="neutral">Neutral profesional</option>
+                            <option value="executive">Resumen ejecutivo</option>
+                            <option value="friendly">Cercano y motivador</option>
+                            <option value="analytical">Analítico y detallado</option>
+                          </select>
+                        </div>
+                        <p class="ai-custom-helper">
+                          Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el reporte.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ai-custom-option" data-option="temporalReference" data-open="false">
+                    <div class="ai-custom-top">
+                      <label class="ai-feature-chip ai-custom-header-label">
+                        <input type="checkbox" data-custom-option="temporalReference" />
+                        <span class="ai-feature-chip-label">Referencia temporal</span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <p class="ai-custom-intro">
+                        Determina el periodo que la IA debe priorizar para explicar cambios, tendencias y comparaciones relevantes.
+                      </p>
+                      <button
+                        type="button"
+                        class="ai-custom-collapse"
+                        data-option-toggle="temporalReference"
+                        aria-expanded="false"
+                      >
+                        <span class="ai-custom-collapse-text">Desplegar opciones</span>
+                        <span class="ai-custom-collapse-icon" aria-hidden="true">▾</span>
+                      </button>
+                    </div>
+                    <div class="ai-custom-extra ai-hidden" data-option-extra="temporalReference">
+                      <div class="ai-custom-fields">
+                        <div class="ai-custom-field">
+                          <label for="aiReportTemporalMode">Enfoque del análisis temporal</label>
+                          <select id="aiReportTemporalMode" data-custom-temporal-mode="temporalReference">
+                            <option value="auto">Detectar periodo automáticamente</option>
+                            <option value="currentPeriod">Enfocar el periodo actual</option>
+                            <option value="lastPeriod">Comparar con el periodo anterior</option>
+                            <option value="custom">Definir un periodo manualmente</option>
+                          </select>
+                        </div>
+                        <div class="ai-custom-field ai-custom-temporal-custom ai-hidden" data-temporal-custom="temporalReference">
+                          <label for="aiReportTemporalCustom">Describe el intervalo a destacar</label>
+                          <textarea
+                            id="aiReportTemporalCustom"
+                            data-custom-temporal-input="temporalReference"
+                            placeholder="Ej. Compara enero-marzo 2024 con el mismo periodo de 2023 y resalta hitos comerciales importantes."
+                          ></textarea>
+                        </div>
+                        <p class="ai-custom-helper">
+                          Esta configuración ayuda a la IA a contextualizar resultados con rangos de fechas, variaciones históricas y objetivos de seguimiento.
+                        </p>
+                        <ul class="ai-custom-hints">
+                          <li>Usa periodos concretos (trimestres, campañas, temporadas) para orientar insights.</li>
+                          <li>Solicita comparaciones clave para explicar avances o caídas.</li>
+                          <li>Incluye hitos o eventos que deban mencionarse en las conclusiones.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
               <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
               <p class="ai-report-helper" style="margin-top:0;">
@@ -2628,6 +2967,50 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_OUTPUT_LANGUAGE_DEFAULT = 'auto';
+      const REPORT_OUTPUT_LANGUAGE_OPTIONS = Object.freeze([
+        { value: 'auto', label: 'Detección automática (IA)' },
+        { value: 'es', label: 'Español' },
+        { value: 'en', label: 'Inglés' },
+        { value: 'pt', label: 'Portugués' },
+        { value: 'fr', label: 'Francés' }
+      ]);
+      const REPORT_OUTPUT_LANGUAGE_SET = REPORT_OUTPUT_LANGUAGE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_TONE_DEFAULT = 'neutral';
+      const REPORT_TONE_OPTIONS = Object.freeze([
+        { value: 'neutral', label: 'Neutral profesional' },
+        { value: 'executive', label: 'Resumen ejecutivo' },
+        { value: 'friendly', label: 'Cercano y motivador' },
+        { value: 'analytical', label: 'Analítico y detallado' }
+      ]);
+      const REPORT_TONE_SET = REPORT_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_TEMPORAL_REFERENCE_DEFAULT = 'auto';
+      const REPORT_TEMPORAL_REFERENCE_OPTIONS = Object.freeze([
+        { value: 'auto', label: 'Detectar periodo automáticamente' },
+        { value: 'currentPeriod', label: 'Enfocar el periodo actual' },
+        { value: 'lastPeriod', label: 'Comparar con el periodo anterior' },
+        { value: 'custom', label: 'Definir un periodo manualmente' }
+      ]);
+      const REPORT_TEMPORAL_REFERENCE_SET = REPORT_TEMPORAL_REFERENCE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
+        outputLanguage: 'Idioma de salida',
+        tone: 'Tono del reporte',
+        temporalReference: 'Referencia temporal'
+      });
+      const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze([
+        'outputLanguage',
+        'tone',
+        'temporalReference'
+      ]);
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -2643,6 +3026,7 @@
       let selectedReportChannels = [];
       let selectedReportFeatures = [];
       let reportFeatureState = {};
+      let reportCustomizationState = createDefaultCustomizationState();
       let reportFavoriteModalVisible = false;
       let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
@@ -5643,6 +6027,10 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
       }
 
+      function createEmptyFeatureTitleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill('');
+      }
+
       function createEmptyFeatureChartTypeArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_CHART_TYPE_DEFAULT);
       }
@@ -5661,6 +6049,16 @@
 
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = entry === null || entry === undefined ? '' : String(entry);
+          });
+        }
+        return base;
+      }
+
+      function normalizeFeatureTitleArray(source) {
+        const base = createEmptyFeatureTitleArray();
         if (Array.isArray(source)) {
           source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
             base[index] = entry === null || entry === undefined ? '' : String(entry);
@@ -5775,6 +6173,7 @@
             selected: false,
             quantity: getReportFeatureDefaultQuantity(key),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceTitles: createEmptyFeatureTitleArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
@@ -5788,6 +6187,9 @@
         }
         if (!Array.isArray(state.instanceDescriptions)) {
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
+        }
+        if (!Array.isArray(state.instanceTitles)) {
+          state.instanceTitles = createEmptyFeatureTitleArray();
         }
         if (!Array.isArray(state.instanceChartTypes)) {
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
@@ -6022,6 +6424,8 @@
           const shouldShowInstances = !!state.selected;
           const normalizedDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
           state.instanceDescriptions = normalizedDescriptions.slice();
+          const normalizedTitles = normalizeFeatureTitleArray(state.instanceTitles);
+          state.instanceTitles = normalizedTitles.slice();
           const normalizedChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
           state.instanceChartTypes = normalizedChartTypes.slice();
           let normalizedListOrders = createEmptyFeatureListOrderArray();
@@ -6049,6 +6453,9 @@
             const textarea = item.querySelector(
               '[data-feature-instance-input="' + feature + '"]'
             );
+            const titleInput = item.querySelector(
+              '[data-feature-instance-title="' + feature + '"]'
+            );
             const typeSelect = item.querySelector(
               '[data-feature-instance-type="' + feature + '"]'
             );
@@ -6071,6 +6478,10 @@
               } else {
                 textarea.value = normalizedDescriptions[index] || '';
               }
+            }
+            if (titleInput) {
+              titleInput.disabled = !withinRange;
+              titleInput.value = normalizedTitles[index] || '';
             }
             if (typeSelect) {
               const chartValue = normalizedChartTypes[index] || REPORT_CHART_TYPE_DEFAULT;
@@ -6116,6 +6527,7 @@
         if (isChecked) {
           state.quantity = clampReportFeatureQuantity(state.quantity, feature);
           state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+          state.instanceTitles = normalizeFeatureTitleArray(state.instanceTitles);
           state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
           state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
@@ -6123,6 +6535,7 @@
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
+          state.instanceTitles = createEmptyFeatureTitleArray();
           state.instanceChartTypes = createEmptyFeatureChartTypeArray();
           state.instanceListOrders = createEmptyFeatureListOrderArray();
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
@@ -6143,6 +6556,7 @@
         const quantity = clampReportFeatureQuantity(value, feature);
         state.quantity = quantity;
         state.instanceDescriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        state.instanceTitles = normalizeFeatureTitleArray(state.instanceTitles);
         state.instanceChartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
@@ -6160,6 +6574,21 @@
         const descriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
         descriptions[safeIndex] = value === null || value === undefined ? '' : String(value);
         state.instanceDescriptions = descriptions;
+      }
+
+      function handleReportFeatureInstanceTitleChange(feature, index, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const titles = normalizeFeatureTitleArray(state.instanceTitles);
+        titles[safeIndex] = value === null || value === undefined ? '' : String(value);
+        state.instanceTitles = titles;
       }
 
       function handleReportFeatureInstanceTypeChange(feature, index, value) {
@@ -6268,6 +6697,17 @@
             });
             field.dataset.bound = 'true';
           });
+          const titleFields = option.querySelectorAll('[data-feature-instance-title="' + feature + '"]');
+          titleFields.forEach(function(field) {
+            if (!field || field.dataset.bound) {
+              return;
+            }
+            field.addEventListener('input', function() {
+              const index = parseInt(field.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTitleChange(feature, index, field.value);
+            });
+            field.dataset.bound = 'true';
+          });
           const typeSelectors = option.querySelectorAll('[data-feature-instance-type="' + feature + '"]');
           typeSelectors.forEach(function(selector) {
             if (!selector || selector.dataset.bound) {
@@ -6323,6 +6763,385 @@
         updateSelectedReportFeatures();
       }
 
+      function normalizeOutputLanguageValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_OUTPUT_LANGUAGE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_OUTPUT_LANGUAGE_DEFAULT;
+        }
+        return REPORT_OUTPUT_LANGUAGE_SET[normalized]
+          ? normalized
+          : REPORT_OUTPUT_LANGUAGE_DEFAULT;
+      }
+
+      function normalizeToneValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_TONE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_TONE_DEFAULT;
+        }
+        return REPORT_TONE_SET[normalized] ? normalized : REPORT_TONE_DEFAULT;
+      }
+
+      function normalizeTemporalModeValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+        }
+        const normalized = String(value).trim();
+        if (!normalized) {
+          return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+        }
+        return REPORT_TEMPORAL_REFERENCE_SET[normalized]
+          ? normalized
+          : REPORT_TEMPORAL_REFERENCE_DEFAULT;
+      }
+
+      function createDefaultCustomizationState() {
+        return {
+          outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
+          tone: { enabled: false, value: REPORT_TONE_DEFAULT },
+          temporalReference: {
+            enabled: false,
+            mode: REPORT_TEMPORAL_REFERENCE_DEFAULT,
+            customText: ''
+          }
+        };
+      }
+
+      function normalizeReportCustomizationInput(source) {
+        const base = createDefaultCustomizationState();
+        if (!source || typeof source !== 'object') {
+          return base;
+        }
+        if (source.outputLanguage && typeof source.outputLanguage === 'object') {
+          base.outputLanguage.enabled = !!source.outputLanguage.enabled;
+          base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+        }
+        if (source.tone && typeof source.tone === 'object') {
+          base.tone.enabled = !!source.tone.enabled;
+          base.tone.value = normalizeToneValue(source.tone.value);
+        }
+        if (source.temporalReference && typeof source.temporalReference === 'object') {
+          base.temporalReference.enabled = !!source.temporalReference.enabled;
+          base.temporalReference.mode = normalizeTemporalModeValue(source.temporalReference.mode);
+          base.temporalReference.customText = source.temporalReference.customText
+            ? String(source.temporalReference.customText).trim()
+            : '';
+        }
+        if (!base.outputLanguage.enabled) {
+          base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+        }
+        if (!base.tone.enabled) {
+          base.tone.value = REPORT_TONE_DEFAULT;
+        }
+        if (!base.temporalReference.enabled) {
+          base.temporalReference.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          base.temporalReference.customText = '';
+        } else if (base.temporalReference.mode !== 'custom') {
+          base.temporalReference.customText = '';
+        }
+        return {
+          outputLanguage: {
+            enabled: base.outputLanguage.enabled,
+            value: base.outputLanguage.value
+          },
+          tone: {
+            enabled: base.tone.enabled,
+            value: base.tone.value
+          },
+          temporalReference: {
+            enabled: base.temporalReference.enabled,
+            mode: base.temporalReference.mode,
+            customText: base.temporalReference.customText
+          }
+        };
+      }
+
+      function ensureReportCustomizationOption(option) {
+        if (!reportCustomizationState || typeof reportCustomizationState !== 'object') {
+          reportCustomizationState = createDefaultCustomizationState();
+        }
+        if (!reportCustomizationState[option]) {
+          const defaults = createDefaultCustomizationState();
+          reportCustomizationState[option] = Object.assign({}, defaults[option]);
+        }
+        return reportCustomizationState[option];
+      }
+
+      function getReportCustomizationOptionElement(option) {
+        return document.querySelector(
+          '#aiReportCustomizationList .ai-custom-option[data-option="' + option + '"]'
+        );
+      }
+
+      function setReportCustomizationOptionOpen(option, open) {
+        const element = getReportCustomizationOptionElement(option);
+        if (!element) {
+          return;
+        }
+        element.dataset.open = open ? 'true' : 'false';
+        const toggle = element.querySelector('[data-option-toggle="' + option + '"]');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          const text = toggle.querySelector('.ai-custom-collapse-text');
+          if (text) {
+            text.textContent = open ? 'Replegar opciones' : 'Desplegar opciones';
+          }
+          const icon = toggle.querySelector('.ai-custom-collapse-icon');
+          if (icon) {
+            icon.textContent = open ? '▴' : '▾';
+          }
+        }
+      }
+
+      function refreshReportCustomizationOption(option) {
+        const element = getReportCustomizationOptionElement(option);
+        if (!element) {
+          return;
+        }
+        const state = ensureReportCustomizationOption(option);
+        const isEnabled = !!state.enabled;
+        const checkbox = element.querySelector('input[data-custom-option="' + option + '"]');
+        if (checkbox) {
+          checkbox.checked = isEnabled;
+        }
+        const toggle = element.querySelector('[data-option-toggle="' + option + '"]');
+        if (toggle) {
+          toggle.disabled = !isEnabled;
+        }
+        if (!isEnabled) {
+          setReportCustomizationOptionOpen(option, false);
+        }
+        const isOpen = element.dataset.open !== 'false';
+        const extra = element.querySelector('[data-option-extra="' + option + '"]');
+        if (extra) {
+          const shouldShow = isEnabled && isOpen;
+          extra.classList.toggle('ai-hidden', !shouldShow);
+          extra.querySelectorAll('select, textarea').forEach(function(input) {
+            input.disabled = !isEnabled;
+          });
+        }
+        if (option === 'outputLanguage') {
+          const select = element.querySelector('[data-custom-select="outputLanguage"]');
+          if (select) {
+            const value = isEnabled
+              ? normalizeOutputLanguageValue(state.value)
+              : REPORT_OUTPUT_LANGUAGE_DEFAULT;
+            select.value = value;
+          }
+        } else if (option === 'tone') {
+          const select = element.querySelector('[data-custom-select="tone"]');
+          if (select) {
+            const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
+            select.value = value;
+          }
+        } else if (option === 'temporalReference') {
+          const modeSelect = element.querySelector('[data-custom-temporal-mode="temporalReference"]');
+          const customWrapper = element.querySelector('[data-temporal-custom="temporalReference"]');
+          const customInput = element.querySelector('[data-custom-temporal-input="temporalReference"]');
+          const modeValue = isEnabled
+            ? normalizeTemporalModeValue(state.mode)
+            : REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          if (modeSelect) {
+            modeSelect.value = modeValue;
+            modeSelect.disabled = !isEnabled;
+          }
+          const showCustom = isEnabled && modeValue === 'custom';
+          if (customWrapper) {
+            customWrapper.classList.toggle('ai-hidden', !showCustom);
+          }
+          if (customInput) {
+            customInput.disabled = !showCustom;
+            customInput.value = showCustom ? state.customText || '' : '';
+          }
+        }
+      }
+
+      function refreshAllReportCustomizationOptions() {
+        REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
+          refreshReportCustomizationOption(option);
+        });
+      }
+
+      function updateReportCustomizationSummary() {
+        const summary = document.getElementById('aiReportCustomizationSummary');
+        if (!summary) {
+          return;
+        }
+        const active = REPORT_CUSTOMIZATION_OPTIONS.filter(function(option) {
+          const state = reportCustomizationState && reportCustomizationState[option];
+          return state && state.enabled;
+        }).map(function(option) {
+          return REPORT_CUSTOMIZATION_LABELS[option] || option;
+        });
+        if (active.length === 0) {
+          summary.textContent = '';
+          summary.classList.add('ai-hidden');
+        } else {
+          summary.textContent = 'Activos: ' + active.join(', ');
+          summary.classList.remove('ai-hidden');
+        }
+      }
+
+      function handleReportCustomizationSelection(option, checked) {
+        const state = ensureReportCustomizationOption(option);
+        state.enabled = !!checked;
+        if (!state.enabled) {
+          if (option === 'outputLanguage') {
+            state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+          } else if (option === 'tone') {
+            state.value = REPORT_TONE_DEFAULT;
+          } else if (option === 'temporalReference') {
+            state.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+            state.customText = '';
+          }
+        } else if (option === 'temporalReference' && !state.mode) {
+          state.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+        }
+        setReportCustomizationOptionOpen(option, state.enabled);
+        refreshReportCustomizationOption(option);
+        updateReportCustomizationSummary();
+      }
+
+      function handleReportCustomizationValueChange(option, value) {
+        const state = ensureReportCustomizationOption(option);
+        if (!state.enabled) {
+          return;
+        }
+        if (option === 'outputLanguage') {
+          state.value = normalizeOutputLanguageValue(value);
+        } else if (option === 'tone') {
+          state.value = normalizeToneValue(value);
+        }
+        refreshReportCustomizationOption(option);
+        updateReportCustomizationSummary();
+      }
+
+      function handleReportTemporalModeChange(value) {
+        const state = ensureReportCustomizationOption('temporalReference');
+        if (!state.enabled) {
+          return;
+        }
+        state.mode = normalizeTemporalModeValue(value);
+        if (state.mode !== 'custom') {
+          state.customText = '';
+        }
+        refreshReportCustomizationOption('temporalReference');
+        updateReportCustomizationSummary();
+      }
+
+      function handleReportTemporalCustomInput(value) {
+        const state = ensureReportCustomizationOption('temporalReference');
+        if (!state.enabled || state.mode !== 'custom') {
+          return;
+        }
+        state.customText = value === null || value === undefined ? '' : String(value);
+      }
+
+      function resetReportCustomizationState() {
+        reportCustomizationState = createDefaultCustomizationState();
+        REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
+          setReportCustomizationOptionOpen(option, false);
+        });
+        refreshAllReportCustomizationOptions();
+        updateReportCustomizationSummary();
+      }
+
+      function initializeReportCustomizationControls() {
+        const list = document.getElementById('aiReportCustomizationList');
+        if (!list) {
+          reportCustomizationState = createDefaultCustomizationState();
+          return;
+        }
+        REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
+          const wrapper = getReportCustomizationOptionElement(option);
+          if (!wrapper) {
+            return;
+          }
+          const checkbox = wrapper.querySelector('input[data-custom-option="' + option + '"]');
+          if (checkbox && !checkbox.dataset.bound) {
+            checkbox.addEventListener('change', function() {
+              handleReportCustomizationSelection(option, checkbox.checked);
+            });
+            checkbox.dataset.bound = 'true';
+          }
+          const toggle = wrapper.querySelector('[data-option-toggle="' + option + '"]');
+          if (toggle && !toggle.dataset.bound) {
+            toggle.addEventListener('click', function() {
+              const isOpen = wrapper.dataset.open !== 'false';
+              setReportCustomizationOptionOpen(option, !isOpen);
+              refreshReportCustomizationOption(option);
+            });
+            toggle.dataset.bound = 'true';
+          }
+          if (option === 'outputLanguage' || option === 'tone') {
+            const select = wrapper.querySelector('[data-custom-select="' + option + '"]');
+            if (select && !select.dataset.bound) {
+              select.addEventListener('change', function() {
+                handleReportCustomizationValueChange(option, select.value);
+              });
+              select.dataset.bound = 'true';
+            }
+          } else if (option === 'temporalReference') {
+            const modeSelect = wrapper.querySelector('[data-custom-temporal-mode="temporalReference"]');
+            if (modeSelect && !modeSelect.dataset.bound) {
+              modeSelect.addEventListener('change', function() {
+                handleReportTemporalModeChange(modeSelect.value);
+              });
+              modeSelect.dataset.bound = 'true';
+            }
+            const customInput = wrapper.querySelector('[data-custom-temporal-input="temporalReference"]');
+            if (customInput && !customInput.dataset.bound) {
+              customInput.addEventListener('input', function() {
+                handleReportTemporalCustomInput(customInput.value);
+              });
+              customInput.dataset.bound = 'true';
+            }
+          }
+        });
+        resetReportCustomizationState();
+      }
+
+      function applyReportCustomizationState(source) {
+        const normalized = normalizeReportCustomizationInput(source);
+        reportCustomizationState = {
+          outputLanguage: Object.assign({}, normalized.outputLanguage),
+          tone: Object.assign({}, normalized.tone),
+          temporalReference: Object.assign({}, normalized.temporalReference)
+        };
+        REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
+          setReportCustomizationOptionOpen(option, !!reportCustomizationState[option].enabled);
+        });
+        refreshAllReportCustomizationOptions();
+        updateReportCustomizationSummary();
+      }
+
+      function getReportCustomizationPayload() {
+        const normalized = normalizeReportCustomizationInput(reportCustomizationState);
+        return {
+          outputLanguage: {
+            enabled: normalized.outputLanguage.enabled,
+            value: normalized.outputLanguage.value
+          },
+          tone: {
+            enabled: normalized.tone.enabled,
+            value: normalized.tone.value
+          },
+          temporalReference: {
+            enabled: normalized.temporalReference.enabled,
+            mode: normalized.temporalReference.mode,
+            customText:
+              normalized.temporalReference.mode === 'custom'
+                ? normalized.temporalReference.customText
+                : ''
+          }
+        };
+      }
+
       function normalizeFeatureId(value) {
         if (value === null || value === undefined) {
           return '';
@@ -6359,6 +7178,7 @@
             }
             const quantityValue = clampReportFeatureQuantity(detail.quantity, featureId);
             const instanceDescriptions = normalizeFeatureInstanceArray(detail.instanceDescriptions);
+            const instanceTitles = normalizeFeatureTitleArray(detail.instanceTitles);
             const instanceChartTypes = normalizeFeatureChartTypeArray(detail.instanceChartTypes);
             const instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
             const instanceListEnumerate = normalizeFeatureListEnumerateArray(
@@ -6370,6 +7190,7 @@
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
+              instanceTitles: instanceTitles,
               instanceChartTypes: instanceChartTypes,
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
@@ -6389,6 +7210,9 @@
             state.instanceDescriptions = detail
               ? normalizeFeatureInstanceArray(detail.instanceDescriptions)
               : createEmptyFeatureInstanceArray();
+            state.instanceTitles = detail
+              ? normalizeFeatureTitleArray(detail.instanceTitles)
+              : createEmptyFeatureTitleArray();
             state.instanceChartTypes = detail
               ? normalizeFeatureChartTypeArray(detail.instanceChartTypes)
               : createEmptyFeatureChartTypeArray();
@@ -6404,6 +7228,7 @@
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
+            state.instanceTitles = createEmptyFeatureTitleArray();
             state.instanceChartTypes = createEmptyFeatureChartTypeArray();
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
@@ -6754,6 +7579,7 @@
           handleReportFormatSelection('');
         }
         applyReportFeatureSelections(action.features || [], action.featureDetails || []);
+        applyReportCustomizationState(action.customization || {});
         const descToggle = document.getElementById('aiReportDescriptionToggle');
         if (descToggle) {
           descToggle.checked = !!action.descriptionEnabled;
@@ -6925,6 +7751,7 @@
           const label = REPORT_FEATURE_LABELS[feature] || feature;
           const quantityValue = state ? clampReportFeatureQuantity(state.quantity, feature) : 1;
           const baseDescriptions = normalizeFeatureInstanceArray(state ? state.instanceDescriptions : []);
+          const baseTitles = normalizeFeatureTitleArray(state ? state.instanceTitles : []);
           const baseChartTypes = normalizeFeatureChartTypeArray(state ? state.instanceChartTypes : []);
           const baseListOrders = normalizeFeatureListOrderArray(state ? state.instanceListOrders : []);
           const baseListEnumerate = normalizeFeatureListEnumerateArray(
@@ -6944,6 +7771,7 @@
           if (state) {
             state.quantity = quantityValue;
             state.instanceDescriptions = trimmedDescriptions.slice();
+            state.instanceTitles = baseTitles.slice();
             state.instanceChartTypes = baseChartTypes.slice();
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
@@ -6952,6 +7780,7 @@
           featureDetailMap[feature] = {
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice(),
+            instanceTitles: baseTitles.slice(),
             instanceChartTypes: baseChartTypes.slice(),
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
@@ -7039,6 +7868,7 @@
           const detail = featureDetailMap[feature] || {
             quantity: getReportFeatureDefaultQuantity(feature),
             instanceDescriptions: createEmptyFeatureInstanceArray(),
+            instanceTitles: createEmptyFeatureTitleArray(),
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
@@ -7048,12 +7878,14 @@
             feature: feature,
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
+            instanceTitles: normalizeFeatureTitleArray(detail.instanceTitles),
             instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes),
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
           };
         });
+        const customizationPayload = getReportCustomizationPayload();
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,
@@ -7066,6 +7898,7 @@
           description: descriptionText,
           features: selectedFeatures,
           featureDetails: featureDetails,
+          customization: customizationPayload,
           emails: sanitizeContactSelection(
             getCheckedValuesFromList('aiReportEmailList'),
             REPORT_ALL_EMAILS_VALUE
@@ -7152,6 +7985,16 @@
           }
         }
         updateReportFeaturesSummary();
+        const customizationWrapper = document.getElementById('aiReportCustomizationWrapper');
+        if (customizationWrapper) {
+          if (selectedReportFormat) {
+            customizationWrapper.classList.remove('ai-hidden');
+            setCollapsibleOpen(customizationWrapper, true);
+          } else {
+            customizationWrapper.classList.add('ai-hidden');
+          }
+        }
+        updateReportCustomizationSummary();
         const formatsWrapper = document.getElementById('aiReportFormatsWrapper');
         if (formatsWrapper) {
           if (selectedReportFormat) {
@@ -7240,6 +8083,12 @@
           setCollapsibleOpen(featuresWrapper, true);
         }
         updateReportFeaturesSummary();
+        const customizationWrapper = document.getElementById('aiReportCustomizationWrapper');
+        if (customizationWrapper) {
+          customizationWrapper.classList.add('ai-hidden');
+          setCollapsibleOpen(customizationWrapper, true);
+        }
+        resetReportCustomizationState();
         const descToggle = document.getElementById('aiReportDescriptionToggle');
         if (descToggle) {
           descToggle.checked = false;
@@ -7456,6 +8305,7 @@
           updateReportFileExtension();
         }
         initializeReportFeatureControls();
+        initializeReportCustomizationControls();
         const deliverySelector = document.getElementById('aiReportDeliverySelector');
         if (deliverySelector) {
           const toggle = document.getElementById('aiReportDeliveryToggle');
