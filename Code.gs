@@ -173,6 +173,41 @@ var REPORT_LIST_ENUM_STYLE_ALLOWED = {
   letters: true,
   roman: true
 };
+var REPORT_SUMMARY_DEPTH_DEFAULT = 'auto';
+var REPORT_SUMMARY_DEPTH_ALLOWED = {
+  auto: true,
+  brief: true,
+  medium: true,
+  detailed: true,
+  bullet: true,
+  headline: true
+};
+var REPORT_SUMMARY_TONE_DEFAULT = 'auto';
+var REPORT_SUMMARY_TONE_ALLOWED = {
+  auto: true,
+  formal: true,
+  conversational: true,
+  analytical: true,
+  motivational: true,
+  academic: true,
+  storytelling: true
+};
+var REPORT_SUMMARY_CONTEXT_CANONICAL = {
+  language: 'language',
+  metrics: 'metrics',
+  threshold: 'threshold',
+  conclusion: 'conclusion',
+  sources: 'sources',
+  timereference: 'timeReference'
+};
+var REPORT_SUMMARY_CONTEXT_ALLOWED = {
+  language: true,
+  metrics: true,
+  threshold: true,
+  conclusion: true,
+  sources: true,
+  timeReference: true
+};
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
@@ -875,6 +910,9 @@ function buildReportFavoriteResponse(entry) {
     var instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
     var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
     var instanceListEnumStyles = normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles);
+    var summaryDepth = normalizeSummaryDepthValue(detail.summaryDepth);
+    var summaryTone = normalizeSummaryToneValue(detail.summaryTone);
+    var summaryContext = normalizeSummaryContextArray(detail.summaryContext);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
@@ -882,7 +920,10 @@ function buildReportFavoriteResponse(entry) {
       instanceChartTypes: instanceChartTypes,
       instanceListOrders: instanceListOrders,
       instanceListEnumerate: instanceListEnumerate,
-      instanceListEnumStyles: instanceListEnumStyles
+      instanceListEnumStyles: instanceListEnumStyles,
+      summaryDepth: summaryDepth,
+      summaryTone: summaryTone,
+      summaryContext: summaryContext
     });
     detailMap[featureId] = true;
   });
@@ -898,7 +939,10 @@ function buildReportFavoriteResponse(entry) {
       instanceChartTypes: normalizeFeatureChartTypeArray([]),
       instanceListOrders: normalizeFeatureListOrderArray([]),
       instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
-      instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
+      instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
+      summaryDepth: REPORT_SUMMARY_DEPTH_DEFAULT,
+      summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+      summaryContext: []
     });
     detailMap[featureId] = true;
   });
@@ -2146,6 +2190,58 @@ function normalizeFeatureListEnumStyleArray(source) {
   return base;
 }
 
+function normalizeSummaryDepthValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_SUMMARY_DEPTH_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_SUMMARY_DEPTH_DEFAULT;
+  }
+  if (REPORT_SUMMARY_DEPTH_ALLOWED[text]) {
+    return text;
+  }
+  return REPORT_SUMMARY_DEPTH_DEFAULT;
+}
+
+function normalizeSummaryToneValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_SUMMARY_TONE_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_SUMMARY_TONE_DEFAULT;
+  }
+  if (REPORT_SUMMARY_TONE_ALLOWED[text]) {
+    return text;
+  }
+  return REPORT_SUMMARY_TONE_DEFAULT;
+}
+
+function normalizeSummaryContextArray(source) {
+  var normalized = [];
+  if (!Array.isArray(source)) {
+    return normalized;
+  }
+  var seen = {};
+  source.forEach(function(entry) {
+    if (entry === null || entry === undefined) {
+      return;
+    }
+    var text = String(entry).trim();
+    if (!text) {
+      return;
+    }
+    var canonical = REPORT_SUMMARY_CONTEXT_CANONICAL[text.toLowerCase()];
+    if (!canonical || seen[canonical] || !REPORT_SUMMARY_CONTEXT_ALLOWED[canonical]) {
+      return;
+    }
+    seen[canonical] = true;
+    normalized.push(canonical);
+  });
+  return normalized;
+}
+
 function saveReportFavorite(payload) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
@@ -2226,6 +2322,9 @@ function saveReportFavorite(payload) {
     var normalizedListEnumerate = normalizeFeatureListEnumerateArray(rawListEnumerate);
     var rawListEnumStyles = Array.isArray(entry.instanceListEnumStyles) ? entry.instanceListEnumStyles : [];
     var normalizedListEnumStyles = normalizeFeatureListEnumStyleArray(rawListEnumStyles);
+    var normalizedSummaryDepth = normalizeSummaryDepthValue(entry.summaryDepth);
+    var normalizedSummaryTone = normalizeSummaryToneValue(entry.summaryTone);
+    var normalizedSummaryContext = normalizeSummaryContextArray(entry.summaryContext);
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
@@ -2241,7 +2340,10 @@ function saveReportFavorite(payload) {
       instanceChartTypes: normalizedChartTypes,
       instanceListOrders: normalizedListOrders,
       instanceListEnumerate: normalizedListEnumerate,
-      instanceListEnumStyles: normalizedListEnumStyles
+      instanceListEnumStyles: normalizedListEnumStyles,
+      summaryDepth: normalizedSummaryDepth,
+      summaryTone: normalizedSummaryTone,
+      summaryContext: normalizedSummaryContext
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2259,7 +2361,10 @@ function saveReportFavorite(payload) {
         instanceChartTypes: normalizeFeatureChartTypeArray([]),
         instanceListOrders: normalizeFeatureListOrderArray([]),
         instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
-        instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
+        instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
+        summaryDepth: REPORT_SUMMARY_DEPTH_DEFAULT,
+        summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+        summaryContext: []
       });
       seenFeatureDetails[featureId] = true;
     }

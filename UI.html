@@ -718,6 +718,181 @@
         letter-spacing: 0.02em;
         text-transform: uppercase;
       }
+      .ai-summary-config {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .ai-summary-config-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-summary-select-label,
+      .ai-summary-context-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #1F2937;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-summary-select {
+        position: relative;
+        display: inline-flex;
+        width: 100%;
+        flex-direction: column;
+      }
+      .ai-summary-select-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        background-color: #F9FAFB;
+        color: #111827;
+        font-size: 13px;
+        padding: 8px 10px;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .ai-summary-select-toggle:hover,
+      .ai-summary-select-toggle:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        outline: none;
+      }
+      .ai-summary-select-label-text {
+        flex: 1;
+        text-align: left;
+      }
+      .ai-summary-select-icon {
+        font-size: 11px;
+        color: #4B5563;
+      }
+      .ai-summary-select-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        z-index: 40;
+        background-color: #FFFFFF;
+        border: 1px solid #D1D5DB;
+        border-radius: 10px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        padding: 6px 0;
+        display: none;
+      }
+      .ai-summary-select[data-open='true'] .ai-summary-select-menu {
+        display: block;
+      }
+      .ai-summary-select-option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: transparent;
+        border: none;
+        color: #111827;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .ai-summary-select-option.is-active {
+        background-color: #EEF2FF;
+        color: #4338CA;
+        font-weight: 600;
+      }
+      .ai-summary-select-option:hover,
+      .ai-summary-select-option:focus {
+        background-color: #EFF6FF;
+        color: #1D4ED8;
+        outline: none;
+      }
+      .ai-summary-context {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-summary-context-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 6px 10px;
+      }
+      .ai-summary-context-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        background-color: #F9FAFB;
+        font-size: 12px;
+        color: #1F2937;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+      }
+      .ai-summary-context-option input {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+      }
+      .ai-summary-context-option:hover,
+      .ai-summary-context-option:focus-within {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
+      }
+      .ai-summary-select-option[data-tooltip],
+      .ai-summary-context-option[data-tooltip] {
+        position: relative;
+      }
+      .ai-summary-select-option[data-tooltip]::after,
+      .ai-summary-context-option[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        top: -6px;
+        transform: translate(-50%, -100%);
+        background: rgba(17, 24, 39, 0.92);
+        color: #F9FAFB;
+        font-size: 11px;
+        line-height: 1.3;
+        padding: 6px 8px;
+        border-radius: 8px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
+        width: 230px;
+        max-width: 70vw;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        text-align: left;
+      }
+      .ai-summary-select-option[data-tooltip]::before,
+      .ai-summary-context-option[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: -6px;
+        transform: translate(-50%, -100%);
+        border: 6px solid transparent;
+        border-top-color: rgba(17, 24, 39, 0.92);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      .ai-summary-select-option[data-tooltip]:hover::after,
+      .ai-summary-select-option[data-tooltip]:hover::before,
+      .ai-summary-select-option[data-tooltip]:focus-visible::after,
+      .ai-summary-select-option[data-tooltip]:focus-visible::before,
+      .ai-summary-context-option[data-tooltip]:hover::after,
+      .ai-summary-context-option[data-tooltip]:hover::before,
+      .ai-summary-context-option[data-tooltip]:focus-visible::after,
+      .ai-summary-context-option[data-tooltip]:focus-visible::before {
+        opacity: 1;
+      }
       .ai-feature-chart-select select {
         width: 100%;
         min-height: 28px;
@@ -2204,31 +2379,243 @@
                         <span class="ai-feature-chip-label">Resumen</span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
-                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="summary">
-                        <label for="aiFeatureQuantity-summary">Cantidad</label>
-                        <input
-                          type="number"
-                          id="aiFeatureQuantity-summary"
-                          data-feature-quantity-input="summary"
-                          min="1"
-                          max="3"
-                          value="1"
-                        />
-                      </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
+                      <div class="ai-summary-config" data-summary-config>
+                        <div class="ai-summary-config-group">
+                          <span class="ai-summary-select-label">Nivel y profundidad del resumen</span>
+                          <div class="ai-summary-select" data-summary-select="depth" data-open="false">
+                            <button
+                              type="button"
+                              class="ai-summary-select-toggle"
+                              data-summary-select-toggle="depth"
+                              aria-haspopup="listbox"
+                              aria-expanded="false"
+                            >
+                              <span class="ai-summary-select-label-text" data-summary-select-label="depth">
+                                Selección inteligente (IA)
+                              </span>
+                              <span class="ai-summary-select-icon">▾</span>
+                            </button>
+                            <div class="ai-summary-select-menu" role="listbox">
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="auto"
+                                data-tooltip="La IA elige la profundidad ideal según los datos y canales seleccionados."
+                              >
+                                Selección inteligente (IA)
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="brief"
+                                data-tooltip="Resumen ejecutivo rápido. Ej: 'Las ventas crecieron 12% en el último mes.'"
+                              >
+                                Breve (1-2 líneas)
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="medium"
+                                data-tooltip="Explicación concisa con contexto. Ej: 'Ventas totales crecieron 12% impulsadas por Tulum.'"
+                              >
+                                Medio (1 párrafo)
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="detailed"
+                                data-tooltip="Análisis con causas y conclusiones. Ej: 'El ticket promedio en Tulum impulsó el +12% mensual.'"
+                              >
+                                Detallado / extenso
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="bullet"
+                                data-tooltip="Resultados enumerados. Ej: '1. Creció la demanda. 2. Bajó el costo. 3. Mejora de márgenes.'"
+                              >
+                                Punto por punto / lista
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="depth"
+                                data-value="headline"
+                                data-tooltip="Estilo noticioso. Ej: 'Récord de ventas en octubre (+12%).'"
+                              >
+                                Resumen tipo titular
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="ai-summary-config-group">
+                          <span class="ai-summary-select-label">Tono y estilo del lenguaje</span>
+                          <div class="ai-summary-select" data-summary-select="tone" data-open="false">
+                            <button
+                              type="button"
+                              class="ai-summary-select-toggle"
+                              data-summary-select-toggle="tone"
+                              aria-haspopup="listbox"
+                              aria-expanded="false"
+                            >
+                              <span class="ai-summary-select-label-text" data-summary-select-label="tone">
+                                Selección inteligente (IA)
+                              </span>
+                              <span class="ai-summary-select-icon">▾</span>
+                            </button>
+                            <div class="ai-summary-select-menu" role="listbox">
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="auto"
+                                data-tooltip="La IA adapta el tono según el público y el tipo de reporte."
+                              >
+                                Selección inteligente (IA)
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="formal"
+                                data-tooltip="Para reportes o reuniones. Ej: 'Los indicadores financieros reflejan una tendencia positiva.'"
+                              >
+                                Formal / ejecutivo
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="conversational"
+                                data-tooltip="Lenguaje natural y cercano. Ej: 'Las ventas van subiendo mes a mes.'"
+                              >
+                                Conversacional / simple
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="analytical"
+                                data-tooltip="Terminología profesional. Ej: 'El margen bruto mejoró un 4,3%.'"
+                              >
+                                Analítico / técnico
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="motivational"
+                                data-tooltip="Ideal para presentaciones visuales. Ej: '¡Gran desempeño!'"
+                              >
+                                Motivacional / creativo
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="academic"
+                                data-tooltip="Estilo de informe o paper. Ej: 'Los datos evidencian una correlación positiva.'"
+                              >
+                                Académico / formal técnico
+                              </button>
+                              <button
+                                type="button"
+                                class="ai-summary-select-option"
+                                role="option"
+                                data-summary-select-option="tone"
+                                data-value="storytelling"
+                                data-tooltip="Formato de relato. Ej: 'A medida que la demanda creció...'"
+                              >
+                                Narrativo / storytelling
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="ai-summary-context" data-summary-context-wrapper>
+                          <span class="ai-summary-context-label">Contexto y personalización</span>
+                          <div class="ai-summary-context-list">
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="language"
+                              data-tooltip="Permite traducir automáticamente el resumen al idioma elegido."
+                            >
+                              <input type="checkbox" data-summary-context="language" value="language" />
+                              <span>Idioma de salida</span>
+                            </label>
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="metrics"
+                              data-tooltip="Limita el análisis a columnas o KPI relevantes (%, totales, etc.)."
+                            >
+                              <input type="checkbox" data-summary-context="metrics" value="metrics" />
+                              <span>Métricas de interés</span>
+                            </label>
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="threshold"
+                              data-tooltip="Ignora datos con impacto menor (por ejemplo, inferiores al 5%)."
+                            >
+                              <input type="checkbox" data-summary-context="threshold" value="threshold" />
+                              <span>Umbral de relevancia</span>
+                            </label>
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="conclusion"
+                              data-tooltip="Agrega una frase final interpretativa de la IA."
+                            >
+                              <input type="checkbox" data-summary-context="conclusion" value="conclusion" />
+                              <span>Conclusión de la IA</span>
+                            </label>
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="sources"
+                              data-tooltip="Incluye hoja o rango de origen como referencia."
+                            >
+                              <input type="checkbox" data-summary-context="sources" value="sources" />
+                              <span>Fuentes de datos</span>
+                            </label>
+                            <label
+                              class="ai-summary-context-option"
+                              data-summary-context-option="timeReference"
+                              data-tooltip="Añade la fecha actual o periodo analizado automáticamente."
+                            >
+                              <input type="checkbox" data-summary-context="timeReference" value="timeReference" />
+                              <span>Referencia temporal</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
-                          <label for="aiFeatureInstance-summary-1">Descripción del resumen</label>
+                          <label for="aiFeatureInstance-summary-1">Descripción del resumen principal</label>
                           <textarea
                             id="aiFeatureInstance-summary-1"
                             data-feature-instance-input="summary"
                             data-instance-index="0"
-                            placeholder="Explica el resumen general que debe redactar la IA"
+                            placeholder="Describe qué debe abarcar el resumen (datos clave, insights o mensajes finales)."
                           ></textarea>
                         </div>
                       </div>
@@ -2556,12 +2943,154 @@
         table: 'Generará tablas detalladas para comparar datos. Ej: "Resumen de ventas por producto".',
         list: 'Generará listados claros de elementos clave. Ej: "Tareas prioritarias del equipo".',
         summary:
-          'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".',
+          'Generará un resumen adaptable con nivel, tono y contexto personalizados. Ej: "Síntesis del trimestre con conclusiones".',
         comments:
           'Añadirá notas y contexto adicional redactado para el reporte. Ej: "Recomendaciones del equipo comercial".',
         metrics:
           'Resaltará cifras puntuales fáciles de leer. Ej: "Ingresos totales y variación semanal".'
       });
+      const REPORT_SUMMARY_DEPTH_OPTIONS = Object.freeze([
+        {
+          value: 'auto',
+          label: 'Selección inteligente (IA)',
+          tooltip: 'La IA elige la profundidad ideal según los datos y canales seleccionados.'
+        },
+        {
+          value: 'brief',
+          label: 'Breve (1-2 líneas)',
+          tooltip: 'Resumen ejecutivo rápido. Ej: "Las ventas crecieron 12% en el último mes."'
+        },
+        {
+          value: 'medium',
+          label: 'Medio (1 párrafo)',
+          tooltip: 'Explicación concisa con contexto. Ej: "Ventas totales crecieron 12% impulsadas por Tulum."'
+        },
+        {
+          value: 'detailed',
+          label: 'Detallado / extenso',
+          tooltip:
+            'Análisis con causas y conclusiones. Ej: "El ticket promedio en Tulum impulsó el +12% mensual."'
+        },
+        {
+          value: 'bullet',
+          label: 'Punto por punto / lista',
+          tooltip: 'Resultados enumerados. Ej: "1. Creció la demanda. 2. Bajó el costo. 3. Mejora de márgenes."'
+        },
+        {
+          value: 'headline',
+          label: 'Resumen tipo titular',
+          tooltip: 'Estilo noticioso. Ej: "Récord de ventas en octubre (+12%)."'
+        }
+      ]);
+      const REPORT_SUMMARY_DEPTH_DEFAULT = 'auto';
+      const REPORT_SUMMARY_DEPTH_LABELS = REPORT_SUMMARY_DEPTH_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_DEPTH_TOOLTIPS = REPORT_SUMMARY_DEPTH_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.tooltip || '';
+        return map;
+      }, {});
+      const REPORT_SUMMARY_DEPTH_SET = REPORT_SUMMARY_DEPTH_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_TONE_OPTIONS = Object.freeze([
+        {
+          value: 'auto',
+          label: 'Selección inteligente (IA)',
+          tooltip: 'La IA adapta el tono según el público y el tipo de reporte.'
+        },
+        {
+          value: 'formal',
+          label: 'Formal / ejecutivo',
+          tooltip: 'Para reportes o reuniones. Ej: "Los indicadores financieros reflejan una tendencia positiva."'
+        },
+        {
+          value: 'conversational',
+          label: 'Conversacional / simple',
+          tooltip: 'Lenguaje natural y cercano. Ej: "Las ventas van subiendo mes a mes."'
+        },
+        {
+          value: 'analytical',
+          label: 'Analítico / técnico',
+          tooltip: 'Terminología profesional. Ej: "El margen bruto mejoró un 4,3%."'
+        },
+        {
+          value: 'motivational',
+          label: 'Motivacional / creativo',
+          tooltip: 'Ideal para presentaciones visuales. Ej: "¡Gran desempeño!"'
+        },
+        {
+          value: 'academic',
+          label: 'Académico / formal técnico',
+          tooltip: 'Estilo de informe o paper. Ej: "Los datos evidencian una correlación positiva."'
+        },
+        {
+          value: 'storytelling',
+          label: 'Narrativo / storytelling',
+          tooltip: 'Formato de relato. Ej: "A medida que la demanda creció..."'
+        }
+      ]);
+      const REPORT_SUMMARY_TONE_DEFAULT = 'auto';
+      const REPORT_SUMMARY_TONE_LABELS = REPORT_SUMMARY_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_TONE_TOOLTIPS = REPORT_SUMMARY_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.tooltip || '';
+        return map;
+      }, {});
+      const REPORT_SUMMARY_TONE_SET = REPORT_SUMMARY_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_CONTEXT_OPTIONS = Object.freeze([
+        {
+          value: 'language',
+          label: 'Idioma de salida',
+          tooltip: 'Permite traducir automáticamente el resumen al idioma elegido.'
+        },
+        {
+          value: 'metrics',
+          label: 'Métricas de interés',
+          tooltip: 'Limita el análisis a columnas o KPI relevantes (%, totales, etc.).'
+        },
+        {
+          value: 'threshold',
+          label: 'Umbral de relevancia',
+          tooltip: 'Ignora datos con impacto menor (por ejemplo, inferiores al 5%).'
+        },
+        {
+          value: 'conclusion',
+          label: 'Conclusión de la IA',
+          tooltip: 'Agrega una frase final interpretativa de la IA.'
+        },
+        {
+          value: 'sources',
+          label: 'Fuentes de datos',
+          tooltip: 'Incluye hoja o rango de origen como referencia.'
+        },
+        {
+          value: 'timeReference',
+          label: 'Referencia temporal',
+          tooltip: 'Añade la fecha actual o periodo analizado automáticamente.'
+        }
+      ]);
+      const REPORT_SUMMARY_CONTEXT_CANONICAL = REPORT_SUMMARY_CONTEXT_OPTIONS.reduce(function(map, option) {
+        const key = option.value ? option.value.toLowerCase() : '';
+        if (key) {
+          map[key] = option.value;
+        }
+        return map;
+      }, {});
+      const REPORT_SUMMARY_CONTEXT_SET = Object.keys(REPORT_SUMMARY_CONTEXT_CANONICAL).reduce(function(map, key) {
+        const canonical = REPORT_SUMMARY_CONTEXT_CANONICAL[key];
+        if (canonical) {
+          map[canonical] = true;
+        }
+        return map;
+      }, {});
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
         summary: true,
         comments: true,
@@ -2652,6 +3181,9 @@
       let currentSavedActionId = '';
       let reportFileDateEnabled = false;
       let favoriteModalEscapeListenerAttached = false;
+      let summarySelectState = { depth: false, tone: false };
+      let summarySelectOutsideListenerAttached = false;
+      let summaryControlsInitialized = false;
 
       let headerKeyCounter = 0;
 
@@ -5659,6 +6191,49 @@
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
       }
 
+      function normalizeSummaryDepthValue(value) {
+        const text = value === null || value === undefined ? '' : String(value).trim().toLowerCase();
+        if (!text) {
+          return REPORT_SUMMARY_DEPTH_DEFAULT;
+        }
+        if (REPORT_SUMMARY_DEPTH_SET[text]) {
+          return text;
+        }
+        return REPORT_SUMMARY_DEPTH_DEFAULT;
+      }
+
+      function normalizeSummaryToneValue(value) {
+        const text = value === null || value === undefined ? '' : String(value).trim().toLowerCase();
+        if (!text) {
+          return REPORT_SUMMARY_TONE_DEFAULT;
+        }
+        if (REPORT_SUMMARY_TONE_SET[text]) {
+          return text;
+        }
+        return REPORT_SUMMARY_TONE_DEFAULT;
+      }
+
+      function normalizeSummaryContextSelection(values) {
+        const normalized = [];
+        if (!Array.isArray(values)) {
+          return normalized;
+        }
+        const seen = {};
+        values.forEach(function(entry) {
+          const key = entry === null || entry === undefined ? '' : String(entry).trim();
+          const canonical = key ? REPORT_SUMMARY_CONTEXT_CANONICAL[key.toLowerCase()] : '';
+          if (!canonical || seen[canonical]) {
+            return;
+          }
+          if (!REPORT_SUMMARY_CONTEXT_SET[canonical]) {
+            return;
+          }
+          seen[canonical] = true;
+          normalized.push(canonical);
+        });
+        return normalized;
+      }
+
       function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
         if (Array.isArray(source)) {
@@ -5801,6 +6376,11 @@
         if (!Array.isArray(state.instanceListEnumStyles)) {
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
         }
+        if (key === 'summary') {
+          state.summaryDepth = normalizeSummaryDepthValue(state.summaryDepth);
+          state.summaryTone = normalizeSummaryToneValue(state.summaryTone);
+          state.summaryContext = normalizeSummaryContextSelection(state.summaryContext);
+        }
         return state;
       }
 
@@ -5824,6 +6404,185 @@
             label.removeAttribute('tabindex');
           }
         });
+      }
+
+      function getSummarySelectWrapper(type) {
+        if (!type) {
+          return null;
+        }
+        return document.querySelector('.ai-summary-select[data-summary-select="' + type + '"]');
+      }
+
+      function ensureSummaryOutsideListener() {
+        if (summarySelectOutsideListenerAttached) {
+          return;
+        }
+        summarySelectOutsideListenerAttached = true;
+        document.addEventListener('click', handleSummarySelectOutsideClick, true);
+      }
+
+      function removeSummaryOutsideListener() {
+        if (!summarySelectOutsideListenerAttached) {
+          return;
+        }
+        summarySelectOutsideListenerAttached = false;
+        document.removeEventListener('click', handleSummarySelectOutsideClick, true);
+      }
+
+      function setSummarySelectOpen(type, open) {
+        const key = type === 'tone' ? 'tone' : 'depth';
+        const shouldOpen = !!open;
+        if (shouldOpen) {
+          Object.keys(summarySelectState).forEach(function(otherKey) {
+            if (otherKey !== key && summarySelectState[otherKey]) {
+              setSummarySelectOpen(otherKey, false);
+            }
+          });
+        }
+        summarySelectState[key] = shouldOpen;
+        const wrapper = getSummarySelectWrapper(key);
+        if (wrapper) {
+          wrapper.setAttribute('data-open', shouldOpen ? 'true' : 'false');
+          const toggle = wrapper.querySelector('[data-summary-select-toggle="' + key + '"]');
+          if (toggle) {
+            toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+          }
+        }
+        if (summarySelectState.depth || summarySelectState.tone) {
+          ensureSummaryOutsideListener();
+        } else {
+          removeSummaryOutsideListener();
+        }
+      }
+
+      function handleSummarySelectOutsideClick(event) {
+        if (!event || !event.target) {
+          return;
+        }
+        if (event.target.closest('.ai-summary-select')) {
+          return;
+        }
+        setSummarySelectOpen('depth', false);
+        setSummarySelectOpen('tone', false);
+      }
+
+      function handleSummarySelectToggleClick(type) {
+        return function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          const key = type === 'tone' ? 'tone' : 'depth';
+          const isOpen = !!summarySelectState[key];
+          setSummarySelectOpen(key, !isOpen);
+        };
+      }
+
+      function handleSummarySelectOption(type, value) {
+        const key = type === 'tone' ? 'tone' : 'depth';
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        if (key === 'depth') {
+          state.summaryDepth = normalizeSummaryDepthValue(value);
+        } else {
+          state.summaryTone = normalizeSummaryToneValue(value);
+        }
+        refreshReportFeatureOption('summary');
+        setSummarySelectOpen(key, false);
+      }
+
+      function handleSummaryContextToggle(value, checked) {
+        const normalized = normalizeSummaryContextSelection([value]);
+        if (normalized.length === 0) {
+          return;
+        }
+        const canonical = normalized[0];
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        const current = Array.isArray(state.summaryContext)
+          ? normalizeSummaryContextSelection(state.summaryContext)
+          : [];
+        const index = current.indexOf(canonical);
+        if (checked && index === -1) {
+          current.push(canonical);
+        }
+        if (!checked && index !== -1) {
+          current.splice(index, 1);
+        }
+        state.summaryContext = normalizeSummaryContextSelection(current);
+        refreshReportFeatureOption('summary');
+      }
+
+      function updateSummarySelectDisplay(wrapper, value, labels, tooltips) {
+        if (!wrapper) {
+          return;
+        }
+        const key = wrapper.dataset ? wrapper.dataset.summarySelect : '';
+        const normalizedValue = key === 'tone'
+          ? normalizeSummaryToneValue(value)
+          : normalizeSummaryDepthValue(value);
+        const labelEl = wrapper.querySelector('[data-summary-select-label="' + key + '"]');
+        if (labelEl) {
+          labelEl.textContent = labels[normalizedValue] || labels[key === 'tone'
+            ? REPORT_SUMMARY_TONE_DEFAULT
+            : REPORT_SUMMARY_DEPTH_DEFAULT];
+        }
+        const toggle = wrapper.querySelector('[data-summary-select-toggle="' + key + '"]');
+        if (toggle) {
+          const tooltip = tooltips[normalizedValue] || '';
+          toggle.setAttribute('title', tooltip);
+        }
+        const options = wrapper.querySelectorAll(
+          '.ai-summary-select-option[data-summary-select-option="' + key + '"]'
+        );
+        options.forEach(function(option) {
+          const optionValue = option.dataset ? option.dataset.value : '';
+          if (!optionValue) {
+            option.classList.remove('is-active');
+            return;
+          }
+          if (optionValue.toLowerCase() === normalizedValue) {
+            option.classList.add('is-active');
+          } else {
+            option.classList.remove('is-active');
+          }
+        });
+      }
+
+      function initializeSummaryControls() {
+        if (summaryControlsInitialized) {
+          return;
+        }
+        const toggles = document.querySelectorAll('[data-summary-select-toggle]');
+        toggles.forEach(function(toggle) {
+          const type = toggle && toggle.dataset ? toggle.dataset.summarySelectToggle : '';
+          if (!type) {
+            return;
+          }
+          toggle.addEventListener('click', handleSummarySelectToggleClick(type));
+        });
+        const options = document.querySelectorAll('.ai-summary-select-option[data-summary-select-option]');
+        options.forEach(function(option) {
+          const type = option && option.dataset ? option.dataset.summarySelectOption : '';
+          const value = option && option.dataset ? option.dataset.value : '';
+          if (!type || !value) {
+            return;
+          }
+          option.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            handleSummarySelectOption(type, value);
+          });
+        });
+        const contexts = document.querySelectorAll('[data-summary-context]');
+        contexts.forEach(function(input) {
+          input.addEventListener('change', function() {
+            handleSummaryContextToggle(input.value, input.checked);
+          });
+        });
+        summaryControlsInitialized = true;
       }
 
       function getChartTypeTooltip(value) {
@@ -6095,6 +6854,51 @@
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
           });
+        }
+        if (feature === 'summary') {
+          const summaryConfig = option.querySelector('[data-summary-config]');
+          if (summaryConfig) {
+            summaryConfig.classList.toggle('ai-hidden', !state.selected);
+          }
+          const normalizedDepth = normalizeSummaryDepthValue(state.summaryDepth);
+          const normalizedTone = normalizeSummaryToneValue(state.summaryTone);
+          state.summaryDepth = normalizedDepth;
+          state.summaryTone = normalizedTone;
+          const normalizedContext = normalizeSummaryContextSelection(state.summaryContext);
+          state.summaryContext = normalizedContext.slice();
+          const depthWrapper = option.querySelector('[data-summary-select="depth"]');
+          updateSummarySelectDisplay(
+            depthWrapper,
+            normalizedDepth,
+            REPORT_SUMMARY_DEPTH_LABELS,
+            REPORT_SUMMARY_DEPTH_TOOLTIPS
+          );
+          const toneWrapper = option.querySelector('[data-summary-select="tone"]');
+          updateSummarySelectDisplay(
+            toneWrapper,
+            normalizedTone,
+            REPORT_SUMMARY_TONE_LABELS,
+            REPORT_SUMMARY_TONE_TOOLTIPS
+          );
+          const selectedMap = {};
+          normalizedContext.forEach(function(entry) {
+            if (entry) {
+              selectedMap[entry] = true;
+            }
+          });
+          const contextInputs = option.querySelectorAll('[data-summary-context]');
+          contextInputs.forEach(function(input) {
+            if (!input) {
+              return;
+            }
+            const normalizedValue = normalizeSummaryContextSelection([input.value]);
+            const canonical = normalizedValue.length > 0 ? normalizedValue[0] : '';
+            input.checked = !!(canonical && selectedMap[canonical]);
+          });
+          if (!state.selected) {
+            setSummarySelectOpen('depth', false);
+            setSummarySelectOpen('tone', false);
+          }
         }
       }
 
@@ -6375,6 +7179,13 @@
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles
             };
+            if (featureId === 'summary') {
+              detailMap[featureId].summaryDepth = normalizeSummaryDepthValue(detail.summaryDepth);
+              detailMap[featureId].summaryTone = normalizeSummaryToneValue(detail.summaryTone);
+              detailMap[featureId].summaryContext = normalizeSummaryContextSelection(
+                detail.summaryContext
+              );
+            }
           });
         }
         Object.keys(reportFeatureState).forEach(function(feature) {
@@ -6401,6 +7212,17 @@
             state.instanceListEnumStyles = detail
               ? normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
               : createEmptyFeatureListEnumStyleArray();
+            if (feature === 'summary') {
+              state.summaryDepth = detail
+                ? normalizeSummaryDepthValue(detail.summaryDepth)
+                : REPORT_SUMMARY_DEPTH_DEFAULT;
+              state.summaryTone = detail
+                ? normalizeSummaryToneValue(detail.summaryTone)
+                : REPORT_SUMMARY_TONE_DEFAULT;
+              state.summaryContext = detail
+                ? normalizeSummaryContextSelection(detail.summaryContext)
+                : [];
+            }
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -6408,6 +7230,11 @@
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
+            if (feature === 'summary') {
+              state.summaryDepth = REPORT_SUMMARY_DEPTH_DEFAULT;
+              state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+              state.summaryContext = [];
+            }
           }
           refreshReportFeatureOption(feature);
         });
@@ -6948,8 +7775,13 @@
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
             state.instanceListEnumStyles = baseListEnumStyles.slice();
+            if (feature === 'summary') {
+              state.summaryDepth = normalizeSummaryDepthValue(state.summaryDepth);
+              state.summaryTone = normalizeSummaryToneValue(state.summaryTone);
+              state.summaryContext = normalizeSummaryContextSelection(state.summaryContext);
+            }
           }
-          featureDetailMap[feature] = {
+          const detailEntry = {
             quantity: quantityValue,
             instanceDescriptions: trimmedDescriptions.slice(),
             instanceChartTypes: baseChartTypes.slice(),
@@ -6957,6 +7789,12 @@
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice()
           };
+          if (feature === 'summary') {
+            detailEntry.summaryDepth = normalizeSummaryDepthValue(state ? state.summaryDepth : '');
+            detailEntry.summaryTone = normalizeSummaryToneValue(state ? state.summaryTone : '');
+            detailEntry.summaryContext = normalizeSummaryContextSelection(state ? state.summaryContext : []);
+          }
+          featureDetailMap[feature] = detailEntry;
         });
 
         if (featureDescriptionIssues.length > 0) {
@@ -7044,7 +7882,7 @@
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
           };
-          return {
+          const entry = {
             feature: feature,
             quantity: clampReportFeatureQuantity(detail.quantity, feature),
             instanceDescriptions: normalizeFeatureInstanceArray(detail.instanceDescriptions),
@@ -7053,6 +7891,12 @@
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
           };
+          if (feature === 'summary') {
+            entry.summaryDepth = normalizeSummaryDepthValue(detail.summaryDepth);
+            entry.summaryTone = normalizeSummaryToneValue(detail.summaryTone);
+            entry.summaryContext = normalizeSummaryContextSelection(detail.summaryContext);
+          }
+          return entry;
         });
         const payload = {
           name: favoriteName,
@@ -8627,6 +9471,7 @@
           updateAiActionState();
         }
         applyReportFeatureTooltips();
+        initializeSummaryControls();
         applyReportChartTypeTooltips();
         applyOptionalCommentHints();
         updateReportFileExtension();
