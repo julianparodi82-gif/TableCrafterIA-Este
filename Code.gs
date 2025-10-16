@@ -62,6 +62,13 @@ function showHelp() {
 }
 
 /**
+ * Permite incluir archivos HTML parciales en las plantillas.
+ */
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
  * Devuelve información sobre el rango activo.  Incluye nombre de la hoja,
  * notación A1, número de filas y columnas y los encabezados detectados en
  * la primera fila del rango.  Se utiliza para pre‑poblar la UI.
