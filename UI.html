@@ -848,6 +848,90 @@
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         position: relative;
       }
+      .ai-summary-context-extra {
+        border: 1px solid #E5E7EB;
+        background-color: #F9FAFB;
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .ai-summary-context-extra + .ai-summary-context-extra {
+        margin-top: 4px;
+      }
+      .ai-summary-language-select label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #374151;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-summary-language-select select {
+        width: 100%;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #111827;
+        background-color: #FFFFFF;
+      }
+      .ai-summary-language-hint {
+        font-size: 11px;
+        color: #6B7280;
+      }
+      .ai-summary-timeparts {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-summary-timepart-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-summary-timepart-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #1F2937;
+      }
+      .ai-summary-timepart-config {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-left: 18px;
+      }
+      .ai-summary-timepart-config label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #374151;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .ai-summary-timepart-config select,
+      .ai-summary-timepart-config input {
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        padding: 7px 9px;
+        font-size: 13px;
+        color: #111827;
+        background-color: #FFFFFF;
+      }
+      .ai-summary-timepart-inputs {
+        display: grid;
+        gap: 8px;
+      }
+      .ai-summary-timepart-secondary {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-summary-timepart-note {
+        font-size: 11px;
+        color: #6B7280;
+      }
       .ai-summary-context-option input {
         width: 14px;
         height: 14px;
@@ -2278,7 +2362,9 @@
                               >
                                 <option value="ai" selected>Selección inteligente (IA)</option>
                                 <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="reversealphabetical">Alfabético Z → A</option>
+                                <option value="quantitydesc">Mayor a menor cantidad</option>
+                                <option value="quantityasc">Menor a mayor cantidad</option>
                                 <option value="priority">Prioridad personalizada</option>
                                 <option value="original">Como aparecen en la tabla</option>
                               </select>
@@ -2348,7 +2434,9 @@
                               >
                                 <option value="ai" selected>Selección inteligente (IA)</option>
                                 <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="reversealphabetical">Alfabético Z → A</option>
+                                <option value="quantitydesc">Mayor a menor cantidad</option>
+                                <option value="quantityasc">Menor a mayor cantidad</option>
                                 <option value="priority">Prioridad personalizada</option>
                                 <option value="original">Como aparecen en la tabla</option>
                               </select>
@@ -2418,7 +2506,9 @@
                               >
                                 <option value="ai" selected>Selección inteligente (IA)</option>
                                 <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
+                                <option value="reversealphabetical">Alfabético Z → A</option>
+                                <option value="quantitydesc">Mayor a menor cantidad</option>
+                                <option value="quantityasc">Menor a mayor cantidad</option>
                                 <option value="priority">Prioridad personalizada</option>
                                 <option value="original">Como aparecen en la tabla</option>
                               </select>
@@ -2663,14 +2753,6 @@
                             </label>
                             <label
                               class="ai-summary-context-option"
-                              data-summary-context-option="metrics"
-                              data-tooltip="Limita el análisis a columnas o KPI relevantes (%, totales, etc.)."
-                            >
-                              <input type="checkbox" data-summary-context="metrics" value="metrics" />
-                              <span>Métricas de interés</span>
-                            </label>
-                            <label
-                              class="ai-summary-context-option"
                               data-summary-context-option="threshold"
                               data-tooltip="Ignora datos con impacto menor (por ejemplo, inferiores al 5%)."
                             >
@@ -2701,6 +2783,116 @@
                               <input type="checkbox" data-summary-context="timeReference" value="timeReference" />
                               <span>Referencia temporal</span>
                             </label>
+                          </div>
+                          <div class="ai-summary-context-extra ai-hidden" data-summary-context-extra="language">
+                            <div class="ai-summary-language-select">
+                              <label for="aiSummaryLanguageSelect">Seleccionar idioma</label>
+                              <select id="aiSummaryLanguageSelect" data-summary-language>
+                                <option value="es">Español</option>
+                                <option value="en">Inglés</option>
+                                <option value="pt">Portugués</option>
+                                <option value="fr">Francés</option>
+                                <option value="de">Alemán</option>
+                                <option value="it">Italiano</option>
+                                <option value="zh">Chino (simplificado)</option>
+                                <option value="ja">Japonés</option>
+                                <option value="ru">Ruso</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ar">Árabe</option>
+                              </select>
+                            </div>
+                            <p class="ai-summary-language-hint">
+                              Se autoselecciona el idioma principal del equipo, puedes ajustarlo cuando lo necesites.
+                            </p>
+                          </div>
+                          <div class="ai-summary-context-extra ai-hidden" data-summary-context-extra="timeReference">
+                            <div class="ai-summary-timeparts">
+                              <div class="ai-summary-timepart-group" data-summary-timepart-group="date">
+                                <label
+                                  class="ai-summary-timepart-toggle"
+                                  data-tooltip="Añade la fecha del reporte, ya sea puntual o un rango."
+                                >
+                                  <input type="checkbox" data-summary-timepart-toggle="date" />
+                                  <span>Incluir fecha</span>
+                                </label>
+                                <div class="ai-summary-timepart-config ai-hidden" data-summary-timepart-config="date">
+                                  <label for="aiSummaryDateMode">Tipo de periodo</label>
+                                  <select id="aiSummaryDateMode" data-summary-timepart-mode="date">
+                                    <option value="single">Una fecha puntual</option>
+                                    <option value="range">Rango de fechas</option>
+                                  </select>
+                                  <div class="ai-summary-timepart-inputs">
+                                    <div class="ai-summary-timepart-secondary">
+                                      <label for="aiSummaryDateStart">Fecha principal</label>
+                                      <input
+                                        type="text"
+                                        id="aiSummaryDateStart"
+                                        data-summary-timepart-input="date"
+                                        data-summary-timepart-field="start"
+                                        placeholder="Ej. 14/10/2025"
+                                      />
+                                    </div>
+                                    <div
+                                      class="ai-summary-timepart-secondary ai-hidden"
+                                      data-summary-timepart-secondary="date"
+                                    >
+                                      <label for="aiSummaryDateEnd">Fecha final</label>
+                                      <input
+                                        type="text"
+                                        id="aiSummaryDateEnd"
+                                        data-summary-timepart-input="date"
+                                        data-summary-timepart-field="end"
+                                        placeholder="Ej. 21/10/2025"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="ai-summary-timepart-group" data-summary-timepart-group="time">
+                                <label
+                                  class="ai-summary-timepart-toggle"
+                                  data-tooltip="Incluye la hora relevante o un rango horario para precisar el periodo analizado."
+                                >
+                                  <input type="checkbox" data-summary-timepart-toggle="time" />
+                                  <span>Incluir hora</span>
+                                </label>
+                                <div class="ai-summary-timepart-config ai-hidden" data-summary-timepart-config="time">
+                                  <label for="aiSummaryTimeMode">Precisión</label>
+                                  <select id="aiSummaryTimeMode" data-summary-timepart-mode="time">
+                                    <option value="single">Una hora puntual</option>
+                                    <option value="range">Rango horario</option>
+                                  </select>
+                                  <div class="ai-summary-timepart-inputs">
+                                    <div class="ai-summary-timepart-secondary">
+                                      <label for="aiSummaryTimeStart">Hora principal</label>
+                                      <input
+                                        type="text"
+                                        id="aiSummaryTimeStart"
+                                        data-summary-timepart-input="time"
+                                        data-summary-timepart-field="start"
+                                        placeholder="Ej. 09:00"
+                                      />
+                                    </div>
+                                    <div
+                                      class="ai-summary-timepart-secondary ai-hidden"
+                                      data-summary-timepart-secondary="time"
+                                    >
+                                      <label for="aiSummaryTimeEnd">Hora final</label>
+                                      <input
+                                        type="text"
+                                        id="aiSummaryTimeEnd"
+                                        data-summary-timepart-input="time"
+                                        data-summary-timepart-field="end"
+                                        placeholder="Ej. 18:00"
+                                      />
+                                    </div>
+                                  </div>
+                                  <span class="ai-summary-timepart-note">
+                                    Utiliza el formato horario preferido por tu equipo (24h, AM/PM, etc.).
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -3142,16 +3334,33 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_SUMMARY_LANGUAGE_OPTIONS = Object.freeze([
+        { value: 'es', label: 'Español' },
+        { value: 'en', label: 'Inglés' },
+        { value: 'pt', label: 'Portugués' },
+        { value: 'fr', label: 'Francés' },
+        { value: 'de', label: 'Alemán' },
+        { value: 'it', label: 'Italiano' },
+        { value: 'zh', label: 'Chino (simplificado)' },
+        { value: 'ja', label: 'Japonés' },
+        { value: 'ru', label: 'Ruso' },
+        { value: 'hi', label: 'Hindi' },
+        { value: 'ar', label: 'Árabe' }
+      ]);
+      const REPORT_SUMMARY_LANGUAGE_DEFAULT = 'es';
+      const REPORT_SUMMARY_LANGUAGE_LABELS = REPORT_SUMMARY_LANGUAGE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_LANGUAGE_SET = REPORT_SUMMARY_LANGUAGE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
       const REPORT_SUMMARY_CONTEXT_OPTIONS = Object.freeze([
         {
           value: 'language',
           label: 'Idioma de salida',
           tooltip: 'Permite traducir automáticamente el resumen al idioma elegido.'
-        },
-        {
-          value: 'metrics',
-          label: 'Métricas de interés',
-          tooltip: 'Limita el análisis a columnas o KPI relevantes (%, totales, etc.).'
         },
         {
           value: 'threshold',
@@ -3188,6 +3397,9 @@
         }
         return map;
       }, {});
+      const REPORT_SUMMARY_TIME_PARTS = Object.freeze(['date', 'time']);
+      const REPORT_SUMMARY_TIME_MODE_DEFAULT = 'single';
+      const REPORT_SUMMARY_TIME_MODE_SET = Object.freeze({ single: true, range: true });
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
         summary: true,
         comments: true,
@@ -3223,7 +3435,9 @@
       const REPORT_LIST_ORDER_OPTIONS = Object.freeze([
         { value: 'ai', label: 'Selección inteligente (IA)' },
         { value: 'alphabetical', label: 'Alfabético A → Z' },
-        { value: 'reverseAlphabetical', label: 'Alfabético Z → A' },
+        { value: 'reversealphabetical', label: 'Alfabético Z → A' },
+        { value: 'quantitydesc', label: 'Mayor a menor cantidad' },
+        { value: 'quantityasc', label: 'Menor a mayor cantidad' },
         { value: 'priority', label: 'Prioridad personalizada' },
         { value: 'original', label: 'Como aparecen en la tabla' }
       ]);
@@ -3281,6 +3495,7 @@
       let summarySelectState = { depth: false, tone: false };
       let summarySelectOutsideListenerAttached = false;
       let summaryControlsInitialized = false;
+      let summaryTeamLanguage = REPORT_SUMMARY_LANGUAGE_DEFAULT;
 
       let headerKeyCounter = 0;
 
@@ -4603,6 +4818,18 @@
             reject(new Error('Función no disponible: ' + functionName));
           }
         });
+      }
+
+      function fetchWorkspaceDefaults() {
+        callServerFunction('getWorkspaceDefaults')
+          .then(function(info) {
+            if (info && info.teamLanguage) {
+              setSummaryTeamLanguage(info.teamLanguage);
+            }
+          })
+          .catch(function(err) {
+            console.log('No se pudieron obtener las preferencias del equipo.', err);
+          });
       }
 
       function selectEditSavedTable(value) {
@@ -6314,6 +6541,99 @@
         return REPORT_SUMMARY_TONE_DEFAULT;
       }
 
+      function normalizeSummaryLanguageValue(value) {
+        const text = value === null || value === undefined ? '' : String(value).trim().toLowerCase();
+        if (!text) {
+          return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+        }
+        if (REPORT_SUMMARY_LANGUAGE_SET[text]) {
+          return text;
+        }
+        return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+      }
+
+      function getDefaultSummaryLanguage() {
+        if (REPORT_SUMMARY_LANGUAGE_SET[summaryTeamLanguage]) {
+          return summaryTeamLanguage;
+        }
+        return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+      }
+
+      function createDefaultSummaryTimePartState() {
+        return {
+          enabled: false,
+          mode: REPORT_SUMMARY_TIME_MODE_DEFAULT,
+          start: '',
+          end: ''
+        };
+      }
+
+      function createDefaultSummaryTimeReferenceState() {
+        const base = {};
+        REPORT_SUMMARY_TIME_PARTS.forEach(function(part) {
+          base[part] = createDefaultSummaryTimePartState();
+        });
+        return base;
+      }
+
+      function normalizeSummaryTimeModeValue(value) {
+        const text = value === null || value === undefined ? '' : String(value).trim().toLowerCase();
+        if (REPORT_SUMMARY_TIME_MODE_SET[text]) {
+          return text;
+        }
+        return REPORT_SUMMARY_TIME_MODE_DEFAULT;
+      }
+
+      function normalizeSummaryTimePartState(source) {
+        const base = createDefaultSummaryTimePartState();
+        if (!source || typeof source !== 'object') {
+          return base;
+        }
+        base.enabled = !!source.enabled;
+        base.mode = normalizeSummaryTimeModeValue(source.mode);
+        base.start = source.start === null || source.start === undefined ? '' : String(source.start).trim();
+        base.end = source.end === null || source.end === undefined ? '' : String(source.end).trim();
+        if (base.mode !== 'range') {
+          base.end = '';
+        }
+        return base;
+      }
+
+      function normalizeSummaryTimeReferenceState(source) {
+        const base = createDefaultSummaryTimeReferenceState();
+        if (!source || typeof source !== 'object') {
+          return base;
+        }
+        REPORT_SUMMARY_TIME_PARTS.forEach(function(part) {
+          base[part] = normalizeSummaryTimePartState(source[part]);
+        });
+        return base;
+      }
+
+      function cloneSummaryTimeReferenceState(source) {
+        const normalized = normalizeSummaryTimeReferenceState(source);
+        const clone = createDefaultSummaryTimeReferenceState();
+        REPORT_SUMMARY_TIME_PARTS.forEach(function(part) {
+          const partState = normalized[part];
+          clone[part] = {
+            enabled: partState.enabled,
+            mode: partState.mode,
+            start: partState.start,
+            end: partState.end
+          };
+        });
+        return clone;
+      }
+
+      function setSummaryTeamLanguage(language) {
+        summaryTeamLanguage = normalizeSummaryLanguageValue(language);
+        const state = ensureReportFeatureState('summary');
+        if (state && !state.summaryLanguageManual) {
+          state.summaryLanguage = summaryTeamLanguage;
+        }
+        refreshReportFeatureOption('summary');
+      }
+
       function normalizeSummaryContextSelection(values) {
         const normalized = [];
         if (!Array.isArray(values)) {
@@ -6465,7 +6785,10 @@
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
-            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
+            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
+            summaryLanguage: getDefaultSummaryLanguage(),
+            summaryLanguageManual: false,
+            summaryTimeReference: createDefaultSummaryTimeReferenceState()
           };
           return reportFeatureState[key];
         }
@@ -6495,6 +6818,13 @@
           state.summaryDepth = normalizeSummaryDepthValue(state.summaryDepth);
           state.summaryTone = normalizeSummaryToneValue(state.summaryTone);
           state.summaryContext = normalizeSummaryContextSelection(state.summaryContext);
+          state.summaryLanguage = normalizeSummaryLanguageValue(
+            state.summaryLanguage !== undefined ? state.summaryLanguage : getDefaultSummaryLanguage()
+          );
+          if (typeof state.summaryLanguageManual !== 'boolean') {
+            state.summaryLanguageManual = false;
+          }
+          state.summaryTimeReference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
         }
         return state;
       }
@@ -6627,6 +6957,12 @@
           current.splice(index, 1);
         }
         state.summaryContext = normalizeSummaryContextSelection(current);
+        if (canonical === 'timeReference' && !checked) {
+          state.summaryTimeReference = createDefaultSummaryTimeReferenceState();
+        }
+        if (canonical === 'language' && !checked && !state.summaryLanguageManual) {
+          state.summaryLanguage = getDefaultSummaryLanguage();
+        }
         refreshReportFeatureOption('summary');
       }
 
@@ -6696,6 +7032,47 @@
           input.addEventListener('change', function() {
             handleSummaryContextToggle(input.value, input.checked);
           });
+        });
+        const languageSelect = document.querySelector('[data-summary-language]');
+        if (languageSelect && !languageSelect.dataset.bound) {
+          languageSelect.addEventListener('change', function() {
+            handleSummaryLanguageChange(languageSelect.value);
+          });
+          languageSelect.dataset.bound = 'true';
+        }
+        const timeToggles = document.querySelectorAll('[data-summary-timepart-toggle]');
+        timeToggles.forEach(function(toggle) {
+          if (!toggle || toggle.dataset.bound) {
+            return;
+          }
+          const part = toggle.dataset.summaryTimepartToggle;
+          toggle.addEventListener('change', function() {
+            handleSummaryTimePartToggle(part, toggle.checked);
+          });
+          toggle.dataset.bound = 'true';
+        });
+        const timeModeSelects = document.querySelectorAll('[data-summary-timepart-mode]');
+        timeModeSelects.forEach(function(select) {
+          if (!select || select.dataset.bound) {
+            return;
+          }
+          const part = select.dataset.summaryTimepartMode;
+          select.addEventListener('change', function() {
+            handleSummaryTimePartModeChange(part, select.value);
+          });
+          select.dataset.bound = 'true';
+        });
+        const timeInputs = document.querySelectorAll('[data-summary-timepart-input]');
+        timeInputs.forEach(function(input) {
+          if (!input || input.dataset.bound) {
+            return;
+          }
+          const part = input.dataset.summaryTimepartInput;
+          const field = input.dataset.summaryTimepartField;
+          input.addEventListener('input', function() {
+            handleSummaryTimePartInput(part, field, input.value);
+          });
+          input.dataset.bound = 'true';
         });
         summaryControlsInitialized = true;
       }
@@ -6994,6 +7371,10 @@
           state.summaryTone = normalizedTone;
           const normalizedContext = normalizeSummaryContextSelection(state.summaryContext);
           state.summaryContext = normalizedContext.slice();
+          const normalizedLanguage = normalizeSummaryLanguageValue(state.summaryLanguage);
+          state.summaryLanguage = normalizedLanguage;
+          const normalizedTimeReference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
+          state.summaryTimeReference = normalizedTimeReference;
           const depthWrapper = option.querySelector('[data-summary-select="depth"]');
           updateSummarySelectDisplay(
             depthWrapper,
@@ -7023,6 +7404,58 @@
             const canonical = normalizedValue.length > 0 ? normalizedValue[0] : '';
             input.checked = !!(canonical && selectedMap[canonical]);
           });
+          const languageExtra = option.querySelector('[data-summary-context-extra="language"]');
+          if (languageExtra) {
+            const select = languageExtra.querySelector('[data-summary-language]');
+            const shouldShowLanguage = !!selectedMap.language;
+            languageExtra.classList.toggle('ai-hidden', !shouldShowLanguage);
+            if (select) {
+              select.value = normalizedLanguage;
+              select.disabled = !shouldShowLanguage;
+            }
+          }
+          const timeExtra = option.querySelector('[data-summary-context-extra="timeReference"]');
+          if (timeExtra) {
+            const shouldShowTime = !!selectedMap.timeReference;
+            timeExtra.classList.toggle('ai-hidden', !shouldShowTime);
+            REPORT_SUMMARY_TIME_PARTS.forEach(function(part) {
+              const toggle = timeExtra.querySelector('[data-summary-timepart-toggle="' + part + '"]');
+              const config = timeExtra.querySelector('[data-summary-timepart-config="' + part + '"]');
+              const partState = normalizedTimeReference[part] || createDefaultSummaryTimePartState();
+              const enabled = shouldShowTime && !!partState.enabled;
+              if (toggle) {
+                toggle.checked = enabled;
+                toggle.disabled = !shouldShowTime;
+              }
+              if (config) {
+                config.classList.toggle('ai-hidden', !enabled);
+                const modeSelect = config.querySelector('[data-summary-timepart-mode="' + part + '"]');
+                if (modeSelect) {
+                  modeSelect.value = partState.mode || REPORT_SUMMARY_TIME_MODE_DEFAULT;
+                  modeSelect.disabled = !enabled;
+                }
+                const startInput = config.querySelector(
+                  '[data-summary-timepart-input="' + part + '"][data-summary-timepart-field="start"]'
+                );
+                if (startInput) {
+                  startInput.value = enabled ? partState.start || '' : '';
+                  startInput.disabled = !enabled;
+                }
+                const endInput = config.querySelector(
+                  '[data-summary-timepart-input="' + part + '"][data-summary-timepart-field="end"]'
+                );
+                const secondary = config.querySelector('[data-summary-timepart-secondary="' + part + '"]');
+                const showSecondary = enabled && partState.mode === 'range';
+                if (secondary) {
+                  secondary.classList.toggle('ai-hidden', !showSecondary);
+                }
+                if (endInput) {
+                  endInput.value = showSecondary ? partState.end || '' : '';
+                  endInput.disabled = !showSecondary;
+                }
+              }
+            });
+          }
           if (!state.selected) {
             setSummarySelectOpen('depth', false);
             setSummarySelectOpen('tone', false);
@@ -7059,6 +7492,14 @@
           state.instanceListOrders = createEmptyFeatureListOrderArray();
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
+          if (feature === 'summary') {
+            state.summaryDepth = REPORT_SUMMARY_DEPTH_DEFAULT;
+            state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+            state.summaryContext = [];
+            state.summaryLanguage = getDefaultSummaryLanguage();
+            state.summaryLanguageManual = false;
+            state.summaryTimeReference = createDefaultSummaryTimeReferenceState();
+          }
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -7177,6 +7618,79 @@
         const styles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
         styles[safeIndex] = normalizeListEnumStyleValue(value);
         state.instanceListEnumStyles = styles;
+      }
+
+      function handleSummaryLanguageChange(value) {
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        state.summaryLanguage = normalizeSummaryLanguageValue(value);
+        state.summaryLanguageManual = true;
+        refreshReportFeatureOption('summary');
+      }
+
+      function handleSummaryTimePartToggle(part, checked) {
+        if (!part || REPORT_SUMMARY_TIME_PARTS.indexOf(part) === -1) {
+          return;
+        }
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        const reference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
+        const partState = reference[part] || createDefaultSummaryTimePartState();
+        if (checked) {
+          partState.enabled = true;
+          reference[part] = partState;
+        } else {
+          reference[part] = createDefaultSummaryTimePartState();
+        }
+        state.summaryTimeReference = reference;
+        refreshReportFeatureOption('summary');
+      }
+
+      function handleSummaryTimePartModeChange(part, mode) {
+        if (!part || REPORT_SUMMARY_TIME_PARTS.indexOf(part) === -1) {
+          return;
+        }
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        const reference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
+        const partState = reference[part] || createDefaultSummaryTimePartState();
+        partState.enabled = !!partState.enabled;
+        partState.mode = normalizeSummaryTimeModeValue(mode);
+        if (partState.mode !== 'range') {
+          partState.end = '';
+        }
+        reference[part] = partState;
+        state.summaryTimeReference = reference;
+        refreshReportFeatureOption('summary');
+      }
+
+      function handleSummaryTimePartInput(part, field, value) {
+        if (!part || REPORT_SUMMARY_TIME_PARTS.indexOf(part) === -1) {
+          return;
+        }
+        if (field !== 'start' && field !== 'end') {
+          return;
+        }
+        const state = ensureReportFeatureState('summary');
+        if (!state) {
+          return;
+        }
+        const reference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
+        const partState = reference[part] || createDefaultSummaryTimePartState();
+        partState.enabled = !!partState.enabled;
+        if (field === 'start') {
+          partState.start = value === null || value === undefined ? '' : String(value);
+        } else {
+          partState.end = value === null || value === undefined ? '' : String(value);
+        }
+        reference[part] = partState;
+        state.summaryTimeReference = reference;
       }
 
       function initializeReportFeatureControls() {
@@ -7341,6 +7855,10 @@
               detailMap[featureId].summaryContext = normalizeSummaryContextSelection(
                 detail.summaryContext
               );
+              detailMap[featureId].summaryLanguage = normalizeSummaryLanguageValue(detail.summaryLanguage);
+              detailMap[featureId].summaryTimeReference = cloneSummaryTimeReferenceState(
+                detail.summaryTimeReference
+              );
             }
           });
         }
@@ -7381,6 +7899,13 @@
               state.summaryContext = detail
                 ? normalizeSummaryContextSelection(detail.summaryContext)
                 : [];
+              state.summaryLanguage = detail
+                ? normalizeSummaryLanguageValue(detail.summaryLanguage)
+                : getDefaultSummaryLanguage();
+              state.summaryLanguageManual = !!detail;
+              state.summaryTimeReference = detail
+                ? cloneSummaryTimeReferenceState(detail.summaryTimeReference)
+                : createDefaultSummaryTimeReferenceState();
             }
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
@@ -7394,6 +7919,9 @@
               state.summaryDepth = REPORT_SUMMARY_DEPTH_DEFAULT;
               state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
               state.summaryContext = [];
+              state.summaryLanguage = getDefaultSummaryLanguage();
+              state.summaryLanguageManual = false;
+              state.summaryTimeReference = createDefaultSummaryTimeReferenceState();
             }
           }
           refreshReportFeatureOption(feature);
@@ -7944,6 +8472,8 @@
               state.summaryDepth = normalizeSummaryDepthValue(state.summaryDepth);
               state.summaryTone = normalizeSummaryToneValue(state.summaryTone);
               state.summaryContext = normalizeSummaryContextSelection(state.summaryContext);
+              state.summaryLanguage = normalizeSummaryLanguageValue(state.summaryLanguage);
+              state.summaryTimeReference = cloneSummaryTimeReferenceState(state.summaryTimeReference);
             }
           }
           const detailEntry = {
@@ -7959,6 +8489,10 @@
             detailEntry.summaryDepth = normalizeSummaryDepthValue(state ? state.summaryDepth : '');
             detailEntry.summaryTone = normalizeSummaryToneValue(state ? state.summaryTone : '');
             detailEntry.summaryContext = normalizeSummaryContextSelection(state ? state.summaryContext : []);
+            detailEntry.summaryLanguage = normalizeSummaryLanguageValue(state ? state.summaryLanguage : '');
+            detailEntry.summaryTimeReference = cloneSummaryTimeReferenceState(
+              state ? state.summaryTimeReference : createDefaultSummaryTimeReferenceState()
+            );
           }
           featureDetailMap[feature] = detailEntry;
         });
@@ -9641,6 +10175,7 @@
         }
         applyReportFeatureTooltips();
         initializeSummaryControls();
+        fetchWorkspaceDefaults();
         applyReportChartTypeTooltips();
         applyOptionalCommentHints();
         updateReportFileExtension();

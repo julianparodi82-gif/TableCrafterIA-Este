@@ -156,7 +156,9 @@ var REPORT_LIST_ORDER_ALLOWED = {
   alphabetical: true,
   reversealphabetical: true,
   priority: true,
-  original: true
+  original: true,
+  quantitydesc: true,
+  quantityasc: true
 };
 var REPORT_LIST_ENUMERATE_DEFAULT = 'no';
 var REPORT_LIST_ENUMERATE_ALLOWED = {
@@ -192,9 +194,28 @@ var REPORT_SUMMARY_TONE_ALLOWED = {
   academic: true,
   storytelling: true
 };
+var REPORT_SUMMARY_LANGUAGE_DEFAULT = 'es';
+var REPORT_SUMMARY_LANGUAGE_ALLOWED = {
+  es: true,
+  en: true,
+  pt: true,
+  fr: true,
+  de: true,
+  it: true,
+  zh: true,
+  ja: true,
+  ru: true,
+  hi: true,
+  ar: true
+};
+var REPORT_SUMMARY_TIME_MODE_DEFAULT = 'single';
+var REPORT_SUMMARY_TIME_MODE_ALLOWED = {
+  single: true,
+  range: true
+};
+var REPORT_SUMMARY_TIME_PARTS = ['date', 'time'];
 var REPORT_SUMMARY_CONTEXT_CANONICAL = {
   language: 'language',
-  metrics: 'metrics',
   threshold: 'threshold',
   conclusion: 'conclusion',
   sources: 'sources',
@@ -202,7 +223,6 @@ var REPORT_SUMMARY_CONTEXT_CANONICAL = {
 };
 var REPORT_SUMMARY_CONTEXT_ALLOWED = {
   language: true,
-  metrics: true,
   threshold: true,
   conclusion: true,
   sources: true,
@@ -919,6 +939,8 @@ function buildReportFavoriteResponse(entry) {
     var summaryDepth = normalizeSummaryDepthValue(detail.summaryDepth);
     var summaryTone = normalizeSummaryToneValue(detail.summaryTone);
     var summaryContext = normalizeSummaryContextArray(detail.summaryContext);
+    var summaryLanguage = normalizeSummaryLanguageValue(detail.summaryLanguage);
+    var summaryTimeReference = normalizeSummaryTimeReference(detail.summaryTimeReference);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
@@ -930,7 +952,9 @@ function buildReportFavoriteResponse(entry) {
       instanceListEnumStyles: instanceListEnumStyles,
       summaryDepth: summaryDepth,
       summaryTone: summaryTone,
-      summaryContext: summaryContext
+      summaryContext: summaryContext,
+      summaryLanguage: summaryLanguage,
+      summaryTimeReference: summaryTimeReference
     });
     detailMap[featureId] = true;
   });
@@ -2226,6 +2250,66 @@ function normalizeSummaryToneValue(value) {
   return REPORT_SUMMARY_TONE_DEFAULT;
 }
 
+function normalizeSummaryLanguageValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+  }
+  if (REPORT_SUMMARY_LANGUAGE_ALLOWED[text]) {
+    return text;
+  }
+  return REPORT_SUMMARY_LANGUAGE_DEFAULT;
+}
+
+function createDefaultSummaryTimePartState() {
+  return {
+    enabled: false,
+    mode: REPORT_SUMMARY_TIME_MODE_DEFAULT,
+    start: '',
+    end: ''
+  };
+}
+
+function createDefaultSummaryTimeReferenceState() {
+  return {
+    date: createDefaultSummaryTimePartState(),
+    time: createDefaultSummaryTimePartState()
+  };
+}
+
+function normalizeSummaryTimePartState(source) {
+  var base = createDefaultSummaryTimePartState();
+  if (!source || typeof source !== 'object') {
+    return base;
+  }
+  base.enabled = !!source.enabled;
+  var rawMode = source.mode === null || source.mode === undefined ? '' : String(source.mode).trim().toLowerCase();
+  base.mode = REPORT_SUMMARY_TIME_MODE_ALLOWED[rawMode] ? rawMode : REPORT_SUMMARY_TIME_MODE_DEFAULT;
+  base.start = source.start === null || source.start === undefined ? '' : String(source.start).trim();
+  base.end = source.end === null || source.end === undefined ? '' : String(source.end).trim();
+  if (base.mode !== 'range') {
+    base.end = '';
+  }
+  return base;
+}
+
+function normalizeSummaryTimeReference(source) {
+  var base = createDefaultSummaryTimeReferenceState();
+  if (!source || typeof source !== 'object') {
+    return base;
+  }
+  REPORT_SUMMARY_TIME_PARTS.forEach(function(part) {
+    if (!part) {
+      return;
+    }
+    base[part] = normalizeSummaryTimePartState(source[part]);
+  });
+  return base;
+}
+
 function normalizeSummaryContextArray(source) {
   var normalized = [];
   if (!Array.isArray(source)) {
@@ -2248,6 +2332,26 @@ function normalizeSummaryContextArray(source) {
     normalized.push(canonical);
   });
   return normalized;
+}
+
+function normalizeSummaryLanguageFromLocale(locale) {
+  if (!locale) {
+    return '';
+  }
+  var text = String(locale).trim();
+  if (!text) {
+    return '';
+  }
+  var lower = text.toLowerCase();
+  var parts = lower.split(/[_-]/);
+  if (!parts.length) {
+    return '';
+  }
+  var candidate = parts[0];
+  if (REPORT_SUMMARY_LANGUAGE_ALLOWED[candidate]) {
+    return candidate;
+  }
+  return '';
 }
 
 function saveReportFavorite(payload) {
@@ -2338,6 +2442,8 @@ function saveReportFavorite(payload) {
     var normalizedSummaryDepth = normalizeSummaryDepthValue(entry.summaryDepth);
     var normalizedSummaryTone = normalizeSummaryToneValue(entry.summaryTone);
     var normalizedSummaryContext = normalizeSummaryContextArray(entry.summaryContext);
+    var normalizedSummaryLanguage = normalizeSummaryLanguageValue(entry.summaryLanguage);
+    var normalizedSummaryTimeReference = normalizeSummaryTimeReference(entry.summaryTimeReference);
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
@@ -2357,7 +2463,9 @@ function saveReportFavorite(payload) {
       instanceListEnumStyles: normalizedListEnumStyles,
       summaryDepth: normalizedSummaryDepth,
       summaryTone: normalizedSummaryTone,
-      summaryContext: normalizedSummaryContext
+      summaryContext: normalizedSummaryContext,
+      summaryLanguage: normalizedSummaryLanguage,
+      summaryTimeReference: normalizedSummaryTimeReference
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2379,7 +2487,9 @@ function saveReportFavorite(payload) {
         instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
         summaryDepth: REPORT_SUMMARY_DEPTH_DEFAULT,
         summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
-        summaryContext: []
+        summaryContext: [],
+        summaryLanguage: REPORT_SUMMARY_LANGUAGE_DEFAULT,
+        summaryTimeReference: createDefaultSummaryTimeReferenceState()
       });
       seenFeatureDetails[featureId] = true;
     }
@@ -2474,6 +2584,35 @@ function saveReportFavorite(payload) {
   ]);
   SpreadsheetApp.flush();
   return { ok: true, id: favoriteId };
+}
+
+function getWorkspaceDefaults() {
+  var locale = '';
+  try {
+    var ss = SpreadsheetApp.getActive();
+    if (ss) {
+      locale = ss.getSpreadsheetLocale();
+    }
+  } catch (err) {
+    locale = '';
+  }
+  var language = normalizeSummaryLanguageFromLocale(locale);
+  if (!language) {
+    var sessionLocale = '';
+    try {
+      sessionLocale = Session.getActiveUserLocale();
+    } catch (err2) {
+      sessionLocale = '';
+    }
+    language = normalizeSummaryLanguageFromLocale(sessionLocale);
+  }
+  if (!language) {
+    language = REPORT_SUMMARY_LANGUAGE_DEFAULT;
+  }
+  return {
+    teamLanguage: language,
+    teamLocale: locale
+  };
 }
 
 /**
