@@ -2260,15 +2260,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeToggle = document.getElementById('themeToggle');
         const appTitle = document.getElementById('appTitle');
         const themeMessage = document.getElementById('themeMessage');
-        const toggleText = document.getElementById('themeToggleText');
+        const themeMessageContent = document.getElementById('themeMessageContent');
+        const themeMessageClose = document.getElementById('themeMessageClose');
+        const themeMessageDismiss = document.getElementById('themeMessageDismiss');
         const body = document.body;
-        if (!themeToggle || !appTitle || !themeMessage || !toggleText || !body) {
+        if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
         }
+
+        const messagePreferenceKey = 'tablecrafter.hideWelcomeMessage';
+
+        function getHidePreference() {
+          try {
+            return window.localStorage.getItem(messagePreferenceKey) === 'true';
+          } catch (error) {
+            return false;
+          }
+        }
+
+        function setHidePreference(value) {
+          try {
+            if (value) {
+              window.localStorage.setItem(messagePreferenceKey, 'true');
+            } else {
+              window.localStorage.removeItem(messagePreferenceKey);
+            }
+          } catch (error) {
+            // Si el almacenamiento no está disponible, ignoramos silenciosamente.
+          }
+        }
+
         const tableMessage =
-          '<p><strong>TableCrafter AI</strong> está listo para ayudarte a diseñar tablas impecables con un nuevo ' +
-          'estilo en verde claro. Organiza tus datos, automatiza reportes y mantén tus flujos al día desde las ' +
-          'pestañas inferiores.</p>';
+          '<p><strong>Bienvenido a TableCrafter AI.</strong> Este espacio te acompaña para convertir rangos en ' +
+          'reportes claros, aplicar formatos profesionales y guardar tus configuraciones favoritas sin salir de la hoja.</p>' +
+          '<p>Explora las pestañas inferiores para aprovechar cada módulo:</p>' +
+          '<ul>' +
+          '<li>Panel IA para generar respuestas, análisis y reportes en segundos.</li>' +
+          '<li>Editar tabla para ajustar estilos y mantener actualizados tus diseños.</li>' +
+          '<li>Crear tabla para levantar nuevas estructuras con ayuda guiada.</li>' +
+          '</ul>';
         const wordMessage =
           '<p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos en general. ' +
           'Mientras terminamos sus detalles, esto es lo que podrás hacer:</p>' +
@@ -2279,20 +2309,35 @@ document.addEventListener('DOMContentLoaded', function() {
           '</ul>' +
           '<p>Prepárate para un espacio que transformará tus palabras con una transición suave hacia un universo celeste.</p>';
 
+        function syncMessageVisibility() {
+          const shouldHide = getHidePreference();
+          themeMessage.classList.toggle('is-hidden', shouldHide);
+          if (themeMessageDismiss) {
+            themeMessageDismiss.checked = shouldHide;
+          }
+        }
+
         function applyTheme(isWordcrafter) {
           if (isWordcrafter) {
             body.classList.add('theme-wordcrafter');
             body.classList.remove('theme-tablecrafter');
             appTitle.textContent = 'WordCrafter AI';
-            toggleText.textContent = 'Volver a TableCrafter';
-            themeMessage.innerHTML = wordMessage;
+            themeMessageContent.innerHTML = wordMessage;
           } else {
             body.classList.add('theme-tablecrafter');
             body.classList.remove('theme-wordcrafter');
             appTitle.textContent = 'TableCrafter AI';
-            toggleText.textContent = 'Explorar WordCrafter';
-            themeMessage.innerHTML = tableMessage;
+            themeMessageContent.innerHTML = tableMessage;
           }
+          syncMessageVisibility();
+        }
+
+        if (themeMessageClose) {
+          themeMessageClose.addEventListener('click', function() {
+            const hideForFuture = Boolean(themeMessageDismiss && themeMessageDismiss.checked);
+            setHidePreference(hideForFuture);
+            themeMessage.classList.add('is-hidden');
+          });
         }
 
         themeToggle.addEventListener('change', function() {

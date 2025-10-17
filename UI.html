@@ -265,6 +265,9 @@
         flex-wrap: wrap;
       }
       .theme-toggle {
+        order: -1;
+      }
+      .theme-toggle {
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -273,9 +276,6 @@
         color: var(--tc-muted);
         cursor: pointer;
         user-select: none;
-      }
-      .theme-toggle-text {
-        font-weight: 600;
       }
       .theme-toggle input {
         position: absolute;
@@ -321,18 +321,26 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
       }
       .theme-message {
+        position: relative;
         margin-bottom: 20px;
-        padding: 16px 18px;
+        padding: 18px 20px 22px;
         border-radius: 12px;
         border: 1px solid var(--tc-border);
         background: var(--tc-surface-alt);
         color: var(--tc-text);
         transition: background var(--tc-transition-duration) ease,
           border-color var(--tc-transition-duration) ease,
-          color var(--tc-transition-duration) ease;
+          color var(--tc-transition-duration) ease,
+          opacity var(--tc-transition-duration) ease;
+      }
+      .theme-message.is-hidden {
+        display: none;
       }
       .theme-message p {
         margin: 0;
+      }
+      .theme-message p + p {
+        margin-top: 10px;
       }
       .theme-message ul {
         margin: 12px 0 0;
@@ -341,6 +349,87 @@
       }
       .theme-message li + li {
         margin-top: 6px;
+      }
+      .theme-message-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        border: none;
+        background: transparent;
+        color: var(--tc-muted);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+      .theme-message-close:hover,
+      .theme-message-close:focus {
+        background-color: var(--tc-primary-soft);
+        color: var(--tc-primary-dark);
+        outline: none;
+      }
+      .theme-message-content {
+        padding-right: 32px;
+      }
+      .theme-message-footer {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+      }
+      .theme-message-optout {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--tc-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+      .theme-message-optout .theme-message-optout-track {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 18px;
+      }
+      .theme-message-optout input {
+        position: absolute;
+        width: 32px;
+        height: 18px;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .theme-message-optout-switch {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--tc-border);
+        transition: background var(--tc-transition-duration) ease,
+          box-shadow var(--tc-transition-duration) ease;
+      }
+      .theme-message-optout-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 3px 6px rgba(15, 23, 42, 0.15);
+        transition: transform var(--tc-transition-duration) ease,
+          background var(--tc-transition-duration) ease;
+      }
+      .theme-message-optout input:checked + .theme-message-optout-switch {
+        background: var(--tc-primary);
+        box-shadow: var(--tc-shadow-base);
+      }
+      .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
+        transform: translateX(14px);
       }
       .tab-btn .favorite-icon {
         color: #FBBF24;
@@ -1996,21 +2085,40 @@
   <body class="theme-tablecrafter">
     <div class="container">
       <div class="theme-header">
-        <h2 id="appTitle">TableCrafter AI</h2>
         <label class="theme-toggle" for="themeToggle">
-          <span id="themeToggleText" class="theme-toggle-text">Explorar WordCrafter</span>
           <input type="checkbox" id="themeToggle" aria-label="Activar vista WordCrafter AI" />
           <span class="theme-toggle-switch">
             <span class="theme-toggle-thumb"></span>
           </span>
         </label>
+        <h2 id="appTitle">TableCrafter AI</h2>
       </div>
-      <div id="themeMessage" class="theme-message">
-        <p>
-          <strong>TableCrafter AI</strong> está listo para ayudarte a diseñar tablas impecables con un nuevo
-          estilo en verde claro. Organiza tus datos, automatiza reportes y mantén tus flujos al día desde las
-          pestañas inferiores.
-        </p>
+      <div id="themeMessage" class="theme-message" role="region" aria-live="polite">
+        <button type="button" id="themeMessageClose" class="theme-message-close" aria-label="Cerrar mensaje">
+          &times;
+        </button>
+        <div id="themeMessageContent" class="theme-message-content">
+          <p>
+            <strong>Bienvenido a TableCrafter AI.</strong> Este espacio te acompaña para convertir rangos en
+            reportes claros, aplicar formatos profesionales y guardar tus configuraciones favoritas sin salir de la
+            hoja.
+          </p>
+          <p>
+            Explora las pestañas inferiores para solicitar ayuda de la IA, ajustar tablas existentes o crear nuevas
+            estructuras con unos pocos clics.
+          </p>
+        </div>
+        <div class="theme-message-footer">
+          <label class="theme-message-optout">
+            <span>No mostrar nuevamente</span>
+            <span class="theme-message-optout-track">
+              <input type="checkbox" id="themeMessageDismiss" aria-label="No volver a mostrar este mensaje" />
+              <span class="theme-message-optout-switch">
+                <span class="theme-message-optout-thumb"></span>
+              </span>
+            </span>
+          </label>
+        </div>
       </div>
       <div class="tab-nav tab-nav-primary">
         <button
