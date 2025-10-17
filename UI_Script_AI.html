@@ -131,17 +131,31 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_OUTPUT_LANGUAGE_TOOLTIPS = Object.freeze({
+        auto: 'La IA detecta el idioma adecuado según tus tablas y contexto.',
+        es: 'Redacta todo el reporte en español neutro.',
+        en: 'Entrega el reporte completo en inglés profesional.',
+        pt: 'Genera cada sección en portugués.',
+        fr: 'Produce el reporte final en francés.'
+      });
+      const REPORT_TONE_TOOLTIPS = Object.freeze({
+        neutral: 'Mantiene un tono formal y equilibrado para cualquier audiencia.',
+        executive: 'Resume hallazgos con foco directivo y conclusiones rápidas.',
+        friendly: 'Utiliza un lenguaje cercano y motivador para equipos.',
+        analytical: 'Profundiza en datos y justificativos con detalle.'
+      });
+      const REPORT_COMMENT_FOCUS_TOOLTIPS = Object.freeze({
+        actions: 'Sugiere próximos pasos concretos para el equipo.',
+        insights: 'Destaca aprendizajes clave identificados en los datos.',
+        risks: 'Advierte riesgos u obstáculos a monitorear.',
+        celebration: 'Resalta logros y reconocimientos para el equipo.',
+        culture: 'Enfatiza clima, colaboración y bienestar del equipo.'
+      });
       const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
         outputLanguage: 'Idioma de salida',
-        tone: 'Tono del reporte',
-        overview: 'Contexto general'
+        tone: 'Tono del reporte'
       });
-      const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze([
-        'outputLanguage',
-        'tone',
-        'overview'
-      ]);
-      const REPORT_OVERVIEW_DEFAULT = '';
+      const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze(['outputLanguage', 'tone']);
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -1195,6 +1209,19 @@ function normalizeFeatureChartTypeArray(source) {
         return base;
       }
 
+function normalizeListOrderValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        const normalized = String(value).trim();
+        if (!normalized) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        return REPORT_LIST_ORDER_SET[normalized]
+          ? normalized
+          : REPORT_LIST_ORDER_DEFAULT;
+      }
+
 function normalizeFeatureListOrderArray(source) {
         const base = createEmptyFeatureListOrderArray();
         if (Array.isArray(source)) {
@@ -1390,6 +1417,57 @@ function applyReportChartTypeTooltips() {
         });
       }
 
+function applySelectOptionTooltips(select, map) {
+        if (!select || !select.options || !map) {
+          return;
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option) {
+            return;
+          }
+          const tooltip = map[option.value];
+          if (tooltip) {
+            option.title = tooltip;
+          } else {
+            option.removeAttribute('title');
+          }
+        });
+      }
+
+function updateSelectTooltip(select, map) {
+        if (!select || !map) {
+          return;
+        }
+        const tooltip = map[select.value] || '';
+        if (tooltip) {
+          select.dataset.tooltip = tooltip;
+          select.setAttribute('title', tooltip);
+          select.classList.add('tc-tooltip-target');
+        } else {
+          select.removeAttribute('data-tooltip');
+          select.removeAttribute('title');
+        }
+      }
+
+function bindSelectTooltipWithMap(select, map) {
+        if (!select) {
+          return;
+        }
+        applySelectOptionTooltips(select, map);
+        updateSelectTooltip(select, map);
+        if (select.dataset.optionTooltipBound === 'true') {
+          return;
+        }
+        const refreshTooltip = function() {
+          applySelectOptionTooltips(select, map);
+          updateSelectTooltip(select, map);
+        };
+        select.addEventListener('change', refreshTooltip);
+        select.addEventListener('focus', refreshTooltip);
+        select.addEventListener('mouseenter', refreshTooltip);
+        select.dataset.optionTooltipBound = 'true';
+      }
+
 function refreshReportFeatureOption(feature) {
         if (!feature) {
           return;
@@ -1527,6 +1605,7 @@ function refreshReportFeatureOption(feature) {
               const focusValue = normalizedCommentFocusArray[index] || REPORT_COMMENT_FOCUS_DEFAULT;
               commentFocusSelect.value = focusValue;
               commentFocusSelect.disabled = !withinRange;
+              bindSelectTooltipWithMap(commentFocusSelect, REPORT_COMMENT_FOCUS_TOOLTIPS);
             }
           });
         }
@@ -1824,6 +1903,7 @@ function initializeReportFeatureControls() {
             if (!selector || selector.dataset.bound) {
               return;
             }
+            bindSelectTooltipWithMap(selector, REPORT_COMMENT_FOCUS_TOOLTIPS);
             selector.addEventListener('change', function() {
               const index = parseInt(selector.dataset.instanceIndex, 10);
               handleReportFeatureInstanceCommentFocusChange(feature, index, selector.value);
@@ -1862,8 +1942,7 @@ function normalizeToneValue(value) {
 function createDefaultCustomizationState() {
         return {
           outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
-          tone: { enabled: false, value: REPORT_TONE_DEFAULT },
-          overview: { enabled: false, text: REPORT_OVERVIEW_DEFAULT }
+          tone: { enabled: false, value: REPORT_TONE_DEFAULT }
         };
       }
 
@@ -1880,18 +1959,11 @@ function normalizeReportCustomizationInput(source) {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
         }
-        if (source.overview && typeof source.overview === 'object') {
-          base.overview.enabled = !!source.overview.enabled;
-          base.overview.text = source.overview.text ? String(source.overview.text).trim() : REPORT_OVERVIEW_DEFAULT;
-        }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
         }
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
-        }
-        if (!base.overview.enabled) {
-          base.overview.text = REPORT_OVERVIEW_DEFAULT;
         }
         return {
           outputLanguage: {
@@ -1901,10 +1973,6 @@ function normalizeReportCustomizationInput(source) {
           tone: {
             enabled: base.tone.enabled,
             value: base.tone.value
-          },
-          overview: {
-            enabled: base.overview.enabled,
-            text: base.overview.enabled ? base.overview.text : REPORT_OVERVIEW_DEFAULT
           }
         };
       }
@@ -1957,6 +2025,10 @@ function refreshReportCustomizationOption(option) {
         if (checkbox) {
           checkbox.checked = isEnabled;
         }
+        const chip = element.querySelector('.ai-custom-header-label');
+        if (chip) {
+          chip.classList.toggle('is-selected', isEnabled);
+        }
         const toggle = element.querySelector('[data-option-toggle="' + option + '"]');
         if (toggle) {
           toggle.disabled = !isEnabled;
@@ -1980,18 +2052,14 @@ function refreshReportCustomizationOption(option) {
               ? normalizeOutputLanguageValue(state.value)
               : REPORT_OUTPUT_LANGUAGE_DEFAULT;
             select.value = value;
+            bindSelectTooltipWithMap(select, REPORT_OUTPUT_LANGUAGE_TOOLTIPS);
           }
         } else if (option === 'tone') {
           const select = element.querySelector('[data-custom-select="tone"]');
           if (select) {
             const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
             select.value = value;
-          }
-        } else if (option === 'overview') {
-          const textarea = element.querySelector('[data-custom-text="overview"]');
-          if (textarea) {
-            textarea.disabled = !isEnabled;
-            textarea.value = isEnabled ? state.text || '' : '';
+            bindSelectTooltipWithMap(select, REPORT_TONE_TOOLTIPS);
           }
         }
       }
@@ -2030,8 +2098,6 @@ function handleReportCustomizationSelection(option, checked) {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
-          } else if (option === 'overview') {
-            state.text = REPORT_OVERVIEW_DEFAULT;
           }
         }
         setReportCustomizationOptionOpen(option, state.enabled);
@@ -2048,19 +2114,9 @@ function handleReportCustomizationValueChange(option, value) {
           state.value = normalizeOutputLanguageValue(value);
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
-        } else if (option === 'overview') {
-          state.text = value === null || value === undefined ? REPORT_OVERVIEW_DEFAULT : String(value).trim();
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
-      }
-
-function handleReportOverviewInput(value) {
-        const state = ensureReportCustomizationOption('overview');
-        if (!state.enabled) {
-          return;
-        }
-        state.text = value === null || value === undefined ? REPORT_OVERVIEW_DEFAULT : String(value).trim();
       }
 
 function resetReportCustomizationState() {
@@ -2107,14 +2163,6 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
-          } else if (option === 'overview') {
-            const textarea = wrapper.querySelector('[data-custom-text="overview"]');
-            if (textarea && !textarea.dataset.bound) {
-              textarea.addEventListener('input', function() {
-                handleReportOverviewInput(textarea.value);
-              });
-              textarea.dataset.bound = 'true';
-            }
           }
         });
         resetReportCustomizationState();
@@ -2124,8 +2172,7 @@ function applyReportCustomizationState(source) {
         const normalized = normalizeReportCustomizationInput(source);
         reportCustomizationState = {
           outputLanguage: Object.assign({}, normalized.outputLanguage),
-          tone: Object.assign({}, normalized.tone),
-          overview: Object.assign({}, normalized.overview)
+          tone: Object.assign({}, normalized.tone)
         };
         REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
           setReportCustomizationOptionOpen(option, !!reportCustomizationState[option].enabled);
@@ -2144,10 +2191,6 @@ function getReportCustomizationPayload() {
           tone: {
             enabled: normalized.tone.enabled,
             value: normalized.tone.value
-          },
-          overview: {
-            enabled: normalized.overview.enabled,
-            text: normalized.overview.enabled ? normalized.overview.text : REPORT_OVERVIEW_DEFAULT
           }
         };
       }

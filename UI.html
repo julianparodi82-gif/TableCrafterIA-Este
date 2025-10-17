@@ -136,6 +136,62 @@
         transform: translateX(-50%) rotate(180deg);
         border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
+      .tc-tooltip-target[data-tooltip],
+      .ai-feature-chip-label[data-tooltip] {
+        position: relative;
+        cursor: help;
+      }
+      .tc-tooltip-target[data-tooltip]::after,
+      .ai-feature-chip-label[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 8px);
+        background: var(--tc-tooltip-bg);
+        color: #F9FAFB;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.35;
+        max-width: 240px;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        pointer-events: none;
+        z-index: 14;
+        white-space: normal;
+      }
+      .tc-tooltip-target[data-tooltip]::before,
+      .ai-feature-chip-label[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        bottom: calc(100% + 4px);
+        border-width: 6px;
+        border-style: solid;
+        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+        z-index: 14;
+      }
+      .tc-tooltip-target[data-tooltip]:hover::after,
+      .tc-tooltip-target[data-tooltip]:hover::before,
+      .tc-tooltip-target[data-tooltip]:focus::after,
+      .tc-tooltip-target[data-tooltip]:focus::before,
+      .tc-tooltip-target[data-tooltip]:focus-visible::after,
+      .tc-tooltip-target[data-tooltip]:focus-visible::before,
+      .ai-feature-chip-label[data-tooltip]:hover::after,
+      .ai-feature-chip-label[data-tooltip]:hover::before,
+      .ai-feature-chip-label[data-tooltip]:focus::after,
+      .ai-feature-chip-label[data-tooltip]:focus::before,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::after,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::before {
+        opacity: 1;
+        transform: translateY(0);
+      }
       .tab-content {
         display: none;
       }
@@ -1968,7 +2024,14 @@
             <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
             <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
           </div>
-          <label for="aiActionSelect" style="margin-top:12px;">Acción a realizar</label>
+          <label
+            for="aiActionSelect"
+            style="margin-top:12px;"
+            class="tc-tooltip-target"
+            data-tooltip="Elige una acción guardada para reutilizar su configuración al instante."
+          >
+            Acción a realizar
+          </label>
           <select id="aiActionSelect" class="ai-action-select">
             <option value="">Seleccionar</option>
             <option value="ask">Pregunta IA</option>
@@ -2511,26 +2574,6 @@
                           >
                             <div class="ai-list-control">
                               <label
-                                for="aiFeatureListOrder-1"
-                               
-                                
-                              >
-                                Orden
-                              </label>
-                              <select
-                                id="aiFeatureListOrder-1"
-                                data-feature-instance-list-order="list"
-                                data-instance-index="0"
-                              >
-                                <option value="ai" selected>Selección inteligente (IA)</option>
-                                <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
-                                <option value="priority">Prioridad personalizada</option>
-                                <option value="original">Como aparecen en la tabla</option>
-                              </select>
-                            </div>
-                            <div class="ai-list-control">
-                              <label
                                 for="aiFeatureListEnumerate-1"
                                
                                 
@@ -2611,26 +2654,6 @@
                           >
                             <div class="ai-list-control">
                               <label
-                                for="aiFeatureListOrder-2"
-                               
-                                
-                              >
-                                Orden
-                              </label>
-                              <select
-                                id="aiFeatureListOrder-2"
-                                data-feature-instance-list-order="list"
-                                data-instance-index="1"
-                              >
-                                <option value="ai" selected>Selección inteligente (IA)</option>
-                                <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
-                                <option value="priority">Prioridad personalizada</option>
-                                <option value="original">Como aparecen en la tabla</option>
-                              </select>
-                            </div>
-                            <div class="ai-list-control">
-                              <label
                                 for="aiFeatureListEnumerate-2"
                                
                                 
@@ -2709,26 +2732,6 @@
                             data-feature-instance-options="list"
                             data-instance-index="2"
                           >
-                            <div class="ai-list-control">
-                              <label
-                                for="aiFeatureListOrder-3"
-                               
-                                
-                              >
-                                Orden
-                              </label>
-                              <select
-                                id="aiFeatureListOrder-3"
-                                data-feature-instance-list-order="list"
-                                data-instance-index="2"
-                              >
-                                <option value="ai" selected>Selección inteligente (IA)</option>
-                                <option value="alphabetical">Alfabético A → Z</option>
-                                <option value="reverseAlphabetical">Alfabético Z → A</option>
-                                <option value="priority">Prioridad personalizada</option>
-                                <option value="original">Como aparecen en la tabla</option>
-                              </select>
-                            </div>
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListEnumerate-3"
@@ -2870,13 +2873,14 @@
                           <div class="ai-feature-comment-focus">
                             <label
                               for="aiFeatureCommentFocus-1"
-                             
-                              
+                              class="tc-tooltip-target"
+                              data-tooltip="Define qué tipo de comentarios debe priorizar la IA."
                             >
                               Enfoque de los comentarios
                             </label>
                             <select
                               id="aiFeatureCommentFocus-1"
+                              class="tc-tooltip-target"
                               data-feature-instance-comment-focus="comments"
                               data-instance-index="0"
                             >
@@ -2946,7 +2950,8 @@
                         <input type="checkbox" data-custom-option="outputLanguage" />
                         <span
                           class="ai-feature-chip-label"
-                          
+                          data-tooltip="Selecciona el idioma final del reporte para que todos los apartados se entreguen de forma consistente."
+                          tabindex="0"
                         >
                           Idioma de salida
                         </span>
@@ -2970,12 +2975,19 @@
                     </div>
                     <div class="ai-custom-extra ai-hidden" data-option-extra="outputLanguage">
                       <div class="ai-custom-fields">
-                        <div
-                          class="ai-custom-field"
-                          
-                        >
-                          <label for="aiReportOutputLanguage">Idioma del reporte generado</label>
-                          <select id="aiReportOutputLanguage" data-custom-select="outputLanguage">
+                        <div class="ai-custom-field">
+                          <label
+                            for="aiReportOutputLanguage"
+                            class="tc-tooltip-target"
+                            data-tooltip="Define el idioma en el que recibirás el reporte generado por la IA."
+                          >
+                            Idioma del reporte generado
+                          </label>
+                          <select
+                            id="aiReportOutputLanguage"
+                            class="tc-tooltip-target"
+                            data-custom-select="outputLanguage"
+                          >
                             <option value="auto">Detección automática (IA)</option>
                             <option value="es">Español</option>
                             <option value="en">Inglés</option>
@@ -2998,7 +3010,8 @@
                         <input type="checkbox" data-custom-option="tone" />
                         <span
                           class="ai-feature-chip-label"
-                          
+                          data-tooltip="Personaliza la voz narrativa del reporte para que coincida con tu audiencia."
+                          tabindex="0"
                         >
                           Tono del reporte
                         </span>
@@ -3022,12 +3035,19 @@
                     </div>
                     <div class="ai-custom-extra ai-hidden" data-option-extra="tone">
                       <div class="ai-custom-fields">
-                        <div
-                          class="ai-custom-field"
-                          
-                        >
-                          <label for="aiReportTone">Estilo de comunicación</label>
-                          <select id="aiReportTone" data-custom-select="tone">
+                        <div class="ai-custom-field">
+                          <label
+                            for="aiReportTone"
+                            class="tc-tooltip-target"
+                            data-tooltip="Selecciona el registro comunicacional que deberá seguir cada sección del reporte."
+                          >
+                            Estilo de comunicación
+                          </label>
+                          <select
+                            id="aiReportTone"
+                            class="tc-tooltip-target"
+                            data-custom-select="tone"
+                          >
                             <option value="neutral">Neutral profesional</option>
                             <option value="executive">Resumen ejecutivo</option>
                             <option value="friendly">Cercano y motivador</option>
@@ -3039,56 +3059,6 @@
                           
                         >
                           Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el reporte.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="ai-custom-option" data-option="overview" data-open="false">
-                    <div class="ai-custom-top">
-                      <label class="ai-feature-chip ai-custom-header-label">
-                        <input type="checkbox" data-custom-option="overview" />
-                        <span
-                          class="ai-feature-chip-label"
-                          
-                        >
-                          Contexto general
-                        </span>
-                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                      </label>
-                      <p
-                        class="ai-custom-intro"
-                        
-                      >
-                        Define instrucciones básicas que guiarán la narrativa completa del reporte generado por la IA.
-                      </p>
-                      <button
-                        type="button"
-                        class="ai-custom-collapse"
-                        data-option-toggle="overview"
-                        aria-expanded="false"
-                      >
-                        <span class="ai-custom-collapse-text">Desplegar opciones</span>
-                        <span class="ai-custom-collapse-icon" aria-hidden="true">▾</span>
-                      </button>
-                    </div>
-                    <div class="ai-custom-extra ai-hidden" data-option-extra="overview">
-                      <div class="ai-custom-fields">
-                        <div
-                          class="ai-custom-field"
-                          
-                        >
-                          <label for="aiReportOverview">Guía general del reporte</label>
-                          <textarea
-                            id="aiReportOverview"
-                            data-custom-text="overview"
-                            placeholder="Ej. Destaca resultados globales, reconoce al equipo comercial y cierra con próximos pasos."
-                          ></textarea>
-                        </div>
-                        <p
-                          class="ai-custom-helper"
-                          
-                        >
-                          Usa este espacio para aclarar mensajes transversales que deban repetirse o mantenerse visibles en todas las secciones.
                         </p>
                       </div>
                     </div>

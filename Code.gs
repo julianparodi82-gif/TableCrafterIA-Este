@@ -193,7 +193,6 @@ var REPORT_TONE_ALLOWED = {
   friendly: true,
   analytical: true
 };
-var REPORT_OVERVIEW_DEFAULT = '';
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
@@ -2218,10 +2217,6 @@ function normalizeReportCustomization(source) {
     tone: {
       enabled: false,
       value: REPORT_TONE_DEFAULT
-    },
-    overview: {
-      enabled: false,
-      text: REPORT_OVERVIEW_DEFAULT
     }
   };
   if (!source || typeof source !== 'object') {
@@ -2235,20 +2230,11 @@ function normalizeReportCustomization(source) {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
   }
-  if (source.overview && typeof source.overview === 'object') {
-    base.overview.enabled = !!source.overview.enabled;
-    base.overview.text = source.overview.text
-      ? String(source.overview.text).trim()
-      : REPORT_OVERVIEW_DEFAULT;
-  }
   if (!base.outputLanguage.enabled) {
     base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
   }
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
-  }
-  if (!base.overview.enabled) {
-    base.overview.text = REPORT_OVERVIEW_DEFAULT;
   }
   return base;
 }

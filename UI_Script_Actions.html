@@ -48,6 +48,7 @@ function renderSavedActionsSelect(actions, selectedId) {
     updateSavedActionsEmptyState(false);
     return;
   }
+  const tooltipMap = Object.create(null);
   list
     .slice()
     .sort(function(a, b) {
@@ -69,10 +70,38 @@ function renderSavedActionsSelect(actions, selectedId) {
       option.value = action.id;
       const label = action.name ? action.name : 'Acción sin nombre';
       option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+      const tooltip = buildSavedActionTooltip(action);
+      if (tooltip) {
+        option.title = tooltip;
+        tooltipMap[action.id] = tooltip;
+      }
       select.appendChild(option);
     });
   select.disabled = false;
   updateSavedActionsEmptyState(true);
+  let fallbackTooltipUpdater = null;
+  if (typeof bindSelectTooltipWithMap === 'function') {
+    bindSelectTooltipWithMap(select, tooltipMap);
+  } else {
+    fallbackTooltipUpdater = function() {
+      const tip = tooltipMap[select.value] || '';
+      if (tip) {
+        select.dataset.tooltip = tip;
+        select.setAttribute('title', tip);
+        select.classList.add('tc-tooltip-target');
+      } else {
+        select.removeAttribute('data-tooltip');
+        select.removeAttribute('title');
+      }
+    };
+    fallbackTooltipUpdater();
+    if (!select.dataset.tooltipBound) {
+      select.addEventListener('change', fallbackTooltipUpdater);
+      select.addEventListener('focus', fallbackTooltipUpdater);
+      select.addEventListener('mouseenter', fallbackTooltipUpdater);
+      select.dataset.tooltipBound = 'true';
+    }
+  }
   if (selectedId) {
     const normalized = String(selectedId);
     const match = Array.prototype.find.call(select.options, function(item) {
@@ -86,6 +115,11 @@ function renderSavedActionsSelect(actions, selectedId) {
     }
   } else {
     select.value = '';
+  }
+  if (typeof updateSelectTooltip === 'function') {
+    updateSelectTooltip(select, tooltipMap);
+  } else if (fallbackTooltipUpdater) {
+    fallbackTooltipUpdater();
   }
 }
 
@@ -127,6 +161,46 @@ function buildReportFavoriteSummary(action) {
   }
   if (action.descriptionEnabled && action.descriptionText) {
     parts.push('Descripción del reporte incluida.');
+  }
+  return parts.join('\n');
+}
+
+function buildSavedActionTooltip(action) {
+  if (!action) {
+    return '';
+  }
+  const parts = [];
+  const typeLabel = getActionTypeLabel(action.type);
+  if (action.description) {
+    parts.push(String(action.description));
+  }
+  if (action.type === 'reportFavorite') {
+    const summary = buildReportFavoriteSummary(action);
+    if (summary) {
+      parts.push(summary);
+    }
+  } else if (action.type === 'table') {
+    const meta = [];
+    if (action.sheetName) {
+      meta.push('Hoja: ' + action.sheetName);
+    }
+    if (action.rangeA1) {
+      meta.push('Rango: ' + action.rangeA1);
+    }
+    if (action.rows) {
+      meta.push('Filas: ' + action.rows);
+    }
+    if (action.cols) {
+      meta.push('Columnas: ' + action.cols);
+    }
+    if (meta.length) {
+      parts.push(meta.join(' • '));
+    }
+  }
+  if (!parts.length) {
+    parts.push('Tipo: ' + typeLabel);
+  } else {
+    parts.unshift('Tipo: ' + typeLabel);
   }
   return parts.join('\n');
 }

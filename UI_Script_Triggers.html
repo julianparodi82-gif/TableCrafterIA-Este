@@ -87,6 +87,7 @@ function populateTriggerActionSelect(actions) {
   placeholder.textContent = 'Seleccionar...';
   select.appendChild(placeholder);
   const list = Array.isArray(actions) ? actions.slice() : [];
+  const tooltipMap = Object.create(null);
   list
     .sort(function(a, b) {
       const nameA = (a && a.name ? a.name : '').toLowerCase();
@@ -107,8 +108,36 @@ function populateTriggerActionSelect(actions) {
       option.value = action.id;
       const label = action.name ? action.name : 'Acción sin nombre';
       option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+      const tooltip = typeof buildSavedActionTooltip === 'function' ? buildSavedActionTooltip(action) : '';
+      if (tooltip) {
+        option.title = tooltip;
+        tooltipMap[action.id] = tooltip;
+      }
       select.appendChild(option);
     });
+  let fallbackTooltipUpdater = null;
+  if (typeof bindSelectTooltipWithMap === 'function') {
+    bindSelectTooltipWithMap(select, tooltipMap);
+  } else {
+    fallbackTooltipUpdater = function() {
+      const tip = tooltipMap[select.value] || '';
+      if (tip) {
+        select.dataset.tooltip = tip;
+        select.setAttribute('title', tip);
+        select.classList.add('tc-tooltip-target');
+      } else {
+        select.removeAttribute('data-tooltip');
+        select.removeAttribute('title');
+      }
+    };
+    fallbackTooltipUpdater();
+    if (!select.dataset.tooltipBound) {
+      select.addEventListener('change', fallbackTooltipUpdater);
+      select.addEventListener('focus', fallbackTooltipUpdater);
+      select.addEventListener('mouseenter', fallbackTooltipUpdater);
+      select.dataset.tooltipBound = 'true';
+    }
+  }
   if (previous) {
     const exists = Array.prototype.find.call(select.options, function(option) {
       return option && option.value === previous;
@@ -116,6 +145,11 @@ function populateTriggerActionSelect(actions) {
     if (exists) {
       select.value = previous;
     }
+  }
+  if (typeof updateSelectTooltip === 'function') {
+    updateSelectTooltip(select, tooltipMap);
+  } else if (fallbackTooltipUpdater) {
+    fallbackTooltipUpdater();
   }
   updateTriggerFormState();
 }
