@@ -3,6 +3,8 @@
   <head>
     <base target="_top">
     <meta charset="UTF-8">
+    <? var __initialThemeMode = typeof initialThemeMode === 'string' && initialThemeMode === 'word' ? 'word' : 'table'; ?>
+    <? var __isWordcrafter = __initialThemeMode === 'word'; ?>
     <style>
       :root {
         --tc-font: 'Inter', Arial, sans-serif;
@@ -92,6 +94,25 @@
       .container {
         background: transparent;
         will-change: transform, opacity;
+        transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.55s ease;
+      }
+
+      .container.sidebar-enter {
+        opacity: 0;
+        transform: translateY(32px) scale(0.96);
+      }
+
+      .container.sidebar-enter-active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .container.sidebar-exit {
+        animation: sidebar-exit-fade 0.36s ease forwards;
+      }
+
+      .container.sidebar-tab-animate {
+        animation: sidebar-tab-wave 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .container.sidebar-theme-animate {
@@ -113,6 +134,32 @@
           transform: translateY(0) scale(1);
           opacity: 1;
           filter: brightness(1);
+        }
+      }
+
+      @keyframes sidebar-tab-wave {
+        0% {
+          transform: translateY(0);
+          box-shadow: none;
+        }
+        40% {
+          transform: translateY(-8px);
+          box-shadow: var(--tc-shadow-soft);
+        }
+        100% {
+          transform: translateY(0);
+          box-shadow: none;
+        }
+      }
+
+      @keyframes sidebar-exit-fade {
+        0% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(28px) scale(0.94);
         }
       }
       .tab-nav {
@@ -276,9 +323,26 @@
       }
       .tab-content {
         display: none;
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.42s ease, transform 0.42s ease;
+        will-change: opacity, transform;
+      }
+      .tab-content.active,
+      .tab-content.is-visible {
+        display: block;
       }
       .tab-content.active {
-        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .tab-content.is-entering {
+        filter: drop-shadow(0 18px 28px rgba(17, 24, 39, 0.08));
+      }
+      .tab-content.is-leaving {
+        opacity: 0;
+        transform: translateY(28px);
+        pointer-events: none;
       }
       .theme-header {
         display: flex;
@@ -2112,14 +2176,38 @@
         background: #FEF3C7;
         color: #B45309;
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        .container,
+        .container.sidebar-theme-animate,
+        .container.sidebar-tab-animate,
+        .container.sidebar-enter,
+        .container.sidebar-enter-active,
+        .tab-content,
+        .tab-content.is-entering,
+        .tab-content.is-leaving {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          transition-delay: 0ms !important;
+        }
+      }
     </style>
   </head>
-  <body class="theme-tablecrafter">
+  <body
+    class="<?!= __isWordcrafter ? 'theme-wordcrafter' : 'theme-tablecrafter' ?>"
+    data-initial-theme="<?!= __isWordcrafter ? 'word' : 'table' ?>"
+  >
     <div class="container">
       <div class="theme-header">
-        <h2 id="appTitle">TableCrafter AI</h2>
+        <h2 id="appTitle"><?!= __isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI' ?></h2>
         <label class="theme-toggle" for="themeToggle">
-          <input type="checkbox" id="themeToggle" aria-label="Activar vista WordCrafter AI" />
+          <input
+            type="checkbox"
+            id="themeToggle"
+            aria-label="Activar vista WordCrafter AI"
+            <? if (__isWordcrafter) { ?>checked<? } ?>
+          />
           <span class="theme-toggle-switch">
             <span class="theme-toggle-thumb"></span>
           </span>
@@ -2130,6 +2218,16 @@
           &times;
         </button>
         <div id="themeMessageContent" class="theme-message-content">
+          <? if (__isWordcrafter) { ?>
+          <p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos con precisión.</p>
+          <p>Pronto podrás:</p>
+          <ul>
+            <li>Crear resúmenes inteligentes adaptados a cada documento.</li>
+            <li>Ajustar tono y estilo con sugerencias en tiempo real.</li>
+            <li>Generar plantillas colaborativas listas para publicar.</li>
+          </ul>
+          <p>Activa el modo celeste cuando quieras conocer sus avances.</p>
+          <? } else { ?>
           <p><strong>¡Bienvenido a TableCrafter AI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>
           <p>Empieza con la acción que necesites:</p>
           <ul>
@@ -2137,6 +2235,7 @@
             <li>Editar tabla: mejora estilos existentes con un par de clics.</li>
             <li>Crear tabla: diseña nuevas estructuras listas para reutilizar.</li>
           </ul>
+          <? } ?>
         </div>
         <div class="theme-message-footer">
           <label class="theme-message-optout">

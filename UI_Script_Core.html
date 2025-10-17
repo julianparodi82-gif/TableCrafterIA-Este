@@ -16,6 +16,9 @@ let allowSidebarUnload = false;
 let sidebarClosePromptActive = false;
 let currentTab = '';
 let lastSavedTableId = '';
+let sidebarContainer = null;
+let sidebarTabAnimationTimeout = null;
+let sidebarEntryCleanupTimeout = null;
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -2132,13 +2135,58 @@ function setActiveTab(tabId, options) {
             btn.classList.remove('active');
           }
         });
+        const nextContent = document.getElementById(tabId);
+        const previousContent = previousTab && previousTab !== tabId ? document.getElementById(previousTab) : null;
+
         document.querySelectorAll('.tab-content').forEach(function(content) {
-          if (content.id === tabId) {
-            content.classList.add('active');
-          } else {
-            content.classList.remove('active');
+          if (content === nextContent) {
+            content.classList.add('is-visible');
+          } else if (content !== previousContent) {
+            content.classList.remove('active', 'is-visible', 'is-entering', 'is-leaving');
           }
         });
+
+        if (previousContent && previousContent !== nextContent) {
+          previousContent.classList.remove('is-entering');
+          previousContent.classList.add('is-visible', 'is-leaving');
+          previousContent.classList.remove('active');
+          const handleLeaveEnd = function(event) {
+            if (event.target !== previousContent || event.propertyName !== 'opacity') {
+              return;
+            }
+            previousContent.classList.remove('is-visible', 'is-leaving');
+            previousContent.removeEventListener('transitionend', handleLeaveEnd);
+          };
+          previousContent.addEventListener('transitionend', handleLeaveEnd);
+          window.setTimeout(function() {
+            previousContent.classList.remove('is-visible', 'is-leaving');
+            previousContent.removeEventListener('transitionend', handleLeaveEnd);
+          }, 650);
+        }
+
+        if (nextContent) {
+          nextContent.classList.remove('is-leaving');
+          nextContent.classList.add('is-visible', 'is-entering');
+          void nextContent.offsetWidth; // reinicia la animación de entrada
+          nextContent.classList.add('active');
+          window.setTimeout(function() {
+            nextContent.classList.remove('is-entering');
+          }, 450);
+        }
+
+        if (sidebarContainer) {
+          sidebarContainer.classList.remove('sidebar-tab-animate');
+          if (sidebarTabAnimationTimeout) {
+            window.clearTimeout(sidebarTabAnimationTimeout);
+          }
+          void sidebarContainer.offsetWidth; // reinicia la animación del contenedor
+          sidebarContainer.classList.add('sidebar-tab-animate');
+          sidebarTabAnimationTimeout = window.setTimeout(function() {
+            if (sidebarContainer) {
+              sidebarContainer.classList.remove('sidebar-tab-animate');
+            }
+          }, 520);
+        }
 
         if (previousTab === 'editTab' && tabId !== 'editTab') {
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
@@ -2265,8 +2313,42 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeMessageDismiss = document.getElementById('themeMessageDismiss');
         const body = document.body;
         const container = document.querySelector('.container');
+        sidebarContainer = container;
+        if (sidebarEntryCleanupTimeout) {
+          window.clearTimeout(sidebarEntryCleanupTimeout);
+          sidebarEntryCleanupTimeout = null;
+        }
         if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
+        }
+
+        if (!currentTab) {
+          const initialActiveContent = document.querySelector('.tab-content.active');
+          currentTab = initialActiveContent ? initialActiveContent.id : 'aiTab';
+        }
+
+        if (container) {
+          container.classList.add('sidebar-enter');
+          if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(function() {
+              if (sidebarContainer) {
+                sidebarContainer.classList.add('sidebar-enter-active');
+              }
+            });
+          } else {
+            container.classList.add('sidebar-enter-active');
+          }
+          sidebarEntryCleanupTimeout = window.setTimeout(function() {
+            if (sidebarContainer) {
+              sidebarContainer.classList.remove('sidebar-enter', 'sidebar-enter-active');
+            }
+            sidebarEntryCleanupTimeout = null;
+          }, 650);
+          window.addEventListener('beforeunload', function() {
+            if (sidebarContainer) {
+              sidebarContainer.classList.add('sidebar-exit');
+            }
+          });
         }
 
         const messagePreferenceKey = 'tablecrafter.hideWelcomeMessage';
@@ -2335,6 +2417,19 @@ document.addEventListener('DOMContentLoaded', function() {
           }, 700);
         }
 
+        function syncAddonThemeMode(nextTheme) {
+          if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            return;
+          }
+          try {
+            google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(
+              nextTheme === 'word' ? 'word' : 'table'
+            );
+          } catch (error) {
+            // Si no se puede comunicar con Apps Script, ignoramos el error.
+          }
+        }
+
         function applyTheme(isWordcrafter, options) {
           const settings = options || {};
           const animate = Boolean(settings.animate);
@@ -2354,6 +2449,9 @@ document.addEventListener('DOMContentLoaded', function() {
             themeMessageContent.innerHTML = tableMessage;
           }
           syncMessageVisibility();
+          if (nextTheme !== currentTheme || settings.forceSync) {
+            syncAddonThemeMode(nextTheme);
+          }
           currentTheme = nextTheme;
         }
 
@@ -2369,7 +2467,7 @@ document.addEventListener('DOMContentLoaded', function() {
           applyTheme(themeToggle.checked, { animate: true });
         });
 
-        applyTheme(themeToggle.checked);
+        applyTheme(themeToggle.checked, { forceSync: true });
       });
 
 </script>
