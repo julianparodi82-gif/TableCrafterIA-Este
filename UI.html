@@ -548,9 +548,14 @@
       .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
         transform: translateX(16px);
       }
+      .tab-btn .tab-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
       .tab-btn .favorite-icon {
         color: #D4AF37;
-        font-size: 13px;
+        font-size: 11px;
         line-height: 1;
       }
       .section {
@@ -2304,16 +2309,18 @@
           data-tab="templatesTab"
           data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
         >
-          <span class="tab-label">Plantillas</span>
-          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="tab-label"
+            >Plantillas<span class="favorite-icon" aria-hidden="true">⭐</span></span
+          >
         </button>
         <button
           class="tab-btn"
           data-tab="actionsTab"
           data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
         >
-          <span class="tab-label">Acciones</span>
-          <span class="favorite-icon" aria-hidden="true">★</span>
+          <span class="tab-label"
+            >Acciones<span class="favorite-icon" aria-hidden="true">⭐</span></span
+          >
         </button>
       </div>
 
