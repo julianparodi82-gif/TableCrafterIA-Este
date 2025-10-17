@@ -170,6 +170,31 @@
       .tab-nav-primary {
         margin-bottom: 20px;
       }
+      @media (min-width: 641px) {
+        .tab-nav-primary {
+          grid-template-areas:
+            'tab-ai tab-edit tab-create'
+            'tab-triggers tab-templates tab-actions';
+        }
+        .tab-nav-primary .tab-btn[data-tab='aiTab'] {
+          grid-area: tab-ai;
+        }
+        .tab-nav-primary .tab-btn[data-tab='editTab'] {
+          grid-area: tab-edit;
+        }
+        .tab-nav-primary .tab-btn[data-tab='createTab'] {
+          grid-area: tab-create;
+        }
+        .tab-nav-primary .tab-btn[data-tab='triggersTab'] {
+          grid-area: tab-triggers;
+        }
+        .tab-nav-primary .tab-btn[data-tab='templatesTab'] {
+          grid-area: tab-templates;
+        }
+        .tab-nav-primary .tab-btn[data-tab='actionsTab'] {
+          grid-area: tab-actions;
+        }
+      }
       .tab-btn {
         border: 1px solid var(--tc-border);
         background: rgba(255, 255, 255, 0.92);
