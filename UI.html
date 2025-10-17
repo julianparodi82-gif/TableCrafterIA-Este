@@ -1817,8 +1817,20 @@
         font-weight: 600;
         color: #1F2937;
         white-space: nowrap;
+        position: relative;
+        display: inline-flex;
+        max-width: 100%;
+      }
+      .ai-report-order-label.tc-tooltip-target {
+        overflow: visible;
+        cursor: help;
+      }
+      .ai-report-order-label-text {
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+        display: inline-block;
       }
       .ai-report-order-meta {
         font-size: 11px;
@@ -4404,7 +4416,7 @@
                   Orden de reporte
                 </button>
                 <p class="ai-report-order-helper">
-                  Organiza el orden en el que aparecerán gráficos, tablas, listas y resúmenes en el archivo final.
+                  Define cómo se presentarán gráficos, listas y resúmenes en el reporte final.
                 </p>
                 <div
                   id="aiReportOrderSummary"
@@ -4698,10 +4710,9 @@
             <div class="ai-report-order-heading">
               <h3 id="aiReportOrderTitle">Orden del reporte</h3>
               <p id="aiReportOrderDescription">
-                Arrastra y suelta para decidir en qué secuencia aparecerán los componentes en los archivos finales.
-                Si una característica no está asociada a tablas específicas, se utilizarán todas las tablas
-                seleccionadas para ese bloque. Pasa el cursor sobre cada etiqueta para ver el nombre, la descripción y
-                los ajustes configurados.
+                Arrastra y suelta para elegir la secuencia de cada componente. Si no defines tablas específicas, se
+                usarán todas las seleccionadas. Pasa el cursor por las etiquetas para ver nombres, descripciones y
+                ajustes clave.
               </p>
             </div>
           </div>

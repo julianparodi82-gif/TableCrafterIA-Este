@@ -1626,6 +1626,20 @@ function updateReportOrderButtonState() {
         }
       }
 
+function getReportOrderItemLabel(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return '';
+        }
+        const titles = normalizeFeatureTitleArray(state.instanceTitles);
+        const titleText = titles[index] ? String(titles[index]).trim() : '';
+        if (titleText) {
+          return titleText;
+        }
+        const baseLabel = REPORT_FEATURE_LABELS[feature] || feature;
+        return baseLabel + ' ' + (index + 1);
+      }
+
 function renderReportOrderList() {
         const list = document.getElementById('aiReportOrderList');
         const empty = document.getElementById('aiReportOrderEmpty');
@@ -1659,8 +1673,12 @@ function renderReportOrderList() {
 
           const labelSpan = document.createElement('span');
           labelSpan.className = 'ai-report-order-label';
-          const baseLabel = REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature;
-          labelSpan.textContent = baseLabel + ' ' + (parsed.index + 1);
+          const labelText = getReportOrderItemLabel(parsed.feature, parsed.index);
+          const labelContent = document.createElement('span');
+          labelContent.className = 'ai-report-order-label-text';
+          labelContent.textContent = labelText ||
+            (REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature) + ' ' + (parsed.index + 1);
+          labelSpan.appendChild(labelContent);
           const tooltip = getReportOrderItemTooltip(parsed.feature, parsed.index);
           if (tooltip) {
             labelSpan.classList.add('tc-tooltip-target');
@@ -1712,8 +1730,9 @@ function renderReportOrderSummary() {
           }
           const chip = document.createElement('span');
           chip.className = 'ai-report-order-summary-chip';
+          const labelText = getReportOrderItemLabel(parsed.feature, parsed.index);
           const baseLabel = REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature;
-          chip.textContent = (index + 1) + '. ' + baseLabel + ' ' + (parsed.index + 1);
+          chip.textContent = (index + 1) + '. ' + (labelText || (baseLabel + ' ' + (parsed.index + 1)));
           const tooltip = getReportOrderItemTooltip(parsed.feature, parsed.index);
           if (tooltip) {
             chip.classList.add('tc-tooltip-target');
