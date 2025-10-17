@@ -199,12 +199,8 @@ var META_INDEX = {
 };
 
 var REPORT_FEATURE_MAX_QUANTITY = 3;
-var REPORT_FEATURES_WITHOUT_QUANTITY = {
-  summary: true
-};
-var REPORT_FEATURE_FIXED_QUANTITY = {
-  summary: 1
-};
+var REPORT_FEATURES_WITHOUT_QUANTITY = {};
+var REPORT_FEATURE_FIXED_QUANTITY = {};
 var REPORT_CHART_TYPE_DEFAULT = 'auto';
 var REPORT_CHART_TYPE_ALLOWED = {
   auto: true,
@@ -952,6 +948,14 @@ function buildReportFavoriteResponse(entry) {
   }
   var features = Array.isArray(config.features) ? config.features : [];
   var featureDetails = Array.isArray(config.featureDetails) ? config.featureDetails : [];
+  var tableList = Array.isArray(config.tables) ? config.tables : [];
+  var normalizedTableSet = {};
+  tableList.forEach(function(tableId) {
+    var normalizedId = normalizeMetaId(tableId);
+    if (normalizedId) {
+      normalizedTableSet[normalizedId] = true;
+    }
+  });
   var detailMap = {};
   var normalizedDetails = [];
   var storedFileName = config.fileName || '';
@@ -986,6 +990,8 @@ function buildReportFavoriteResponse(entry) {
     var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
     var instanceListEnumStyles = normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles);
     var summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
+    var instanceTablesEnabled = normalizeFeatureTableToggleArray(detail.instanceTablesEnabled);
+    var instanceTables = normalizeFeatureTableSelectionArray(detail.instanceTables, normalizedTableSet);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
@@ -995,7 +1001,9 @@ function buildReportFavoriteResponse(entry) {
       instanceListOrders: instanceListOrders,
       instanceListEnumerate: instanceListEnumerate,
       instanceListEnumStyles: instanceListEnumStyles,
-      summaryLength: summaryLengthValue
+      summaryLength: summaryLengthValue,
+      instanceTablesEnabled: instanceTablesEnabled,
+      instanceTables: instanceTables
     });
     detailMap[featureId] = true;
   });
@@ -1013,7 +1021,9 @@ function buildReportFavoriteResponse(entry) {
       instanceListOrders: normalizeFeatureListOrderArray([]),
       instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
       instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
-      summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
+      summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
+      instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+      instanceTables: createEmptyFeatureTableSelectionArray()
     });
     detailMap[featureId] = true;
   });
@@ -2289,6 +2299,56 @@ function normalizeFeatureListEnumStyleArray(source) {
   return base;
 }
 
+function createEmptyFeatureTableToggleArray() {
+  return [false, false, false];
+}
+
+function normalizeFeatureTableToggleArray(source) {
+  var base = createEmptyFeatureTableToggleArray();
+  if (Array.isArray(source)) {
+    source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+      base[index] = !!entry;
+    });
+  }
+  return base;
+}
+
+function createEmptyFeatureTableSelectionArray() {
+  return [[], [], []];
+}
+
+function normalizeFeatureTableSelectionArray(source, allowedSet) {
+  var base = createEmptyFeatureTableSelectionArray();
+  if (!Array.isArray(source)) {
+    return base;
+  }
+  var allowAll = !allowedSet;
+  source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+    if (!Array.isArray(entry)) {
+      base[index] = [];
+      return;
+    }
+    var seen = {};
+    var values = [];
+    entry.forEach(function(value) {
+      if (value === null || value === undefined) {
+        return;
+      }
+      var text = String(value).trim();
+      if (!text || text === ALL_TABLES_OPTION_VALUE || seen[text]) {
+        return;
+      }
+      if (!allowAll && !allowedSet[text]) {
+        return;
+      }
+      seen[text] = true;
+      values.push(text);
+    });
+    base[index] = values;
+  });
+  return base;
+}
+
 function normalizeSummaryLengthValue(value) {
   if (value === null || value === undefined) {
     return REPORT_SUMMARY_LENGTH_DEFAULT;
@@ -2427,6 +2487,11 @@ function saveReportFavorite(payload) {
   var normalizedFeatureDetails = [];
   var seenFeatureDetails = {};
   var missingFeatureDescriptions = [];
+  var missingFeatureAssociations = [];
+  var normalizedTableSet = {};
+  normalizedTables.forEach(function(tableId) {
+    normalizedTableSet[tableId] = true;
+  });
   featureDetails.forEach(function(entry) {
     if (!entry) {
       return;
@@ -2458,11 +2523,22 @@ function saveReportFavorite(payload) {
     var rawListEnumStyles = Array.isArray(entry.instanceListEnumStyles) ? entry.instanceListEnumStyles : [];
     var normalizedListEnumStyles = normalizeFeatureListEnumStyleArray(rawListEnumStyles);
     var summaryLengthValue = normalizeSummaryLengthValue(entry.summaryLength);
+    var normalizedTableToggles = normalizeFeatureTableToggleArray(entry.instanceTablesEnabled);
+    var normalizedTableSelections = normalizeFeatureTableSelectionArray(
+      entry.instanceTables,
+      normalizedTableSet
+    );
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
         if (missingFeatureDescriptions.indexOf(descLabel) === -1) {
           missingFeatureDescriptions.push(descLabel);
+        }
+      }
+      if (normalizedTableToggles[idx] && normalizedTableSelections[idx].length === 0) {
+        var assocLabel = 'Tablas asociadas para ' + (featureLabelMap[featureId] || featureId) + ' #' + (idx + 1);
+        if (missingFeatureAssociations.indexOf(assocLabel) === -1) {
+          missingFeatureAssociations.push(assocLabel);
         }
       }
     }
@@ -2475,7 +2551,9 @@ function saveReportFavorite(payload) {
       instanceListOrders: normalizedListOrders,
       instanceListEnumerate: normalizedListEnumerate,
       instanceListEnumStyles: normalizedListEnumStyles,
-      summaryLength: summaryLengthValue
+      summaryLength: summaryLengthValue,
+      instanceTablesEnabled: normalizedTableToggles,
+      instanceTables: normalizedTableSelections
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2495,7 +2573,9 @@ function saveReportFavorite(payload) {
         instanceListOrders: normalizeFeatureListOrderArray([]),
         instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
         instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
-        summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
+        summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
+        instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+        instanceTables: createEmptyFeatureTableSelectionArray()
       });
       seenFeatureDetails[featureId] = true;
     }
@@ -2515,6 +2595,13 @@ function saveReportFavorite(payload) {
   }
   if (missingFeatureDescriptions.length > 0) {
     missingFeatureDescriptions.forEach(function(message) {
+      if (missing.indexOf(message) === -1) {
+        missing.push(message);
+      }
+    });
+  }
+  if (missingFeatureAssociations.length > 0) {
+    missingFeatureAssociations.forEach(function(message) {
       if (missing.indexOf(message) === -1) {
         missing.push(message);
       }

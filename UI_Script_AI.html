@@ -29,12 +29,8 @@
         summary:
           'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".'
       });
-      const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
-        summary: true
-      });
-      const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
-        summary: 1
-      });
+      const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({});
+      const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({});
       const REPORT_CHART_TYPE_DEFAULT = 'auto';
       const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
         { value: 'auto', label: 'Selección inteligente de la IA' },
@@ -387,6 +383,7 @@ function updateAiListSelectionUI(select) {
             item.setAttribute('aria-selected', 'false');
           }
         });
+        refreshAllReportFeatureOptions();
       }
 
 function toggleAiListValue(value) {
@@ -1201,6 +1198,86 @@ function createEmptyFeatureListEnumStyleArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
       }
 
+function createEmptyFeatureTableToggleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(false);
+      }
+
+function createEmptyFeatureTableSelectionArray() {
+        return Array.from({ length: REPORT_FEATURE_MAX_QUANTITY }, function() {
+          return [];
+        });
+      }
+
+function cloneFeatureTableSelectionArray(source) {
+        const base = createEmptyFeatureTableSelectionArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const seen = Object.create(null);
+          const values = [];
+          entry.forEach(function(value) {
+            if (value === null || value === undefined) {
+              return;
+            }
+            const text = String(value).trim();
+            if (!text || seen[text]) {
+              return;
+            }
+            seen[text] = true;
+            values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
+function normalizeFeatureTableToggleArray(source) {
+        const base = createEmptyFeatureTableToggleArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(value, index) {
+            base[index] = !!value;
+          });
+        }
+        return base;
+      }
+
+function normalizeFeatureTableSelectionArray(source, allowedSet) {
+        const base = createEmptyFeatureTableSelectionArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        const hasAllowedSet = allowedSet && typeof allowedSet === 'object';
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const seen = Object.create(null);
+          const values = [];
+          entry.forEach(function(value) {
+            if (value === null || value === undefined) {
+              return;
+            }
+            const text = String(value).trim();
+            if (!text || text === ALL_TABLES_OPTION_VALUE || seen[text]) {
+              return;
+            }
+            if (hasAllowedSet && !allowedSet[text]) {
+              return;
+            }
+            seen[text] = true;
+            values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
 function normalizeSummaryLengthValue(value) {
         if (value === null || value === undefined) {
           return REPORT_SUMMARY_LENGTH_DEFAULT;
@@ -1328,7 +1405,9 @@ function ensureReportFeatureState(feature) {
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
-            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+            instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+            instanceTables: createEmptyFeatureTableSelectionArray()
           };
           return reportFeatureState[key];
         }
@@ -1359,6 +1438,12 @@ function ensureReportFeatureState(feature) {
         }
         if (!state.summaryTone || !REPORT_SUMMARY_TONE_SET[state.summaryTone]) {
           state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+        }
+        if (!Array.isArray(state.instanceTablesEnabled)) {
+          state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+        }
+        if (!Array.isArray(state.instanceTables)) {
+          state.instanceTables = createEmptyFeatureTableSelectionArray();
         }
         return state;
       }
@@ -1430,6 +1515,83 @@ function updateChartTypeWrapperTooltip(select) {
         } else {
           select.removeAttribute('title');
         }
+      }
+
+function getReportFeatureAssociationOptions() {
+        const selectedIds = getSelectedAiTableIds();
+        const normalizedIds = Array.isArray(selectedIds) ? selectedIds.slice() : [];
+        const hasAllOption = normalizedIds.indexOf(ALL_TABLES_OPTION_VALUE) !== -1;
+        const allowedSet = Object.create(null);
+        const entries = [];
+        const cache = Array.isArray(savedTablesCache) ? savedTablesCache : [];
+        const tableMap = cache.reduce(function(map, entry) {
+          if (entry && entry.id) {
+            map[String(entry.id)] = entry;
+          }
+          return map;
+        }, Object.create(null));
+        if (!hasAllOption) {
+          normalizedIds.forEach(function(id) {
+            if (!id || id === ALL_TABLES_OPTION_VALUE) {
+              return;
+            }
+            const entry = tableMap[id];
+            if (!entry) {
+              return;
+            }
+            const label = entry.name || entry.fullRangeA1 || entry.id;
+            allowedSet[entry.id] = true;
+            entries.push({ id: entry.id, name: label });
+          });
+        }
+        let message = '';
+        if (normalizedIds.length === 0) {
+          message = 'Selecciona tablas en la parte superior para asociarlas a cada característica.';
+        } else if (hasAllOption) {
+          message = 'Para asociar tablas específicas, elige tablas individuales en la parte superior.';
+        } else if (entries.length === 0) {
+          message = 'Las tablas seleccionadas ya no están disponibles. Actualiza la lista e inténtalo nuevamente.';
+        }
+        return {
+          entries: entries,
+          allowedSet: allowedSet,
+          hasAllOption: hasAllOption,
+          message: message
+        };
+      }
+
+function populateFeatureTableSelect(select, options, selectedValues) {
+        if (!select) {
+          return;
+        }
+        const previousScroll = select.scrollTop;
+        const previousFocus = document.activeElement === select;
+        select.innerHTML = '';
+        options.forEach(function(option) {
+          if (!option || !option.id) {
+            return;
+          }
+          const opt = document.createElement('option');
+          opt.value = option.id;
+          opt.textContent = option.name || option.id;
+          select.appendChild(opt);
+        });
+        const selectedSet = Object.create(null);
+        if (Array.isArray(selectedValues)) {
+          selectedValues.forEach(function(value) {
+            selectedSet[String(value)] = true;
+          });
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option || !option.value) {
+            return;
+          }
+          option.selected = !!selectedSet[option.value];
+        });
+        if (previousFocus) {
+          select.focus();
+        }
+        select.scrollTop = previousScroll;
       }
 
 function bindChartTypeTooltip(select) {
@@ -1592,6 +1754,16 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumerate = normalizedListEnumerate.slice();
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
+          const associationOptions = getReportFeatureAssociationOptions();
+          let normalizedTableToggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+          let normalizedTableSelections = normalizeFeatureTableSelectionArray(
+            state.instanceTables,
+            associationOptions.hasAllOption ? null : associationOptions.allowedSet
+          );
+          if (!state.selected || associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+            normalizedTableToggles = createEmptyFeatureTableToggleArray();
+            normalizedTableSelections = createEmptyFeatureTableSelectionArray();
+          }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -1620,6 +1792,18 @@ function refreshReportFeatureOption(feature) {
             );
             const enumStyleSelect = item.querySelector(
               '[data-feature-instance-list-style="' + feature + '"]'
+            );
+            const tableToggle = item.querySelector(
+              '[data-feature-instance-table-toggle="' + feature + '"]'
+            );
+            const tableSelectWrapper = item.querySelector(
+              '[data-feature-instance-table-select-wrapper="' + feature + '"]'
+            );
+            const tableSelect = item.querySelector(
+              '[data-feature-instance-table-select="' + feature + '"]'
+            );
+            const tableEmptyMessage = item.querySelector(
+              '[data-feature-instance-table-empty="' + feature + '"]'
             );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
@@ -1658,8 +1842,59 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
+            const canAssociate =
+              !!state.selected && associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+            if (tableToggle) {
+              const toggleEnabled = withinRange && canAssociate;
+              tableToggle.disabled = !toggleEnabled;
+              const currentToggle = toggleEnabled && normalizedTableToggles[index];
+              tableToggle.checked = !!currentToggle;
+              if (!toggleEnabled) {
+                normalizedTableToggles[index] = false;
+                normalizedTableSelections[index] = [];
+              }
+            }
+            const shouldShowTableSelect =
+              withinRange && canAssociate && normalizedTableToggles[index];
+            if (tableSelectWrapper) {
+              tableSelectWrapper.classList.toggle('ai-hidden', !shouldShowTableSelect);
+            }
+            if (tableSelect) {
+              if (shouldShowTableSelect) {
+                populateFeatureTableSelect(
+                  tableSelect,
+                  associationOptions.entries,
+                  normalizedTableSelections[index]
+                );
+                tableSelect.disabled = false;
+              } else {
+                tableSelect.innerHTML = '';
+                tableSelect.disabled = true;
+              }
+            }
+            if (tableEmptyMessage) {
+              const shouldShowEmpty =
+                withinRange && !!state.selected && !!associationOptions.message && !canAssociate;
+              tableEmptyMessage.classList.toggle('ai-hidden', !shouldShowEmpty);
+              if (shouldShowEmpty) {
+                tableEmptyMessage.textContent = associationOptions.message;
+              }
+            }
           });
+          state.instanceTablesEnabled = normalizedTableToggles.slice();
+          state.instanceTables = cloneFeatureTableSelectionArray(normalizedTableSelections);
         }
+      }
+
+function refreshAllReportFeatureOptions() {
+        if (!reportFeatureState || typeof reportFeatureState !== 'object') {
+          return;
+        }
+        Object.keys(reportFeatureState).forEach(function(feature) {
+          if (feature) {
+            refreshReportFeatureOption(feature);
+          }
+        });
       }
 
 function updateSelectedReportFeatures() {
@@ -1686,6 +1921,10 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
           state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
           state.summaryLength = normalizeSummaryLengthValue(state.summaryLength);
+          state.instanceTablesEnabled = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+          state.instanceTables = cloneFeatureTableSelectionArray(
+            normalizeFeatureTableSelectionArray(state.instanceTables)
+          );
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -1695,6 +1934,8 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
           state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
+          state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+          state.instanceTables = createEmptyFeatureTableSelectionArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -1716,6 +1957,10 @@ function handleReportFeatureQuantityChange(feature, value) {
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
         state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+        state.instanceTablesEnabled = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        state.instanceTables = cloneFeatureTableSelectionArray(
+          normalizeFeatureTableSelectionArray(state.instanceTables)
+        );
         refreshReportFeatureOption(feature);
       }
 
@@ -1834,6 +2079,59 @@ function handleReportFeatureInstanceListStyleChange(feature, index, value) {
         }
       }
 
+function handleReportFeatureInstanceTableToggle(feature, index, enabled) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const selections = cloneFeatureTableSelectionArray(
+          normalizeFeatureTableSelectionArray(state.instanceTables)
+        );
+        const associationOptions = getReportFeatureAssociationOptions();
+        const canAssociate = associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+        if (!canAssociate || !enabled) {
+          toggles[safeIndex] = false;
+          selections[safeIndex] = [];
+        } else {
+          toggles[safeIndex] = true;
+        }
+        state.instanceTablesEnabled = toggles;
+        state.instanceTables = selections;
+        refreshReportFeatureOption(feature);
+      }
+
+function handleReportFeatureInstanceTableSelection(feature, index, values) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const associationOptions = getReportFeatureAssociationOptions();
+        if (associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const normalizedSelection = normalizeFeatureTableSelectionArray(
+          [Array.isArray(values) ? values : []],
+          associationOptions.allowedSet
+        );
+        const selections = cloneFeatureTableSelectionArray(state.instanceTables);
+        selections[safeIndex] = normalizedSelection[0] || [];
+        state.instanceTablesEnabled = toggles;
+        state.instanceTables = selections;
+        refreshReportFeatureOption(feature);
+      }
+
 function handleReportFeatureSummaryLengthChange(feature, value) {
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
@@ -1946,6 +2244,32 @@ function initializeReportFeatureControls() {
               handleReportFeatureInstanceListStyleChange(feature, index, selector.value);
             });
             selector.dataset.bound = 'true';
+          });
+          const tableToggles = option.querySelectorAll(
+            '[data-feature-instance-table-toggle="' + feature + '"]'
+          );
+          tableToggles.forEach(function(toggle) {
+            if (!toggle || toggle.dataset.bound) {
+              return;
+            }
+            toggle.addEventListener('change', function() {
+              const index = parseInt(toggle.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTableToggle(feature, index, toggle.checked);
+            });
+            toggle.dataset.bound = 'true';
+          });
+          const tableSelects = option.querySelectorAll(
+            '[data-feature-instance-table-select="' + feature + '"]'
+          );
+          tableSelects.forEach(function(select) {
+            if (!select || select.dataset.bound) {
+              return;
+            }
+            select.addEventListener('change', function() {
+              const index = parseInt(select.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTableSelection(feature, index, getSelectedOptionValues(select));
+            });
+            select.dataset.bound = 'true';
           });
           const summaryLengthSelector = option.querySelector(
             '[data-feature-summary-length="' + feature + '"]'
@@ -2382,6 +2706,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             );
             const summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
             const summaryToneValue = normalizeSummaryToneValue(detail.summaryTone);
+            const instanceTableToggles = normalizeFeatureTableToggleArray(detail.instanceTablesEnabled);
+            const instanceTableSelections = normalizeFeatureTableSelectionArray(detail.instanceTables);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -2391,7 +2717,9 @@ function applyReportFeatureSelections(features, featureDetails) {
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles,
               summaryLength: summaryLengthValue,
-              summaryTone: summaryToneValue
+              summaryTone: summaryToneValue,
+              instanceTablesEnabled: instanceTableToggles,
+              instanceTables: instanceTableSelections
             };
           });
         }
@@ -2428,6 +2756,14 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.summaryTone = detail
               ? normalizeSummaryToneValue(detail.summaryTone)
               : REPORT_SUMMARY_TONE_DEFAULT;
+            state.instanceTablesEnabled = detail
+              ? normalizeFeatureTableToggleArray(detail.instanceTablesEnabled)
+              : createEmptyFeatureTableToggleArray();
+            state.instanceTables = detail
+              ? cloneFeatureTableSelectionArray(
+                  normalizeFeatureTableSelectionArray(detail.instanceTables)
+                )
+              : createEmptyFeatureTableSelectionArray();
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2438,6 +2774,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
             state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
             state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+            state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+            state.instanceTables = createEmptyFeatureTableSelectionArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -2474,6 +2812,7 @@ function setAiTablesSelection(values) {
           disabled: select.disabled,
           selectedValues: getSelectedOptionValues(select)
         });
+        refreshAllReportFeatureOptions();
       }
 
 async function loadReportFavoriteIntoPanel(action) {
@@ -2633,6 +2972,18 @@ async function handleReportFavoriteSave() {
           ? selectedReportChannels.slice()
           : [];
         const missingItems = [];
+        const selectedTables = getSelectedAiTableIds();
+        const hasAllTablesOption = Array.isArray(selectedTables)
+          ? selectedTables.indexOf(ALL_TABLES_OPTION_VALUE) !== -1
+          : false;
+        const allowedTableSet = Object.create(null);
+        if (Array.isArray(selectedTables) && !hasAllTablesOption) {
+          selectedTables.forEach(function(value) {
+            if (value && value !== ALL_TABLES_OPTION_VALUE) {
+              allowedTableSet[value] = true;
+            }
+          });
+        }
 
         if (!favoriteName) {
           missingItems.push('Nombre del reporte favorito');
@@ -2648,6 +2999,7 @@ async function handleReportFavoriteSave() {
         }
         const featureDetailMap = {};
         const featureDescriptionIssues = [];
+        const featureAssociationIssues = [];
 
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
@@ -2669,12 +3021,26 @@ async function handleReportFavoriteSave() {
           const summaryToneValue = state
             ? normalizeSummaryToneValue(state.summaryTone)
             : REPORT_SUMMARY_TONE_DEFAULT;
+          let baseTableToggles = normalizeFeatureTableToggleArray(
+            state ? state.instanceTablesEnabled : []
+          );
+          let baseTableSelections = normalizeFeatureTableSelectionArray(
+            state ? state.instanceTables : [],
+            hasAllTablesOption ? null : allowedTableSet
+          );
+          if (hasAllTablesOption) {
+            baseTableToggles = createEmptyFeatureTableToggleArray();
+            baseTableSelections = createEmptyFeatureTableSelectionArray();
+          }
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
           for (var idx = 0; idx < quantityValue; idx++) {
             if (!trimmedDescriptions[idx]) {
               featureDescriptionIssues.push({ feature: label, index: idx });
+            }
+            if (!hasAllTablesOption && baseTableToggles[idx] && baseTableSelections[idx].length === 0) {
+              featureAssociationIssues.push({ feature: label, index: idx });
             }
           }
           if (state) {
@@ -2687,6 +3053,8 @@ async function handleReportFavoriteSave() {
             state.instanceListEnumStyles = baseListEnumStyles.slice();
             state.summaryLength = summaryLengthValue;
             state.summaryTone = summaryToneValue;
+            state.instanceTablesEnabled = baseTableToggles.slice();
+            state.instanceTables = cloneFeatureTableSelectionArray(baseTableSelections);
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -2697,13 +3065,21 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice(),
             summaryLength: summaryLengthValue,
-            summaryTone: summaryToneValue
+            summaryTone: summaryToneValue,
+            instanceTablesEnabled: baseTableToggles.slice(),
+            instanceTables: cloneFeatureTableSelectionArray(baseTableSelections)
           };
         });
 
         if (featureDescriptionIssues.length > 0) {
           featureDescriptionIssues.forEach(function(issue) {
             missingItems.push('Descripción ' + (issue.index + 1) + ' para ' + issue.feature);
+          });
+        }
+
+        if (featureAssociationIssues.length > 0) {
+          featureAssociationIssues.forEach(function(issue) {
+            missingItems.push('Tablas asociadas para ' + issue.feature + ' #' + (issue.index + 1));
           });
         }
 
@@ -2765,7 +3141,6 @@ async function handleReportFavoriteSave() {
           }
         });
 
-        const selectedTables = getSelectedAiTableIds();
         if (!selectedTables || selectedTables.length === 0) {
           await showMessageModal('Selecciona al menos una tabla para asociar el reporte.', {
             title: 'Tablas requeridas',
@@ -2789,7 +3164,9 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
-            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+            instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+            instanceTables: createEmptyFeatureTableSelectionArray()
           };
           return {
             feature: feature,
@@ -2801,7 +3178,14 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles),
             summaryLength: normalizeSummaryLengthValue(detail.summaryLength),
-            summaryTone: normalizeSummaryToneValue(detail.summaryTone)
+            summaryTone: normalizeSummaryToneValue(detail.summaryTone),
+            instanceTablesEnabled: normalizeFeatureTableToggleArray(detail.instanceTablesEnabled),
+            instanceTables: cloneFeatureTableSelectionArray(
+              normalizeFeatureTableSelectionArray(
+                detail.instanceTables,
+                hasAllTablesOption ? null : allowedTableSet
+              )
+            )
           };
         });
         const customizationPayload = getReportCustomizationPayload();
