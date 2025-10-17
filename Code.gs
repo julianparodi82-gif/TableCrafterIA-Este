@@ -40,7 +40,7 @@ function showSidebar() {
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
-  var html = template.evaluate().setTitle(sidebarTitle).setWidth(520);
+  var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
   SpreadsheetApp.getUi().showSidebar(html);
   refreshAddonMenuForTheme(themeMode);
 }
