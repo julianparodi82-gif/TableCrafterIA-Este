@@ -1,3 +1,246 @@
 <script>
-// Lógica específica de la pestaña Triggers pendiente de implementación.
+let triggerEntries = [];
+let triggerIdCounter = 0;
+
+function getTriggerFrequencyLabel(value) {
+  switch (value) {
+    case 'hourly':
+      return 'Cada hora';
+    case 'daily':
+      return 'Cada día';
+    case 'weekly':
+      return 'Cada semana';
+    default:
+      return 'Personalizado';
+  }
+}
+
+function updateTriggerEmptyState(hasItems) {
+  const empty = document.getElementById('triggerListEmpty');
+  if (!empty) {
+    return;
+  }
+  if (hasItems) {
+    empty.classList.add('ai-hidden');
+  } else {
+    empty.classList.remove('ai-hidden');
+  }
+}
+
+function renderTriggerList() {
+  const list = document.getElementById('triggerList');
+  if (!list) {
+    return;
+  }
+  list.innerHTML = '';
+  if (!Array.isArray(triggerEntries) || triggerEntries.length === 0) {
+    updateTriggerEmptyState(false);
+    return;
+  }
+  updateTriggerEmptyState(true);
+  triggerEntries.forEach(function(entry) {
+    if (!entry) {
+      return;
+    }
+    const item = document.createElement('li');
+    item.className = 'tc-card-list-item';
+    const title = document.createElement('h4');
+    title.textContent = entry.title || 'Trigger sin nombre';
+    item.appendChild(title);
+    const meta = document.createElement('div');
+    meta.className = 'tc-card-meta';
+    if (entry.frequencyLabel) {
+      const frequency = document.createElement('span');
+      frequency.className = 'tc-badge';
+      frequency.textContent = entry.frequencyLabel;
+      meta.appendChild(frequency);
+    }
+    if (entry.actionLabel) {
+      const action = document.createElement('span');
+      action.textContent = 'Acción: ' + entry.actionLabel;
+      meta.appendChild(action);
+    }
+    if (entry.startsAtLabel) {
+      const starts = document.createElement('span');
+      starts.textContent = entry.startsAtLabel;
+      meta.appendChild(starts);
+    }
+    item.appendChild(meta);
+    if (entry.notes) {
+      const notes = document.createElement('p');
+      notes.textContent = entry.notes;
+      item.appendChild(notes);
+    }
+    list.appendChild(item);
+  });
+}
+
+function populateTriggerActionSelect(actions) {
+  const select = document.getElementById('triggerActionSelect');
+  if (!select) {
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Seleccionar...';
+  select.appendChild(placeholder);
+  const list = Array.isArray(actions) ? actions.slice() : [];
+  list
+    .sort(function(a, b) {
+      const nameA = (a && a.name ? a.name : '').toLowerCase();
+      const nameB = (b && b.name ? b.name : '').toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    })
+    .forEach(function(action) {
+      if (!action || !action.id) {
+        return;
+      }
+      const option = document.createElement('option');
+      option.value = action.id;
+      const label = action.name ? action.name : 'Acción sin nombre';
+      option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+      select.appendChild(option);
+    });
+  if (previous) {
+    const exists = Array.prototype.find.call(select.options, function(option) {
+      return option && option.value === previous;
+    });
+    if (exists) {
+      select.value = previous;
+    }
+  }
+  updateTriggerFormState();
+}
+
+function updateTriggerFormState() {
+  const actionSelect = document.getElementById('triggerActionSelect');
+  const frequencySelect = document.getElementById('triggerFrequencySelect');
+  const createBtn = document.getElementById('triggerCreateBtn');
+  if (!createBtn) {
+    return;
+  }
+  const ready = !!(actionSelect && actionSelect.value && frequencySelect && frequencySelect.value);
+  createBtn.disabled = !ready;
+}
+
+function buildTriggerTitle(actionLabel, frequencyLabel) {
+  const parts = [];
+  if (frequencyLabel) {
+    parts.push(frequencyLabel);
+  }
+  if (actionLabel) {
+    parts.push(actionLabel);
+  }
+  return parts.length ? parts.join(' • ') : 'Trigger programado';
+}
+
+function handleTriggerPreview() {
+  const actionSelect = document.getElementById('triggerActionSelect');
+  const frequencySelect = document.getElementById('triggerFrequencySelect');
+  const startDateInput = document.getElementById('triggerStartDate');
+  const actionOption = actionSelect && actionSelect.options ? actionSelect.options[actionSelect.selectedIndex] : null;
+  const actionLabel = actionOption ? actionOption.textContent : '';
+  const frequencyLabel = getTriggerFrequencyLabel(frequencySelect ? frequencySelect.value : '');
+  const startDate = startDateInput && startDateInput.value ? startDateInput.value : '';
+  const lines = [];
+  if (actionLabel) {
+    lines.push('Acción: ' + actionLabel);
+  }
+  if (frequencyLabel) {
+    lines.push('Frecuencia: ' + frequencyLabel);
+  }
+  lines.push('Inicio: ' + (startDate || 'Al guardar'));
+  showMessageModal(lines.join('\n'), {
+    title: 'Vista previa del trigger',
+    variant: 'info'
+  });
+}
+
+function handleTriggerCreate() {
+  const actionSelect = document.getElementById('triggerActionSelect');
+  const frequencySelect = document.getElementById('triggerFrequencySelect');
+  const startDateInput = document.getElementById('triggerStartDate');
+  if (!actionSelect || !frequencySelect) {
+    return;
+  }
+  const actionId = actionSelect.value;
+  const frequency = frequencySelect.value;
+  if (!actionId || !frequency) {
+    showMessageModal('Selecciona una acción y una frecuencia para guardar el trigger.', {
+      title: 'Datos incompletos',
+      variant: 'warning'
+    });
+    return;
+  }
+  const actionOption = actionSelect.options[actionSelect.selectedIndex];
+  const actionLabel = actionOption ? actionOption.textContent : '';
+  const frequencyLabel = getTriggerFrequencyLabel(frequency);
+  const startDate = startDateInput && startDateInput.value ? startDateInput.value : '';
+  const entry = {
+    id: 'localTrigger:' + (++triggerIdCounter),
+    actionId: actionId,
+    actionLabel: actionLabel,
+    frequency: frequency,
+    frequencyLabel: frequencyLabel,
+    startDate: startDate,
+    startsAtLabel: startDate ? 'Inicia: ' + startDate : 'Inicia al guardar',
+    title: buildTriggerTitle(actionLabel, frequencyLabel)
+  };
+  triggerEntries.push(entry);
+  renderTriggerList();
+  showMessageModal('Trigger guardado. Puedes editarlo cuando conectemos el programador.', {
+    title: 'Trigger registrado',
+    variant: 'success'
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const actionSelect = document.getElementById('triggerActionSelect');
+  const frequencySelect = document.getElementById('triggerFrequencySelect');
+  const createBtn = document.getElementById('triggerCreateBtn');
+  const previewBtn = document.getElementById('triggerPreviewBtn');
+  const refreshBtn = document.getElementById('triggerRefreshBtn');
+
+  if (actionSelect) {
+    actionSelect.addEventListener('change', updateTriggerFormState);
+  }
+  if (frequencySelect) {
+    frequencySelect.addEventListener('change', updateTriggerFormState);
+  }
+  if (createBtn) {
+    createBtn.addEventListener('click', handleTriggerCreate);
+  }
+  if (previewBtn) {
+    previewBtn.addEventListener('click', handleTriggerPreview);
+  }
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function() {
+      renderTriggerList();
+    });
+  }
+
+  document.addEventListener('tc:savedActionsUpdated', function(event) {
+    const actions = event && event.detail && Array.isArray(event.detail.actions) ? event.detail.actions : [];
+    populateTriggerActionSelect(actions);
+  });
+
+  if (typeof getSavedActionsSnapshot === 'function') {
+    populateTriggerActionSelect(getSavedActionsSnapshot());
+  }
+  if (typeof ensureSavedActionsCache === 'function') {
+    ensureSavedActionsCache().catch(function() {
+      populateTriggerActionSelect([]);
+    });
+  }
+  updateTriggerFormState();
+  renderTriggerList();
+});
 </script>

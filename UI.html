@@ -142,55 +142,6 @@
       .tab-content.active {
         display: block;
       }
-      .tc-tooltip-target {
-        position: relative;
-        cursor: inherit;
-      }
-      .tc-tooltip-target[data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        transform: translate(-50%, 4px);
-        background: var(--tc-tooltip-bg);
-        color: #F9FAFB;
-        padding: 8px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.35;
-        max-width: 240px;
-        text-align: left;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-        z-index: 16;
-        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
-        white-space: normal;
-      }
-      .tc-tooltip-target[data-tooltip]::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 3px);
-        transform: translateX(-50%);
-        border-width: 6px;
-        border-style: solid;
-        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-        z-index: 16;
-      }
-      .tc-tooltip-target[data-tooltip]:hover::after,
-      .tc-tooltip-target[data-tooltip]:hover::before,
-      .tc-tooltip-target[data-tooltip]:focus::after,
-      .tc-tooltip-target[data-tooltip]:focus::before,
-      .tc-tooltip-target[data-tooltip]:focus-visible::after,
-      .tc-tooltip-target[data-tooltip]:focus-visible::before {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
       .tab-btn .favorite-icon {
         color: #FBBF24;
         font-size: 16px;
@@ -204,6 +155,178 @@
       .section:last-child {
         border-bottom: none;
         margin-bottom: 0;
+      }
+      .tc-card {
+        background: var(--tc-surface);
+        border: 1px solid var(--tc-border);
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 16px 32px rgba(11, 108, 249, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .tc-card + .tc-card {
+        margin-top: 18px;
+      }
+      .tc-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .tc-card-title {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .tc-card-heading {
+        margin: 0;
+        font-size: 18px;
+        color: var(--tc-text);
+      }
+      .tc-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--tc-primary-light);
+        color: var(--tc-primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+      .tc-card-subtitle {
+        margin: 4px 0 0;
+        color: var(--tc-muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .tc-card-empty {
+        padding: 18px;
+        border: 1px dashed var(--tc-border-strong);
+        border-radius: 12px;
+        color: var(--tc-muted);
+        text-align: center;
+        font-size: 13px;
+        background: var(--tc-surface-alt);
+      }
+      .tc-card-muted {
+        background: var(--tc-surface-alt);
+        border: 1px dashed var(--tc-border);
+        border-radius: 12px;
+        padding: 18px;
+        color: var(--tc-muted);
+      }
+      .tc-card-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tc-card-list-item {
+        border: 1px solid var(--tc-border);
+        border-radius: 12px;
+        padding: 16px;
+        background: #FFFFFF;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .tc-card-list-item h4 {
+        margin: 0;
+        font-size: 15px;
+        color: var(--tc-text);
+      }
+      .tc-card-list-item p {
+        margin: 0;
+        color: var(--tc-muted);
+        font-size: 13px;
+      }
+      .tc-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .tc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        background: var(--tc-primary-light);
+        color: var(--tc-primary);
+      }
+      .tc-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .tc-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+      .tc-form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tc-form-field select,
+      .tc-form-field input,
+      .tc-form-field textarea {
+        width: 100%;
+      }
+      .tc-field-note {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .tc-template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+      .tc-template-card {
+        border: 1px solid var(--tc-border);
+        border-radius: 12px;
+        padding: 16px;
+        background: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        cursor: pointer;
+      }
+      .tc-template-card:hover,
+      .tc-template-card.active {
+        box-shadow: var(--tc-shadow-soft);
+        transform: translateY(-2px);
+        border-color: var(--tc-primary);
+      }
+      .tc-template-card h4 {
+        margin: 0;
+        font-size: 15px;
+        color: var(--tc-text);
+      }
+      .tc-template-card p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .tc-template-details {
+        min-height: 120px;
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre-line;
       }
       label {
         display: block;
@@ -559,60 +682,6 @@
       .ai-feature-chip-label {
         flex: 1 1 auto;
       }
-      .ai-feature-chip-label[data-tooltip] {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        cursor: help;
-      }
-      .ai-feature-chip-label[data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        transform: translateX(-50%);
-        background-color: var(--tc-tooltip-bg);
-        color: #F8FAFC;
-        padding: 8px 10px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1.3;
-        max-width: 240px;
-        text-align: center;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-        z-index: 12;
-        box-shadow: 0 12px 24px rgba(8, 76, 186, 0.18);
-        white-space: normal;
-      }
-      .ai-feature-chip-label[data-tooltip]::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 4px);
-        transform: translateX(-50%);
-        border-width: 6px;
-        border-style: solid;
-        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-        z-index: 12;
-      }
-      .ai-feature-chip-label[data-tooltip]:hover::after,
-      .ai-feature-chip-label[data-tooltip]:hover::before,
-      .ai-feature-chip-label[data-tooltip]:focus::after,
-      .ai-feature-chip-label[data-tooltip]:focus::before,
-      .ai-feature-chip-label[data-tooltip]:focus-visible::after,
-      .ai-feature-chip-label[data-tooltip]:focus-visible::before {
-        opacity: 1;
-      }
-      .ai-feature-chip-label[data-tooltip]:focus-visible {
-        outline: 2px solid var(--tc-primary);
-        outline-offset: 2px;
-      }
       .ai-optional-comment textarea {
         width: 100%;
       }
@@ -859,48 +928,6 @@
         color: var(--tc-text);
         box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
       }
-      .ai-feature-chart-select[data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 6px);
-        transform: translateX(-50%);
-        background: var(--tc-tooltip-bg);
-        color: #F8FAFC;
-        padding: 8px 10px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.3;
-        text-align: center;
-        max-width: 220px;
-        pointer-events: none;
-        opacity: 0;
-        box-shadow: 0 12px 24px rgba(8, 76, 186, 0.18);
-        transition: opacity 0.15s ease, transform 0.15s ease;
-        white-space: normal;
-        z-index: 12;
-      }
-      .ai-feature-chart-select[data-tooltip]::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 2px);
-        transform: translateX(-50%);
-        border-width: 6px;
-        border-style: solid;
-        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-        z-index: 12;
-      }
-      .ai-feature-chart-select[data-tooltip]:hover::after,
-      .ai-feature-chart-select[data-tooltip]:hover::before,
-      .ai-feature-chart-select[data-tooltip]:focus-within::after,
-      .ai-feature-chart-select[data-tooltip]:focus-within::before {
-        opacity: 1;
-      }
       .ai-report-customization {
         margin-top: 16px;
       }
@@ -1038,39 +1065,6 @@
           align-self: flex-start;
         }
       }
-      .ai-actions-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-      .ai-actions-icon {
-        font-size: 24px;
-        color: #F59E0B;
-      }
-      .ai-actions-title {
-        margin: 0;
-        font-size: 18px;
-      }
-      .ai-actions-description {
-        margin: 4px 0 0;
-        color: #4B5563;
-        font-size: 13px;
-      }
-      .ai-actions-select-row {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-      .ai-actions-select-row label {
-        font-weight: 600;
-      }
-      .ai-actions-selectors {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
       .ai-actions-dropdown {
         flex: 1 1 auto;
         min-height: 38px;
@@ -1110,11 +1104,6 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-      }
-      .ai-action-empty {
-        color: #6B7280;
-        font-size: 13px;
-        margin-top: 4px;
       }
       .ai-action-highlight {
         font-weight: 600;
@@ -2011,24 +2000,24 @@
           </div>
           <div id="aiReportSection" class="ai-action-section">
             <label
-              class="ai-report-description-toggle js-comment-hint-trigger tc-tooltip-target"
-              data-tooltip="Activa la descripción para contextualizar el reporte. Ejemplo: 'Resultados del Q2 para dirección comercial'."
+              class="ai-report-description-toggle js-comment-hint-trigger"
+              
             >
               <input type="checkbox" id="aiReportDescriptionToggle" /> Agregar descripción del reporte
             </label>
             <div class="ai-optional-comment ai-hidden js-comment-hint-field">
               <textarea
                 id="aiReportDescription"
-                class="ai-report-description-field ai-hidden tc-tooltip-target"
-                data-tooltip="Escribe un contexto breve que ayude a la IA a presentar correctamente la información."
+                class="ai-report-description-field ai-hidden"
+                
                 placeholder="Describe el objetivo o contenido del reporte"
               ></textarea>
             </div>
             <div class="ai-report-filename-group">
               <label
                 for="aiReportFileName"
-                class="tc-tooltip-target"
-                data-tooltip="Determina cómo se guardará el archivo final. Ejemplo: 'Reporte_financiero_Q3'."
+               
+                
               >
                 Nombre del archivo
               </label>
@@ -2037,9 +2026,9 @@
               </div>
               <p id="aiReportFilePreview" class="ai-report-file-preview" data-empty="true"></p>
               <label
-                class="ai-report-date-toggle tc-tooltip-target"
+                class="ai-report-date-toggle"
                 for="aiReportFileDateToggle"
-                data-tooltip="Añade automáticamente la fecha actual para identificar versiones. Ejemplo: 'Reporte_financiero_Q3_2024-06-30'."
+                
               >
                 <input type="checkbox" id="aiReportFileDateToggle" /> Agregar fecha al nombre
               </label>
@@ -2069,33 +2058,33 @@
                   Selecciona un formato de salida para exportar tus reportes a los canales disponibles.
                 </p>
                 <p
-                  class="ai-report-helper tc-tooltip-target"
-                  data-tooltip="Selecciona el formato final según cómo compartirás el reporte. Ejemplo: PDF para dirección, Sheets para trabajo colaborativo."
+                  class="ai-report-helper"
+                  
                 >
                   Elige el formato en el que deseas generar el reporte.
                 </p>
                 <div class="ai-report-options">
                   <button
                     type="button"
-                    class="ai-report-btn tc-tooltip-target"
+                    class="ai-report-btn"
                     data-format="pdf"
-                    data-tooltip="Genera un PDF listo para enviar o imprimir. Ejemplo: reporte ejecutivo final."
+                    
                   >
                     PDF
                   </button>
                   <button
                     type="button"
-                    class="ai-report-btn tc-tooltip-target"
+                    class="ai-report-btn"
                     data-format="excel"
-                    data-tooltip="Exporta a Excel para trabajar con fórmulas o ediciones adicionales."
+                    
                   >
                     Excel
                   </button>
                   <button
                     type="button"
-                    class="ai-report-btn tc-tooltip-target"
+                    class="ai-report-btn"
                     data-format="sheets"
-                    data-tooltip="Crea una copia en Google Sheets para colaborar en línea con tu equipo."
+                    
                   >
                     Google Sheets
                   </button>
@@ -2127,9 +2116,9 @@
               </div>
               <div class="ai-collapsible-body" id="aiReportFeaturesBody">
                 <p
-                  class="ai-report-helper tc-tooltip-target"
+                  class="ai-report-helper"
                   style="margin-top:0;"
-                  data-tooltip="Activa cada bloque para construir un reporte completo. Ejemplo: combina una tabla resumida con un gráfico comparativo."
+                  
                 >
                   Selecciona los componentes que debe incluir tu reporte final.
                 </p>
@@ -2144,8 +2133,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="chart">
                         <label
                           for="aiFeatureQuantity-chart"
-                          class="tc-tooltip-target"
-                          data-tooltip="Indica cuántos gráficos incluir. Ejemplo: 2 para comparar evolución anual y distribución actual."
+                         
+                          
                         >
                           Cantidad
                         </label>
@@ -2169,8 +2158,8 @@
                           <div class="ai-feature-chart-title">
                             <label
                               for="aiFeatureChartTitle-chart-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Asigna un título descriptivo que aparecerá en el reporte. Ejemplo: 'Ventas mensuales 2024'."
+                             
+                              
                             >
                               Título del gráfico (opcional)
                             </label>
@@ -2185,8 +2174,8 @@
                           <div class="ai-feature-chart-select">
                             <label
                               for="aiFeatureChartType-chart-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Elige el diseño visual ideal. Ejemplo: barras para comparar equipos, líneas para mostrar tendencias."
+                             
+                              
                             >
                               Tipo de gráfico
                             </label>
@@ -2205,8 +2194,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-chart-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Detalla lo que debe mostrar el gráfico. Ejemplo: 'Comparar ventas reales vs objetivo por mes'."
+                           
+                            
                           >
                             Descripción 1
                           </label>
@@ -2225,8 +2214,8 @@
                           <div class="ai-feature-chart-title">
                             <label
                               for="aiFeatureChartTitle-chart-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Define el título que verá tu audiencia. Ejemplo: 'Participación por canal 2024'."
+                             
+                              
                             >
                               Título del gráfico (opcional)
                             </label>
@@ -2241,8 +2230,8 @@
                           <div class="ai-feature-chart-select">
                             <label
                               for="aiFeatureChartType-chart-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Selecciona el formato que mejor explique este segundo gráfico."
+                             
+                              
                             >
                               Tipo de gráfico
                             </label>
@@ -2261,8 +2250,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-chart-2"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe qué debe mostrar el segundo gráfico. Ejemplo: 'Distribución del presupuesto por canal'."
+                           
+                            
                           >
                             Descripción 2
                           </label>
@@ -2281,8 +2270,8 @@
                           <div class="ai-feature-chart-title">
                             <label
                               for="aiFeatureChartTitle-chart-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Utiliza un título que resuma el objetivo del gráfico. Ejemplo: 'Comparativo anual proyectado'."
+                             
+                              
                             >
                               Título del gráfico (opcional)
                             </label>
@@ -2297,8 +2286,8 @@
                           <div class="ai-feature-chart-select">
                             <label
                               for="aiFeatureChartType-chart-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Selecciona el diseño que aporte claridad a este tercer gráfico."
+                             
+                              
                             >
                               Tipo de gráfico
                             </label>
@@ -2317,8 +2306,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-chart-3"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe un tercer gráfico opcional. Ejemplo: 'Evolución acumulada de ingresos'."
+                           
+                            
                           >
                             Descripción 3
                           </label>
@@ -2342,8 +2331,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="table">
                         <label
                           for="aiFeatureQuantity-table"
-                          class="tc-tooltip-target"
-                          data-tooltip="Define cuántas tablas deseas generar. Ejemplo: 1 para resumen principal y 2 para detalle por región."
+                         
+                          
                         >
                           Cantidad
                         </label>
@@ -2367,8 +2356,8 @@
                           <div class="ai-feature-table-title">
                             <label
                               for="aiFeatureTableTitle-table-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Personaliza el encabezado de la tabla. Ejemplo: 'Ventas por país'."
+                             
+                              
                             >
                               Título de la tabla (opcional)
                             </label>
@@ -2382,8 +2371,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-table-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe el contenido de la tabla. Ejemplo: 'Ventas trimestrales con columnas de objetivo y variación'."
+                           
+                            
                           >
                             Descripción 1
                           </label>
@@ -2402,8 +2391,8 @@
                           <div class="ai-feature-table-title">
                             <label
                               for="aiFeatureTableTitle-table-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Asigna un título para la segunda tabla. Ejemplo: 'Top 10 clientes por facturación'."
+                             
+                              
                             >
                               Título de la tabla (opcional)
                             </label>
@@ -2417,8 +2406,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-table-2"
-                            class="tc-tooltip-target"
-                            data-tooltip="Detalla qué debe contener la segunda tabla."
+                           
+                            
                           >
                             Descripción 2
                           </label>
@@ -2437,8 +2426,8 @@
                           <div class="ai-feature-table-title">
                             <label
                               for="aiFeatureTableTitle-table-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Título sugerido para una tercera tabla opcional."
+                             
+                              
                             >
                               Título de la tabla (opcional)
                             </label>
@@ -2452,8 +2441,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-table-3"
-                            class="tc-tooltip-target"
-                            data-tooltip="Explica qué información debe mostrar la tercera tabla."
+                           
+                            
                           >
                             Descripción 3
                           </label>
@@ -2477,8 +2466,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="list">
                         <label
                           for="aiFeatureQuantity-list"
-                          class="tc-tooltip-target"
-                          data-tooltip="Indica cuántas listas distintas generar. Ejemplo: 3 para prioridades, riesgos y próximos pasos."
+                         
+                          
                         >
                           Cantidad
                         </label>
@@ -2502,8 +2491,8 @@
                           <div class="ai-feature-list-title">
                             <label
                               for="aiFeatureListTitle-list-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Nombrá la lista para clarificar su propósito. Ejemplo: 'Prioridades clave'."
+                             
+                              
                             >
                               Título de la lista (opcional)
                             </label>
@@ -2523,8 +2512,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListOrder-1"
-                                class="tc-tooltip-target"
-                                data-tooltip="Define cómo se ordenarán los ítems. Ejemplo: 'Prioridad personalizada' para ordenar según impacto."
+                               
+                                
                               >
                                 Orden
                               </label>
@@ -2543,8 +2532,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListEnumerate-1"
-                                class="tc-tooltip-target"
-                                data-tooltip="Selecciona si deseas numerar la lista o dejarla con viñetas."
+                               
+                                
                               >
                                 Enumerar elementos
                               </label>
@@ -2560,8 +2549,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListStyle-1"
-                                class="tc-tooltip-target"
-                                data-tooltip="Define el estilo visual. Ejemplo: 'Tildes' para resaltar logros o 'Números' para pasos secuenciales."
+                               
+                                
                               >
                                 Formato de lista
                               </label>
@@ -2582,8 +2571,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-list-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe qué elementos debe listar la IA. Ejemplo: 'Prioridades estratégicas con responsables'."
+                           
+                            
                           >
                             Descripción 1
                           </label>
@@ -2602,8 +2591,8 @@
                           <div class="ai-feature-list-title">
                             <label
                               for="aiFeatureListTitle-list-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Define un título breve para la segunda lista. Ejemplo: 'Riesgos a monitorear'."
+                             
+                              
                             >
                               Título de la lista (opcional)
                             </label>
@@ -2623,8 +2612,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListOrder-2"
-                                class="tc-tooltip-target"
-                                data-tooltip="Elige el orden que mejor comunique esta lista secundaria."
+                               
+                                
                               >
                                 Orden
                               </label>
@@ -2643,8 +2632,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListEnumerate-2"
-                                class="tc-tooltip-target"
-                                data-tooltip="Decide si esta lista debe numerarse para destacar la secuencia."
+                               
+                                
                               >
                                 Enumerar elementos
                               </label>
@@ -2660,8 +2649,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListStyle-2"
-                                class="tc-tooltip-target"
-                                data-tooltip="Selecciona el estilo visual más claro para esta lista."
+                               
+                                
                               >
                                 Formato de lista
                               </label>
@@ -2682,8 +2671,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-list-2"
-                            class="tc-tooltip-target"
-                            data-tooltip="Indica el contenido de la segunda lista. Ejemplo: 'Riesgos críticos con mitigaciones sugeridas'."
+                           
+                            
                           >
                             Descripción 2
                           </label>
@@ -2702,8 +2691,8 @@
                           <div class="ai-feature-list-title">
                             <label
                               for="aiFeatureListTitle-list-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Etiqueta la tercera lista para facilitar su lectura. Ejemplo: 'Acciones recomendadas'."
+                             
+                              
                             >
                               Título de la lista (opcional)
                             </label>
@@ -2723,8 +2712,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListOrder-3"
-                                class="tc-tooltip-target"
-                                data-tooltip="Organiza esta lista según la prioridad o criterio que prefieras resaltar."
+                               
+                                
                               >
                                 Orden
                               </label>
@@ -2743,8 +2732,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListEnumerate-3"
-                                class="tc-tooltip-target"
-                                data-tooltip="Decide si los elementos deben numerarse para reforzar el orden."
+                               
+                                
                               >
                                 Enumerar elementos
                               </label>
@@ -2760,8 +2749,8 @@
                             <div class="ai-list-control">
                               <label
                                 for="aiFeatureListStyle-3"
-                                class="tc-tooltip-target"
-                                data-tooltip="Elige el estilo visual más conveniente para este tercer listado."
+                               
+                                
                               >
                                 Formato de lista
                               </label>
@@ -2782,8 +2771,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-list-3"
-                            class="tc-tooltip-target"
-                            data-tooltip="Explica qué debe incluir la tercera lista opcional."
+                           
+                            
                           >
                             Descripción 3
                           </label>
@@ -2807,8 +2796,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="summary">
                         <label
                           for="aiFeatureQuantity-summary"
-                          class="tc-tooltip-target"
-                          data-tooltip="Define cuántos resúmenes necesitas. Normalmente 1 es suficiente para cerrar el reporte."
+                         
+                          
                         >
                           Cantidad
                         </label>
@@ -2831,8 +2820,8 @@
                         >
                           <label
                             for="aiFeatureInstance-summary-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe qué puntos debe sintetizar la IA. Ejemplo: 'Resultados generales y decisiones inmediatas'."
+                           
+                            
                           >
                             Descripción del resumen
                           </label>
@@ -2856,8 +2845,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="comments">
                         <label
                           for="aiFeatureQuantity-comments"
-                          class="tc-tooltip-target"
-                          data-tooltip="Indica si quieres uno o varios bloques de comentarios personalizados."
+                         
+                          
                         >
                           Cantidad
                         </label>
@@ -2881,8 +2870,8 @@
                           <div class="ai-feature-comment-focus">
                             <label
                               for="aiFeatureCommentFocus-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Selecciona el ángulo principal de los comentarios. Ejemplo: 'Acciones recomendadas' para planes concretos."
+                             
+                              
                             >
                               Enfoque de los comentarios
                             </label>
@@ -2900,8 +2889,8 @@
                           </div>
                           <label
                             for="aiFeatureInstance-comments-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Explica qué comentarios esperas. Ejemplo: 'Sugerir próximos pasos para marketing y ventas'."
+                           
+                            
                           >
                             Descripción de comentarios
                           </label>
@@ -2944,9 +2933,9 @@
               </div>
               <div class="ai-collapsible-body" id="aiReportCustomizationBody">
                 <p
-                  class="ai-report-helper tc-tooltip-target"
+                  class="ai-report-helper"
                   style="margin-top:0;"
-                  data-tooltip="Personaliza idioma, tono y notas generales para que la IA redacte con el contexto adecuado. Ejemplo: tono ejecutivo y notas para clientes."
+                  
                 >
                   Ajusta cómo debe redactar la IA el reporte final según el público y las prioridades estratégicas.
                 </p>
@@ -2956,16 +2945,16 @@
                       <label class="ai-feature-chip ai-custom-header-label">
                         <input type="checkbox" data-custom-option="outputLanguage" />
                         <span
-                          class="ai-feature-chip-label tc-tooltip-target"
-                          data-tooltip="Activa esta opción cuando necesites que todo el reporte se genere en un idioma específico."
+                          class="ai-feature-chip-label"
+                          
                         >
                           Idioma de salida
                         </span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
                       <p
-                        class="ai-custom-intro tc-tooltip-target"
-                        data-tooltip="Útil para reportes bilingües o cuando compartes resultados con audiencias internacionales."
+                        class="ai-custom-intro"
+                        
                       >
                         Indica el idioma final del reporte para mantener la comunicación alineada a tu audiencia.
                       </p>
@@ -2982,8 +2971,8 @@
                     <div class="ai-custom-extra ai-hidden" data-option-extra="outputLanguage">
                       <div class="ai-custom-fields">
                         <div
-                          class="ai-custom-field tc-tooltip-target"
-                          data-tooltip="Selecciona el idioma exacto en el que deseas recibir el reporte final."
+                          class="ai-custom-field"
+                          
                         >
                           <label for="aiReportOutputLanguage">Idioma del reporte generado</label>
                           <select id="aiReportOutputLanguage" data-custom-select="outputLanguage">
@@ -2995,8 +2984,8 @@
                           </select>
                         </div>
                         <p
-                          class="ai-custom-helper tc-tooltip-target"
-                          data-tooltip="Ejemplo: genera el reporte en inglés para presentarlo a la casa matriz, aun si los datos están en español."
+                          class="ai-custom-helper"
+                          
                         >
                           La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
                         </p>
@@ -3008,16 +2997,16 @@
                       <label class="ai-feature-chip ai-custom-header-label">
                         <input type="checkbox" data-custom-option="tone" />
                         <span
-                          class="ai-feature-chip-label tc-tooltip-target"
-                          data-tooltip="Personaliza la voz del reporte según la audiencia que lo recibirá."
+                          class="ai-feature-chip-label"
+                          
                         >
                           Tono del reporte
                         </span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
                       <p
-                        class="ai-custom-intro tc-tooltip-target"
-                        data-tooltip="Elige un tono ejecutivo para presentaciones directivas o uno cercano para equipos operativos."
+                        class="ai-custom-intro"
+                        
                       >
                         Ajusta la voz narrativa con la que se presentarán resultados, hallazgos y llamados a la acción.
                       </p>
@@ -3034,8 +3023,8 @@
                     <div class="ai-custom-extra ai-hidden" data-option-extra="tone">
                       <div class="ai-custom-fields">
                         <div
-                          class="ai-custom-field tc-tooltip-target"
-                          data-tooltip="Escoge el tono que refleje mejor la cultura del equipo o la formalidad del documento."
+                          class="ai-custom-field"
+                          
                         >
                           <label for="aiReportTone">Estilo de comunicación</label>
                           <select id="aiReportTone" data-custom-select="tone">
@@ -3046,8 +3035,8 @@
                           </select>
                         </div>
                         <p
-                          class="ai-custom-helper tc-tooltip-target"
-                          data-tooltip="Ejemplo: usa 'Resumen ejecutivo' cuando el reporte se entregará a gerentes con poco tiempo disponible."
+                          class="ai-custom-helper"
+                          
                         >
                           Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el reporte.
                         </p>
@@ -3059,16 +3048,16 @@
                       <label class="ai-feature-chip ai-custom-header-label">
                         <input type="checkbox" data-custom-option="overview" />
                         <span
-                          class="ai-feature-chip-label tc-tooltip-target"
-                          data-tooltip="Añade indicaciones generales que deben aplicarse a todo el reporte."
+                          class="ai-feature-chip-label"
+                          
                         >
                           Contexto general
                         </span>
                         <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
                       </label>
                       <p
-                        class="ai-custom-intro tc-tooltip-target"
-                        data-tooltip="Resume prioridades, público objetivo o mensajes clave que quieras remarcar en todas las secciones."
+                        class="ai-custom-intro"
+                        
                       >
                         Define instrucciones básicas que guiarán la narrativa completa del reporte generado por la IA.
                       </p>
@@ -3085,8 +3074,8 @@
                     <div class="ai-custom-extra ai-hidden" data-option-extra="overview">
                       <div class="ai-custom-fields">
                         <div
-                          class="ai-custom-field tc-tooltip-target"
-                          data-tooltip="Escribe notas breves que aclaren el enfoque global del reporte."
+                          class="ai-custom-field"
+                          
                         >
                           <label for="aiReportOverview">Guía general del reporte</label>
                           <textarea
@@ -3096,8 +3085,8 @@
                           ></textarea>
                         </div>
                         <p
-                          class="ai-custom-helper tc-tooltip-target"
-                          data-tooltip="Ideal para recordar mensajes clave como: 'orientar el reporte a clientes externos' o 'resaltar impacto regional'."
+                          class="ai-custom-helper"
+                          
                         >
                           Usa este espacio para aclarar mensajes transversales que deban repetirse o mantenerse visibles en todas las secciones.
                         </p>
@@ -3110,9 +3099,9 @@
             <div id="aiReportDeliverySection" class="ai-report-delivery ai-hidden">
               <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
               <p
-                class="ai-report-helper tc-tooltip-target"
+                class="ai-report-helper"
                 style="margin-top:0;"
-                data-tooltip="Determina cómo compartirás el archivo generado. Ejemplo: descargar para archivarlo y enviarlo por email al equipo."
+                
               >
                 Selecciona uno o varios canales para distribuir el reporte.
               </p>
@@ -3254,36 +3243,110 @@
       </div>
       <div id="triggersTab" class="tab-content">
         <div class="section">
-          <p>Administra y programa los triggers asociados a TableCrafter.</p>
+          <div class="tc-card">
+            <div class="tc-card-header">
+              <div class="tc-card-title">
+                <span class="tc-card-icon" aria-hidden="true">⏱</span>
+                <div>
+                  <h3 class="tc-card-heading">Programaciones activas</h3>
+                  <p class="tc-card-subtitle">Consulta las ejecuciones automáticas disponibles.</p>
+                </div>
+              </div>
+              <button type="button" id="triggerRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
+            <div id="triggerListEmpty" class="tc-card-empty">No hay triggers configurados todavía.</div>
+            <ul id="triggerList" class="tc-card-list" aria-live="polite"></ul>
+          </div>
+          <div class="tc-card">
+            <h3 class="tc-card-heading">Nuevo trigger</h3>
+            <p class="tc-card-subtitle">Define la frecuencia y la acción que quieres automatizar.</p>
+            <div class="tc-form-grid">
+              <div class="tc-form-field">
+                <label for="triggerActionSelect">Acción a ejecutar</label>
+                <select id="triggerActionSelect">
+                  <option value="">Seleccionar...</option>
+                </select>
+                <p class="tc-field-note">Se mostrarán las tablas y reportes favoritos disponibles.</p>
+              </div>
+              <div class="tc-form-field">
+                <label for="triggerFrequencySelect">Frecuencia</label>
+                <select id="triggerFrequencySelect">
+                  <option value="">Seleccionar frecuencia</option>
+                  <option value="hourly">Cada hora</option>
+                  <option value="daily">Cada día</option>
+                  <option value="weekly">Cada semana</option>
+                </select>
+                <p class="tc-field-note">Elige el intervalo que mejor acompañe tu flujo de trabajo.</p>
+              </div>
+            </div>
+            <div class="tc-form-field">
+              <label for="triggerStartDate">Fecha de inicio</label>
+              <input type="date" id="triggerStartDate" />
+            </div>
+            <div class="tc-card-actions">
+              <button type="button" id="triggerPreviewBtn" class="btn-secondary">Vista previa</button>
+              <button type="button" id="triggerCreateBtn" class="btn-primary">Guardar trigger</button>
+            </div>
+          </div>
         </div>
       </div>
       <div id="templatesTab" class="tab-content">
         <div class="section">
-          <p>Revisa tus plantillas favoritas para reutilizarlas rápidamente.</p>
+          <div class="tc-card">
+            <div class="tc-card-header">
+              <div class="tc-card-title">
+                <span class="tc-card-icon" aria-hidden="true">📁</span>
+                <div>
+                  <h3 class="tc-card-heading">Biblioteca de plantillas</h3>
+                  <p class="tc-card-subtitle">Guarda estructuras listas para reutilizar en nuevos reportes.</p>
+                </div>
+              </div>
+              <button type="button" id="templateRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
+            <div id="templateGridEmpty" class="tc-card-empty">Aún no guardaste plantillas.</div>
+            <div id="templateGrid" class="tc-template-grid" role="list"></div>
+          </div>
+          <div class="tc-card">
+            <h3 class="tc-card-heading">Detalles de la plantilla</h3>
+            <p class="tc-card-subtitle">Selecciona una plantilla para revisar su contenido.</p>
+            <div id="templateDetails" class="tc-template-details tc-card-muted" aria-live="polite">
+              Selecciona una plantilla para ver más información.
+            </div>
+            <div class="tc-card-actions">
+              <button type="button" id="templateDuplicateBtn" class="btn-secondary" disabled>Duplicar</button>
+              <button type="button" id="templateApplyBtn" class="btn-primary" disabled>Usar plantilla</button>
+            </div>
+          </div>
         </div>
       </div>
       <div id="actionsTab" class="tab-content">
         <div class="section">
-          <div class="ai-actions-header">
-            <span class="ai-actions-icon" aria-hidden="true">★</span>
-            <div>
-              <h3 class="ai-actions-title">Acciones guardadas</h3>
-              <p class="ai-actions-description">
-                Selecciona y gestiona los reportes, tablas y consultas que hayas marcado como favoritas.
-              </p>
+          <div class="tc-card">
+            <div class="tc-card-header">
+              <div class="tc-card-title">
+                <span class="tc-card-icon" aria-hidden="true">★</span>
+                <div>
+                  <h3 class="tc-card-heading">Acciones guardadas</h3>
+                  <p class="tc-card-subtitle">
+                    Selecciona y gestiona los reportes, tablas y consultas que guardaste como favoritas.
+                  </p>
+                </div>
+              </div>
+              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
-          </div>
-          <div class="ai-actions-select-row">
-            <label for="aiSavedActions">Lista de acciones</label>
-            <div class="ai-actions-selectors">
+            <div class="tc-form-field">
+              <label for="aiSavedActions">Lista de acciones</label>
               <select id="aiSavedActions" class="ai-actions-dropdown">
                 <option value="">Seleccionar...</option>
               </select>
-              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
+            <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay acciones guardadas todavía.</div>
           </div>
-          <div id="aiActionsEmptyMessage" class="ai-action-empty">No hay acciones guardadas todavía.</div>
-          <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite"></div>
+          <div class="tc-card">
+            <h3 class="tc-card-heading">Detalle seleccionado</h3>
+            <p class="tc-card-subtitle">Revisa la información asociada y vuelve a editarla cuando quieras.</p>
+            <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -3328,58 +3391,9 @@
     <?!= include('UI_Script_Edit'); ?>
     <?!= include('UI_Script_Create'); ?>
     <?!= include('UI_Script_AI'); ?>
+    <?!= include('UI_Script_Actions'); ?>
     <?!= include('UI_Script_Triggers'); ?>
     <?!= include('UI_Script_Templates'); ?>
-    <?!= include('UI_Script_Actions'); ?>
 
   </body>
 </html>
-      .tc-tooltip-target {
-        position: relative;
-        cursor: inherit;
-      }
-      .tc-tooltip-target[data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        transform: translate(-50%, 4px);
-        background: var(--tc-tooltip-bg);
-        color: #F9FAFB;
-        padding: 8px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.35;
-        max-width: 240px;
-        text-align: left;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-        z-index: 16;
-        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
-        white-space: normal;
-      }
-      .tc-tooltip-target[data-tooltip]::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 3px);
-        transform: translateX(-50%);
-        border-width: 6px;
-        border-style: solid;
-        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-        z-index: 16;
-      }
-      .tc-tooltip-target[data-tooltip]:hover::after,
-      .tc-tooltip-target[data-tooltip]:hover::before,
-      .tc-tooltip-target[data-tooltip]:focus::after,
-      .tc-tooltip-target[data-tooltip]:focus::before,
-      .tc-tooltip-target[data-tooltip]:focus-visible::after,
-      .tc-tooltip-target[data-tooltip]:focus-visible::before {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
