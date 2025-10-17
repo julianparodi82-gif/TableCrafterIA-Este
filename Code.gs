@@ -233,6 +233,7 @@ var REPORT_LIST_ENUM_STYLE_ALLOWED = {
   letters: true,
   roman: true
 };
+var REPORT_FEATURE_SEQUENCE = ['chart', 'table', 'list', 'summary'];
 var REPORT_OUTPUT_LANGUAGE_DEFAULT = 'auto';
 var REPORT_OUTPUT_LANGUAGE_ALLOWED = {
   auto: true,
@@ -1027,6 +1028,8 @@ function buildReportFavoriteResponse(entry) {
     });
     detailMap[featureId] = true;
   });
+  var quantityMap = buildFeatureQuantityMap(normalizedDetails);
+  var normalizedOrder = normalizeFeatureOrderEntries(config.featureOrder, quantityMap);
   return {
     id: normalizeMetaId(data[META_INDEX.id]),
     type: 'reportFavorite',
@@ -1044,6 +1047,7 @@ function buildReportFavoriteResponse(entry) {
     descriptionText: config.description || '',
     features: features,
     featureDetails: normalizedDetails,
+    featureOrder: normalizedOrder,
     emails: Array.isArray(config.emails) ? config.emails : [],
     phones: Array.isArray(config.phones) ? config.phones : [],
     customization: normalizeReportCustomization(config.customization)
@@ -2349,6 +2353,99 @@ function normalizeFeatureTableSelectionArray(source, allowedSet) {
   return base;
 }
 
+function buildFeatureQuantityMap(details) {
+  var map = {};
+  if (!Array.isArray(details)) {
+    return map;
+  }
+  details.forEach(function(detail) {
+    if (!detail) {
+      return;
+    }
+    var featureId = normalizeMetaId(detail.feature);
+    if (!featureId) {
+      return;
+    }
+    map[featureId] = clampReportFeatureQuantityValue(featureId, detail.quantity);
+  });
+  return map;
+}
+
+function buildActiveFeatureInstanceKeysFromMap(quantityMap) {
+  var keys = [];
+  if (!quantityMap) {
+    return keys;
+  }
+  REPORT_FEATURE_SEQUENCE.forEach(function(featureId) {
+    if (!featureId || !Object.prototype.hasOwnProperty.call(quantityMap, featureId)) {
+      return;
+    }
+    var quantity = clampReportFeatureQuantityValue(featureId, quantityMap[featureId]);
+    for (var idx = 0; idx < quantity; idx++) {
+      keys.push(featureId + ':' + idx);
+    }
+  });
+  return keys;
+}
+
+function parseFeatureOrderEntry(entry) {
+  if (entry === null || entry === undefined) {
+    return null;
+  }
+  if (typeof entry === 'string') {
+    var parts = String(entry).split(':');
+    if (parts.length !== 2) {
+      return null;
+    }
+    var feature = normalizeMetaId(parts[0]);
+    var index = parseInt(parts[1], 10);
+    if (!feature || isNaN(index) || index < 0 || index >= REPORT_FEATURE_MAX_QUANTITY) {
+      return null;
+    }
+    return { feature: feature, index: index };
+  }
+  var featureId = normalizeMetaId(entry.feature);
+  if (!featureId) {
+    return null;
+  }
+  var parsedIndex = parseInt(entry.index, 10);
+  if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= REPORT_FEATURE_MAX_QUANTITY) {
+    return null;
+  }
+  return { feature: featureId, index: parsedIndex };
+}
+
+function normalizeFeatureOrderEntries(source, quantityMap) {
+  var activeKeys = buildActiveFeatureInstanceKeysFromMap(quantityMap);
+  var activeSet = activeKeys.reduce(function(map, key) {
+    map[key] = true;
+    return map;
+  }, {});
+  var normalizedKeys = [];
+  if (Array.isArray(source)) {
+    source.forEach(function(entry) {
+      var parsed = parseFeatureOrderEntry(entry);
+      if (!parsed) {
+        return;
+      }
+      var key = parsed.feature + ':' + parsed.index;
+      if (!activeSet[key] || normalizedKeys.indexOf(key) !== -1) {
+        return;
+      }
+      normalizedKeys.push(key);
+    });
+  }
+  activeKeys.forEach(function(key) {
+    if (normalizedKeys.indexOf(key) === -1) {
+      normalizedKeys.push(key);
+    }
+  });
+  return normalizedKeys.map(function(key) {
+    var parts = key.split(':');
+    return { feature: parts[0], index: parseInt(parts[1], 10) };
+  });
+}
+
 function normalizeSummaryLengthValue(value) {
   if (value === null || value === undefined) {
     return REPORT_SUMMARY_LENGTH_DEFAULT;
@@ -2640,6 +2737,8 @@ function saveReportFavorite(payload) {
     }
   });
   var customization = normalizeReportCustomization(payload.customization);
+  var quantityMapForOrder = buildFeatureQuantityMap(normalizedFeatureDetails);
+  var normalizedFeatureOrder = normalizeFeatureOrderEntries(payload.featureOrder, quantityMapForOrder);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   var config = {
     format: format,
@@ -2652,6 +2751,7 @@ function saveReportFavorite(payload) {
     description: payload.description ? String(payload.description) : '',
     features: normalizedFeatures,
     featureDetails: normalizedFeatureDetails,
+    featureOrder: normalizedFeatureOrder,
     featureDescriptionsEnabled: false,
     featureDescriptions: '',
     emails: normalizedEmails,
