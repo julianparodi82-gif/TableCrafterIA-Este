@@ -2264,11 +2264,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeMessageClose = document.getElementById('themeMessageClose');
         const themeMessageDismiss = document.getElementById('themeMessageDismiss');
         const body = document.body;
+        const container = document.querySelector('.container');
         if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
         }
 
         const messagePreferenceKey = 'tablecrafter.hideWelcomeMessage';
+        let themeAnimationTimeout = null;
+        let currentTheme = null;
 
         function getHidePreference() {
           try {
@@ -2316,7 +2319,29 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        function applyTheme(isWordcrafter) {
+        function playSidebarAnimation() {
+          if (!container) {
+            return;
+          }
+          container.classList.remove('sidebar-theme-animate');
+          // Forzamos un reflujo para reiniciar la animación cuando se activa consecutivamente.
+          void container.offsetWidth; // eslint-disable-line no-unused-expressions
+          container.classList.add('sidebar-theme-animate');
+          if (themeAnimationTimeout) {
+            window.clearTimeout(themeAnimationTimeout);
+          }
+          themeAnimationTimeout = window.setTimeout(function() {
+            container.classList.remove('sidebar-theme-animate');
+          }, 700);
+        }
+
+        function applyTheme(isWordcrafter, options) {
+          const settings = options || {};
+          const animate = Boolean(settings.animate);
+          const nextTheme = isWordcrafter ? 'word' : 'table';
+          if (animate && nextTheme !== currentTheme) {
+            playSidebarAnimation();
+          }
           if (isWordcrafter) {
             body.classList.add('theme-wordcrafter');
             body.classList.remove('theme-tablecrafter');
@@ -2329,6 +2354,7 @@ document.addEventListener('DOMContentLoaded', function() {
             themeMessageContent.innerHTML = tableMessage;
           }
           syncMessageVisibility();
+          currentTheme = nextTheme;
         }
 
         if (themeMessageClose) {
@@ -2340,7 +2366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         themeToggle.addEventListener('change', function() {
-          applyTheme(themeToggle.checked);
+          applyTheme(themeToggle.checked, { animate: true });
         });
 
         applyTheme(themeToggle.checked);

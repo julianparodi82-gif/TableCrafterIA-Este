@@ -91,6 +91,29 @@
       }
       .container {
         background: transparent;
+        will-change: transform, opacity;
+      }
+
+      .container.sidebar-theme-animate {
+        animation: sidebar-theme-shift 0.65s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      @keyframes sidebar-theme-shift {
+        0% {
+          transform: translateY(12px) scale(0.98);
+          opacity: 0.72;
+          filter: brightness(0.96);
+        }
+        45% {
+          transform: translateY(-6px) scale(1.01);
+          opacity: 1;
+          filter: brightness(1.04);
+        }
+        100% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+          filter: brightness(1);
+        }
       }
       .tab-nav {
         display: grid;
@@ -263,6 +286,7 @@
         justify-content: space-between;
         gap: 12px;
         flex-wrap: nowrap;
+        margin-bottom: 28px;
       }
       #appTitle {
         font-size: 26px;
