@@ -261,11 +261,15 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
+        gap: 12px;
+        flex-wrap: nowrap;
       }
-      .theme-toggle {
-        order: -1;
+      #appTitle {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--tc-primary);
+        margin: 0;
+        letter-spacing: 0.01em;
       }
       .theme-toggle {
         position: relative;
@@ -276,6 +280,7 @@
         color: var(--tc-muted);
         cursor: pointer;
         user-select: none;
+        margin-left: auto;
       }
       .theme-toggle input {
         position: absolute;
@@ -323,11 +328,13 @@
       .theme-message {
         position: relative;
         margin-bottom: 20px;
-        padding: 18px 20px 22px;
+        padding: 16px 18px 18px;
         border-radius: 12px;
         border: 1px solid var(--tc-border);
         background: var(--tc-surface-alt);
         color: var(--tc-text);
+        width: 100%;
+        max-width: 520px;
         transition: background var(--tc-transition-duration) ease,
           border-color var(--tc-transition-duration) ease,
           color var(--tc-transition-duration) ease,
@@ -340,10 +347,10 @@
         margin: 0;
       }
       .theme-message p + p {
-        margin-top: 10px;
+        margin-top: 8px;
       }
       .theme-message ul {
-        margin: 12px 0 0;
+        margin: 10px 0 0;
         padding-left: 20px;
         color: var(--tc-muted);
       }
@@ -377,12 +384,13 @@
         margin-top: 14px;
         display: flex;
         justify-content: flex-end;
+        align-items: center;
       }
       .theme-message-optout {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        font-size: 11px;
+        gap: 12px;
+        font-size: 13px;
         color: var(--tc-muted);
         cursor: pointer;
         user-select: none;
@@ -392,21 +400,21 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 18px;
+        width: 38px;
+        height: 22px;
       }
       .theme-message-optout input {
         position: absolute;
-        width: 32px;
-        height: 18px;
+        width: 38px;
+        height: 22px;
         margin: 0;
         opacity: 0;
         cursor: pointer;
       }
       .theme-message-optout-switch {
         position: relative;
-        width: 32px;
-        height: 18px;
+        width: 38px;
+        height: 22px;
         border-radius: 999px;
         background: var(--tc-border);
         transition: background var(--tc-transition-duration) ease,
@@ -414,10 +422,10 @@
       }
       .theme-message-optout-thumb {
         position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 12px;
-        height: 12px;
+        top: 4px;
+        left: 4px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         background: #ffffff;
         box-shadow: 0 3px 6px rgba(15, 23, 42, 0.15);
@@ -429,7 +437,7 @@
         box-shadow: var(--tc-shadow-base);
       }
       .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
-        transform: translateX(14px);
+        transform: translateX(16px);
       }
       .tab-btn .favorite-icon {
         color: #FBBF24;
@@ -2085,28 +2093,26 @@
   <body class="theme-tablecrafter">
     <div class="container">
       <div class="theme-header">
+        <h2 id="appTitle">TableCrafter AI</h2>
         <label class="theme-toggle" for="themeToggle">
           <input type="checkbox" id="themeToggle" aria-label="Activar vista WordCrafter AI" />
           <span class="theme-toggle-switch">
             <span class="theme-toggle-thumb"></span>
           </span>
         </label>
-        <h2 id="appTitle">TableCrafter AI</h2>
       </div>
       <div id="themeMessage" class="theme-message" role="region" aria-live="polite">
         <button type="button" id="themeMessageClose" class="theme-message-close" aria-label="Cerrar mensaje">
           &times;
         </button>
         <div id="themeMessageContent" class="theme-message-content">
-          <p>
-            <strong>Bienvenido a TableCrafter AI.</strong> Este espacio te acompaña para convertir rangos en
-            reportes claros, aplicar formatos profesionales y guardar tus configuraciones favoritas sin salir de la
-            hoja.
-          </p>
-          <p>
-            Explora las pestañas inferiores para solicitar ayuda de la IA, ajustar tablas existentes o crear nuevas
-            estructuras con unos pocos clics.
-          </p>
+          <p><strong>¡Bienvenido a TableCrafter AI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>
+          <p>Empieza con la acción que necesites:</p>
+          <ul>
+            <li>Panel IA: solicita análisis, resúmenes o reportes en segundos.</li>
+            <li>Editar tabla: mejora estilos existentes con un par de clics.</li>
+            <li>Crear tabla: diseña nuevas estructuras listas para reutilizar.</li>
+          </ul>
         </div>
         <div class="theme-message-footer">
           <label class="theme-message-optout">
