@@ -1,8 +1,8 @@
 <script>
 const DEFAULT_STYLE = Object.freeze({
-  headerColor: '#CFE8FC',
+  headerColor: '#CDEFD9',
   altColor1: '#FFFFFF',
-  altColor2: '#F3F4F6',
+  altColor2: '#F1F8F3',
   border: true,
   bold: true
 });
@@ -2256,4 +2256,50 @@ async function processSidebarCloseRequest() {
 
 
       
+document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const appTitle = document.getElementById('appTitle');
+        const themeMessage = document.getElementById('themeMessage');
+        const toggleText = document.getElementById('themeToggleText');
+        const body = document.body;
+        if (!themeToggle || !appTitle || !themeMessage || !toggleText || !body) {
+          return;
+        }
+        const tableMessage =
+          '<p><strong>TableCrafter AI</strong> está listo para ayudarte a diseñar tablas impecables con un nuevo ' +
+          'estilo en verde claro. Organiza tus datos, automatiza reportes y mantén tus flujos al día desde las ' +
+          'pestañas inferiores.</p>';
+        const wordMessage =
+          '<p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos en general. ' +
+          'Mientras terminamos sus detalles, esto es lo que podrás hacer:</p>' +
+          '<ul>' +
+          '<li>Automatizar resúmenes inteligentes adaptados a cada documento.</li>' +
+          '<li>Editar textos con control de tono y sugerencias en tiempo real.</li>' +
+          '<li>Generar plantillas colaborativas y flujos de aprobación asistidos por IA.</li>' +
+          '</ul>' +
+          '<p>Prepárate para un espacio que transformará tus palabras con una transición suave hacia un universo celeste.</p>';
+
+        function applyTheme(isWordcrafter) {
+          if (isWordcrafter) {
+            body.classList.add('theme-wordcrafter');
+            body.classList.remove('theme-tablecrafter');
+            appTitle.textContent = 'WordCrafter AI';
+            toggleText.textContent = 'Volver a TableCrafter';
+            themeMessage.innerHTML = wordMessage;
+          } else {
+            body.classList.add('theme-tablecrafter');
+            body.classList.remove('theme-wordcrafter');
+            appTitle.textContent = 'TableCrafter AI';
+            toggleText.textContent = 'Explorar WordCrafter';
+            themeMessage.innerHTML = tableMessage;
+          }
+        }
+
+        themeToggle.addEventListener('change', function() {
+          applyTheme(themeToggle.checked);
+        });
+
+        applyTheme(themeToggle.checked);
+      });
+
 </script>
