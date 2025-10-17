@@ -139,20 +139,40 @@
         analytical: 'Profundiza en datos y justificativos con detalle.'
       });
       const REPORT_SUMMARY_LENGTH_TOOLTIPS = Object.freeze({
-        concise: 'Entre 3 y 4 frases que destacan resultados clave. Ej: "Ventas +12% vs. objetivo trimestral."',
-        standard: 'Un párrafo completo con contexto y hallazgos principales. Ej: "Crecimos 8% impulsados por marketing digital."',
-        detailed: 'Dos párrafos con cifras, causas y próximos pasos sugeridos.',
-        executive: 'Resumen con insights y conclusiones ejecutivas más recomendación final.'
+        concise: 'Entre 1 y 2 oraciones con los resultados clave. Ej: "Ventas +12% vs. objetivo trimestral."',
+        standard: '3 o 4 oraciones que aportan contexto y hallazgos principales.',
+        detailed: 'Uno o dos párrafos con cifras, causas y próximos pasos sugeridos.',
+        executive: 'Dos párrafos y un cierre ejecutivo con recomendaciones finales.'
+      });
+      const REPORT_SUMMARY_TONE_DEFAULT = 'neutral';
+      const REPORT_SUMMARY_TONE_OPTIONS = Object.freeze([
+        { value: 'neutral', label: 'Neutral profesional' },
+        { value: 'optimistic', label: 'Optimista y motivador' },
+        { value: 'analytical', label: 'Analítico y preciso' },
+        { value: 'persuasive', label: 'Persuasivo orientado a la acción' }
+      ]);
+      const REPORT_SUMMARY_TONE_SET = REPORT_SUMMARY_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_SUMMARY_TONE_TOOLTIPS = Object.freeze({
+        neutral: 'Mantiene un tono equilibrado y objetivo apto para cualquier audiencia.',
+        optimistic: 'Destaca logros y próximos pasos con energía positiva.',
+        analytical: 'Refuerza datos, causas y matices técnicos con precisión.',
+        persuasive: 'Enfatiza impactos y llamados a la acción para impulsar decisiones.'
       });
       const REPORT_PERSONA_DEFAULT = 'auto';
       const REPORT_PERSONA_OPTIONS = Object.freeze([
         { value: 'auto', label: 'Elegir automáticamente (IA)' },
         { value: 'executive', label: 'Dirección general' },
+        { value: 'data-analyst', label: 'Analista de datos' },
         { value: 'finance', label: 'Dirección financiera' },
-        { value: 'marketing', label: 'Dirección de marketing' },
         { value: 'operations', label: 'Gerencia de operaciones' },
+        { value: 'marketing', label: 'Marketing y comunicación' },
         { value: 'hr', label: 'Recursos humanos' },
-        { value: 'sales', label: 'Liderazgo comercial' }
+        { value: 'it', label: 'Especialista en IT / Sistemas' },
+        { value: 'sales', label: 'Liderazgo comercial' },
+        { value: 'custom', label: 'Personalizado' }
       ]);
       const REPORT_PERSONA_SET = REPORT_PERSONA_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
@@ -161,11 +181,14 @@
       const REPORT_PERSONA_TOOLTIPS = Object.freeze({
         auto: 'La IA elige el perfil adecuado según tablas y público objetivo.',
         executive: 'Enfatiza visión global, riesgos y próximos pasos para la dirección.',
+        'data-analyst': 'Profundiza en métricas, variaciones y calidad de los datos utilizados.',
         finance: 'Prioriza márgenes, costos y salud financiera con foco en KPIs.',
-        marketing: 'Resalta performance de campañas, audiencia y crecimiento de marca.',
         operations: 'Detalla eficiencia operativa, logística y tiempos de entrega.',
         hr: 'Se enfoca en clima laboral, desarrollo y bienestar del equipo.',
-        sales: 'Subraya pipeline, conversiones y resultados comerciales clave.'
+        marketing: 'Resalta performance de campañas, audiencia y crecimiento de marca.',
+        it: 'Enfatiza integraciones, calidad de datos y viabilidad técnica de las soluciones.',
+        sales: 'Subraya pipeline, conversiones y resultados comerciales clave.',
+        custom: 'Usa el contexto personalizado que definas para orientar las recomendaciones.'
       });
       const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
         outputLanguage: 'Idioma de salida',
@@ -1191,6 +1214,17 @@ function normalizeSummaryLengthValue(value) {
           : REPORT_SUMMARY_LENGTH_DEFAULT;
       }
 
+function normalizeSummaryToneValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_SUMMARY_TONE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_SUMMARY_TONE_DEFAULT;
+        }
+        return REPORT_SUMMARY_TONE_SET[normalized] ? normalized : REPORT_SUMMARY_TONE_DEFAULT;
+      }
+
 function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
         if (Array.isArray(source)) {
@@ -1293,7 +1327,8 @@ function ensureReportFeatureState(feature) {
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
-            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
+            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
           };
           return reportFeatureState[key];
         }
@@ -1321,6 +1356,9 @@ function ensureReportFeatureState(feature) {
         }
         if (!state.summaryLength || !REPORT_SUMMARY_LENGTH_SET[state.summaryLength]) {
           state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
+        }
+        if (!state.summaryTone || !REPORT_SUMMARY_TONE_SET[state.summaryTone]) {
+          state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
         }
         return state;
       }
@@ -1522,6 +1560,17 @@ function refreshReportFeatureOption(feature) {
           summaryLengthSelect.disabled = !isEnabled;
           summaryLengthSelect.value = value;
           bindSelectTooltipWithMap(summaryLengthSelect, REPORT_SUMMARY_LENGTH_TOOLTIPS);
+        }
+        const summaryToneSelect = option.querySelector('[data-feature-summary-tone="' + feature + '"]');
+        if (summaryToneSelect) {
+          const isEnabled = !!state.selected;
+          const value = feature === 'summary'
+            ? normalizeSummaryToneValue(state.summaryTone)
+            : REPORT_SUMMARY_TONE_DEFAULT;
+          state.summaryTone = value;
+          summaryToneSelect.disabled = !isEnabled;
+          summaryToneSelect.value = value;
+          bindSelectTooltipWithMap(summaryToneSelect, REPORT_SUMMARY_TONE_TOOLTIPS);
         }
         const instancesWrapper = option.querySelector('[data-feature-instances="' + feature + '"]');
         if (instancesWrapper) {
@@ -1793,6 +1842,14 @@ function handleReportFeatureSummaryLengthChange(feature, value) {
         state.summaryLength = normalizeSummaryLengthValue(value);
       }
 
+function handleReportFeatureSummaryToneChange(feature, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        state.summaryTone = normalizeSummaryToneValue(value);
+      }
+
 function initializeReportFeatureControls() {
         reportFeatureState = {};
         const featureOptions = document.querySelectorAll('#aiReportFeatureList .ai-feature-option');
@@ -1900,6 +1957,14 @@ function initializeReportFeatureControls() {
             });
             summaryLengthSelector.dataset.bound = 'true';
           }
+          const summaryToneSelector = option.querySelector('[data-feature-summary-tone="' + feature + '"]');
+          if (summaryToneSelector && !summaryToneSelector.dataset.bound) {
+            bindSelectTooltipWithMap(summaryToneSelector, REPORT_SUMMARY_TONE_TOOLTIPS);
+            summaryToneSelector.addEventListener('change', function() {
+              handleReportFeatureSummaryToneChange(feature, summaryToneSelector.value);
+            });
+            summaryToneSelector.dataset.bound = 'true';
+          }
           refreshReportFeatureOption(feature);
         });
         updateSelectedReportFeatures();
@@ -1940,11 +2005,18 @@ function normalizePersonaValue(value) {
         return REPORT_PERSONA_SET[normalized] ? normalized : REPORT_PERSONA_DEFAULT;
       }
 
+function normalizePersonaCustomNote(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
 function createDefaultCustomizationState() {
         return {
           outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
           tone: { enabled: false, value: REPORT_TONE_DEFAULT },
-          persona: { enabled: false, value: REPORT_PERSONA_DEFAULT }
+          persona: { enabled: false, value: REPORT_PERSONA_DEFAULT, customNote: '' }
         };
       }
 
@@ -1964,6 +2036,7 @@ function normalizeReportCustomizationInput(source) {
         if (source.persona && typeof source.persona === 'object') {
           base.persona.enabled = !!source.persona.enabled;
           base.persona.value = normalizePersonaValue(source.persona.value);
+          base.persona.customNote = normalizePersonaCustomNote(source.persona.customNote);
         }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
@@ -1973,6 +2046,10 @@ function normalizeReportCustomizationInput(source) {
         }
         if (!base.persona.enabled) {
           base.persona.value = REPORT_PERSONA_DEFAULT;
+          base.persona.customNote = '';
+        }
+        if (base.persona.value !== 'custom') {
+          base.persona.customNote = '';
         }
         return {
           outputLanguage: {
@@ -1985,7 +2062,8 @@ function normalizeReportCustomizationInput(source) {
           },
           persona: {
             enabled: base.persona.enabled,
-            value: base.persona.value
+            value: base.persona.value,
+            customNote: base.persona.customNote
           }
         };
       }
@@ -2081,6 +2159,16 @@ function refreshReportCustomizationOption(option) {
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_PERSONA_TOOLTIPS);
           }
+          const customNoteWrapper = element.querySelector('[data-custom-persona-note]');
+          if (customNoteWrapper) {
+            const shouldShowCustom = isEnabled && normalizePersonaValue(state.value) === 'custom';
+            customNoteWrapper.classList.toggle('ai-hidden', !shouldShowCustom);
+            const noteInput = customNoteWrapper.querySelector('[data-custom-persona-note-input]');
+            if (noteInput) {
+              noteInput.disabled = !shouldShowCustom;
+              noteInput.value = shouldShowCustom ? normalizePersonaCustomNote(state.customNote) : '';
+            }
+          }
         }
       }
 
@@ -2120,6 +2208,7 @@ function handleReportCustomizationSelection(option, checked) {
             state.value = REPORT_TONE_DEFAULT;
           } else if (option === 'persona') {
             state.value = REPORT_PERSONA_DEFAULT;
+            state.customNote = '';
           }
         }
         setReportCustomizationOptionOpen(option, state.enabled);
@@ -2138,9 +2227,21 @@ function handleReportCustomizationValueChange(option, value) {
           state.value = normalizeToneValue(value);
         } else if (option === 'persona') {
           state.value = normalizePersonaValue(value);
+          if (state.value !== 'custom') {
+            state.customNote = '';
+          }
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
+      }
+
+function handleReportCustomizationPersonaNoteChange(value) {
+        const state = ensureReportCustomizationOption('persona');
+        if (!state.enabled || normalizePersonaValue(state.value) !== 'custom') {
+          state.customNote = '';
+          return;
+        }
+        state.customNote = value === null || value === undefined ? '' : String(value);
       }
 
 function resetReportCustomizationState() {
@@ -2187,6 +2288,15 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
+            if (option === 'persona') {
+              const noteInput = wrapper.querySelector('[data-custom-persona-note-input]');
+              if (noteInput && !noteInput.dataset.bound) {
+                noteInput.addEventListener('input', function() {
+                  handleReportCustomizationPersonaNoteChange(noteInput.value);
+                });
+                noteInput.dataset.bound = 'true';
+              }
+            }
           }
         });
         resetReportCustomizationState();
@@ -2219,7 +2329,8 @@ function getReportCustomizationPayload() {
           },
           persona: {
             enabled: normalized.persona.enabled,
-            value: normalized.persona.value
+            value: normalized.persona.value,
+            customNote: normalized.persona.customNote
           }
         };
       }
@@ -2270,6 +2381,7 @@ function applyReportFeatureSelections(features, featureDetails) {
               detail.instanceListEnumStyles
             );
             const summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
+            const summaryToneValue = normalizeSummaryToneValue(detail.summaryTone);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -2278,7 +2390,8 @@ function applyReportFeatureSelections(features, featureDetails) {
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles,
-              summaryLength: summaryLengthValue
+              summaryLength: summaryLengthValue,
+              summaryTone: summaryToneValue
             };
           });
         }
@@ -2312,6 +2425,9 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.summaryLength = detail
               ? normalizeSummaryLengthValue(detail.summaryLength)
               : REPORT_SUMMARY_LENGTH_DEFAULT;
+            state.summaryTone = detail
+              ? normalizeSummaryToneValue(detail.summaryTone)
+              : REPORT_SUMMARY_TONE_DEFAULT;
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2321,6 +2437,7 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
             state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
+            state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
           }
           refreshReportFeatureOption(feature);
         });
@@ -2549,6 +2666,9 @@ async function handleReportFavoriteSave() {
           const summaryLengthValue = state
             ? normalizeSummaryLengthValue(state.summaryLength)
             : REPORT_SUMMARY_LENGTH_DEFAULT;
+          const summaryToneValue = state
+            ? normalizeSummaryToneValue(state.summaryTone)
+            : REPORT_SUMMARY_TONE_DEFAULT;
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
@@ -2566,6 +2686,7 @@ async function handleReportFavoriteSave() {
             state.instanceListEnumerate = baseListEnumerate.slice();
             state.instanceListEnumStyles = baseListEnumStyles.slice();
             state.summaryLength = summaryLengthValue;
+            state.summaryTone = summaryToneValue;
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -2575,7 +2696,8 @@ async function handleReportFavoriteSave() {
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice(),
-            summaryLength: summaryLengthValue
+            summaryLength: summaryLengthValue,
+            summaryTone: summaryToneValue
           };
         });
 
@@ -2666,7 +2788,8 @@ async function handleReportFavoriteSave() {
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
-            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
+            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
           };
           return {
             feature: feature,
@@ -2677,7 +2800,8 @@ async function handleReportFavoriteSave() {
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles),
-            summaryLength: normalizeSummaryLengthValue(detail.summaryLength)
+            summaryLength: normalizeSummaryLengthValue(detail.summaryLength),
+            summaryTone: normalizeSummaryToneValue(detail.summaryTone)
           };
         });
         const customizationPayload = getReportCustomizationPayload();

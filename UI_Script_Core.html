@@ -1,8 +1,8 @@
 <script>
 const DEFAULT_STYLE = Object.freeze({
-  headerColor: '#CFE8FC',
+  headerColor: '#CDEFD9',
   altColor1: '#FFFFFF',
-  altColor2: '#F3F4F6',
+  altColor2: '#F1F8F3',
   border: true,
   bold: true
 });
@@ -16,6 +16,8 @@ let allowSidebarUnload = false;
 let sidebarClosePromptActive = false;
 let currentTab = '';
 let lastSavedTableId = '';
+let sidebarContainer = null;
+let sidebarEntryCleanupTimeout = null;
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -2132,13 +2134,44 @@ function setActiveTab(tabId, options) {
             btn.classList.remove('active');
           }
         });
+        const nextContent = document.getElementById(tabId);
+        const previousContent = previousTab && previousTab !== tabId ? document.getElementById(previousTab) : null;
+
         document.querySelectorAll('.tab-content').forEach(function(content) {
-          if (content.id === tabId) {
-            content.classList.add('active');
-          } else {
-            content.classList.remove('active');
+          if (content === nextContent) {
+            content.classList.add('is-visible');
+          } else if (content !== previousContent) {
+            content.classList.remove('active', 'is-visible', 'is-entering', 'is-leaving');
           }
         });
+
+        if (previousContent && previousContent !== nextContent) {
+          previousContent.classList.remove('is-entering');
+          previousContent.classList.add('is-visible', 'is-leaving');
+          previousContent.classList.remove('active');
+          const handleLeaveEnd = function(event) {
+            if (event.target !== previousContent || event.propertyName !== 'opacity') {
+              return;
+            }
+            previousContent.classList.remove('is-visible', 'is-leaving');
+            previousContent.removeEventListener('transitionend', handleLeaveEnd);
+          };
+          previousContent.addEventListener('transitionend', handleLeaveEnd);
+          window.setTimeout(function() {
+            previousContent.classList.remove('is-visible', 'is-leaving');
+            previousContent.removeEventListener('transitionend', handleLeaveEnd);
+          }, 650);
+        }
+
+        if (nextContent) {
+          nextContent.classList.remove('is-leaving');
+          nextContent.classList.add('is-visible', 'is-entering');
+          void nextContent.offsetWidth; // reinicia la animación de entrada
+          nextContent.classList.add('active');
+          window.setTimeout(function() {
+            nextContent.classList.remove('is-entering');
+          }, 450);
+        }
 
         if (previousTab === 'editTab' && tabId !== 'editTab') {
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
@@ -2256,4 +2289,170 @@ async function processSidebarCloseRequest() {
 
 
       
+document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const appTitle = document.getElementById('appTitle');
+        const themeMessage = document.getElementById('themeMessage');
+        const themeMessageContent = document.getElementById('themeMessageContent');
+        const themeMessageClose = document.getElementById('themeMessageClose');
+        const themeMessageDismiss = document.getElementById('themeMessageDismiss');
+        const body = document.body;
+        const container = document.querySelector('.container');
+        sidebarContainer = container;
+        if (sidebarEntryCleanupTimeout) {
+          window.clearTimeout(sidebarEntryCleanupTimeout);
+          sidebarEntryCleanupTimeout = null;
+        }
+        if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
+          return;
+        }
+
+        if (!currentTab) {
+          const initialActiveContent = document.querySelector('.tab-content.active');
+          currentTab = initialActiveContent ? initialActiveContent.id : 'aiTab';
+        }
+
+        if (container) {
+          container.classList.add('sidebar-enter');
+          if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(function() {
+              if (sidebarContainer) {
+                sidebarContainer.classList.add('sidebar-enter-active');
+              }
+            });
+          } else {
+            container.classList.add('sidebar-enter-active');
+          }
+          sidebarEntryCleanupTimeout = window.setTimeout(function() {
+            if (sidebarContainer) {
+              sidebarContainer.classList.remove('sidebar-enter', 'sidebar-enter-active');
+            }
+            sidebarEntryCleanupTimeout = null;
+          }, 650);
+          window.addEventListener('beforeunload', function() {
+            if (sidebarContainer) {
+              sidebarContainer.classList.add('sidebar-exit');
+            }
+          });
+        }
+
+        const messagePreferenceKey = 'tablecrafter.hideWelcomeMessage';
+        let themeAnimationTimeout = null;
+        let currentTheme = null;
+
+        function getHidePreference() {
+          try {
+            return window.localStorage.getItem(messagePreferenceKey) === 'true';
+          } catch (error) {
+            return false;
+          }
+        }
+
+        function setHidePreference(value) {
+          try {
+            if (value) {
+              window.localStorage.setItem(messagePreferenceKey, 'true');
+            } else {
+              window.localStorage.removeItem(messagePreferenceKey);
+            }
+          } catch (error) {
+            // Si el almacenamiento no está disponible, ignoramos silenciosamente.
+          }
+        }
+
+        const tableMessage =
+          '<p><strong>¡Bienvenido a TableCrafter AI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>' +
+          '<p>Empieza con la acción que necesites:</p>' +
+          '<ul>' +
+          '<li>Panel IA: solicita análisis, resúmenes o reportes en segundos.</li>' +
+          '<li>Editar tabla: mejora estilos existentes con un par de clics.</li>' +
+          '<li>Crear tabla: diseña nuevas estructuras listas para reutilizar.</li>' +
+          '</ul>';
+        const wordMessage =
+          '<p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos con precisión.</p>' +
+          '<p>Pronto podrás:</p>' +
+          '<ul>' +
+          '<li>Crear resúmenes inteligentes adaptados a cada documento.</li>' +
+          '<li>Ajustar tono y estilo con sugerencias en tiempo real.</li>' +
+          '<li>Generar plantillas colaborativas listas para publicar.</li>' +
+          '</ul>' +
+          '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
+
+        function syncMessageVisibility() {
+          const shouldHide = getHidePreference();
+          themeMessage.classList.toggle('is-hidden', shouldHide);
+          if (themeMessageDismiss) {
+            themeMessageDismiss.checked = shouldHide;
+          }
+        }
+
+        function playSidebarAnimation() {
+          if (!container) {
+            return;
+          }
+          container.classList.remove('sidebar-theme-animate');
+          // Forzamos un reflujo para reiniciar la animación cuando se activa consecutivamente.
+          void container.offsetWidth; // eslint-disable-line no-unused-expressions
+          container.classList.add('sidebar-theme-animate');
+          if (themeAnimationTimeout) {
+            window.clearTimeout(themeAnimationTimeout);
+          }
+          themeAnimationTimeout = window.setTimeout(function() {
+            container.classList.remove('sidebar-theme-animate');
+          }, 700);
+        }
+
+        function syncAddonThemeMode(nextTheme) {
+          if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            return;
+          }
+          try {
+            google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(
+              nextTheme === 'word' ? 'word' : 'table'
+            );
+          } catch (error) {
+            // Si no se puede comunicar con Apps Script, ignoramos el error.
+          }
+        }
+
+        function applyTheme(isWordcrafter, options) {
+          const settings = options || {};
+          const animate = Boolean(settings.animate);
+          const nextTheme = isWordcrafter ? 'word' : 'table';
+          if (animate && nextTheme !== currentTheme) {
+            playSidebarAnimation();
+          }
+          if (isWordcrafter) {
+            body.classList.add('theme-wordcrafter');
+            body.classList.remove('theme-tablecrafter');
+            appTitle.textContent = 'WordCrafter AI';
+            themeMessageContent.innerHTML = wordMessage;
+          } else {
+            body.classList.add('theme-tablecrafter');
+            body.classList.remove('theme-wordcrafter');
+            appTitle.textContent = 'TableCrafter AI';
+            themeMessageContent.innerHTML = tableMessage;
+          }
+          syncMessageVisibility();
+          if (nextTheme !== currentTheme || settings.forceSync) {
+            syncAddonThemeMode(nextTheme);
+          }
+          currentTheme = nextTheme;
+        }
+
+        if (themeMessageClose) {
+          themeMessageClose.addEventListener('click', function() {
+            const hideForFuture = Boolean(themeMessageDismiss && themeMessageDismiss.checked);
+            setHidePreference(hideForFuture);
+            themeMessage.classList.add('is-hidden');
+          });
+        }
+
+        themeToggle.addEventListener('change', function() {
+          applyTheme(themeToggle.checked, { animate: true });
+        });
+
+        applyTheme(themeToggle.checked, { forceSync: true });
+      });
+
 </script>

@@ -21,13 +21,13 @@
 /**
  * Añade el menú personalizado al abrir la hoja de cálculo.
  */
+var SIDEBAR_THEME_PROPERTY_KEY = 'tablecrafter.sidebarThemeMode';
+var SIDEBAR_THEME_WORD = 'word';
+var SIDEBAR_THEME_TABLE = 'table';
+
 function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu('TableCrafter AI')
-    .addItem('Mostrar TableCrafter', 'showSidebar')
-    .addItem('Configurar API', 'showConfig')
-    .addItem('Ayuda', 'showHelp')
-    .addToUi();
+  var themeMode = getSidebarThemeMode();
+  refreshAddonMenuForTheme(themeMode);
 }
 
 /**
@@ -35,8 +35,12 @@ function onOpen() {
  */
 function showSidebar() {
   var template = HtmlService.createTemplateFromFile('UI');
-  var html = template.evaluate().setTitle('TableCrafter AI');
+  var themeMode = getSidebarThemeMode();
+  template.initialThemeMode = themeMode;
+  var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafter AI' : 'TableCrafter AI';
+  var html = template.evaluate().setTitle(sidebarTitle).setWidth(520);
   SpreadsheetApp.getUi().showSidebar(html);
+  refreshAddonMenuForTheme(themeMode);
 }
 
 /**
@@ -66,6 +70,44 @@ function showHelp() {
  */
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function getSidebarThemeMode() {
+  var userProperties = PropertiesService.getUserProperties();
+  var stored = userProperties.getProperty(SIDEBAR_THEME_PROPERTY_KEY);
+  if (stored === SIDEBAR_THEME_WORD || stored === SIDEBAR_THEME_TABLE) {
+    return stored;
+  }
+  return SIDEBAR_THEME_TABLE;
+}
+
+function refreshAddonMenuForTheme(themeMode) {
+  var normalized = themeMode === SIDEBAR_THEME_WORD ? SIDEBAR_THEME_WORD : SIDEBAR_THEME_TABLE;
+  var ui = SpreadsheetApp.getUi();
+  var spreadsheet = SpreadsheetApp.getActive();
+  if (spreadsheet && typeof spreadsheet.removeMenu === 'function') {
+    try {
+      spreadsheet.removeMenu('TableCrafter AI');
+    } catch (error) {}
+    try {
+      spreadsheet.removeMenu('WordCrafter AI');
+    } catch (error) {}
+  }
+  var isWordcrafter = normalized === SIDEBAR_THEME_WORD;
+  var menuLabel = isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI';
+  var showLabel = isWordcrafter ? 'Mostrar WordCrafter' : 'Mostrar TableCrafter';
+  ui.createMenu(menuLabel)
+    .addItem(showLabel, 'showSidebar')
+    .addItem('Configurar API', 'showConfig')
+    .addItem('Ayuda', 'showHelp')
+    .addToUi();
+}
+
+function setSidebarThemeMode(mode) {
+  var normalized = mode === SIDEBAR_THEME_WORD ? SIDEBAR_THEME_WORD : SIDEBAR_THEME_TABLE;
+  PropertiesService.getUserProperties().setProperty(SIDEBAR_THEME_PROPERTY_KEY, normalized);
+  refreshAddonMenuForTheme(normalized);
+  return normalized;
 }
 
 /**
