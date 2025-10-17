@@ -40,7 +40,7 @@ function showSidebar() {
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
-  var html = template.evaluate().setTitle(sidebarTitle).setWidth(520);
+  var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
   SpreadsheetApp.getUi().showSidebar(html);
   refreshAddonMenuForTheme(themeMode);
 }
@@ -85,19 +85,18 @@ function getSidebarThemeMode() {
 
 function refreshAddonMenuForTheme(themeMode) {
   var ui = SpreadsheetApp.getUi();
-  var spreadsheet = SpreadsheetApp.getActive();
-  if (spreadsheet && typeof spreadsheet.removeMenu === 'function') {
+  if (ui && typeof ui.removeMenu === 'function') {
     try {
-      spreadsheet.removeMenu('TableCrafter AI');
+      ui.removeMenu('TableCrafter AI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('TableCrafterAI');
+      ui.removeMenu('TableCrafterAI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('WordCrafter AI');
+      ui.removeMenu('WordCrafter AI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('WordCrafterAI');
+      ui.removeMenu('WordCrafterAI');
     } catch (error) {}
   }
   ui.createMenu('TableCrafterAI')
