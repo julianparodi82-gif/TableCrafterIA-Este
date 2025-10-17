@@ -9,6 +9,16 @@ const DEFAULT_STYLE = Object.freeze({
 
 const ALL_TABLES_OPTION_VALUE = '__ALL__';
 const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
+const DEFAULT_AI_FILL_DATA_TYPE = 'datos';
+const AI_FILL_DATA_TYPE_OPTIONS = [
+  { value: 'datos', label: 'Datos generales' },
+  { value: 'numericos', label: 'Números calculados' },
+  { value: 'texto', label: 'Texto descriptivo' },
+  { value: 'fechas', label: 'Fechas y horarios' },
+  { value: 'formulas', label: 'Fórmulas' },
+  { value: 'listas', label: 'Listas categóricas' },
+  { value: 'personalizado', label: 'Personalizado' }
+];
 let headerKeyCounter = 0;
 let savedTablesCache = [];
 let savedTablesCacheInitialized = false;
@@ -63,7 +73,8 @@ function normalizeHeaderModel(entry) {
           hasDescription: false,
           key: '',
           aiFillEnabled: false,
-          aiFillPrompt: ''
+          aiFillPrompt: '',
+          aiFillDataType: DEFAULT_AI_FILL_DATA_TYPE
         };
         if (entry && typeof entry === 'object') {
           const labelValue =
@@ -89,7 +100,10 @@ function normalizeHeaderModel(entry) {
           const aiPromptValue = Object.prototype.hasOwnProperty.call(entry, 'aiFillPrompt')
             ? entry.aiFillPrompt
             : '';
+          const aiDataTypeValue =
+            entry.aiFillDataType !== undefined && entry.aiFillDataType !== null ? entry.aiFillDataType : '';
           const trimmedPrompt = String(aiPromptValue || '').trim();
+          const trimmedDataType = String(aiDataTypeValue || '').trim() || DEFAULT_AI_FILL_DATA_TYPE;
           const aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
           normalized.label = trimmedLabel;
           normalized.description = hasDescription ? trimmedDescription : '';
@@ -97,6 +111,7 @@ function normalizeHeaderModel(entry) {
           normalized.key = String(keyValue || '').trim();
           normalized.aiFillEnabled = aiEnabled;
           normalized.aiFillPrompt = trimmedPrompt;
+          normalized.aiFillDataType = trimmedDataType;
           if (!normalized.key) {
             normalized.key = generateHeaderKey();
           }
@@ -110,6 +125,7 @@ function normalizeHeaderModel(entry) {
         }
         normalized.aiFillEnabled = false;
         normalized.aiFillPrompt = '';
+        normalized.aiFillDataType = DEFAULT_AI_FILL_DATA_TYPE;
         return normalized;
       }
 
@@ -135,13 +151,18 @@ function cloneHeaderModels(source) {
           const hasPrompt = item.aiFillPrompt ? String(item.aiFillPrompt).trim() : '';
           const explicitFlag = Object.prototype.hasOwnProperty.call(item, 'aiFillEnabled');
           const aiEnabled = explicitFlag ? !!item.aiFillEnabled : !!hasPrompt;
+          const normalizedDataType =
+            item.aiFillDataType !== undefined && item.aiFillDataType !== null
+              ? String(item.aiFillDataType).trim()
+              : '';
           return {
             label: item.label,
             description: item.hasDescription ? item.description : '',
             hasDescription: item.hasDescription,
             key: item.key || generateHeaderKey(),
             aiFillEnabled: aiEnabled,
-            aiFillPrompt: hasPrompt
+            aiFillPrompt: hasPrompt,
+            aiFillDataType: normalizedDataType || DEFAULT_AI_FILL_DATA_TYPE
           };
         });
       }
@@ -1387,10 +1408,44 @@ function renderHeaderList(listId, headers) {
           aiToggle.type = 'checkbox';
           aiToggle.checked = !!header.aiFillEnabled;
           const aiToggleText = document.createElement('span');
-          aiToggleText.textContent = 'Completar con IA';
+          aiToggleText.textContent = 'Generar contenido con IA';
           aiToggleLabel.appendChild(aiToggle);
           aiToggleLabel.appendChild(aiToggleText);
           li.appendChild(aiToggleLabel);
+
+          const aiDataTypeWrapper = document.createElement('div');
+          aiDataTypeWrapper.className = 'header-ai-datatype js-comment-hint-trigger';
+          aiDataTypeWrapper.setAttribute(
+            'data-comment-hint',
+            'Define el tipo de información que debería crear la IA para esta columna. Usa "Personalizado" para reglas propias.'
+          );
+          const dataTypeId = 'headerAiDataType_' + (header.key || index);
+          const aiDataTypeLabel = document.createElement('label');
+          aiDataTypeLabel.setAttribute('for', dataTypeId);
+          aiDataTypeLabel.textContent = 'Tipos de datos';
+          aiDataTypeWrapper.appendChild(aiDataTypeLabel);
+
+          const aiDataTypeSelect = document.createElement('select');
+          aiDataTypeSelect.id = dataTypeId;
+          AI_FILL_DATA_TYPE_OPTIONS.forEach(function(option) {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.label;
+            aiDataTypeSelect.appendChild(opt);
+          });
+          const initialDataType = header.aiFillDataType || DEFAULT_AI_FILL_DATA_TYPE;
+          aiDataTypeSelect.value = initialDataType;
+          headers[index].aiFillDataType = initialDataType;
+          aiDataTypeSelect.addEventListener('change', function() {
+            headers[index].aiFillDataType = this.value || DEFAULT_AI_FILL_DATA_TYPE;
+            markHeadersDirty();
+          });
+          aiDataTypeWrapper.appendChild(aiDataTypeSelect);
+          if (!header.aiFillEnabled) {
+            aiDataTypeWrapper.classList.add('hidden');
+            aiDataTypeSelect.disabled = true;
+          }
+          li.appendChild(aiDataTypeWrapper);
 
           const aiPromptWrapper = document.createElement('div');
           aiPromptWrapper.className = 'header-ai-prompt js-comment-hint-trigger';
@@ -1414,6 +1469,11 @@ function renderHeaderList(listId, headers) {
               aiToggle.checked = true;
               aiPromptWrapper.classList.remove('hidden');
               aiPromptField.disabled = false;
+              aiDataTypeWrapper.classList.remove('hidden');
+              aiDataTypeSelect.disabled = false;
+              if (!headers[index].aiFillDataType) {
+                headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+              }
             }
             markHeadersDirty();
           });
@@ -1425,12 +1485,19 @@ function renderHeaderList(listId, headers) {
             if (this.checked) {
               aiPromptWrapper.classList.remove('hidden');
               aiPromptField.disabled = false;
+              aiDataTypeWrapper.classList.remove('hidden');
+              aiDataTypeSelect.disabled = false;
+              if (!headers[index].aiFillDataType) {
+                headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+              }
               if (!headers[index].aiFillPrompt) {
                 aiPromptField.focus();
               }
             } else {
               aiPromptWrapper.classList.add('hidden');
               aiPromptField.disabled = true;
+              aiDataTypeWrapper.classList.add('hidden');
+              aiDataTypeSelect.disabled = true;
             }
             markHeadersDirty();
           });

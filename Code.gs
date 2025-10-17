@@ -25,6 +25,7 @@ var SIDEBAR_THEME_PROPERTY_KEY = 'tablecrafter.sidebarThemeMode';
 var SIDEBAR_THEME_WORD = 'word';
 var SIDEBAR_THEME_TABLE = 'table';
 var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
+var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 
 function onOpen() {
   var themeMode = getSidebarThemeMode();
@@ -519,7 +520,8 @@ function normalizeHeaderEntry(entry) {
     hasDescription: false,
     key: '',
     aiFillEnabled: false,
-    aiFillPrompt: ''
+    aiFillPrompt: '',
+    aiFillDataType: DEFAULT_AI_FILL_DATA_TYPE
   };
   if (entry && typeof entry === 'object') {
     var labelValue = '';
@@ -541,7 +543,9 @@ function normalizeHeaderEntry(entry) {
     var hasExplicitAiFlag = Object.prototype.hasOwnProperty.call(entry, 'aiFillEnabled');
     var aiEnabledValue = hasExplicitAiFlag ? entry.aiFillEnabled : false;
     var aiPromptValue = Object.prototype.hasOwnProperty.call(entry, 'aiFillPrompt') ? entry.aiFillPrompt : '';
+    var aiDataTypeValue = Object.prototype.hasOwnProperty.call(entry, 'aiFillDataType') ? entry.aiFillDataType : '';
     var trimmedPrompt = String(aiPromptValue === undefined || aiPromptValue === null ? '' : aiPromptValue).trim();
+    var trimmedDataType = String(aiDataTypeValue === undefined || aiDataTypeValue === null ? '' : aiDataTypeValue).trim();
     var aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
     normalized.label = String(labelValue === undefined || labelValue === null ? '' : labelValue).trim();
     normalized.description = hasDescription ? String(descriptionValue || '').trim() : '';
@@ -549,6 +553,7 @@ function normalizeHeaderEntry(entry) {
     normalized.key = normalizeHeaderKey(keyValue);
     normalized.aiFillEnabled = aiEnabled;
     normalized.aiFillPrompt = trimmedPrompt;
+    normalized.aiFillDataType = trimmedDataType || DEFAULT_AI_FILL_DATA_TYPE;
     return normalized;
   }
   if (entry !== undefined && entry !== null) {
@@ -1350,7 +1355,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     var hasExplicitAiFlag = entry && Object.prototype.hasOwnProperty.call(entry, 'aiFillEnabled');
     var aiEnabledValue = hasExplicitAiFlag ? entry.aiFillEnabled : false;
     var aiPromptValue = entry && entry.aiFillPrompt !== undefined && entry.aiFillPrompt !== null ? String(entry.aiFillPrompt) : '';
+    var aiDataTypeValue = entry && entry.aiFillDataType !== undefined && entry.aiFillDataType !== null ? String(entry.aiFillDataType) : '';
     var trimmedPrompt = aiPromptValue.trim();
+    var trimmedDataType = aiDataTypeValue.trim() || DEFAULT_AI_FILL_DATA_TYPE;
     var aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
     return {
       label: trimmedLabel,
@@ -1358,7 +1365,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       hasDescription: hasDescription,
       key: normalizeHeaderKey(keyValue),
       aiFillEnabled: aiEnabled,
-      aiFillPrompt: trimmedPrompt
+      aiFillPrompt: trimmedPrompt,
+      aiFillDataType: trimmedDataType
     };
   });
   var headerMetaForReturn = headerMeta.map(function(item) {
@@ -1368,7 +1376,8 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       hasDescription: !!item.hasDescription,
       key: item.key || '',
       aiFillEnabled: !!item.aiFillEnabled,
-      aiFillPrompt: item.aiFillPrompt ? String(item.aiFillPrompt).trim() : ''
+      aiFillPrompt: item.aiFillPrompt ? String(item.aiFillPrompt).trim() : '',
+      aiFillDataType: item.aiFillDataType ? String(item.aiFillDataType).trim() : DEFAULT_AI_FILL_DATA_TYPE
     };
   });
   var headerValues = headerMetaForReturn.map(function(item) {

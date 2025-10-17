@@ -274,11 +274,7 @@
         z-index: 12;
       }
       .tab-btn[data-tooltip]:hover::after,
-      .tab-btn[data-tooltip]:hover::before,
-      .tab-btn[data-tooltip]:focus::after,
-      .tab-btn[data-tooltip]:focus::before,
-      .tab-btn[data-tooltip]:focus-visible::after,
-      .tab-btn[data-tooltip]:focus-visible::before {
+      .tab-btn[data-tooltip]:hover::before {
         opacity: 1;
       }
       .tab-nav-primary .tab-btn[data-tooltip]::after {
@@ -1108,8 +1104,8 @@
       .ai-comment-hint[data-comment-hint]::before,
       .ai-comment-hint[data-comment-hint]::after {
         position: absolute;
-        right: 0;
-        bottom: calc(100% + 8px);
+        left: 0;
+        top: calc(100% + 8px);
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -1120,7 +1116,7 @@
         content: '💡';
         font-size: 1.15rem;
         line-height: 1;
-        transform: translateY(6px);
+        transform: translateY(-6px);
       }
       .ai-comment-hint[data-comment-hint]::after {
         content: attr(data-comment-hint);
@@ -1133,7 +1129,7 @@
         font-size: 12px;
         font-weight: 500;
         line-height: 1.35;
-        transform: translateY(6px);
+        transform: translateY(-6px);
         text-align: left;
         white-space: normal;
       }
@@ -1152,7 +1148,6 @@
       @media (max-width: 480px) {
         .ai-comment-hint[data-comment-hint]::before,
         .ai-comment-hint[data-comment-hint]::after {
-          right: auto;
           left: 0;
         }
       }
@@ -1898,6 +1893,23 @@
         gap: 6px;
         width: 100%;
       }
+      .header-ai-datatype {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+      }
+      .header-ai-datatype label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-muted);
+      }
+      .header-ai-datatype select {
+        min-height: 34px;
+      }
+      .header-ai-datatype.hidden {
+        display: none;
+      }
       .header-ai-prompt-field {
         width: 100%;
         min-height: 48px;
@@ -2434,7 +2446,10 @@
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
-            <label class="checkbox-subtle">
+            <label
+              class="checkbox-subtle js-comment-hint-trigger"
+              data-comment-hint="Mantiene las fórmulas coherentes cuando reubicas la tabla. Ej.: si =B2*2 se mueve una columna a la derecha, se actualizará a =C2*2."
+            >
               <input type="checkbox" id="editUpdateFormulaRefs" checked />
               Actualizar referencias de fórmulas al mover tabla.
             </label>
