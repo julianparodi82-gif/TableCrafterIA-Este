@@ -2171,9 +2171,10 @@
       .header-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 8px;
+        gap: 10px;
+        padding: 12px;
         border-bottom: 1px solid #E5E7EB;
+        min-height: 64px;
       }
       .header-item:last-child {
         border-bottom: none;
@@ -2181,16 +2182,17 @@
       .header-item-row {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 10px;
+        min-height: 40px;
       }
       .header-item-drag {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 32px;
-        border-radius: 4px;
-        background-color: #F3F4F6;
+        width: 32px;
+        height: 36px;
+        border-radius: 6px;
+        background-color: #EEF0F4;
         color: #6B7280;
         cursor: grab;
         font-size: 16px;
@@ -2200,13 +2202,13 @@
         transition: background-color 0.15s ease, color 0.15s ease;
       }
       .header-item-drag:hover {
-        background-color: #E5E7EB;
+        background-color: #E1E4EB;
         color: #4B5563;
       }
       .header-item-drag:active,
       .header-item.dragging .header-item-drag {
         cursor: grabbing;
-        background-color: #E5E7EB;
+        background-color: #E1E4EB;
       }
       .header-item input[type="text"] {
         flex: 1 1 auto;
@@ -2237,8 +2239,8 @@
         padding: 4px 8px;
         border-radius: 4px;
         cursor: pointer;
-        min-width: 32px;
-        height: 32px;
+        min-width: 36px;
+        height: 36px;
         font-size: 16px;
         line-height: 1;
       }
