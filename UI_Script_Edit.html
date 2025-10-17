@@ -444,6 +444,13 @@ function setEditRangeUI(info, options) {
               header.description = fallback.description || '';
               header.hasDescription = true;
             }
+            const fallbackPrompt = fallback.aiFillPrompt ? String(fallback.aiFillPrompt).trim() : '';
+            if (fallback.aiFillEnabled && !header.aiFillEnabled) {
+              header.aiFillEnabled = true;
+            }
+            if ((!header.aiFillPrompt || !String(header.aiFillPrompt).trim()) && fallbackPrompt) {
+              header.aiFillPrompt = fallbackPrompt;
+            }
             if (fallback.key) {
               header.key = fallback.key;
             }

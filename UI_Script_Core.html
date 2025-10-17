@@ -18,6 +18,10 @@ let currentTab = '';
 let lastSavedTableId = '';
 let sidebarContainer = null;
 let sidebarEntryCleanupTimeout = null;
+let currentTheme = null;
+let tabButtonsList = [];
+let tabContentsList = [];
+let hideWelcomePreference = false;
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -57,7 +61,9 @@ function normalizeHeaderModel(entry) {
           label: '',
           description: '',
           hasDescription: false,
-          key: ''
+          key: '',
+          aiFillEnabled: false,
+          aiFillPrompt: ''
         };
         if (entry && typeof entry === 'object') {
           const labelValue =
@@ -78,10 +84,19 @@ function normalizeHeaderModel(entry) {
               : entry.id !== undefined && entry.id !== null
               ? entry.id
               : '';
+          const hasExplicitAiFlag = Object.prototype.hasOwnProperty.call(entry, 'aiFillEnabled');
+          const aiEnabledValue = hasExplicitAiFlag ? entry.aiFillEnabled : false;
+          const aiPromptValue = Object.prototype.hasOwnProperty.call(entry, 'aiFillPrompt')
+            ? entry.aiFillPrompt
+            : '';
+          const trimmedPrompt = String(aiPromptValue || '').trim();
+          const aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
           normalized.label = trimmedLabel;
           normalized.description = hasDescription ? trimmedDescription : '';
           normalized.hasDescription = hasDescription;
           normalized.key = String(keyValue || '').trim();
+          normalized.aiFillEnabled = aiEnabled;
+          normalized.aiFillPrompt = trimmedPrompt;
           if (!normalized.key) {
             normalized.key = generateHeaderKey();
           }
@@ -93,6 +108,8 @@ function normalizeHeaderModel(entry) {
         if (!normalized.key) {
           normalized.key = generateHeaderKey();
         }
+        normalized.aiFillEnabled = false;
+        normalized.aiFillPrompt = '';
         return normalized;
       }
 
@@ -115,11 +132,16 @@ function toHeaderModelArray(source) {
 
 function cloneHeaderModels(source) {
         return toHeaderModelArray(source).map(function(item) {
+          const hasPrompt = item.aiFillPrompt ? String(item.aiFillPrompt).trim() : '';
+          const explicitFlag = Object.prototype.hasOwnProperty.call(item, 'aiFillEnabled');
+          const aiEnabled = explicitFlag ? !!item.aiFillEnabled : !!hasPrompt;
           return {
             label: item.label,
             description: item.hasDescription ? item.description : '',
             hasDescription: item.hasDescription,
-            key: item.key || generateHeaderKey()
+            key: item.key || generateHeaderKey(),
+            aiFillEnabled: aiEnabled,
+            aiFillPrompt: hasPrompt
           };
         });
       }
@@ -1355,6 +1377,64 @@ function renderHeaderList(listId, headers) {
           topRow.appendChild(actions);
           li.appendChild(topRow);
 
+          const aiToggleLabel = document.createElement('label');
+          aiToggleLabel.className = 'header-ai-toggle js-comment-hint-trigger';
+          aiToggleLabel.setAttribute(
+            'data-comment-hint',
+            'Activa esta opción para que la IA complete automáticamente la columna siguiendo tus indicaciones.'
+          );
+          const aiToggle = document.createElement('input');
+          aiToggle.type = 'checkbox';
+          aiToggle.checked = !!header.aiFillEnabled;
+          const aiToggleText = document.createElement('span');
+          aiToggleText.textContent = 'Completar con IA';
+          aiToggleLabel.appendChild(aiToggle);
+          aiToggleLabel.appendChild(aiToggleText);
+          li.appendChild(aiToggleLabel);
+
+          const aiPromptWrapper = document.createElement('div');
+          aiPromptWrapper.className = 'header-ai-prompt js-comment-hint-trigger';
+          aiPromptWrapper.setAttribute(
+            'data-comment-hint',
+            'Describe qué debe generar la IA. Puedes mencionar otros encabezados o reglas específicas para personalizar el contenido.'
+          );
+          const aiPromptField = document.createElement('textarea');
+          aiPromptField.className = 'header-ai-prompt-field';
+          aiPromptField.rows = 2;
+          aiPromptField.placeholder = 'Ej.: Crear un resumen usando la columna "Notas"';
+          aiPromptField.value = header.aiFillPrompt || '';
+          if (!header.aiFillEnabled) {
+            aiPromptWrapper.classList.add('hidden');
+            aiPromptField.disabled = true;
+          }
+          aiPromptField.addEventListener('input', function() {
+            headers[index].aiFillPrompt = this.value;
+            if (this.value.trim() && !headers[index].aiFillEnabled) {
+              headers[index].aiFillEnabled = true;
+              aiToggle.checked = true;
+              aiPromptWrapper.classList.remove('hidden');
+              aiPromptField.disabled = false;
+            }
+            markHeadersDirty();
+          });
+          aiPromptWrapper.appendChild(aiPromptField);
+          li.appendChild(aiPromptWrapper);
+
+          aiToggle.addEventListener('change', function() {
+            headers[index].aiFillEnabled = this.checked;
+            if (this.checked) {
+              aiPromptWrapper.classList.remove('hidden');
+              aiPromptField.disabled = false;
+              if (!headers[index].aiFillPrompt) {
+                aiPromptField.focus();
+              }
+            } else {
+              aiPromptWrapper.classList.add('hidden');
+              aiPromptField.disabled = true;
+            }
+            markHeadersDirty();
+          });
+
           const descField = document.createElement('textarea');
           descField.className = 'header-desc-field';
           descField.placeholder = 'Descripción de la columna';
@@ -2120,8 +2200,115 @@ function getActionTypeLabel(type) {
 
       
 
+function parseThemeList(value) {
+        if (!value) {
+          return [];
+        }
+        if (Array.isArray(value)) {
+          return value;
+        }
+        return String(value)
+          .split(/[\s,]+/)
+          .map(function(entry) {
+            return entry.trim();
+          })
+          .filter(function(entry) {
+            return entry.length > 0;
+          });
+      }
+
+function elementSupportsTheme(element, theme) {
+        if (!element) {
+          return true;
+        }
+        const themeData = element.dataset ? element.dataset.themes : null;
+        if (!themeData) {
+          return true;
+        }
+        const allowed = parseThemeList(themeData);
+        if (allowed.length === 0) {
+          return true;
+        }
+        return allowed.indexOf(theme) !== -1;
+      }
+
+function isTabAllowedForTheme(tabId, theme) {
+        const normalizedTheme = theme === 'word' ? 'word' : 'table';
+        if (!tabId) {
+          return false;
+        }
+        const button = tabButtonsList.find(function(btn) {
+          return btn && btn.dataset && btn.dataset.tab === tabId;
+        });
+        if (button && !elementSupportsTheme(button, normalizedTheme)) {
+          return false;
+        }
+        const content = document.getElementById(tabId);
+        if (content && !elementSupportsTheme(content, normalizedTheme)) {
+          return false;
+        }
+        return true;
+      }
+
+function findFirstTabForTheme(theme) {
+        const normalizedTheme = theme === 'word' ? 'word' : 'table';
+        for (let i = 0; i < tabButtonsList.length; i++) {
+          const btn = tabButtonsList[i];
+          if (btn && elementSupportsTheme(btn, normalizedTheme)) {
+            return btn;
+          }
+        }
+        const fallbackButtons = document.querySelectorAll('.tab-btn');
+        for (let j = 0; j < fallbackButtons.length; j++) {
+          const btn = fallbackButtons[j];
+          if (btn && elementSupportsTheme(btn, normalizedTheme)) {
+            return btn;
+          }
+        }
+        return null;
+      }
+
+function updateTabVisibilityForTheme(theme) {
+        const normalizedTheme = theme === 'word' ? 'word' : 'table';
+        let firstAllowedButton = null;
+        tabButtonsList.forEach(function(btn) {
+          if (!btn) {
+            return;
+          }
+          const allowed = elementSupportsTheme(btn, normalizedTheme);
+          btn.dataset.themeHidden = allowed ? 'false' : 'true';
+          btn.tabIndex = allowed ? 0 : -1;
+          if (allowed && !firstAllowedButton) {
+            firstAllowedButton = btn;
+          }
+        });
+        tabContentsList.forEach(function(content) {
+          if (!content) {
+            return;
+          }
+          const allowed = elementSupportsTheme(content, normalizedTheme);
+          content.dataset.themeHidden = allowed ? 'false' : 'true';
+        });
+        if (!isTabAllowedForTheme(currentTab, normalizedTheme)) {
+          const fallback = firstAllowedButton || findFirstTabForTheme(normalizedTheme);
+          if (fallback && fallback.dataset && fallback.dataset.tab) {
+            setActiveTab(fallback.dataset.tab, { force: true });
+          }
+        }
+      }
+
+
+
 function setActiveTab(tabId, options) {
         options = options || {};
+        const themeForTab = currentTheme || (document.body.classList.contains('theme-wordcrafter') ? 'word' : 'table');
+        if (!isTabAllowedForTheme(tabId, themeForTab)) {
+          const fallback = findFirstTabForTheme(themeForTab);
+          if (fallback && fallback.dataset && fallback.dataset.tab && tabId !== fallback.dataset.tab) {
+            setActiveTab(fallback.dataset.tab, Object.assign({}, options, { force: true }));
+          }
+          return;
+        }
         if (currentTab === tabId && !options.force) {
           return;
         }
@@ -2336,40 +2523,20 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
 
-        const messagePreferenceKey = 'tablecrafter.hideWelcomeMessage';
+        tabButtonsList = Array.from(document.querySelectorAll('.tab-btn'));
+        tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
         let themeAnimationTimeout = null;
-        let currentTheme = null;
-
-        function getHidePreference() {
-          try {
-            return window.localStorage.getItem(messagePreferenceKey) === 'true';
-          } catch (error) {
-            return false;
-          }
-        }
-
-        function setHidePreference(value) {
-          try {
-            if (value) {
-              window.localStorage.setItem(messagePreferenceKey, 'true');
-            } else {
-              window.localStorage.removeItem(messagePreferenceKey);
-            }
-          } catch (error) {
-            // Si el almacenamiento no está disponible, ignoramos silenciosamente.
-          }
-        }
 
         const tableMessage =
-          '<p><strong>¡Bienvenido a TableCrafter AI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>' +
+          '<p><strong>¡Bienvenido a TableCrafterAI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>' +
           '<p>Empieza con la acción que necesites:</p>' +
           '<ul>' +
           '<li>Panel IA: solicita análisis, resúmenes o reportes en segundos.</li>' +
           '<li>Editar tabla: mejora estilos existentes con un par de clics.</li>' +
-          '<li>Crear tabla: diseña nuevas estructuras listas para reutilizar.</li>' +
+          '<li>Crear tabla: diseña nuevas estructuras listas para reutilizar y configura columnas con IA.</li>' +
           '</ul>';
         const wordMessage =
-          '<p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos con precisión.</p>' +
+          '<p><strong>WordCrafterAI</strong> está por llegar para automatizar y editar textos con precisión.</p>' +
           '<p>Pronto podrás:</p>' +
           '<ul>' +
           '<li>Crear resúmenes inteligentes adaptados a cada documento.</li>' +
@@ -2379,14 +2546,50 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
-          const shouldHide = getHidePreference();
+          const shouldHide = !!hideWelcomePreference;
           themeMessage.classList.toggle('is-hidden', shouldHide);
           if (themeMessageDismiss) {
             themeMessageDismiss.checked = shouldHide;
           }
         }
 
-        function playSidebarAnimation() {
+        function persistWelcomePreference(value, options) {
+          hideWelcomePreference = !!value;
+          const opts = options || {};
+          if (opts.sync !== false) {
+            syncMessageVisibility();
+          }
+          if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            return;
+          }
+          try {
+            google.script.run.withFailureHandler(function() {}).setWelcomeMessagePreference(!hideWelcomePreference);
+          } catch (error) {
+            // Si no se puede comunicar con Apps Script, ignoramos para no bloquear la UI.
+          }
+        }
+
+        function fetchWelcomePreference() {
+          if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            syncMessageVisibility();
+            return;
+          }
+          try {
+            google.script.run
+              .withSuccessHandler(function(res) {
+                hideWelcomePreference = !!(res && res.hideWelcome);
+                syncMessageVisibility();
+              })
+              .withFailureHandler(function() {
+                syncMessageVisibility();
+              })
+              .getWelcomeMessagePreference();
+          } catch (error) {
+            syncMessageVisibility();
+          }
+        }
+
+function playSidebarAnimation() {
           if (!container) {
             return;
           }
@@ -2419,32 +2622,44 @@ document.addEventListener('DOMContentLoaded', function() {
           const settings = options || {};
           const animate = Boolean(settings.animate);
           const nextTheme = isWordcrafter ? 'word' : 'table';
-          if (animate && nextTheme !== currentTheme) {
+          const previousTheme = currentTheme;
+          if (animate && nextTheme !== previousTheme) {
             playSidebarAnimation();
           }
+          currentTheme = nextTheme;
           if (isWordcrafter) {
             body.classList.add('theme-wordcrafter');
             body.classList.remove('theme-tablecrafter');
-            appTitle.textContent = 'WordCrafter AI';
+            appTitle.textContent = 'WordCrafterAI';
             themeMessageContent.innerHTML = wordMessage;
           } else {
             body.classList.add('theme-tablecrafter');
             body.classList.remove('theme-wordcrafter');
-            appTitle.textContent = 'TableCrafter AI';
+            appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
-          if (nextTheme !== currentTheme || settings.forceSync) {
+          if (nextTheme !== previousTheme || settings.forceSync) {
             syncAddonThemeMode(nextTheme);
           }
-          currentTheme = nextTheme;
         }
 
         if (themeMessageClose) {
           themeMessageClose.addEventListener('click', function() {
             const hideForFuture = Boolean(themeMessageDismiss && themeMessageDismiss.checked);
-            setHidePreference(hideForFuture);
+            persistWelcomePreference(hideForFuture, { sync: false });
             themeMessage.classList.add('is-hidden');
+          });
+        }
+
+        if (themeMessageDismiss) {
+          themeMessageDismiss.addEventListener('change', function() {
+            const shouldHide = this.checked;
+            persistWelcomePreference(shouldHide);
+            if (!shouldHide) {
+              themeMessage.classList.remove('is-hidden');
+            }
           });
         }
 
@@ -2452,6 +2667,7 @@ document.addEventListener('DOMContentLoaded', function() {
           applyTheme(themeToggle.checked, { animate: true });
         });
 
+        fetchWelcomePreference();
         applyTheme(themeToggle.checked, { forceSync: true });
       });
 

@@ -1,7 +1,7 @@
 /**
- * TableCrafter AI
+ * TableCrafterAI
  *
- * Este archivo contiene la lógica principal del complemento TableCrafter AI para
+ * Este archivo contiene la lógica principal del complemento TableCrafterAI para
  * Google Sheets.  Se han implementado las funciones públicas existentes
  * (onOpen, showSidebar, showConfig, showHelp) y nuevas utilidades para dar
  * soporte al formateo de tablas con banda de color y vistas de filtro
@@ -24,6 +24,7 @@
 var SIDEBAR_THEME_PROPERTY_KEY = 'tablecrafter.sidebarThemeMode';
 var SIDEBAR_THEME_WORD = 'word';
 var SIDEBAR_THEME_TABLE = 'table';
+var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
 
 function onOpen() {
   var themeMode = getSidebarThemeMode();
@@ -37,7 +38,7 @@ function showSidebar() {
   var template = HtmlService.createTemplateFromFile('UI');
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
-  var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafter AI' : 'TableCrafter AI';
+  var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
   var html = template.evaluate().setTitle(sidebarTitle).setWidth(520);
   SpreadsheetApp.getUi().showSidebar(html);
   refreshAddonMenuForTheme(themeMode);
@@ -50,8 +51,8 @@ function showConfig() {
   var html = HtmlService.createHtmlOutputFromFile('Config')
     .setWidth(400)
     .setHeight(220)
-    .setTitle('Configuración de TableCrafter');
-  SpreadsheetApp.getUi().showModalDialog(html, 'Configuración de TableCrafter');
+    .setTitle('Configuración de TableCrafterAI');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Configuración de TableCrafterAI');
 }
 
 /**
@@ -61,8 +62,8 @@ function showHelp() {
   var html = HtmlService.createHtmlOutputFromFile('Help')
     .setWidth(600)
     .setHeight(500)
-    .setTitle('Ayuda de TableCrafter');
-  SpreadsheetApp.getUi().showModalDialog(html, 'Ayuda de TableCrafter');
+    .setTitle('Ayuda de TableCrafterAI');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Ayuda de TableCrafterAI');
 }
 
 /**
@@ -82,7 +83,6 @@ function getSidebarThemeMode() {
 }
 
 function refreshAddonMenuForTheme(themeMode) {
-  var normalized = themeMode === SIDEBAR_THEME_WORD ? SIDEBAR_THEME_WORD : SIDEBAR_THEME_TABLE;
   var ui = SpreadsheetApp.getUi();
   var spreadsheet = SpreadsheetApp.getActive();
   if (spreadsheet && typeof spreadsheet.removeMenu === 'function') {
@@ -90,14 +90,17 @@ function refreshAddonMenuForTheme(themeMode) {
       spreadsheet.removeMenu('TableCrafter AI');
     } catch (error) {}
     try {
+      spreadsheet.removeMenu('TableCrafterAI');
+    } catch (error) {}
+    try {
       spreadsheet.removeMenu('WordCrafter AI');
     } catch (error) {}
+    try {
+      spreadsheet.removeMenu('WordCrafterAI');
+    } catch (error) {}
   }
-  var isWordcrafter = normalized === SIDEBAR_THEME_WORD;
-  var menuLabel = isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI';
-  var showLabel = isWordcrafter ? 'Mostrar WordCrafter' : 'Mostrar TableCrafter';
-  ui.createMenu(menuLabel)
-    .addItem(showLabel, 'showSidebar')
+  ui.createMenu('TableCrafterAI')
+    .addItem('Mostrar TableCrafterAI', 'showSidebar')
     .addItem('Configurar API', 'showConfig')
     .addItem('Ayuda', 'showHelp')
     .addToUi();
@@ -108,6 +111,21 @@ function setSidebarThemeMode(mode) {
   PropertiesService.getUserProperties().setProperty(SIDEBAR_THEME_PROPERTY_KEY, normalized);
   refreshAddonMenuForTheme(normalized);
   return normalized;
+}
+
+function getWelcomeMessagePreference() {
+  var value = PropertiesService.getUserProperties().getProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  return { hideWelcome: value === 'true' };
+}
+
+function setWelcomeMessagePreference(showMessage) {
+  var userProperties = PropertiesService.getUserProperties();
+  if (showMessage) {
+    userProperties.deleteProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  } else {
+    userProperties.setProperty(WELCOME_MESSAGE_PROPERTY_KEY, 'true');
+  }
+  return { hideWelcome: !showMessage };
 }
 
 /**
@@ -499,7 +517,9 @@ function normalizeHeaderEntry(entry) {
     label: '',
     description: '',
     hasDescription: false,
-    key: ''
+    key: '',
+    aiFillEnabled: false,
+    aiFillPrompt: ''
   };
   if (entry && typeof entry === 'object') {
     var labelValue = '';
@@ -518,10 +538,17 @@ function normalizeHeaderEntry(entry) {
     } else if (Object.prototype.hasOwnProperty.call(entry, 'id')) {
       keyValue = entry.id;
     }
+    var hasExplicitAiFlag = Object.prototype.hasOwnProperty.call(entry, 'aiFillEnabled');
+    var aiEnabledValue = hasExplicitAiFlag ? entry.aiFillEnabled : false;
+    var aiPromptValue = Object.prototype.hasOwnProperty.call(entry, 'aiFillPrompt') ? entry.aiFillPrompt : '';
+    var trimmedPrompt = String(aiPromptValue === undefined || aiPromptValue === null ? '' : aiPromptValue).trim();
+    var aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
     normalized.label = String(labelValue === undefined || labelValue === null ? '' : labelValue).trim();
     normalized.description = hasDescription ? String(descriptionValue || '').trim() : '';
     normalized.hasDescription = hasDescription;
     normalized.key = normalizeHeaderKey(keyValue);
+    normalized.aiFillEnabled = aiEnabled;
+    normalized.aiFillPrompt = trimmedPrompt;
     return normalized;
   }
   if (entry !== undefined && entry !== null) {
@@ -1320,11 +1347,18 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     var explicitHasDescription = entry && Object.prototype.hasOwnProperty.call(entry, 'hasDescription') ? !!entry.hasDescription : false;
     var hasDescription = explicitHasDescription || trimmedDescription !== '';
     var keyValue = entry && entry.key !== undefined && entry.key !== null ? String(entry.key) : '';
+    var hasExplicitAiFlag = entry && Object.prototype.hasOwnProperty.call(entry, 'aiFillEnabled');
+    var aiEnabledValue = hasExplicitAiFlag ? entry.aiFillEnabled : false;
+    var aiPromptValue = entry && entry.aiFillPrompt !== undefined && entry.aiFillPrompt !== null ? String(entry.aiFillPrompt) : '';
+    var trimmedPrompt = aiPromptValue.trim();
+    var aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
     return {
       label: trimmedLabel,
       description: hasDescription ? trimmedDescription : '',
       hasDescription: hasDescription,
-      key: normalizeHeaderKey(keyValue)
+      key: normalizeHeaderKey(keyValue),
+      aiFillEnabled: aiEnabled,
+      aiFillPrompt: trimmedPrompt
     };
   });
   var headerMetaForReturn = headerMeta.map(function(item) {
@@ -1332,7 +1366,9 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
       label: item.label || '',
       description: item.hasDescription ? (item.description || '') : '',
       hasDescription: !!item.hasDescription,
-      key: item.key || ''
+      key: item.key || '',
+      aiFillEnabled: !!item.aiFillEnabled,
+      aiFillPrompt: item.aiFillPrompt ? String(item.aiFillPrompt).trim() : ''
     };
   });
   var headerValues = headerMetaForReturn.map(function(item) {
