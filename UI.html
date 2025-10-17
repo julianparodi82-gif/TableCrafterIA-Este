@@ -850,6 +850,27 @@
         border: 1px dashed #CBD5F5;
         background-color: #F8FAFF;
       }
+      .ai-feature-summary-preferences {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .ai-feature-summary-title,
+      .ai-feature-summary-length {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-feature-summary-title input,
+      .ai-feature-summary-length select {
+        border-radius: 10px;
+        border: 1px solid var(--tc-border);
+        background-color: var(--tc-surface);
+        font-size: 12px;
+        padding: 8px 12px;
+        color: var(--tc-text);
+        box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
+      }
       .ai-feature-instances {
         margin-top: 8px;
         display: flex;
@@ -914,28 +935,6 @@
       }
       .ai-feature-instance-options select:disabled {
         opacity: 0.55;
-      }
-      .ai-feature-comment-focus {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        margin-bottom: 8px;
-      }
-      .ai-feature-comment-focus label {
-        font-size: 10px;
-        font-weight: 600;
-        color: var(--tc-muted);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-      .ai-feature-comment-focus select {
-        border-radius: 10px;
-        border: 1px solid var(--tc-border);
-        background-color: var(--tc-surface);
-        font-size: 12px;
-        padding: 8px 12px;
-        color: var(--tc-text);
-        box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
       }
       .ai-feature-chart-select {
         display: flex;
@@ -2799,8 +2798,8 @@
                       <div class="ai-feature-quantity ai-hidden" data-feature-quantity="summary">
                         <label
                           for="aiFeatureQuantity-summary"
-                         
-                          
+                          class="tc-tooltip-target"
+                          data-tooltip="Selecciona cuántos resúmenes diferentes quieres generar."
                         >
                           Cantidad
                         </label>
@@ -2815,6 +2814,43 @@
                       </div>
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
+                      <div class="ai-feature-summary-preferences">
+                        <div class="ai-feature-summary-title">
+                          <label
+                            for="aiFeatureSummaryTitle"
+                            class="tc-tooltip-target"
+                            data-tooltip="Añade un título breve si quieres que el resumen aparezca destacado."
+                          >
+                            Título del resumen (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            id="aiFeatureSummaryTitle"
+                            data-feature-instance-title="summary"
+                            data-instance-index="0"
+                            placeholder="Ej. Resumen ejecutivo del trimestre"
+                          />
+                        </div>
+                        <div class="ai-feature-summary-length">
+                          <label
+                            for="aiFeatureSummaryLength"
+                            class="tc-tooltip-target"
+                            data-tooltip="Define la extensión y profundidad con la que se redactará el resumen."
+                          >
+                            Longitud del resumen
+                          </label>
+                          <select
+                            id="aiFeatureSummaryLength"
+                            data-feature-summary-length="summary"
+                            class="tc-tooltip-target"
+                          >
+                            <option value="concise">Breve y directo</option>
+                            <option value="standard" selected>Equilibrado</option>
+                            <option value="detailed">Detallado</option>
+                            <option value="executive">Ejecutivo con conclusiones</option>
+                          </select>
+                        </div>
+                      </div>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -2823,8 +2859,8 @@
                         >
                           <label
                             for="aiFeatureInstance-summary-1"
-                           
-                            
+                            class="tc-tooltip-target"
+                            data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
                           >
                             Descripción del resumen
                           </label>
@@ -2838,76 +2874,7 @@
                       </div>
                     </div>
                   </div>
-                  <div class="ai-feature-option" data-feature="comments">
-                    <div class="ai-feature-top">
-                      <label class="ai-feature-chip">
-                        <input type="checkbox" name="aiReportFeatures" value="comments" />
-                        <span class="ai-feature-chip-label">Comentarios</span>
-                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
-                      </label>
-                      <div class="ai-feature-quantity ai-hidden" data-feature-quantity="comments">
-                        <label
-                          for="aiFeatureQuantity-comments"
-                         
-                          
-                        >
-                          Cantidad
-                        </label>
-                        <input
-                          type="number"
-                          id="aiFeatureQuantity-comments"
-                          data-feature-quantity-input="comments"
-                          min="1"
-                          max="3"
-                          value="1"
-                        />
-                      </div>
-                    </div>
-                    <div class="ai-feature-extra ai-hidden" data-feature-extra="comments">
-                      <div class="ai-feature-instances ai-hidden" data-feature-instances="comments">
-                        <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
-                          data-feature-instance="comments"
-                          data-instance-index="0"
-                        >
-                          <div class="ai-feature-comment-focus">
-                            <label
-                              for="aiFeatureCommentFocus-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Define qué tipo de comentarios debe priorizar la IA."
-                            >
-                              Enfoque de los comentarios
-                            </label>
-                            <select
-                              id="aiFeatureCommentFocus-1"
-                              class="tc-tooltip-target"
-                              data-feature-instance-comment-focus="comments"
-                              data-instance-index="0"
-                            >
-                              <option value="actions">Acciones recomendadas</option>
-                              <option value="insights">Insights clave</option>
-                              <option value="risks">Alertas y riesgos</option>
-                              <option value="celebration">Reconocimiento de logros</option>
-                              <option value="culture">Equipo y cultura</option>
-                            </select>
-                          </div>
-                          <label
-                            for="aiFeatureInstance-comments-1"
-                           
-                            
-                          >
-                            Descripción de comentarios
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-comments-1"
-                            data-feature-instance-input="comments"
-                            data-instance-index="0"
-                            placeholder="Indica las notas o recomendaciones que debe incluir el reporte"
-                          ></textarea>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
                 </div>
               </div>
             </div>
@@ -3019,7 +2986,7 @@
                       </label>
                       <p
                         class="ai-custom-intro"
-                        
+
                       >
                         Ajusta la voz narrativa con la que se presentarán resultados, hallazgos y llamados a la acción.
                       </p>
@@ -3056,9 +3023,71 @@
                         </div>
                         <p
                           class="ai-custom-helper"
-                          
+
                         >
                           Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el reporte.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ai-custom-option" data-option="persona" data-open="false">
+                    <div class="ai-custom-top">
+                      <label class="ai-feature-chip ai-custom-header-label">
+                        <input type="checkbox" data-custom-option="persona" />
+                        <span
+                          class="ai-feature-chip-label"
+                          data-tooltip="Orienta el reporte según el perfil profesional que tomará las decisiones finales."
+                          tabindex="0"
+                        >
+                          Perfil profesional del reporte
+                        </span>
+                        <span class="ai-feature-chip-check" aria-hidden="true">✓</span>
+                      </label>
+                      <p
+                        class="ai-custom-intro"
+ 
+                      >
+                        Ajusta ejemplos y recomendaciones para que la IA hable desde la mirada del rol más relevante.
+                      </p>
+                      <button
+                        type="button"
+                        class="ai-custom-collapse"
+                        data-option-toggle="persona"
+                        aria-expanded="false"
+                      >
+                        <span class="ai-custom-collapse-text">Desplegar opciones</span>
+                        <span class="ai-custom-collapse-icon" aria-hidden="true">▾</span>
+                      </button>
+                    </div>
+                    <div class="ai-custom-extra ai-hidden" data-option-extra="persona">
+                      <div class="ai-custom-fields">
+                        <div class="ai-custom-field">
+                          <label
+                            for="aiReportPersona"
+                            class="tc-tooltip-target"
+                            data-tooltip="Elige el perfil experto que guiará el enfoque y las prioridades del reporte."
+                          >
+                            Referencia profesional
+                          </label>
+                          <select
+                            id="aiReportPersona"
+                            class="tc-tooltip-target"
+                            data-custom-select="persona"
+                          >
+                            <option value="auto">Elegir automáticamente (IA)</option>
+                            <option value="executive">Dirección general</option>
+                            <option value="finance">Dirección financiera</option>
+                            <option value="marketing">Dirección de marketing</option>
+                            <option value="operations">Gerencia de operaciones</option>
+                            <option value="hr">Recursos humanos</option>
+                            <option value="sales">Liderazgo comercial</option>
+                          </select>
+                        </div>
+                        <p
+                          class="ai-custom-helper"
+ 
+                        >
+                          La IA destacará datos, métricas y recomendaciones alineadas a las preocupaciones típicas de ese rol.
                         </p>
                       </div>
                     </div>

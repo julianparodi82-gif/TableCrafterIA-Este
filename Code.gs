@@ -139,12 +139,10 @@ var META_INDEX = {
 
 var REPORT_FEATURE_MAX_QUANTITY = 3;
 var REPORT_FEATURES_WITHOUT_QUANTITY = {
-  summary: true,
-  comments: true
+  summary: true
 };
 var REPORT_FEATURE_FIXED_QUANTITY = {
-  summary: 1,
-  comments: 1
+  summary: 1
 };
 var REPORT_CHART_TYPE_DEFAULT = 'auto';
 var REPORT_CHART_TYPE_ALLOWED = {
@@ -192,6 +190,23 @@ var REPORT_TONE_ALLOWED = {
   executive: true,
   friendly: true,
   analytical: true
+};
+var REPORT_SUMMARY_LENGTH_DEFAULT = 'standard';
+var REPORT_SUMMARY_LENGTH_ALLOWED = {
+  concise: true,
+  standard: true,
+  detailed: true,
+  executive: true
+};
+var REPORT_PERSONA_DEFAULT = 'auto';
+var REPORT_PERSONA_ALLOWED = {
+  auto: true,
+  executive: true,
+  finance: true,
+  marketing: true,
+  operations: true,
+  hr: true,
+  sales: true
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
@@ -896,6 +911,7 @@ function buildReportFavoriteResponse(entry) {
     var instanceListOrders = normalizeFeatureListOrderArray(detail.instanceListOrders);
     var instanceListEnumerate = normalizeFeatureListEnumerateArray(detail.instanceListEnumerate);
     var instanceListEnumStyles = normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles);
+    var summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
     normalizedDetails.push({
       feature: featureId,
       quantity: quantityValue,
@@ -904,7 +920,8 @@ function buildReportFavoriteResponse(entry) {
       instanceChartTypes: instanceChartTypes,
       instanceListOrders: instanceListOrders,
       instanceListEnumerate: instanceListEnumerate,
-      instanceListEnumStyles: instanceListEnumStyles
+      instanceListEnumStyles: instanceListEnumStyles,
+      summaryLength: summaryLengthValue
     });
     detailMap[featureId] = true;
   });
@@ -921,7 +938,8 @@ function buildReportFavoriteResponse(entry) {
       instanceChartTypes: normalizeFeatureChartTypeArray([]),
       instanceListOrders: normalizeFeatureListOrderArray([]),
       instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
-      instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
+      instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
+      summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
     });
     detailMap[featureId] = true;
   });
@@ -2184,6 +2202,17 @@ function normalizeFeatureListEnumStyleArray(source) {
   return base;
 }
 
+function normalizeSummaryLengthValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_SUMMARY_LENGTH_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_SUMMARY_LENGTH_DEFAULT;
+  }
+  return REPORT_SUMMARY_LENGTH_ALLOWED[text] ? text : REPORT_SUMMARY_LENGTH_DEFAULT;
+}
+
 function normalizeOutputLanguageValue(value) {
   if (value === null || value === undefined) {
     return REPORT_OUTPUT_LANGUAGE_DEFAULT;
@@ -2208,6 +2237,17 @@ function normalizeToneValue(value) {
   return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
 }
 
+function normalizePersonaValue(value) {
+  if (value === null || value === undefined) {
+    return REPORT_PERSONA_DEFAULT;
+  }
+  var text = String(value).trim().toLowerCase();
+  if (!text) {
+    return REPORT_PERSONA_DEFAULT;
+  }
+  return REPORT_PERSONA_ALLOWED[text] ? text : REPORT_PERSONA_DEFAULT;
+}
+
 function normalizeReportCustomization(source) {
   var base = {
     outputLanguage: {
@@ -2217,6 +2257,10 @@ function normalizeReportCustomization(source) {
     tone: {
       enabled: false,
       value: REPORT_TONE_DEFAULT
+    },
+    persona: {
+      enabled: false,
+      value: REPORT_PERSONA_DEFAULT
     }
   };
   if (!source || typeof source !== 'object') {
@@ -2230,11 +2274,18 @@ function normalizeReportCustomization(source) {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
   }
+  if (source.persona && typeof source.persona === 'object') {
+    base.persona.enabled = !!source.persona.enabled;
+    base.persona.value = normalizePersonaValue(source.persona.value);
+  }
   if (!base.outputLanguage.enabled) {
     base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
   }
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
+  }
+  if (!base.persona.enabled) {
+    base.persona.value = REPORT_PERSONA_DEFAULT;
   }
   return base;
 }
@@ -2273,8 +2324,7 @@ function saveReportFavorite(payload) {
     chart: 'Gráfico',
     table: 'Tabla',
     list: 'Lista',
-    summary: 'Resumen',
-    comments: 'Comentarios'
+    summary: 'Resumen'
   };
   var tables = Array.isArray(payload.tables) ? payload.tables : [];
   var seenTables = {};
@@ -2320,6 +2370,7 @@ function saveReportFavorite(payload) {
     var normalizedListEnumerate = normalizeFeatureListEnumerateArray(rawListEnumerate);
     var rawListEnumStyles = Array.isArray(entry.instanceListEnumStyles) ? entry.instanceListEnumStyles : [];
     var normalizedListEnumStyles = normalizeFeatureListEnumStyleArray(rawListEnumStyles);
+    var summaryLengthValue = normalizeSummaryLengthValue(entry.summaryLength);
     for (var idx = 0; idx < quantityValue; idx++) {
       if (!normalizedInstances[idx]) {
         var descLabel = 'Descripción ' + (idx + 1) + ' para ' + (featureLabelMap[featureId] || featureId);
@@ -2336,7 +2387,8 @@ function saveReportFavorite(payload) {
       instanceChartTypes: normalizedChartTypes,
       instanceListOrders: normalizedListOrders,
       instanceListEnumerate: normalizedListEnumerate,
-      instanceListEnumStyles: normalizedListEnumStyles
+      instanceListEnumStyles: normalizedListEnumStyles,
+      summaryLength: summaryLengthValue
     });
     seenFeatureDetails[featureId] = true;
   });
@@ -2355,7 +2407,8 @@ function saveReportFavorite(payload) {
         instanceChartTypes: normalizeFeatureChartTypeArray([]),
         instanceListOrders: normalizeFeatureListOrderArray([]),
         instanceListEnumerate: normalizeFeatureListEnumerateArray([]),
-        instanceListEnumStyles: normalizeFeatureListEnumStyleArray([])
+        instanceListEnumStyles: normalizeFeatureListEnumStyleArray([]),
+        summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
       });
       seenFeatureDetails[featureId] = true;
     }

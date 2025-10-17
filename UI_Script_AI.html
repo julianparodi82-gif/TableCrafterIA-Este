@@ -20,25 +20,20 @@
         { value: 'chart', label: 'Gráfico' },
         { value: 'table', label: 'Tabla' },
         { value: 'list', label: 'Lista' },
-        { value: 'summary', label: 'Resumen' },
-        { value: 'comments', label: 'Comentarios' }
+        { value: 'summary', label: 'Resumen' }
       ]);
       const REPORT_FEATURE_TOOLTIPS = Object.freeze({
         chart: 'Generará gráficos comparativos o de tendencia. Ej: "Ventas mensuales vs objetivo".',
         table: 'Generará tablas detalladas para comparar datos. Ej: "Resumen de ventas por producto".',
         list: 'Generará listados claros de elementos clave. Ej: "Tareas prioritarias del equipo".',
         summary:
-          'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".',
-        comments:
-          'Añadirá comentarios con el enfoque seleccionado (acciones, insights, riesgos, etc.). Ej: "Próximo paso para el equipo comercial".'
+          'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".'
       });
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
-        summary: true,
-        comments: true
+        summary: true
       });
       const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
-        summary: 1,
-        comments: 1
+        summary: 1
       });
       const REPORT_CHART_TYPE_DEFAULT = 'auto';
       const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
@@ -96,15 +91,14 @@
         map[option.value] = true;
         return map;
       }, {});
-      const REPORT_COMMENT_FOCUS_DEFAULT = 'actions';
-      const REPORT_COMMENT_FOCUS_OPTIONS = Object.freeze([
-        { value: 'actions', label: 'Acciones recomendadas' },
-        { value: 'insights', label: 'Insights clave' },
-        { value: 'risks', label: 'Alertas y riesgos' },
-        { value: 'celebration', label: 'Reconocimiento de logros' },
-        { value: 'culture', label: 'Equipo y cultura' }
+      const REPORT_SUMMARY_LENGTH_DEFAULT = 'standard';
+      const REPORT_SUMMARY_LENGTH_OPTIONS = Object.freeze([
+        { value: 'concise', label: 'Breve y directo' },
+        { value: 'standard', label: 'Equilibrado' },
+        { value: 'detailed', label: 'Detallado' },
+        { value: 'executive', label: 'Ejecutivo con conclusiones' }
       ]);
-      const REPORT_COMMENT_FOCUS_SET = REPORT_COMMENT_FOCUS_OPTIONS.reduce(function(map, option) {
+      const REPORT_SUMMARY_LENGTH_SET = REPORT_SUMMARY_LENGTH_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
         return map;
       }, {});
@@ -144,18 +138,41 @@
         friendly: 'Utiliza un lenguaje cercano y motivador para equipos.',
         analytical: 'Profundiza en datos y justificativos con detalle.'
       });
-      const REPORT_COMMENT_FOCUS_TOOLTIPS = Object.freeze({
-        actions: 'Sugiere próximos pasos concretos para el equipo.',
-        insights: 'Destaca aprendizajes clave identificados en los datos.',
-        risks: 'Advierte riesgos u obstáculos a monitorear.',
-        celebration: 'Resalta logros y reconocimientos para el equipo.',
-        culture: 'Enfatiza clima, colaboración y bienestar del equipo.'
+      const REPORT_SUMMARY_LENGTH_TOOLTIPS = Object.freeze({
+        concise: 'Entre 3 y 4 frases que destacan resultados clave. Ej: "Ventas +12% vs. objetivo trimestral."',
+        standard: 'Un párrafo completo con contexto y hallazgos principales. Ej: "Crecimos 8% impulsados por marketing digital."',
+        detailed: 'Dos párrafos con cifras, causas y próximos pasos sugeridos.',
+        executive: 'Resumen con insights y conclusiones ejecutivas más recomendación final.'
+      });
+      const REPORT_PERSONA_DEFAULT = 'auto';
+      const REPORT_PERSONA_OPTIONS = Object.freeze([
+        { value: 'auto', label: 'Elegir automáticamente (IA)' },
+        { value: 'executive', label: 'Dirección general' },
+        { value: 'finance', label: 'Dirección financiera' },
+        { value: 'marketing', label: 'Dirección de marketing' },
+        { value: 'operations', label: 'Gerencia de operaciones' },
+        { value: 'hr', label: 'Recursos humanos' },
+        { value: 'sales', label: 'Liderazgo comercial' }
+      ]);
+      const REPORT_PERSONA_SET = REPORT_PERSONA_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_PERSONA_TOOLTIPS = Object.freeze({
+        auto: 'La IA elige el perfil adecuado según tablas y público objetivo.',
+        executive: 'Enfatiza visión global, riesgos y próximos pasos para la dirección.',
+        finance: 'Prioriza márgenes, costos y salud financiera con foco en KPIs.',
+        marketing: 'Resalta performance de campañas, audiencia y crecimiento de marca.',
+        operations: 'Detalla eficiencia operativa, logística y tiempos de entrega.',
+        hr: 'Se enfoca en clima laboral, desarrollo y bienestar del equipo.',
+        sales: 'Subraya pipeline, conversiones y resultados comerciales clave.'
       });
       const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
         outputLanguage: 'Idioma de salida',
-        tone: 'Tono del reporte'
+        tone: 'Tono del reporte',
+        persona: 'Perfil profesional'
       });
-      const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze(['outputLanguage', 'tone']);
+      const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze(['outputLanguage', 'tone', 'persona']);
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -1161,8 +1178,17 @@ function createEmptyFeatureListEnumStyleArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
       }
 
-function createEmptyFeatureCommentFocusArray() {
-        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_COMMENT_FOCUS_DEFAULT);
+function normalizeSummaryLengthValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_SUMMARY_LENGTH_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_SUMMARY_LENGTH_DEFAULT;
+        }
+        return REPORT_SUMMARY_LENGTH_SET[normalized]
+          ? normalized
+          : REPORT_SUMMARY_LENGTH_DEFAULT;
       }
 
 function normalizeFeatureInstanceArray(source) {
@@ -1252,29 +1278,6 @@ function normalizeFeatureListEnumStyleArray(source) {
         return base;
       }
 
-function normalizeCommentFocusValue(value) {
-        if (value === null || value === undefined) {
-          return REPORT_COMMENT_FOCUS_DEFAULT;
-        }
-        const normalized = String(value).trim().toLowerCase();
-        if (!normalized) {
-          return REPORT_COMMENT_FOCUS_DEFAULT;
-        }
-        return REPORT_COMMENT_FOCUS_SET[normalized]
-          ? normalized
-          : REPORT_COMMENT_FOCUS_DEFAULT;
-      }
-
-function normalizeFeatureCommentFocusArray(source) {
-        const base = createEmptyFeatureCommentFocusArray();
-        if (Array.isArray(source)) {
-          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
-            base[index] = normalizeCommentFocusValue(entry);
-          });
-        }
-        return base;
-      }
-
 function ensureReportFeatureState(feature) {
         const key = feature || '';
         if (!key) {
@@ -1290,7 +1293,7 @@ function ensureReportFeatureState(feature) {
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
-            instanceCommentFocus: createEmptyFeatureCommentFocusArray()
+            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
           };
           return reportFeatureState[key];
         }
@@ -1316,8 +1319,8 @@ function ensureReportFeatureState(feature) {
         if (!Array.isArray(state.instanceListEnumStyles)) {
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
         }
-        if (!Array.isArray(state.instanceCommentFocus)) {
-          state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
+        if (!state.summaryLength || !REPORT_SUMMARY_LENGTH_SET[state.summaryLength]) {
+          state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
         }
         return state;
       }
@@ -1509,6 +1512,17 @@ function refreshReportFeatureOption(feature) {
             quantityInput.disabled = !shouldShowQuantity;
           }
         }
+        const summaryLengthSelect = option.querySelector('[data-feature-summary-length="' + feature + '"]');
+        if (summaryLengthSelect) {
+          const isEnabled = !!state.selected;
+          const value = feature === 'summary'
+            ? normalizeSummaryLengthValue(state.summaryLength)
+            : REPORT_SUMMARY_LENGTH_DEFAULT;
+          state.summaryLength = value;
+          summaryLengthSelect.disabled = !isEnabled;
+          summaryLengthSelect.value = value;
+          bindSelectTooltipWithMap(summaryLengthSelect, REPORT_SUMMARY_LENGTH_TOOLTIPS);
+        }
         const instancesWrapper = option.querySelector('[data-feature-instances="' + feature + '"]');
         if (instancesWrapper) {
           const shouldShowInstances = !!state.selected;
@@ -1521,7 +1535,6 @@ function refreshReportFeatureOption(feature) {
           let normalizedListOrders = createEmptyFeatureListOrderArray();
           let normalizedListEnumerate = createEmptyFeatureListEnumerateArray();
           let normalizedListEnumStyles = createEmptyFeatureListEnumStyleArray();
-          let normalizedCommentFocus = createEmptyFeatureCommentFocusArray();
           if (feature === 'list') {
             normalizedListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
             normalizedListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
@@ -1530,8 +1543,6 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumerate = normalizedListEnumerate.slice();
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
-          const normalizedCommentFocusArray = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
-          state.instanceCommentFocus = normalizedCommentFocusArray.slice();
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -1560,9 +1571,6 @@ function refreshReportFeatureOption(feature) {
             );
             const enumStyleSelect = item.querySelector(
               '[data-feature-instance-list-style="' + feature + '"]'
-            );
-            const commentFocusSelect = item.querySelector(
-              '[data-feature-instance-comment-focus="' + feature + '"]'
             );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
@@ -1601,12 +1609,6 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
-            if (commentFocusSelect) {
-              const focusValue = normalizedCommentFocusArray[index] || REPORT_COMMENT_FOCUS_DEFAULT;
-              commentFocusSelect.value = focusValue;
-              commentFocusSelect.disabled = !withinRange;
-              bindSelectTooltipWithMap(commentFocusSelect, REPORT_COMMENT_FOCUS_TOOLTIPS);
-            }
           });
         }
       }
@@ -1634,7 +1636,7 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
           state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
-          state.instanceCommentFocus = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
+          state.summaryLength = normalizeSummaryLengthValue(state.summaryLength);
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -1643,7 +1645,7 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListOrders = createEmptyFeatureListOrderArray();
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
-          state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
+          state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -1665,7 +1667,6 @@ function handleReportFeatureQuantityChange(feature, value) {
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
         state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
-        state.instanceCommentFocus = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
         refreshReportFeatureOption(feature);
       }
 
@@ -1784,19 +1785,12 @@ function handleReportFeatureInstanceListStyleChange(feature, index, value) {
         }
       }
 
-function handleReportFeatureInstanceCommentFocusChange(feature, index, value) {
+function handleReportFeatureSummaryLengthChange(feature, value) {
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
           return;
         }
-        const parsedIndex = parseInt(index, 10);
-        if (isNaN(parsedIndex)) {
-          return;
-        }
-        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
-        const focusValues = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
-        focusValues[safeIndex] = normalizeCommentFocusValue(value);
-        state.instanceCommentFocus = focusValues;
+        state.summaryLength = normalizeSummaryLengthValue(value);
       }
 
 function initializeReportFeatureControls() {
@@ -1896,20 +1890,16 @@ function initializeReportFeatureControls() {
             });
             selector.dataset.bound = 'true';
           });
-          const commentFocusSelectors = option.querySelectorAll(
-            '[data-feature-instance-comment-focus="' + feature + '"]'
+          const summaryLengthSelector = option.querySelector(
+            '[data-feature-summary-length="' + feature + '"]'
           );
-          commentFocusSelectors.forEach(function(selector) {
-            if (!selector || selector.dataset.bound) {
-              return;
-            }
-            bindSelectTooltipWithMap(selector, REPORT_COMMENT_FOCUS_TOOLTIPS);
-            selector.addEventListener('change', function() {
-              const index = parseInt(selector.dataset.instanceIndex, 10);
-              handleReportFeatureInstanceCommentFocusChange(feature, index, selector.value);
+          if (summaryLengthSelector && !summaryLengthSelector.dataset.bound) {
+            bindSelectTooltipWithMap(summaryLengthSelector, REPORT_SUMMARY_LENGTH_TOOLTIPS);
+            summaryLengthSelector.addEventListener('change', function() {
+              handleReportFeatureSummaryLengthChange(feature, summaryLengthSelector.value);
             });
-            selector.dataset.bound = 'true';
-          });
+            summaryLengthSelector.dataset.bound = 'true';
+          }
           refreshReportFeatureOption(feature);
         });
         updateSelectedReportFeatures();
@@ -1939,10 +1929,22 @@ function normalizeToneValue(value) {
         return REPORT_TONE_SET[normalized] ? normalized : REPORT_TONE_DEFAULT;
       }
 
+function normalizePersonaValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_PERSONA_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_PERSONA_DEFAULT;
+        }
+        return REPORT_PERSONA_SET[normalized] ? normalized : REPORT_PERSONA_DEFAULT;
+      }
+
 function createDefaultCustomizationState() {
         return {
           outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
-          tone: { enabled: false, value: REPORT_TONE_DEFAULT }
+          tone: { enabled: false, value: REPORT_TONE_DEFAULT },
+          persona: { enabled: false, value: REPORT_PERSONA_DEFAULT }
         };
       }
 
@@ -1959,11 +1961,18 @@ function normalizeReportCustomizationInput(source) {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
         }
+        if (source.persona && typeof source.persona === 'object') {
+          base.persona.enabled = !!source.persona.enabled;
+          base.persona.value = normalizePersonaValue(source.persona.value);
+        }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
         }
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
+        }
+        if (!base.persona.enabled) {
+          base.persona.value = REPORT_PERSONA_DEFAULT;
         }
         return {
           outputLanguage: {
@@ -1973,6 +1982,10 @@ function normalizeReportCustomizationInput(source) {
           tone: {
             enabled: base.tone.enabled,
             value: base.tone.value
+          },
+          persona: {
+            enabled: base.persona.enabled,
+            value: base.persona.value
           }
         };
       }
@@ -2061,6 +2074,13 @@ function refreshReportCustomizationOption(option) {
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_TONE_TOOLTIPS);
           }
+        } else if (option === 'persona') {
+          const select = element.querySelector('[data-custom-select="persona"]');
+          if (select) {
+            const value = isEnabled ? normalizePersonaValue(state.value) : REPORT_PERSONA_DEFAULT;
+            select.value = value;
+            bindSelectTooltipWithMap(select, REPORT_PERSONA_TOOLTIPS);
+          }
         }
       }
 
@@ -2098,6 +2118,8 @@ function handleReportCustomizationSelection(option, checked) {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
+          } else if (option === 'persona') {
+            state.value = REPORT_PERSONA_DEFAULT;
           }
         }
         setReportCustomizationOptionOpen(option, state.enabled);
@@ -2114,6 +2136,8 @@ function handleReportCustomizationValueChange(option, value) {
           state.value = normalizeOutputLanguageValue(value);
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
+        } else if (option === 'persona') {
+          state.value = normalizePersonaValue(value);
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
@@ -2155,7 +2179,7 @@ function initializeReportCustomizationControls() {
             });
             toggle.dataset.bound = 'true';
           }
-          if (option === 'outputLanguage' || option === 'tone') {
+          if (option === 'outputLanguage' || option === 'tone' || option === 'persona') {
             const select = wrapper.querySelector('[data-custom-select="' + option + '"]');
             if (select && !select.dataset.bound) {
               select.addEventListener('change', function() {
@@ -2172,7 +2196,8 @@ function applyReportCustomizationState(source) {
         const normalized = normalizeReportCustomizationInput(source);
         reportCustomizationState = {
           outputLanguage: Object.assign({}, normalized.outputLanguage),
-          tone: Object.assign({}, normalized.tone)
+          tone: Object.assign({}, normalized.tone),
+          persona: Object.assign({}, normalized.persona)
         };
         REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
           setReportCustomizationOptionOpen(option, !!reportCustomizationState[option].enabled);
@@ -2191,6 +2216,10 @@ function getReportCustomizationPayload() {
           tone: {
             enabled: normalized.tone.enabled,
             value: normalized.tone.value
+          },
+          persona: {
+            enabled: normalized.persona.enabled,
+            value: normalized.persona.value
           }
         };
       }
@@ -2240,7 +2269,7 @@ function applyReportFeatureSelections(features, featureDetails) {
             const instanceListEnumStyles = normalizeFeatureListEnumStyleArray(
               detail.instanceListEnumStyles
             );
-            const instanceCommentFocus = normalizeFeatureCommentFocusArray(detail.instanceCommentFocus);
+            const summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -2249,7 +2278,7 @@ function applyReportFeatureSelections(features, featureDetails) {
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles,
-              instanceCommentFocus: instanceCommentFocus
+              summaryLength: summaryLengthValue
             };
           });
         }
@@ -2280,9 +2309,9 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListEnumStyles = detail
               ? normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
               : createEmptyFeatureListEnumStyleArray();
-            state.instanceCommentFocus = detail
-              ? normalizeFeatureCommentFocusArray(detail.instanceCommentFocus)
-              : createEmptyFeatureCommentFocusArray();
+            state.summaryLength = detail
+              ? normalizeSummaryLengthValue(detail.summaryLength)
+              : REPORT_SUMMARY_LENGTH_DEFAULT;
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2291,7 +2320,7 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
-            state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
+            state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
           }
           refreshReportFeatureOption(feature);
         });
@@ -2517,9 +2546,9 @@ async function handleReportFavoriteSave() {
           const baseListEnumStyles = normalizeFeatureListEnumStyleArray(
             state ? state.instanceListEnumStyles : []
           );
-          const baseCommentFocus = normalizeFeatureCommentFocusArray(
-            state ? state.instanceCommentFocus : []
-          );
+          const summaryLengthValue = state
+            ? normalizeSummaryLengthValue(state.summaryLength)
+            : REPORT_SUMMARY_LENGTH_DEFAULT;
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
@@ -2536,7 +2565,7 @@ async function handleReportFavoriteSave() {
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
             state.instanceListEnumStyles = baseListEnumStyles.slice();
-            state.instanceCommentFocus = baseCommentFocus.slice();
+            state.summaryLength = summaryLengthValue;
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -2546,7 +2575,7 @@ async function handleReportFavoriteSave() {
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice(),
-            instanceCommentFocus: baseCommentFocus.slice()
+            summaryLength: summaryLengthValue
           };
         });
 
@@ -2637,7 +2666,7 @@ async function handleReportFavoriteSave() {
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
-            instanceCommentFocus: createEmptyFeatureCommentFocusArray()
+            summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT
           };
           return {
             feature: feature,
@@ -2648,7 +2677,7 @@ async function handleReportFavoriteSave() {
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles),
-            instanceCommentFocus: normalizeFeatureCommentFocusArray(detail.instanceCommentFocus)
+            summaryLength: normalizeSummaryLengthValue(detail.summaryLength)
           };
         });
         const customizationPayload = getReportCustomizationPayload();
