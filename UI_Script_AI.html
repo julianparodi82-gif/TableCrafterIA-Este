@@ -29,12 +29,8 @@
         summary:
           'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".'
       });
-      const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
-        summary: true
-      });
-      const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
-        summary: 1
-      });
+      const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({});
+      const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({});
       const REPORT_CHART_TYPE_DEFAULT = 'auto';
       const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
         { value: 'auto', label: 'Selección inteligente de la IA' },
@@ -213,9 +209,14 @@
       let reportFeatureState = {};
       let reportCustomizationState = createDefaultCustomizationState();
       let reportFavoriteModalVisible = false;
+      let reportFeatureOrder = [];
+      let reportOrderDraft = [];
+      let reportOrderOverlayVisible = false;
+      let reportOrderOverlayEscapeListenerAttached = false;
+      let reportOrderDragKey = '';
       let savingReportFavorite = false;
       let reportDeliveryOutsideListenerAttached = false;
-     let reportFileDateEnabled = false;
+      let reportFileDateEnabled = false;
       let favoriteModalEscapeListenerAttached = false;
 
 
@@ -387,6 +388,7 @@ function updateAiListSelectionUI(select) {
             item.setAttribute('aria-selected', 'false');
           }
         });
+        refreshAllReportFeatureOptions();
       }
 
 function toggleAiListValue(value) {
@@ -1201,6 +1203,723 @@ function createEmptyFeatureListEnumStyleArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
       }
 
+function createEmptyFeatureTableToggleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(false);
+      }
+
+function createEmptyFeatureTableSelectionArray() {
+        return Array.from({ length: REPORT_FEATURE_MAX_QUANTITY }, function() {
+          return [];
+        });
+      }
+
+function cloneFeatureTableSelectionArray(source) {
+        const base = createEmptyFeatureTableSelectionArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const seen = Object.create(null);
+          const values = [];
+          entry.forEach(function(value) {
+            if (value === null || value === undefined) {
+              return;
+            }
+            const text = String(value).trim();
+            if (!text || seen[text]) {
+              return;
+            }
+            seen[text] = true;
+            values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
+function normalizeFeatureTableToggleArray(source) {
+        const base = createEmptyFeatureTableToggleArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(value, index) {
+            base[index] = !!value;
+          });
+        }
+        return base;
+      }
+
+function normalizeFeatureTableSelectionArray(source, allowedSet) {
+        const base = createEmptyFeatureTableSelectionArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        const hasAllowedSet = allowedSet && typeof allowedSet === 'object';
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const seen = Object.create(null);
+          const values = [];
+          entry.forEach(function(value) {
+            if (value === null || value === undefined) {
+              return;
+            }
+            const text = String(value).trim();
+            if (!text || text === ALL_TABLES_OPTION_VALUE || seen[text]) {
+              return;
+            }
+            if (hasAllowedSet && !allowedSet[text]) {
+              return;
+            }
+            seen[text] = true;
+            values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
+function createFeatureInstanceKey(feature, index) {
+        const normalizedFeature = normalizeFeatureId(feature);
+        if (!normalizedFeature) {
+          return '';
+        }
+        const parsedIndex = parseInt(index, 10);
+        const safeIndex = isNaN(parsedIndex)
+          ? 0
+          : Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        return normalizedFeature + ':' + safeIndex;
+      }
+
+function parseFeatureInstanceKey(key) {
+        if (key === null || key === undefined) {
+          return null;
+        }
+        const parts = String(key).split(':');
+        if (parts.length !== 2) {
+          return null;
+        }
+        const feature = normalizeFeatureId(parts[0]);
+        const index = parseInt(parts[1], 10);
+        if (!feature || isNaN(index) || index < 0 || index >= REPORT_FEATURE_MAX_QUANTITY) {
+          return null;
+        }
+        return { feature: feature, index: index };
+      }
+
+function normalizeReportOrderEntries(entries) {
+        if (!Array.isArray(entries)) {
+          return [];
+        }
+        const result = [];
+        entries.forEach(function(entry) {
+          if (entry === null || entry === undefined) {
+            return;
+          }
+          if (typeof entry === 'string') {
+            const parsed = parseFeatureInstanceKey(entry);
+            if (parsed) {
+              const key = createFeatureInstanceKey(parsed.feature, parsed.index);
+              if (key) {
+                result.push(key);
+              }
+            }
+            return;
+          }
+          const feature = normalizeFeatureId(entry.feature);
+          const index = parseInt(entry.index, 10);
+          if (!feature || isNaN(index) || index < 0 || index >= REPORT_FEATURE_MAX_QUANTITY) {
+            return;
+          }
+          const key = createFeatureInstanceKey(feature, index);
+          if (key) {
+            result.push(key);
+          }
+        });
+        return result;
+      }
+
+function getActiveReportFeatureInstanceKeys() {
+        const keys = [];
+        REPORT_FEATURE_OPTIONS.forEach(function(option) {
+          if (!option || !option.value) {
+            return;
+          }
+          const feature = option.value;
+          const state = ensureReportFeatureState(feature);
+          if (!state || !state.selected) {
+            return;
+          }
+          const quantity = clampReportFeatureQuantity(state.quantity, feature);
+          for (let idx = 0; idx < quantity; idx++) {
+            const key = createFeatureInstanceKey(feature, idx);
+            if (key) {
+              keys.push(key);
+            }
+          }
+        });
+        return keys;
+      }
+
+function sanitizeReportOrder(orderList, activeKeys) {
+        const baseEntries = normalizeReportOrderEntries(orderList);
+        const active = Array.isArray(activeKeys) ? activeKeys.slice() : getActiveReportFeatureInstanceKeys();
+        const activeSet = active.reduce(function(map, key) {
+          if (key) {
+            map[key] = true;
+          }
+          return map;
+        }, Object.create(null));
+        const sanitized = [];
+        baseEntries.forEach(function(key) {
+          if (key && activeSet[key] && sanitized.indexOf(key) === -1) {
+            sanitized.push(key);
+          }
+        });
+        active.forEach(function(key) {
+          if (key && sanitized.indexOf(key) === -1) {
+            sanitized.push(key);
+          }
+        });
+        return sanitized;
+      }
+
+function findOptionLabel(options, value) {
+        if (!Array.isArray(options)) {
+          return '';
+        }
+        const normalized = value === null || value === undefined ? '' : String(value);
+        const match = options.find(function(option) {
+          return option && option.value === normalized;
+        });
+        return match && match.label ? match.label : '';
+      }
+
+function getReportChartTypeLabel(value) {
+        const normalized = normalizeChartTypeValue(value);
+        return findOptionLabel(REPORT_CHART_TYPE_OPTIONS, normalized) || 'Selección automática';
+      }
+
+function getReportListOrderLabel(value) {
+        const normalized = value === null || value === undefined ? '' : String(value);
+        return findOptionLabel(REPORT_LIST_ORDER_OPTIONS, normalized) || '';
+      }
+
+function getReportListEnumerateLabel(value) {
+        const normalized = value === null || value === undefined ? '' : String(value);
+        return findOptionLabel(REPORT_LIST_ENUMERATE_OPTIONS, normalized) || '';
+      }
+
+function getReportListEnumStyleLabel(value) {
+        const normalized = value === null || value === undefined ? '' : String(value);
+        return findOptionLabel(REPORT_LIST_ENUM_STYLE_OPTIONS, normalized) || '';
+      }
+
+function getReportSummaryLengthLabel(value) {
+        const normalized = normalizeSummaryLengthValue(value);
+        return findOptionLabel(REPORT_SUMMARY_LENGTH_OPTIONS, normalized) || '';
+      }
+
+function getReportSummaryToneLabel(value) {
+        const normalized = normalizeSummaryToneValue(value);
+        return findOptionLabel(REPORT_SUMMARY_TONE_OPTIONS, normalized) || '';
+      }
+
+function getReportTableLabel(id) {
+        if (!id) {
+          return '';
+        }
+        if (id === ALL_TABLES_OPTION_VALUE) {
+          return 'Todas las tablas';
+        }
+        if (typeof getSavedTableFromCache === 'function') {
+          const entry = getSavedTableFromCache(id);
+          if (entry) {
+            if (entry.name) {
+              return entry.name;
+            }
+            if (entry.fullRangeA1) {
+              return entry.fullRangeA1;
+            }
+          }
+        }
+        return String(id);
+      }
+
+function formatReportTableLabelList(ids) {
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return '';
+        }
+        const labels = [];
+        ids.forEach(function(id) {
+          if (!id || id === ALL_TABLES_OPTION_VALUE) {
+            return;
+          }
+          const label = getReportTableLabel(id);
+          if (label) {
+            labels.push(label);
+          }
+        });
+        if (labels.length === 0) {
+          return '';
+        }
+        if (labels.length <= 4) {
+          return labels.join(', ');
+        }
+        const visible = labels.slice(0, 3);
+        visible.push('+' + (labels.length - 3) + ' más');
+        return visible.join(', ');
+      }
+
+function getReportOrderTablesMeta(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return '';
+        }
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const selections = normalizeFeatureTableSelectionArray(state.instanceTables);
+        if (toggles[index] && Array.isArray(selections[index]) && selections[index].length > 0) {
+          const count = selections[index].length;
+          return count === 1 ? 'Tablas: 1 específica' : 'Tablas: ' + count + ' específicas';
+        }
+        const selectedIds = getSelectedAiTableIds();
+        if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+          return 'Tablas: sin seleccionar';
+        }
+        if (selectedIds.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+          return 'Tablas: todas las seleccionadas';
+        }
+        return 'Tablas: ' + selectedIds.length + (selectedIds.length === 1 ? ' seleccionada' : ' seleccionadas');
+      }
+
+function getReportOrderTablesDetail(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return 'Tablas generales: sin seleccionar';
+        }
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const selections = normalizeFeatureTableSelectionArray(state.instanceTables);
+        if (toggles[index] && Array.isArray(selections[index]) && selections[index].length > 0) {
+          const detail = formatReportTableLabelList(selections[index]);
+          if (detail) {
+            return 'Tablas específicas: ' + detail;
+          }
+          const count = selections[index].length;
+          return 'Tablas específicas: ' + (count === 1 ? '1 tabla' : count + ' tablas');
+        }
+        const selectedIds = getSelectedAiTableIds();
+        if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+          return 'Tablas generales: sin seleccionar';
+        }
+        if (selectedIds.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+          return 'Tablas generales: todas las tablas seleccionadas';
+        }
+        const detail = formatReportTableLabelList(selectedIds);
+        if (detail) {
+          return 'Tablas generales: ' + detail;
+        }
+        const count = selectedIds.length;
+        return 'Tablas generales: ' + (count === 1 ? '1 tabla' : count + ' tablas');
+      }
+
+function getReportOrderItemMeta(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return '';
+        }
+        const parts = [];
+        if (feature === 'chart') {
+          const chartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+          parts.push('Tipo: ' + getReportChartTypeLabel(chartTypes[index]));
+        } else if (feature === 'list') {
+          const enumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+          if (enumerate[index] === 'yes') {
+            const styles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+            const styleLabel = getReportListEnumStyleLabel(styles[index]);
+            parts.push(styleLabel ? 'Enumeración: ' + styleLabel : 'Enumeración: activada');
+          } else {
+            const orders = normalizeFeatureListOrderArray(state.instanceListOrders);
+            const orderLabel = getReportListOrderLabel(orders[index]);
+            if (orderLabel) {
+              parts.push('Orden: ' + orderLabel);
+            }
+          }
+        } else if (feature === 'summary') {
+          const lengthLabel = getReportSummaryLengthLabel(state.summaryLength);
+          if (lengthLabel) {
+            parts.push('Longitud: ' + lengthLabel);
+          }
+        }
+        const tablesMeta = getReportOrderTablesMeta(feature, index);
+        if (tablesMeta) {
+          parts.push(tablesMeta);
+        }
+        return parts.join(' · ');
+      }
+
+function getReportOrderItemTooltip(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return '';
+        }
+        const quantity = clampReportFeatureQuantity(state.quantity, feature);
+        if (index < 0 || index >= quantity) {
+          return '';
+        }
+        const titles = normalizeFeatureTitleArray(state.instanceTitles);
+        const descriptions = normalizeFeatureInstanceArray(state.instanceDescriptions);
+        const lines = [];
+        const titleText = titles[index] ? String(titles[index]).trim() : '';
+        const descriptionText = descriptions[index] ? String(descriptions[index]).trim() : '';
+        if (titleText) {
+          lines.push('Nombre: ' + titleText);
+        }
+        if (descriptionText) {
+          lines.push('Descripción: ' + descriptionText);
+        }
+        if (feature === 'chart') {
+          const chartTypes = normalizeFeatureChartTypeArray(state.instanceChartTypes);
+          lines.push('Tipo: ' + getReportChartTypeLabel(chartTypes[index]));
+        } else if (feature === 'list') {
+          const enumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+          if (enumerate[index] === 'yes') {
+            const styles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+            const styleLabel = getReportListEnumStyleLabel(styles[index]);
+            lines.push(styleLabel ? 'Enumeración: ' + styleLabel : 'Enumeración: activada');
+          } else {
+            const orders = normalizeFeatureListOrderArray(state.instanceListOrders);
+            const orderLabel = getReportListOrderLabel(orders[index]);
+            if (orderLabel) {
+              lines.push('Orden: ' + orderLabel);
+            }
+          }
+        } else if (feature === 'summary') {
+          const lengthLabel = getReportSummaryLengthLabel(state.summaryLength);
+          if (lengthLabel) {
+            lines.push('Longitud: ' + lengthLabel);
+          }
+          const toneLabel = getReportSummaryToneLabel(state.summaryTone);
+          if (toneLabel) {
+            lines.push('Tono: ' + toneLabel);
+          }
+        }
+        lines.push(getReportOrderTablesDetail(feature, index));
+        return lines.join('\n');
+      }
+
+function updateReportOrderButtonState() {
+        const button = document.getElementById('aiReportOrderBtn');
+        if (!button) {
+          return;
+        }
+        const activeKeys = getActiveReportFeatureInstanceKeys();
+        const hasItems = activeKeys.length > 0;
+        button.disabled = !hasItems;
+        if (hasItems) {
+          button.removeAttribute('aria-disabled');
+        } else {
+          button.setAttribute('aria-disabled', 'true');
+        }
+      }
+
+function getReportOrderItemLabel(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return '';
+        }
+        const titles = normalizeFeatureTitleArray(state.instanceTitles);
+        const titleText = titles[index] ? String(titles[index]).trim() : '';
+        if (titleText) {
+          return titleText;
+        }
+        const baseLabel = REPORT_FEATURE_LABELS[feature] || feature;
+        return baseLabel + ' ' + (index + 1);
+      }
+
+function renderReportOrderList() {
+        const list = document.getElementById('aiReportOrderList');
+        const empty = document.getElementById('aiReportOrderEmpty');
+        if (!list || !empty) {
+          return;
+        }
+        const source = reportOrderOverlayVisible ? reportOrderDraft : reportFeatureOrder;
+        const keys = sanitizeReportOrder(source);
+        list.innerHTML = '';
+        if (keys.length === 0) {
+          empty.classList.remove('ai-hidden');
+          list.classList.add('ai-hidden');
+          return;
+        }
+        empty.classList.add('ai-hidden');
+        list.classList.remove('ai-hidden');
+        keys.forEach(function(key) {
+          const parsed = parseFeatureInstanceKey(key);
+          if (!parsed) {
+            return;
+          }
+          const item = document.createElement('div');
+          item.className = 'ai-report-order-item';
+          item.setAttribute('data-order-item', key);
+          item.setAttribute('role', 'listitem');
+          const draggable = keys.length > 1;
+          item.setAttribute('draggable', draggable ? 'true' : 'false');
+
+          const textWrapper = document.createElement('div');
+          textWrapper.className = 'ai-report-order-text';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'ai-report-order-label';
+          const labelText = getReportOrderItemLabel(parsed.feature, parsed.index);
+          const labelContent = document.createElement('span');
+          labelContent.className = 'ai-report-order-label-text';
+          labelContent.textContent = labelText ||
+            (REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature) + ' ' + (parsed.index + 1);
+          labelSpan.appendChild(labelContent);
+          const tooltip = getReportOrderItemTooltip(parsed.feature, parsed.index);
+          if (tooltip) {
+            labelSpan.classList.add('tc-tooltip-target');
+            labelSpan.setAttribute('data-tooltip', tooltip);
+            labelSpan.setAttribute('tabindex', '0');
+          }
+          textWrapper.appendChild(labelSpan);
+
+          const metaText = getReportOrderItemMeta(parsed.feature, parsed.index);
+          if (metaText) {
+            const metaSpan = document.createElement('span');
+            metaSpan.className = 'ai-report-order-meta';
+            metaSpan.textContent = metaText;
+            textWrapper.appendChild(metaSpan);
+          }
+
+          item.appendChild(textWrapper);
+
+          if (draggable) {
+            const handle = document.createElement('span');
+            handle.className = 'ai-report-order-handle';
+            handle.setAttribute('aria-hidden', 'true');
+            handle.textContent = '⋮⋮';
+            item.appendChild(handle);
+          }
+
+          list.appendChild(item);
+        });
+
+        bindReportOrderDragEvents();
+      }
+
+function renderReportOrderSummary() {
+        const summary = document.getElementById('aiReportOrderSummary');
+        if (!summary) {
+          return;
+        }
+        const keys = sanitizeReportOrder(reportFeatureOrder);
+        summary.innerHTML = '';
+        if (keys.length === 0) {
+          summary.classList.add('ai-hidden');
+          return;
+        }
+        summary.classList.remove('ai-hidden');
+        keys.forEach(function(key, index) {
+          const parsed = parseFeatureInstanceKey(key);
+          if (!parsed) {
+            return;
+          }
+          const chip = document.createElement('span');
+          chip.className = 'ai-report-order-summary-chip';
+          const labelText = getReportOrderItemLabel(parsed.feature, parsed.index);
+          const baseLabel = REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature;
+          chip.textContent = (index + 1) + '. ' + (labelText || (baseLabel + ' ' + (parsed.index + 1)));
+          const tooltip = getReportOrderItemTooltip(parsed.feature, parsed.index);
+          if (tooltip) {
+            chip.classList.add('tc-tooltip-target');
+            chip.setAttribute('data-tooltip', tooltip);
+            chip.setAttribute('tabindex', '0');
+          }
+          summary.appendChild(chip);
+        });
+      }
+
+function bindReportOrderDragEvents() {
+        const items = document.querySelectorAll('.ai-report-order-item[draggable="true"]');
+        items.forEach(function(item) {
+          item.addEventListener('dragstart', handleReportOrderDragStart);
+          item.addEventListener('dragend', handleReportOrderDragEnd);
+          item.addEventListener('dragover', handleReportOrderDragOver);
+          item.addEventListener('dragleave', handleReportOrderDragLeave);
+          item.addEventListener('drop', handleReportOrderDrop);
+        });
+      }
+
+function handleReportOrderDragStart(event) {
+        const target = event.currentTarget;
+        if (!target || target.getAttribute('draggable') === 'false') {
+          return;
+        }
+        const key = target.dataset ? target.dataset.orderItem : '';
+        if (!key) {
+          return;
+        }
+        reportOrderDragKey = key;
+        target.classList.add('dragging');
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', key);
+        }
+      }
+
+function handleReportOrderDragEnd(event) {
+        const target = event.currentTarget;
+        if (target) {
+          target.classList.remove('dragging');
+          target.classList.remove('drag-over');
+        }
+        reportOrderDragKey = '';
+      }
+
+function handleReportOrderDragOver(event) {
+        if (event.preventDefault) {
+          event.preventDefault();
+        }
+        const target = event.currentTarget;
+        if (!target || target.getAttribute('draggable') === 'false') {
+          return;
+        }
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = 'move';
+        }
+        target.classList.add('drag-over');
+      }
+
+function handleReportOrderDragLeave(event) {
+        const target = event.currentTarget;
+        if (target) {
+          target.classList.remove('drag-over');
+        }
+      }
+
+function handleReportOrderDrop(event) {
+        if (event.preventDefault) {
+          event.preventDefault();
+        }
+        const target = event.currentTarget;
+        if (!target || target.getAttribute('draggable') === 'false') {
+          return;
+        }
+        target.classList.remove('drag-over');
+        const targetKey = target.dataset ? target.dataset.orderItem : '';
+        const sourceKey = reportOrderDragKey || (event.dataTransfer ? event.dataTransfer.getData('text/plain') : '');
+        if (!targetKey || !sourceKey || targetKey === sourceKey) {
+          return;
+        }
+        const current = sanitizeReportOrder(reportOrderDraft);
+        const fromIndex = current.indexOf(sourceKey);
+        const toIndex = current.indexOf(targetKey);
+        if (fromIndex === -1 || toIndex === -1) {
+          return;
+        }
+        current.splice(fromIndex, 1);
+        const newIndex = toIndex + (fromIndex < toIndex ? 1 : 0);
+        current.splice(newIndex, 0, sourceKey);
+        reportOrderDraft = current;
+        renderReportOrderList();
+        updateReportOrderActions();
+      }
+
+function updateReportOrderActions() {
+        const applyBtn = document.getElementById('aiReportOrderApplyBtn');
+        if (applyBtn) {
+          applyBtn.disabled = sanitizeReportOrder(reportOrderDraft).length === 0;
+        }
+      }
+
+function syncReportFeatureOrder() {
+        const activeKeys = getActiveReportFeatureInstanceKeys();
+        reportFeatureOrder = sanitizeReportOrder(reportFeatureOrder, activeKeys);
+        if (reportOrderOverlayVisible) {
+          reportOrderDraft = sanitizeReportOrder(reportOrderDraft, activeKeys);
+          renderReportOrderList();
+          updateReportOrderActions();
+        }
+        renderReportOrderSummary();
+        updateReportOrderButtonState();
+      }
+
+function openReportOrderOverlay() {
+        const activeKeys = getActiveReportFeatureInstanceKeys();
+        if (activeKeys.length === 0) {
+          return;
+        }
+        const overlay = document.getElementById('aiReportOrderOverlay');
+        const trigger = document.getElementById('aiReportOrderBtn');
+        reportOrderDraft = sanitizeReportOrder(reportFeatureOrder.slice(), activeKeys);
+        reportOrderOverlayVisible = true;
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+        if (trigger) {
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+        renderReportOrderList();
+        updateReportOrderActions();
+        if (overlay) {
+          const focusable = overlay.querySelector('.ai-report-order-label');
+          if (focusable) {
+            focusable.focus();
+          }
+        }
+      }
+
+function closeReportOrderOverlay(options) {
+        const overlay = document.getElementById('aiReportOrderOverlay');
+        const trigger = document.getElementById('aiReportOrderBtn');
+        const applyChanges = options && options.apply;
+        const focusTrigger = options && options.focusTrigger;
+        if (applyChanges) {
+          reportFeatureOrder = sanitizeReportOrder(reportOrderDraft.slice());
+        }
+        reportOrderDraft = [];
+        reportOrderOverlayVisible = false;
+        reportOrderDragKey = '';
+        if (overlay) {
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+        if (trigger) {
+          trigger.setAttribute('aria-expanded', 'false');
+          if (focusTrigger) {
+            trigger.focus();
+          }
+        }
+        if (applyChanges) {
+          syncReportFeatureOrder();
+        } else {
+          updateReportOrderButtonState();
+        }
+      }
+
+function buildReportOrderPayload() {
+        const sanitized = sanitizeReportOrder(reportFeatureOrder);
+        return sanitized
+          .map(function(key) {
+            const parsed = parseFeatureInstanceKey(key);
+            if (!parsed) {
+              return null;
+            }
+            return { feature: parsed.feature, index: parsed.index };
+          })
+          .filter(Boolean);
+      }
+
+function applyReportFeatureOrder(orderEntries) {
+        reportFeatureOrder = sanitizeReportOrder(orderEntries);
+        syncReportFeatureOrder();
+      }
+
 function normalizeSummaryLengthValue(value) {
         if (value === null || value === undefined) {
           return REPORT_SUMMARY_LENGTH_DEFAULT;
@@ -1328,7 +2047,9 @@ function ensureReportFeatureState(feature) {
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
-            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+            instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+            instanceTables: createEmptyFeatureTableSelectionArray()
           };
           return reportFeatureState[key];
         }
@@ -1359,6 +2080,12 @@ function ensureReportFeatureState(feature) {
         }
         if (!state.summaryTone || !REPORT_SUMMARY_TONE_SET[state.summaryTone]) {
           state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+        }
+        if (!Array.isArray(state.instanceTablesEnabled)) {
+          state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+        }
+        if (!Array.isArray(state.instanceTables)) {
+          state.instanceTables = createEmptyFeatureTableSelectionArray();
         }
         return state;
       }
@@ -1430,6 +2157,83 @@ function updateChartTypeWrapperTooltip(select) {
         } else {
           select.removeAttribute('title');
         }
+      }
+
+function getReportFeatureAssociationOptions() {
+        const selectedIds = getSelectedAiTableIds();
+        const normalizedIds = Array.isArray(selectedIds) ? selectedIds.slice() : [];
+        const hasAllOption = normalizedIds.indexOf(ALL_TABLES_OPTION_VALUE) !== -1;
+        const allowedSet = Object.create(null);
+        const entries = [];
+        const cache = Array.isArray(savedTablesCache) ? savedTablesCache : [];
+        const tableMap = cache.reduce(function(map, entry) {
+          if (entry && entry.id) {
+            map[String(entry.id)] = entry;
+          }
+          return map;
+        }, Object.create(null));
+        if (!hasAllOption) {
+          normalizedIds.forEach(function(id) {
+            if (!id || id === ALL_TABLES_OPTION_VALUE) {
+              return;
+            }
+            const entry = tableMap[id];
+            if (!entry) {
+              return;
+            }
+            const label = entry.name || entry.fullRangeA1 || entry.id;
+            allowedSet[entry.id] = true;
+            entries.push({ id: entry.id, name: label });
+          });
+        }
+        let message = '';
+        if (normalizedIds.length === 0) {
+          message = 'Selecciona tablas en la parte superior para asociarlas a cada característica.';
+        } else if (hasAllOption) {
+          message = 'Para asociar tablas específicas, elige tablas individuales en la parte superior.';
+        } else if (entries.length === 0) {
+          message = 'Las tablas seleccionadas ya no están disponibles. Actualiza la lista e inténtalo nuevamente.';
+        }
+        return {
+          entries: entries,
+          allowedSet: allowedSet,
+          hasAllOption: hasAllOption,
+          message: message
+        };
+      }
+
+function populateFeatureTableSelect(select, options, selectedValues) {
+        if (!select) {
+          return;
+        }
+        const previousScroll = select.scrollTop;
+        const previousFocus = document.activeElement === select;
+        select.innerHTML = '';
+        options.forEach(function(option) {
+          if (!option || !option.id) {
+            return;
+          }
+          const opt = document.createElement('option');
+          opt.value = option.id;
+          opt.textContent = option.name || option.id;
+          select.appendChild(opt);
+        });
+        const selectedSet = Object.create(null);
+        if (Array.isArray(selectedValues)) {
+          selectedValues.forEach(function(value) {
+            selectedSet[String(value)] = true;
+          });
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option || !option.value) {
+            return;
+          }
+          option.selected = !!selectedSet[option.value];
+        });
+        if (previousFocus) {
+          select.focus();
+        }
+        select.scrollTop = previousScroll;
       }
 
 function bindChartTypeTooltip(select) {
@@ -1592,6 +2396,18 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumerate = normalizedListEnumerate.slice();
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
+          const associationOptions = getReportFeatureAssociationOptions();
+          let normalizedTableToggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+          let normalizedTableSelections = normalizeFeatureTableSelectionArray(
+            state.instanceTables,
+            associationOptions.hasAllOption ? null : associationOptions.allowedSet
+          );
+          if (!state.selected) {
+            normalizedTableToggles = createEmptyFeatureTableToggleArray();
+            normalizedTableSelections = createEmptyFeatureTableSelectionArray();
+          } else if (associationOptions.entries.length === 0 && !associationOptions.hasAllOption) {
+            normalizedTableSelections = createEmptyFeatureTableSelectionArray();
+          }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -1620,6 +2436,18 @@ function refreshReportFeatureOption(feature) {
             );
             const enumStyleSelect = item.querySelector(
               '[data-feature-instance-list-style="' + feature + '"]'
+            );
+            const tableToggle = item.querySelector(
+              '[data-feature-instance-table-toggle="' + feature + '"]'
+            );
+            const tableSelectWrapper = item.querySelector(
+              '[data-feature-instance-table-select-wrapper="' + feature + '"]'
+            );
+            const tableSelect = item.querySelector(
+              '[data-feature-instance-table-select="' + feature + '"]'
+            );
+            const tableEmptyMessage = item.querySelector(
+              '[data-feature-instance-table-empty="' + feature + '"]'
             );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
@@ -1658,8 +2486,64 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
+            const canAssociate =
+              !!state.selected && associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+            if (tableToggle) {
+              const toggleEnabled = withinRange && !!state.selected;
+              tableToggle.disabled = !toggleEnabled;
+              const currentToggle = toggleEnabled && normalizedTableToggles[index];
+              tableToggle.checked = !!currentToggle;
+              if (!toggleEnabled) {
+                normalizedTableToggles[index] = false;
+                normalizedTableSelections[index] = [];
+              }
+            }
+            const shouldShowTableSelect =
+              withinRange && normalizedTableToggles[index] && canAssociate;
+            if (tableSelectWrapper) {
+              tableSelectWrapper.classList.toggle('ai-hidden', !shouldShowTableSelect);
+            }
+            if (tableSelect) {
+              if (shouldShowTableSelect) {
+                populateFeatureTableSelect(
+                  tableSelect,
+                  associationOptions.entries,
+                  normalizedTableSelections[index]
+                );
+                tableSelect.disabled = false;
+              } else {
+                tableSelect.innerHTML = '';
+                tableSelect.disabled = true;
+              }
+            }
+            if (tableEmptyMessage) {
+              const shouldShowEmpty =
+                withinRange && normalizedTableToggles[index] && !!associationOptions.message && !canAssociate;
+              tableEmptyMessage.classList.toggle('ai-hidden', !shouldShowEmpty);
+              if (shouldShowEmpty) {
+                tableEmptyMessage.textContent = associationOptions.message;
+              }
+            }
           });
+          state.instanceTablesEnabled = normalizedTableToggles.slice();
+          state.instanceTables = cloneFeatureTableSelectionArray(normalizedTableSelections);
         }
+      }
+
+function refreshAllReportFeatureOptions() {
+        if (!reportFeatureState || typeof reportFeatureState !== 'object') {
+          return;
+        }
+        Object.keys(reportFeatureState).forEach(function(feature) {
+          if (feature) {
+            refreshReportFeatureOption(feature);
+          }
+        });
+        renderReportOrderList();
+        if (reportOrderOverlayVisible) {
+          updateReportOrderActions();
+        }
+        renderReportOrderSummary();
       }
 
 function updateSelectedReportFeatures() {
@@ -1668,6 +2552,7 @@ function updateSelectedReportFeatures() {
           return state && state.selected;
         });
         updateReportFeaturesSummary();
+        syncReportFeatureOrder();
       }
 
 function handleReportFeatureSelection(feature, checked) {
@@ -1686,6 +2571,10 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
           state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
           state.summaryLength = normalizeSummaryLengthValue(state.summaryLength);
+          state.instanceTablesEnabled = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+          state.instanceTables = cloneFeatureTableSelectionArray(
+            normalizeFeatureTableSelectionArray(state.instanceTables)
+          );
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -1695,6 +2584,8 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
           state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
+          state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+          state.instanceTables = createEmptyFeatureTableSelectionArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -1716,7 +2607,12 @@ function handleReportFeatureQuantityChange(feature, value) {
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
         state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+        state.instanceTablesEnabled = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        state.instanceTables = cloneFeatureTableSelectionArray(
+          normalizeFeatureTableSelectionArray(state.instanceTables)
+        );
         refreshReportFeatureOption(feature);
+        syncReportFeatureOrder();
       }
 
 function handleReportFeatureInstanceInput(feature, index, value) {
@@ -1834,6 +2730,62 @@ function handleReportFeatureInstanceListStyleChange(feature, index, value) {
         }
       }
 
+function handleReportFeatureInstanceTableToggle(feature, index, enabled) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const selections = cloneFeatureTableSelectionArray(
+          normalizeFeatureTableSelectionArray(state.instanceTables)
+        );
+        const associationOptions = getReportFeatureAssociationOptions();
+        const canAssociate = associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+        if (!enabled) {
+          toggles[safeIndex] = false;
+          selections[safeIndex] = [];
+        } else {
+          toggles[safeIndex] = true;
+          if (!canAssociate) {
+            selections[safeIndex] = [];
+          }
+        }
+        state.instanceTablesEnabled = toggles;
+        state.instanceTables = selections;
+        refreshReportFeatureOption(feature);
+      }
+
+function handleReportFeatureInstanceTableSelection(feature, index, values) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const associationOptions = getReportFeatureAssociationOptions();
+        if (associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
+        const normalizedSelection = normalizeFeatureTableSelectionArray(
+          [Array.isArray(values) ? values : []],
+          associationOptions.allowedSet
+        );
+        const selections = cloneFeatureTableSelectionArray(state.instanceTables);
+        selections[safeIndex] = normalizedSelection[0] || [];
+        state.instanceTablesEnabled = toggles;
+        state.instanceTables = selections;
+        refreshReportFeatureOption(feature);
+      }
+
 function handleReportFeatureSummaryLengthChange(feature, value) {
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
@@ -1852,6 +2804,12 @@ function handleReportFeatureSummaryToneChange(feature, value) {
 
 function initializeReportFeatureControls() {
         reportFeatureState = {};
+        reportFeatureOrder = [];
+        reportOrderDraft = [];
+        reportOrderDragKey = '';
+        closeReportOrderOverlay({ apply: false, focusTrigger: false });
+        renderReportOrderList();
+        updateReportOrderActions();
         const featureOptions = document.querySelectorAll('#aiReportFeatureList .ai-feature-option');
         featureOptions.forEach(function(option) {
           const feature = option.dataset ? option.dataset.feature : '';
@@ -1946,6 +2904,32 @@ function initializeReportFeatureControls() {
               handleReportFeatureInstanceListStyleChange(feature, index, selector.value);
             });
             selector.dataset.bound = 'true';
+          });
+          const tableToggles = option.querySelectorAll(
+            '[data-feature-instance-table-toggle="' + feature + '"]'
+          );
+          tableToggles.forEach(function(toggle) {
+            if (!toggle || toggle.dataset.bound) {
+              return;
+            }
+            toggle.addEventListener('change', function() {
+              const index = parseInt(toggle.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTableToggle(feature, index, toggle.checked);
+            });
+            toggle.dataset.bound = 'true';
+          });
+          const tableSelects = option.querySelectorAll(
+            '[data-feature-instance-table-select="' + feature + '"]'
+          );
+          tableSelects.forEach(function(select) {
+            if (!select || select.dataset.bound) {
+              return;
+            }
+            select.addEventListener('change', function() {
+              const index = parseInt(select.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceTableSelection(feature, index, getSelectedOptionValues(select));
+            });
+            select.dataset.bound = 'true';
           });
           const summaryLengthSelector = option.querySelector(
             '[data-feature-summary-length="' + feature + '"]'
@@ -2382,6 +3366,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             );
             const summaryLengthValue = normalizeSummaryLengthValue(detail.summaryLength);
             const summaryToneValue = normalizeSummaryToneValue(detail.summaryTone);
+            const instanceTableToggles = normalizeFeatureTableToggleArray(detail.instanceTablesEnabled);
+            const instanceTableSelections = normalizeFeatureTableSelectionArray(detail.instanceTables);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -2391,7 +3377,9 @@ function applyReportFeatureSelections(features, featureDetails) {
               instanceListEnumerate: instanceListEnumerate,
               instanceListEnumStyles: instanceListEnumStyles,
               summaryLength: summaryLengthValue,
-              summaryTone: summaryToneValue
+              summaryTone: summaryToneValue,
+              instanceTablesEnabled: instanceTableToggles,
+              instanceTables: instanceTableSelections
             };
           });
         }
@@ -2428,6 +3416,14 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.summaryTone = detail
               ? normalizeSummaryToneValue(detail.summaryTone)
               : REPORT_SUMMARY_TONE_DEFAULT;
+            state.instanceTablesEnabled = detail
+              ? normalizeFeatureTableToggleArray(detail.instanceTablesEnabled)
+              : createEmptyFeatureTableToggleArray();
+            state.instanceTables = detail
+              ? cloneFeatureTableSelectionArray(
+                  normalizeFeatureTableSelectionArray(detail.instanceTables)
+                )
+              : createEmptyFeatureTableSelectionArray();
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2438,6 +3434,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
             state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
             state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
+            state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
+            state.instanceTables = createEmptyFeatureTableSelectionArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -2474,6 +3472,7 @@ function setAiTablesSelection(values) {
           disabled: select.disabled,
           selectedValues: getSelectedOptionValues(select)
         });
+        refreshAllReportFeatureOptions();
       }
 
 async function loadReportFavoriteIntoPanel(action) {
@@ -2500,6 +3499,7 @@ async function loadReportFavoriteIntoPanel(action) {
           handleReportFormatSelection('');
         }
         applyReportFeatureSelections(action.features || [], action.featureDetails || []);
+        applyReportFeatureOrder(action.featureOrder || []);
         applyReportCustomizationState(action.customization || {});
         const descToggle = document.getElementById('aiReportDescriptionToggle');
         if (descToggle) {
@@ -2633,6 +3633,18 @@ async function handleReportFavoriteSave() {
           ? selectedReportChannels.slice()
           : [];
         const missingItems = [];
+        const selectedTables = getSelectedAiTableIds();
+        const hasAllTablesOption = Array.isArray(selectedTables)
+          ? selectedTables.indexOf(ALL_TABLES_OPTION_VALUE) !== -1
+          : false;
+        const allowedTableSet = Object.create(null);
+        if (Array.isArray(selectedTables) && !hasAllTablesOption) {
+          selectedTables.forEach(function(value) {
+            if (value && value !== ALL_TABLES_OPTION_VALUE) {
+              allowedTableSet[value] = true;
+            }
+          });
+        }
 
         if (!favoriteName) {
           missingItems.push('Nombre del reporte favorito');
@@ -2648,6 +3660,7 @@ async function handleReportFavoriteSave() {
         }
         const featureDetailMap = {};
         const featureDescriptionIssues = [];
+        const featureAssociationIssues = [];
 
         selectedFeatures.forEach(function(feature) {
           const state = ensureReportFeatureState(feature);
@@ -2669,12 +3682,26 @@ async function handleReportFavoriteSave() {
           const summaryToneValue = state
             ? normalizeSummaryToneValue(state.summaryTone)
             : REPORT_SUMMARY_TONE_DEFAULT;
+          let baseTableToggles = normalizeFeatureTableToggleArray(
+            state ? state.instanceTablesEnabled : []
+          );
+          let baseTableSelections = normalizeFeatureTableSelectionArray(
+            state ? state.instanceTables : [],
+            hasAllTablesOption ? null : allowedTableSet
+          );
+          if (hasAllTablesOption) {
+            baseTableToggles = createEmptyFeatureTableToggleArray();
+            baseTableSelections = createEmptyFeatureTableSelectionArray();
+          }
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
           for (var idx = 0; idx < quantityValue; idx++) {
             if (!trimmedDescriptions[idx]) {
               featureDescriptionIssues.push({ feature: label, index: idx });
+            }
+            if (!hasAllTablesOption && baseTableToggles[idx] && baseTableSelections[idx].length === 0) {
+              featureAssociationIssues.push({ feature: label, index: idx });
             }
           }
           if (state) {
@@ -2687,6 +3714,8 @@ async function handleReportFavoriteSave() {
             state.instanceListEnumStyles = baseListEnumStyles.slice();
             state.summaryLength = summaryLengthValue;
             state.summaryTone = summaryToneValue;
+            state.instanceTablesEnabled = baseTableToggles.slice();
+            state.instanceTables = cloneFeatureTableSelectionArray(baseTableSelections);
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -2697,13 +3726,21 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: baseListEnumerate.slice(),
             instanceListEnumStyles: baseListEnumStyles.slice(),
             summaryLength: summaryLengthValue,
-            summaryTone: summaryToneValue
+            summaryTone: summaryToneValue,
+            instanceTablesEnabled: baseTableToggles.slice(),
+            instanceTables: cloneFeatureTableSelectionArray(baseTableSelections)
           };
         });
 
         if (featureDescriptionIssues.length > 0) {
           featureDescriptionIssues.forEach(function(issue) {
             missingItems.push('Descripción ' + (issue.index + 1) + ' para ' + issue.feature);
+          });
+        }
+
+        if (featureAssociationIssues.length > 0) {
+          featureAssociationIssues.forEach(function(issue) {
+            missingItems.push('Tablas asociadas para ' + issue.feature + ' #' + (issue.index + 1));
           });
         }
 
@@ -2765,7 +3802,6 @@ async function handleReportFavoriteSave() {
           }
         });
 
-        const selectedTables = getSelectedAiTableIds();
         if (!selectedTables || selectedTables.length === 0) {
           await showMessageModal('Selecciona al menos una tabla para asociar el reporte.', {
             title: 'Tablas requeridas',
@@ -2789,7 +3825,9 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
             instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
-            summaryTone: REPORT_SUMMARY_TONE_DEFAULT
+            summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
+            instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
+            instanceTables: createEmptyFeatureTableSelectionArray()
           };
           return {
             feature: feature,
@@ -2801,7 +3839,14 @@ async function handleReportFavoriteSave() {
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
             instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles),
             summaryLength: normalizeSummaryLengthValue(detail.summaryLength),
-            summaryTone: normalizeSummaryToneValue(detail.summaryTone)
+            summaryTone: normalizeSummaryToneValue(detail.summaryTone),
+            instanceTablesEnabled: normalizeFeatureTableToggleArray(detail.instanceTablesEnabled),
+            instanceTables: cloneFeatureTableSelectionArray(
+              normalizeFeatureTableSelectionArray(
+                detail.instanceTables,
+                hasAllTablesOption ? null : allowedTableSet
+              )
+            )
           };
         });
         const customizationPayload = getReportCustomizationPayload();
@@ -2817,6 +3862,7 @@ async function handleReportFavoriteSave() {
           description: descriptionText,
           features: selectedFeatures,
           featureDetails: featureDetails,
+          featureOrder: buildReportOrderPayload(),
           customization: customizationPayload,
           emails: sanitizeContactSelection(
             getCheckedValuesFromList('aiReportEmailList'),
@@ -3265,6 +4311,44 @@ function initializeReportSection() {
         if (phoneSaveBtn) {
           phoneSaveBtn.addEventListener('click', saveReportPhone);
         }
+        const orderBtn = document.getElementById('aiReportOrderBtn');
+        if (orderBtn && !orderBtn.dataset.bound) {
+          orderBtn.addEventListener('click', function() {
+            openReportOrderOverlay();
+          });
+          orderBtn.dataset.bound = 'true';
+        }
+        const orderCancelBtn = document.getElementById('aiReportOrderCancelBtn');
+        if (orderCancelBtn && !orderCancelBtn.dataset.bound) {
+          orderCancelBtn.addEventListener('click', function() {
+            closeReportOrderOverlay({ apply: false, focusTrigger: true });
+          });
+          orderCancelBtn.dataset.bound = 'true';
+        }
+        const orderApplyBtn = document.getElementById('aiReportOrderApplyBtn');
+        if (orderApplyBtn && !orderApplyBtn.dataset.bound) {
+          orderApplyBtn.addEventListener('click', function() {
+            closeReportOrderOverlay({ apply: true, focusTrigger: true });
+          });
+          orderApplyBtn.dataset.bound = 'true';
+        }
+        const orderOverlay = document.getElementById('aiReportOrderOverlay');
+        if (orderOverlay && !orderOverlay.dataset.bound) {
+          orderOverlay.addEventListener('click', function(event) {
+            if (event.target === orderOverlay) {
+              closeReportOrderOverlay({ apply: false, focusTrigger: true });
+            }
+          });
+          orderOverlay.dataset.bound = 'true';
+        }
+        if (!reportOrderOverlayEscapeListenerAttached) {
+          document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && reportOrderOverlayVisible) {
+              closeReportOrderOverlay({ apply: false, focusTrigger: true });
+            }
+          });
+          reportOrderOverlayEscapeListenerAttached = true;
+        }
         const favoriteBtn = document.getElementById('aiReportFavoriteBtn');
         if (favoriteBtn) {
           favoriteBtn.addEventListener('click', function() {
@@ -3309,6 +4393,7 @@ function initializeReportSection() {
         }
         closeReportFavoriteModal({ resetName: true });
         updateSelectedReportChannels();
+        updateReportOrderButtonState();
         reportSectionInitialized = true;
       }
 

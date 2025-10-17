@@ -1413,39 +1413,8 @@ function renderHeaderList(listId, headers) {
           aiToggleLabel.appendChild(aiToggleText);
           li.appendChild(aiToggleLabel);
 
-          const aiDataTypeWrapper = document.createElement('div');
-          aiDataTypeWrapper.className = 'header-ai-datatype js-comment-hint-trigger';
-          aiDataTypeWrapper.setAttribute(
-            'data-comment-hint',
-            'Define el tipo de información que debería crear la IA para esta columna. Usa "Personalizado" para reglas propias.'
-          );
-          const dataTypeId = 'headerAiDataType_' + (header.key || index);
-          const aiDataTypeLabel = document.createElement('label');
-          aiDataTypeLabel.setAttribute('for', dataTypeId);
-          aiDataTypeLabel.textContent = 'Tipos de datos';
-          aiDataTypeWrapper.appendChild(aiDataTypeLabel);
-
-          const aiDataTypeSelect = document.createElement('select');
-          aiDataTypeSelect.id = dataTypeId;
-          AI_FILL_DATA_TYPE_OPTIONS.forEach(function(option) {
-            const opt = document.createElement('option');
-            opt.value = option.value;
-            opt.textContent = option.label;
-            aiDataTypeSelect.appendChild(opt);
-          });
-          const initialDataType = header.aiFillDataType || DEFAULT_AI_FILL_DATA_TYPE;
-          aiDataTypeSelect.value = initialDataType;
-          headers[index].aiFillDataType = initialDataType;
-          aiDataTypeSelect.addEventListener('change', function() {
-            headers[index].aiFillDataType = this.value || DEFAULT_AI_FILL_DATA_TYPE;
-            markHeadersDirty();
-          });
-          aiDataTypeWrapper.appendChild(aiDataTypeSelect);
-          if (!header.aiFillEnabled) {
-            aiDataTypeWrapper.classList.add('hidden');
-            aiDataTypeSelect.disabled = true;
-          }
-          li.appendChild(aiDataTypeWrapper);
+          let aiDataTypeWrapper;
+          let aiDataTypeSelect;
 
           const aiPromptWrapper = document.createElement('div');
           aiPromptWrapper.className = 'header-ai-prompt js-comment-hint-trigger';
@@ -1469,10 +1438,12 @@ function renderHeaderList(listId, headers) {
               aiToggle.checked = true;
               aiPromptWrapper.classList.remove('hidden');
               aiPromptField.disabled = false;
-              aiDataTypeWrapper.classList.remove('hidden');
-              aiDataTypeSelect.disabled = false;
-              if (!headers[index].aiFillDataType) {
-                headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+              if (aiDataTypeWrapper && aiDataTypeSelect) {
+                aiDataTypeWrapper.classList.remove('hidden');
+                aiDataTypeSelect.disabled = false;
+                if (!headers[index].aiFillDataType) {
+                  headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+                }
               }
             }
             markHeadersDirty();
@@ -1480,15 +1451,51 @@ function renderHeaderList(listId, headers) {
           aiPromptWrapper.appendChild(aiPromptField);
           li.appendChild(aiPromptWrapper);
 
+          aiDataTypeWrapper = document.createElement('div');
+          aiDataTypeWrapper.className = 'header-ai-datatype js-comment-hint-trigger';
+          aiDataTypeWrapper.setAttribute(
+            'data-comment-hint',
+            'Define el tipo de información que debería crear la IA para esta columna. Usa "Personalizado" para reglas propias.'
+          );
+          const dataTypeId = 'headerAiDataType_' + (header.key || index);
+          const aiDataTypeLabel = document.createElement('label');
+          aiDataTypeLabel.setAttribute('for', dataTypeId);
+          aiDataTypeLabel.textContent = 'Tipos de datos';
+          aiDataTypeWrapper.appendChild(aiDataTypeLabel);
+
+          aiDataTypeSelect = document.createElement('select');
+          aiDataTypeSelect.id = dataTypeId;
+          AI_FILL_DATA_TYPE_OPTIONS.forEach(function(option) {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.label;
+            aiDataTypeSelect.appendChild(opt);
+          });
+          const initialDataType = header.aiFillDataType || DEFAULT_AI_FILL_DATA_TYPE;
+          aiDataTypeSelect.value = initialDataType;
+          headers[index].aiFillDataType = initialDataType;
+          aiDataTypeSelect.addEventListener('change', function() {
+            headers[index].aiFillDataType = this.value || DEFAULT_AI_FILL_DATA_TYPE;
+            markHeadersDirty();
+          });
+          aiDataTypeWrapper.appendChild(aiDataTypeSelect);
+          if (!header.aiFillEnabled) {
+            aiDataTypeWrapper.classList.add('hidden');
+            aiDataTypeSelect.disabled = true;
+          }
+          li.appendChild(aiDataTypeWrapper);
+
           aiToggle.addEventListener('change', function() {
             headers[index].aiFillEnabled = this.checked;
             if (this.checked) {
               aiPromptWrapper.classList.remove('hidden');
               aiPromptField.disabled = false;
-              aiDataTypeWrapper.classList.remove('hidden');
-              aiDataTypeSelect.disabled = false;
-              if (!headers[index].aiFillDataType) {
-                headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+              if (aiDataTypeWrapper && aiDataTypeSelect) {
+                aiDataTypeWrapper.classList.remove('hidden');
+                aiDataTypeSelect.disabled = false;
+                if (!headers[index].aiFillDataType) {
+                  headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+                }
               }
               if (!headers[index].aiFillPrompt) {
                 aiPromptField.focus();
@@ -1496,8 +1503,10 @@ function renderHeaderList(listId, headers) {
             } else {
               aiPromptWrapper.classList.add('hidden');
               aiPromptField.disabled = true;
-              aiDataTypeWrapper.classList.add('hidden');
-              aiDataTypeSelect.disabled = true;
+              if (aiDataTypeWrapper && aiDataTypeSelect) {
+                aiDataTypeWrapper.classList.add('hidden');
+                aiDataTypeSelect.disabled = true;
+              }
             }
             markHeadersDirty();
           });
