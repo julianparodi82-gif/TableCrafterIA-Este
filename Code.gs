@@ -84,8 +84,17 @@ function getSidebarThemeMode() {
 function refreshAddonMenuForTheme(themeMode) {
   var normalized = themeMode === SIDEBAR_THEME_WORD ? SIDEBAR_THEME_WORD : SIDEBAR_THEME_TABLE;
   var ui = SpreadsheetApp.getUi();
+  var spreadsheet = SpreadsheetApp.getActive();
+  if (spreadsheet && typeof spreadsheet.removeMenu === 'function') {
+    try {
+      spreadsheet.removeMenu('TableCrafter AI');
+    } catch (error) {}
+    try {
+      spreadsheet.removeMenu('WordCrafter AI');
+    } catch (error) {}
+  }
   var isWordcrafter = normalized === SIDEBAR_THEME_WORD;
-  var menuLabel = isWordcrafter ? '🟦 WordCrafter AI' : '🟢 TableCrafter AI';
+  var menuLabel = isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI';
   var showLabel = isWordcrafter ? 'Mostrar WordCrafter' : 'Mostrar TableCrafter';
   ui.createMenu(menuLabel)
     .addItem(showLabel, 'showSidebar')

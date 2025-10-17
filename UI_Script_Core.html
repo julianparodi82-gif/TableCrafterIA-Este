@@ -17,7 +17,6 @@ let sidebarClosePromptActive = false;
 let currentTab = '';
 let lastSavedTableId = '';
 let sidebarContainer = null;
-let sidebarTabAnimationTimeout = null;
 let sidebarEntryCleanupTimeout = null;
 
 function generateHeaderKey() {
@@ -2172,20 +2171,6 @@ function setActiveTab(tabId, options) {
           window.setTimeout(function() {
             nextContent.classList.remove('is-entering');
           }, 450);
-        }
-
-        if (sidebarContainer) {
-          sidebarContainer.classList.remove('sidebar-tab-animate');
-          if (sidebarTabAnimationTimeout) {
-            window.clearTimeout(sidebarTabAnimationTimeout);
-          }
-          void sidebarContainer.offsetWidth; // reinicia la animación del contenedor
-          sidebarContainer.classList.add('sidebar-tab-animate');
-          sidebarTabAnimationTimeout = window.setTimeout(function() {
-            if (sidebarContainer) {
-              sidebarContainer.classList.remove('sidebar-tab-animate');
-            }
-          }, 520);
         }
 
         if (previousTab === 'editTab' && tabId !== 'editTab') {

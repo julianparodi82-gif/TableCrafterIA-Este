@@ -13,12 +13,17 @@
       body {
         font-family: var(--tc-font);
         margin: 0;
-        padding: 16px;
+        padding: 0;
         background: var(--tc-body-gradient);
         color: var(--tc-text);
         line-height: 1.5;
-        overflow-x: hidden;
+        overflow: hidden;
         transition: background var(--tc-transition-duration) ease, color var(--tc-transition-duration) ease;
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+        flex-direction: column;
+        align-items: stretch;
       }
       body.theme-tablecrafter {
         --tc-text: #0F3A26;
@@ -62,6 +67,17 @@
         --tc-tooltip-bg: rgba(8, 45, 68, 0.92);
         --tc-body-gradient: linear-gradient(160deg, #F0F7FF 0%, #D8EFFF 48%, #E8F7FF 100%);
       }
+      .sidebar-scroll-wrapper {
+        direction: rtl;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 16px;
+        box-sizing: border-box;
+        width: 100%;
+        max-height: 100vh;
+        scrollbar-gutter: stable both-edges;
+        flex: 1 1 auto;
+      }
       .tab-btn,
       .tc-card,
       .tc-card-icon,
@@ -95,6 +111,7 @@
         background: transparent;
         will-change: transform, opacity;
         transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.55s ease;
+        direction: ltr;
       }
 
       .container.sidebar-enter {
@@ -109,10 +126,6 @@
 
       .container.sidebar-exit {
         animation: sidebar-exit-fade 0.36s ease forwards;
-      }
-
-      .container.sidebar-tab-animate {
-        animation: sidebar-tab-wave 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .container.sidebar-theme-animate {
@@ -134,21 +147,6 @@
           transform: translateY(0) scale(1);
           opacity: 1;
           filter: brightness(1);
-        }
-      }
-
-      @keyframes sidebar-tab-wave {
-        0% {
-          transform: translateY(0);
-          box-shadow: none;
-        }
-        40% {
-          transform: translateY(-8px);
-          box-shadow: var(--tc-shadow-soft);
-        }
-        100% {
-          transform: translateY(0);
-          box-shadow: none;
         }
       }
 
@@ -2180,7 +2178,6 @@
       @media (prefers-reduced-motion: reduce) {
         .container,
         .container.sidebar-theme-animate,
-        .container.sidebar-tab-animate,
         .container.sidebar-enter,
         .container.sidebar-enter-active,
         .tab-content,
@@ -2198,7 +2195,8 @@
     class="<?!= __isWordcrafter ? 'theme-wordcrafter' : 'theme-tablecrafter' ?>"
     data-initial-theme="<?!= __isWordcrafter ? 'word' : 'table' ?>"
   >
-    <div class="container">
+    <div class="sidebar-scroll-wrapper">
+      <div class="container">
       <div class="theme-header">
         <h2 id="appTitle"><?!= __isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI' ?></h2>
         <label class="theme-toggle" for="themeToggle">
@@ -3779,6 +3777,7 @@
             <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite"></div>
           </div>
         </div>
+      </div>
       </div>
     </div>
 
