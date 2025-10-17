@@ -1262,6 +1262,15 @@
         color: var(--tc-text);
         box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
       }
+      .ai-feature-description {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .ai-feature-description textarea {
+        margin: 0;
+      }
       .ai-feature-association {
         margin-top: 8px;
         padding-top: 8px;
@@ -1649,10 +1658,30 @@
         color: #6B7280;
         line-height: 1.4;
       }
+      .ai-report-order-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 2px 0 0;
+      }
+      .ai-report-order-summary-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.12);
+        border: 1px solid rgba(37, 99, 235, 0.24);
+        font-size: 11px;
+        font-weight: 600;
+        color: #1D4ED8;
+        line-height: 1.2;
+      }
       .ai-report-order-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(15, 23, 42, 0.48);
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(8px);
         display: none;
         align-items: center;
         justify-content: flex-end;
@@ -1663,26 +1692,77 @@
         display: flex;
       }
       .ai-report-order-panel {
-        width: min(420px, 92vw);
+        width: min(440px, 94vw);
         max-height: 100%;
-        background: #FFFFFF;
-        border-radius: 18px;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
-        padding: 24px;
+        background: linear-gradient(180deg, rgba(248, 250, 255, 0.98) 0%, #FFFFFF 22%);
+        border-radius: 20px;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, 0.28);
+        padding: 26px 24px 24px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
+        border: 1px solid rgba(99, 102, 241, 0.18);
+        position: relative;
+        overflow: hidden;
+      }
+      .ai-report-order-panel::before {
+        content: '';
+        position: absolute;
+        inset: -60% -40% auto auto;
+        height: 220px;
+        width: 320px;
+        background: radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.22), transparent 70%);
+        pointer-events: none;
+      }
+      .ai-report-order-panel::after {
+        content: '';
+        position: absolute;
+        inset: auto auto -40% -20%;
+        height: 200px;
+        width: 260px;
+        background: radial-gradient(ellipse at bottom left, rgba(124, 58, 237, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+      .ai-report-order-panel > * {
+        position: relative;
+        z-index: 1;
+      }
+      .ai-report-order-title-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.14);
+      }
+      .ai-report-order-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #2563EB 0%, #4338CA 100%);
+        color: #FFFFFF;
+        font-size: 22px;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+      }
+      .ai-report-order-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
       .ai-report-order-header h3 {
-        margin: 0 0 4px;
+        margin: 0;
         font-size: 20px;
-        color: #111827;
+        color: #1E3A8A;
       }
       .ai-report-order-header p {
         margin: 0;
         color: #4B5563;
         font-size: 13px;
-        line-height: 1.45;
+        line-height: 1.5;
       }
       .ai-report-order-list {
         margin: 0;
@@ -1693,50 +1773,56 @@
         gap: 12px;
         overflow-y: auto;
         max-height: 52vh;
-        padding-right: 4px;
+        padding-right: 6px;
       }
       .ai-report-order-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 1px solid #E5E7EB;
-        background: #F9FAFB;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        background: rgba(255, 255, 255, 0.94);
         cursor: grab;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
       }
       .ai-report-order-item[draggable="false"] {
         cursor: default;
       }
+      .ai-report-order-item:hover {
+        border-color: rgba(37, 99, 235, 0.32);
+        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+        background: #F8FAFF;
+      }
       .ai-report-order-item.dragging {
-        opacity: 0.6;
+        opacity: 0.65;
       }
       .ai-report-order-item.drag-over {
         border-color: #2563EB;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
         background: #EFF6FF;
         transform: translateY(-1px);
       }
       .ai-report-order-text {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
         flex: 1;
         min-width: 0;
       }
       .ai-report-order-label {
         font-size: 13px;
         font-weight: 600;
-        color: #111827;
+        color: #1F2937;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .ai-report-order-meta {
-        font-size: 12px;
-        color: #6B7280;
+        font-size: 11px;
+        color: #6366F1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1746,34 +1832,35 @@
         color: #2563EB;
         line-height: 1;
         flex-shrink: 0;
+        letter-spacing: 2px;
       }
       .ai-report-order-empty {
-        border: 1px dashed #D1D5DB;
-        border-radius: 12px;
-        padding: 28px 16px;
+        border: 1px dashed rgba(148, 163, 184, 0.7);
+        border-radius: 14px;
+        padding: 28px 18px;
         text-align: center;
         font-size: 13px;
         color: #6B7280;
-        background: #F9FAFB;
+        background: rgba(248, 250, 255, 0.8);
       }
       .ai-report-order-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
       }
       @media (max-width: 768px) {
         .ai-report-order-overlay {
-          padding: 12px;
+          padding: 14px;
           justify-content: center;
         }
         .ai-report-order-panel {
           width: min(480px, 96vw);
-          border-radius: 16px;
-          padding: 20px;
+          border-radius: 18px;
+          padding: 22px 20px 20px;
         }
         .ai-report-order-list {
-          max-height: 55vh;
+          max-height: 56vh;
         }
       }
       .ai-report-generate-btn {
@@ -2934,6 +3021,15 @@
                               placeholder="Ej. Evolución mensual de ventas"
                             />
                           </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-chart-1">Descripción 1</label>
+                            <textarea
+                              id="aiFeatureInstance-chart-1"
+                              data-feature-instance-input="chart"
+                              data-instance-index="0"
+                              placeholder="Detalla el primer gráfico que necesitas"
+                            ></textarea>
+                          </div>
                           <div class="ai-feature-chart-select">
                             <label
                               for="aiFeatureChartType-chart-1"
@@ -2994,19 +3090,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-chart-1"
-                           
-                            
-                          >
-                            Descripción 1
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-chart-1"
-                            data-feature-instance-input="chart"
-                            data-instance-index="0"
-                            placeholder="Detalla el primer gráfico que necesitas"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3028,6 +3111,15 @@
                               data-instance-index="1"
                               placeholder="Ej. Distribución por categorías"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-chart-2">Descripción 2</label>
+                            <textarea
+                              id="aiFeatureInstance-chart-2"
+                              data-feature-instance-input="chart"
+                              data-instance-index="1"
+                              placeholder="Detalla el segundo gráfico que necesitas"
+                            ></textarea>
                           </div>
                           <div class="ai-feature-chart-select">
                             <label
@@ -3089,19 +3181,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-chart-2"
-                           
-                            
-                          >
-                            Descripción 2
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-chart-2"
-                            data-feature-instance-input="chart"
-                            data-instance-index="1"
-                            placeholder="Describe el segundo gráfico a incluir"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3123,6 +3202,15 @@
                               data-instance-index="2"
                               placeholder="Ej. Comparativo anual proyectado"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-chart-3">Descripción 3</label>
+                            <textarea
+                              id="aiFeatureInstance-chart-3"
+                              data-feature-instance-input="chart"
+                              data-instance-index="2"
+                              placeholder="Detalla el tercer gráfico que necesitas"
+                            ></textarea>
                           </div>
                           <div class="ai-feature-chart-select">
                             <label
@@ -3184,19 +3272,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-chart-3"
-                           
-                            
-                          >
-                            Descripción 3
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-chart-3"
-                            data-feature-instance-input="chart"
-                            data-instance-index="2"
-                            placeholder="Especifica detalles para un tercer gráfico"
-                          ></textarea>
                         </div>
                       </div>
                     </div>
@@ -3249,6 +3324,15 @@
                               placeholder="Ej. Indicadores comerciales por trimestre"
                             />
                           </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-table-1">Descripción 1</label>
+                            <textarea
+                              id="aiFeatureInstance-table-1"
+                              data-feature-instance-input="table"
+                              data-instance-index="0"
+                              placeholder="Define la primera tabla o matriz requerida"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="table"
@@ -3288,19 +3372,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-table-1"
-                           
-                            
-                          >
-                            Descripción 1
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-table-1"
-                            data-feature-instance-input="table"
-                            data-instance-index="0"
-                            placeholder="Define la primera tabla o matriz requerida"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3322,6 +3393,15 @@
                               data-instance-index="1"
                               placeholder="Ej. Rendimiento por equipo y objetivo"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-table-2">Descripción 2</label>
+                            <textarea
+                              id="aiFeatureInstance-table-2"
+                              data-feature-instance-input="table"
+                              data-instance-index="1"
+                              placeholder="Explica la segunda tabla a incluir"
+                            ></textarea>
                           </div>
                           <div
                             class="ai-feature-association"
@@ -3362,19 +3442,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-table-2"
-                           
-                            
-                          >
-                            Descripción 2
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-table-2"
-                            data-feature-instance-input="table"
-                            data-instance-index="1"
-                            placeholder="Explica la segunda tabla a incluir"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3396,6 +3463,15 @@
                               data-instance-index="2"
                               placeholder="Ej. Proyección de ingresos por escenario"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-table-3">Descripción 3</label>
+                            <textarea
+                              id="aiFeatureInstance-table-3"
+                              data-feature-instance-input="table"
+                              data-instance-index="2"
+                              placeholder="Describe una tercera tabla opcional"
+                            ></textarea>
                           </div>
                           <div
                             class="ai-feature-association"
@@ -3436,19 +3512,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-table-3"
-                           
-                            
-                          >
-                            Descripción 3
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-table-3"
-                            data-feature-instance-input="table"
-                            data-instance-index="2"
-                            placeholder="Describe una tercera tabla opcional"
-                          ></textarea>
                         </div>
                       </div>
                     </div>
@@ -3500,6 +3563,15 @@
                               data-instance-index="0"
                               placeholder="Ej. Prioridades clave para el comité ejecutivo"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-list-1">Descripción 1</label>
+                            <textarea
+                              id="aiFeatureInstance-list-1"
+                              data-feature-instance-input="list"
+                              data-instance-index="0"
+                              placeholder="Especifica la primera lista a generar"
+                            ></textarea>
                           </div>
                           <div
                             class="ai-feature-instance-options"
@@ -3585,19 +3657,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-list-1"
-                           
-                            
-                          >
-                            Descripción 1
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-list-1"
-                            data-feature-instance-input="list"
-                            data-instance-index="0"
-                            placeholder="Especifica la primera lista a generar"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3619,6 +3678,15 @@
                               data-instance-index="1"
                               placeholder="Ej. Riesgos a monitorear en la operación"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-list-2">Descripción 2</label>
+                            <textarea
+                              id="aiFeatureInstance-list-2"
+                              data-feature-instance-input="list"
+                              data-instance-index="1"
+                              placeholder="Explica la segunda lista a generar"
+                            ></textarea>
                           </div>
                           <div
                             class="ai-feature-instance-options"
@@ -3704,19 +3772,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-list-2"
-                           
-                            
-                          >
-                            Descripción 2
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-list-2"
-                            data-feature-instance-input="list"
-                            data-instance-index="1"
-                            placeholder="Detalla la segunda lista solicitada"
-                          ></textarea>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
@@ -3738,6 +3793,15 @@
                               data-instance-index="2"
                               placeholder="Ej. Acciones recomendadas por área"
                             />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label for="aiFeatureInstance-list-3">Descripción 3</label>
+                            <textarea
+                              id="aiFeatureInstance-list-3"
+                              data-feature-instance-input="list"
+                              data-instance-index="2"
+                              placeholder="Describe una tercera lista si aplica"
+                            ></textarea>
                           </div>
                           <div
                             class="ai-feature-instance-options"
@@ -3823,19 +3887,6 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-list-3"
-                           
-                            
-                          >
-                            Descripción 3
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-list-3"
-                            data-feature-instance-input="list"
-                            data-instance-index="2"
-                            placeholder="Describe una tercera lista si aplica"
-                          ></textarea>
                         </div>
                       </div>
                     </div>
@@ -3967,32 +4018,27 @@
                               ></p>
                             </div>
                           </div>
-                          <label
-                            for="aiFeatureInstance-summary-1"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                          >
-                            Descripción del resumen
-                          </label>
-                          <textarea
-                            id="aiFeatureInstance-summary-1"
-                            data-feature-instance-input="summary"
-                            data-instance-index="0"
-                            placeholder="Explica el resumen general que debe redactar la IA"
-                          ></textarea>
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-1"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción del resumen
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-1"
+                              data-feature-instance-input="summary"
+                              data-instance-index="0"
+                              placeholder="Explica el resumen general que debe redactar la IA"
+                            ></textarea>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="1"
                         >
-                          <label
-                            for="aiFeatureInstance-summary-2"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                          >
-                            Descripción 2
-                          </label>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
@@ -4032,25 +4078,27 @@
                               ></p>
                             </div>
                           </div>
-                          <textarea
-                            id="aiFeatureInstance-summary-2"
-                            data-feature-instance-input="summary"
-                            data-instance-index="1"
-                            placeholder="Explica el segundo resumen que debe redactar la IA"
-                          ></textarea>
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-2"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 2
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-2"
+                              data-feature-instance-input="summary"
+                              data-instance-index="1"
+                              placeholder="Explica el segundo resumen que debe redactar la IA"
+                            ></textarea>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="2"
                         >
-                          <label
-                            for="aiFeatureInstance-summary-3"
-                            class="tc-tooltip-target"
-                            data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                          >
-                            Descripción 3
-                          </label>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
@@ -4090,12 +4138,21 @@
                               ></p>
                             </div>
                           </div>
-                          <textarea
-                            id="aiFeatureInstance-summary-3"
-                            data-feature-instance-input="summary"
-                            data-instance-index="2"
-                            placeholder="Describe un tercer resumen si aplica"
-                          ></textarea>
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-3"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 3
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-3"
+                              data-feature-instance-input="summary"
+                              data-instance-index="2"
+                              placeholder="Describe un tercer resumen si aplica"
+                            ></textarea>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -4349,6 +4406,11 @@
                 <p class="ai-report-order-helper">
                   Organiza el orden en el que aparecerán gráficos, tablas, listas y resúmenes en el archivo final.
                 </p>
+                <div
+                  id="aiReportOrderSummary"
+                  class="ai-report-order-summary ai-hidden"
+                  aria-live="polite"
+                ></div>
               </div>
               <label for="aiReportDeliveryToggle">Canales para compartir o enviar</label>
               <p
@@ -4631,13 +4693,18 @@
         aria-describedby="aiReportOrderDescription"
       >
         <div class="ai-report-order-header">
-          <h3 id="aiReportOrderTitle">Orden del reporte</h3>
-          <p id="aiReportOrderDescription">
-            Arrastra y suelta para decidir en qué secuencia aparecerán los componentes en los archivos finales.
-            Si una característica no está asociada a tablas específicas, se utilizarán todas las tablas seleccionadas
-            para ese bloque. Pasa el cursor sobre cada etiqueta para ver el nombre, la descripción y los ajustes
-            configurados.
-          </p>
+          <div class="ai-report-order-title-group">
+            <span class="ai-report-order-icon" aria-hidden="true">🗂️</span>
+            <div class="ai-report-order-heading">
+              <h3 id="aiReportOrderTitle">Orden del reporte</h3>
+              <p id="aiReportOrderDescription">
+                Arrastra y suelta para decidir en qué secuencia aparecerán los componentes en los archivos finales.
+                Si una característica no está asociada a tablas específicas, se utilizarán todas las tablas
+                seleccionadas para ese bloque. Pasa el cursor sobre cada etiqueta para ver el nombre, la descripción y
+                los ajustes configurados.
+              </p>
+            </div>
+          </div>
         </div>
         <div id="aiReportOrderEmpty" class="ai-report-order-empty">
           Selecciona al menos una característica para organizar su orden.

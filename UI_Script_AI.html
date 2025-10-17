@@ -1693,6 +1693,37 @@ function renderReportOrderList() {
         bindReportOrderDragEvents();
       }
 
+function renderReportOrderSummary() {
+        const summary = document.getElementById('aiReportOrderSummary');
+        if (!summary) {
+          return;
+        }
+        const keys = sanitizeReportOrder(reportFeatureOrder);
+        summary.innerHTML = '';
+        if (keys.length === 0) {
+          summary.classList.add('ai-hidden');
+          return;
+        }
+        summary.classList.remove('ai-hidden');
+        keys.forEach(function(key, index) {
+          const parsed = parseFeatureInstanceKey(key);
+          if (!parsed) {
+            return;
+          }
+          const chip = document.createElement('span');
+          chip.className = 'ai-report-order-summary-chip';
+          const baseLabel = REPORT_FEATURE_LABELS[parsed.feature] || parsed.feature;
+          chip.textContent = (index + 1) + '. ' + baseLabel + ' ' + (parsed.index + 1);
+          const tooltip = getReportOrderItemTooltip(parsed.feature, parsed.index);
+          if (tooltip) {
+            chip.classList.add('tc-tooltip-target');
+            chip.setAttribute('data-tooltip', tooltip);
+            chip.setAttribute('tabindex', '0');
+          }
+          summary.appendChild(chip);
+        });
+      }
+
 function bindReportOrderDragEvents() {
         const items = document.querySelectorAll('.ai-report-order-item[draggable="true"]');
         items.forEach(function(item) {
@@ -1794,6 +1825,7 @@ function syncReportFeatureOrder() {
           renderReportOrderList();
           updateReportOrderActions();
         }
+        renderReportOrderSummary();
         updateReportOrderButtonState();
       }
 
@@ -2351,8 +2383,10 @@ function refreshReportFeatureOption(feature) {
             state.instanceTables,
             associationOptions.hasAllOption ? null : associationOptions.allowedSet
           );
-          if (!state.selected || associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+          if (!state.selected) {
             normalizedTableToggles = createEmptyFeatureTableToggleArray();
+            normalizedTableSelections = createEmptyFeatureTableSelectionArray();
+          } else if (associationOptions.entries.length === 0 && !associationOptions.hasAllOption) {
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
           }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
@@ -2436,7 +2470,7 @@ function refreshReportFeatureOption(feature) {
             const canAssociate =
               !!state.selected && associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
             if (tableToggle) {
-              const toggleEnabled = withinRange && canAssociate;
+              const toggleEnabled = withinRange && !!state.selected;
               tableToggle.disabled = !toggleEnabled;
               const currentToggle = toggleEnabled && normalizedTableToggles[index];
               tableToggle.checked = !!currentToggle;
@@ -2446,7 +2480,7 @@ function refreshReportFeatureOption(feature) {
               }
             }
             const shouldShowTableSelect =
-              withinRange && canAssociate && normalizedTableToggles[index];
+              withinRange && normalizedTableToggles[index] && canAssociate;
             if (tableSelectWrapper) {
               tableSelectWrapper.classList.toggle('ai-hidden', !shouldShowTableSelect);
             }
@@ -2465,7 +2499,7 @@ function refreshReportFeatureOption(feature) {
             }
             if (tableEmptyMessage) {
               const shouldShowEmpty =
-                withinRange && !!state.selected && !!associationOptions.message && !canAssociate;
+                withinRange && normalizedTableToggles[index] && !!associationOptions.message && !canAssociate;
               tableEmptyMessage.classList.toggle('ai-hidden', !shouldShowEmpty);
               if (shouldShowEmpty) {
                 tableEmptyMessage.textContent = associationOptions.message;
@@ -2490,6 +2524,7 @@ function refreshAllReportFeatureOptions() {
         if (reportOrderOverlayVisible) {
           updateReportOrderActions();
         }
+        renderReportOrderSummary();
       }
 
 function updateSelectedReportFeatures() {
@@ -2692,11 +2727,14 @@ function handleReportFeatureInstanceTableToggle(feature, index, enabled) {
         );
         const associationOptions = getReportFeatureAssociationOptions();
         const canAssociate = associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
-        if (!canAssociate || !enabled) {
+        if (!enabled) {
           toggles[safeIndex] = false;
           selections[safeIndex] = [];
         } else {
           toggles[safeIndex] = true;
+          if (!canAssociate) {
+            selections[safeIndex] = [];
+          }
         }
         state.instanceTablesEnabled = toggles;
         state.instanceTables = selections;
