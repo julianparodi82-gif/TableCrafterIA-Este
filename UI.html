@@ -1000,13 +1000,15 @@
         margin-bottom: 12px;
       }
       .ai-feature-summary-title,
-      .ai-feature-summary-length {
+      .ai-feature-summary-length,
+      .ai-feature-summary-tone {
         display: flex;
         flex-direction: column;
         gap: 6px;
       }
       .ai-feature-summary-title input,
-      .ai-feature-summary-length select {
+      .ai-feature-summary-length select,
+      .ai-feature-summary-tone select {
         border-radius: 10px;
         border: 1px solid var(--tc-border);
         background-color: var(--tc-surface);
@@ -3005,10 +3007,29 @@
                             data-feature-summary-length="summary"
                             class="tc-tooltip-target"
                           >
-                            <option value="concise">Breve y directo</option>
-                            <option value="standard" selected>Equilibrado</option>
-                            <option value="detailed">Detallado</option>
-                            <option value="executive">Ejecutivo con conclusiones</option>
+                            <option value="concise">Breve y directo (1 - 2 oraciones)</option>
+                            <option value="standard" selected>Equilibrado (3 - 4 oraciones)</option>
+                            <option value="detailed">Detallado (1 - 2 párrafos)</option>
+                            <option value="executive">Ejecutivo con conclusiones (2 párrafos + cierre)</option>
+                          </select>
+                        </div>
+                        <div class="ai-feature-summary-tone">
+                          <label
+                            for="aiFeatureSummaryTone"
+                            class="tc-tooltip-target"
+                            data-tooltip="Selecciona el tono emocional o comunicacional que mejor represente el resumen."
+                          >
+                            Tono del resumen
+                          </label>
+                          <select
+                            id="aiFeatureSummaryTone"
+                            data-feature-summary-tone="summary"
+                            class="tc-tooltip-target"
+                          >
+                            <option value="neutral">Neutral profesional</option>
+                            <option value="optimistic">Optimista y motivador</option>
+                            <option value="analytical">Analítico y preciso</option>
+                            <option value="persuasive">Persuasivo orientado a la acción</option>
                           </select>
                         </div>
                       </div>
@@ -3237,18 +3258,31 @@
                           >
                             <option value="auto">Elegir automáticamente (IA)</option>
                             <option value="executive">Dirección general</option>
+                            <option value="data-analyst">Analista de datos</option>
                             <option value="finance">Dirección financiera</option>
-                            <option value="marketing">Dirección de marketing</option>
                             <option value="operations">Gerencia de operaciones</option>
+                            <option value="marketing">Marketing y comunicación</option>
                             <option value="hr">Recursos humanos</option>
+                            <option value="it">Especialista en IT / Sistemas</option>
                             <option value="sales">Liderazgo comercial</option>
+                            <option value="custom">Personalizado</option>
                           </select>
+                        </div>
+                        <div class="ai-custom-field ai-hidden" data-custom-persona-note>
+                          <label for="aiReportPersonaNote">Describe el perfil (opcional)</label>
+                          <textarea
+                            id="aiReportPersonaNote"
+                            data-custom-persona-note-input
+                            class="tc-tooltip-target"
+                            data-tooltip="Ej. Responsable de compliance que necesita foco en riesgos regulatorios y próximos controles."
+                            placeholder="Detalla el rol, prioridades o expectativas del perfil que leerá el reporte"
+                          ></textarea>
                         </div>
                         <p
                           class="ai-custom-helper"
- 
+
                         >
-                          La IA destacará datos, métricas y recomendaciones alineadas a las preocupaciones típicas de ese rol.
+                          La IA destacará datos, métricas y recomendaciones alineadas a las preocupaciones típicas de ese rol. Si eliges la opción personalizada podrás especificar un contexto propio para afinar la perspectiva.
                         </p>
                       </div>
                     </div>

@@ -35,7 +35,7 @@ function onOpen() {
  */
 function showSidebar() {
   var template = HtmlService.createTemplateFromFile('UI');
-  var html = template.evaluate().setTitle('TableCrafter AI');
+  var html = template.evaluate().setTitle('TableCrafter AI').setWidth(440);
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
