@@ -69,13 +69,13 @@
       }
       .sidebar-scroll-wrapper {
         direction: ltr;
+        writing-mode: horizontal-tb;
         overflow-y: auto;
         overflow-x: hidden;
         padding: 16px;
         box-sizing: border-box;
         width: 100%;
         max-height: 100vh;
-        scrollbar-gutter: stable both-edges;
         flex: 1 1 auto;
       }
       .tab-btn,
@@ -2651,7 +2651,7 @@
           </span>
         </label>
       </div>
-      <div id="themeMessage" class="theme-message" role="region" aria-live="polite">
+      <div id="themeMessage" class="theme-message is-hidden" role="region" aria-live="polite">
         <button type="button" id="themeMessageClose" class="theme-message-close" aria-label="Cerrar mensaje">
           &times;
         </button>
@@ -4464,9 +4464,7 @@
                 >
                   Orden de reporte
                 </button>
-                <p class="ai-report-order-helper">
-                  Define cómo se presentarán gráficos, listas y resúmenes en el reporte final.
-                </p>
+                <p class="ai-report-order-helper">Organiza el orden de cada sección del reporte.</p>
                 <div
                   id="aiReportOrderSummary"
                   class="ai-report-order-summary ai-hidden"

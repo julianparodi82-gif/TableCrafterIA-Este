@@ -31,7 +31,8 @@ let sidebarEntryCleanupTimeout = null;
 let currentTheme = null;
 let tabButtonsList = [];
 let tabContentsList = [];
-let hideWelcomePreference = false;
+let hideWelcomePreference = null;
+let welcomePreferenceResolved = false;
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -2785,15 +2786,17 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
-          const shouldHide = !!hideWelcomePreference;
+          const resolved = welcomePreferenceResolved;
+          const shouldHide = resolved ? !!hideWelcomePreference : true;
           themeMessage.classList.toggle('is-hidden', shouldHide);
           if (themeMessageDismiss) {
-            themeMessageDismiss.checked = shouldHide;
+            themeMessageDismiss.checked = resolved && !!hideWelcomePreference;
           }
         }
 
         function persistWelcomePreference(value, options) {
           hideWelcomePreference = !!value;
+          welcomePreferenceResolved = true;
           const opts = options || {};
           if (opts.sync !== false) {
             syncMessageVisibility();
@@ -2810,6 +2813,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function fetchWelcomePreference() {
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            hideWelcomePreference = false;
+            welcomePreferenceResolved = true;
             syncMessageVisibility();
             return;
           }
@@ -2817,13 +2822,18 @@ document.addEventListener('DOMContentLoaded', function() {
             google.script.run
               .withSuccessHandler(function(res) {
                 hideWelcomePreference = !!(res && res.hideWelcome);
+                welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .withFailureHandler(function() {
+                hideWelcomePreference = false;
+                welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .getWelcomeMessagePreference();
           } catch (error) {
+            hideWelcomePreference = false;
+            welcomePreferenceResolved = true;
             syncMessageVisibility();
           }
         }
