@@ -34,8 +34,8 @@ function onOpen() {
  * Muestra la barra lateral principal del complemento.
  */
 function showSidebar() {
-  var html = HtmlService.createHtmlOutputFromFile('UI')
-    .setTitle('TableCrafter AI');
+  var template = HtmlService.createTemplateFromFile('UI');
+  var html = template.evaluate().setTitle('TableCrafter AI');
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
