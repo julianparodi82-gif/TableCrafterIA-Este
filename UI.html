@@ -344,6 +344,16 @@
         opacity: 1;
         transform: translateY(0);
       }
+      .ai-report-order-label.tc-tooltip-target[data-tooltip]::after {
+        bottom: auto;
+        top: calc(100% + 8px);
+        transform: translateY(-4px);
+      }
+      .ai-report-order-label.tc-tooltip-target[data-tooltip]::before {
+        bottom: auto;
+        top: calc(100% + 4px);
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
+      }
       .tab-content {
         display: none;
         opacity: 0;
@@ -2173,6 +2183,31 @@
         align-items: center;
         gap: 6px;
       }
+      .header-item-drag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 32px;
+        border-radius: 4px;
+        background-color: #F3F4F6;
+        color: #6B7280;
+        cursor: grab;
+        font-size: 16px;
+        line-height: 1;
+        user-select: none;
+        flex-shrink: 0;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .header-item-drag:hover {
+        background-color: #E5E7EB;
+        color: #4B5563;
+      }
+      .header-item-drag:active,
+      .header-item.dragging .header-item-drag {
+        cursor: grabbing;
+        background-color: #E5E7EB;
+      }
       .header-item input[type="text"] {
         flex: 1 1 auto;
         min-height: 32px;
@@ -2180,6 +2215,20 @@
       .header-item-actions {
         display: flex;
         gap: 4px;
+      }
+      .header-item.dragging {
+        opacity: 0.65;
+        background-color: #EEF2FF;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.18);
+        border-radius: 6px;
+      }
+      .header-list.header-list-dragging {
+        cursor: grabbing;
+      }
+      .header-list.header-list-dragging .header-item input,
+      .header-list.header-list-dragging .header-item button,
+      .header-list.header-list-dragging .header-item label {
+        pointer-events: none;
       }
       .header-item button {
         border: none;
