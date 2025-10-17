@@ -1,0 +1,2259 @@
+<script>
+const DEFAULT_STYLE = Object.freeze({
+  headerColor: '#CFE8FC',
+  altColor1: '#FFFFFF',
+  altColor2: '#F3F4F6',
+  border: true,
+  bold: true
+});
+
+const ALL_TABLES_OPTION_VALUE = '__ALL__';
+const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
+let headerKeyCounter = 0;
+let savedTablesCache = [];
+let savedTablesCacheInitialized = false;
+let allowSidebarUnload = false;
+let sidebarClosePromptActive = false;
+let currentTab = '';
+let lastSavedTableId = '';
+
+function generateHeaderKey() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return 'hdr_' + crypto.randomUUID();
+        }
+        headerKeyCounter += 1;
+        return 'hdr_' + Date.now().toString(36) + '_' + headerKeyCounter.toString(36);
+      }
+
+
+
+      
+
+function normalizeFormulaPreference(value) {
+        if (typeof value === 'boolean') {
+          return value;
+        }
+        if (value === null || value === undefined) {
+          return true;
+        }
+        const text = String(value).trim().toLowerCase();
+        if (!text) {
+          return true;
+        }
+        if (['false', '0', 'no', 'off'].indexOf(text) !== -1) {
+          return false;
+        }
+        return true;
+      }
+
+
+
+      
+
+function normalizeHeaderModel(entry) {
+        const normalized = {
+          label: '',
+          description: '',
+          hasDescription: false,
+          key: ''
+        };
+        if (entry && typeof entry === 'object') {
+          const labelValue =
+            entry.label !== undefined && entry.label !== null
+              ? entry.label
+              : entry.text !== undefined && entry.text !== null
+              ? entry.text
+              : '';
+          const descriptionValue = entry.description !== undefined && entry.description !== null ? entry.description : '';
+          const trimmedLabel = String(labelValue || '').trim();
+          const trimmedDescription = String(descriptionValue || '').trim();
+          const explicitHasDescription =
+            Object.prototype.hasOwnProperty.call(entry, 'hasDescription') && entry.hasDescription === true;
+          const hasDescription = explicitHasDescription || trimmedDescription !== '';
+          const keyValue =
+            entry.key !== undefined && entry.key !== null
+              ? entry.key
+              : entry.id !== undefined && entry.id !== null
+              ? entry.id
+              : '';
+          normalized.label = trimmedLabel;
+          normalized.description = hasDescription ? trimmedDescription : '';
+          normalized.hasDescription = hasDescription;
+          normalized.key = String(keyValue || '').trim();
+          if (!normalized.key) {
+            normalized.key = generateHeaderKey();
+          }
+          return normalized;
+        }
+        if (entry !== undefined && entry !== null) {
+          normalized.label = String(entry).trim();
+        }
+        if (!normalized.key) {
+          normalized.key = generateHeaderKey();
+        }
+        return normalized;
+      }
+
+
+
+      
+
+function toHeaderModelArray(source) {
+        if (!Array.isArray(source)) {
+          return [];
+        }
+        return source.map(function(entry) {
+          return normalizeHeaderModel(entry);
+        });
+      }
+
+
+
+      
+
+function cloneHeaderModels(source) {
+        return toHeaderModelArray(source).map(function(item) {
+          return {
+            label: item.label,
+            description: item.hasDescription ? item.description : '',
+            hasDescription: item.hasDescription,
+            key: item.key || generateHeaderKey()
+          };
+        });
+      }
+
+
+
+      
+
+function normalizeStyleModel(style) {
+        const normalized = {
+          headerColor: DEFAULT_STYLE.headerColor,
+          altColor1: DEFAULT_STYLE.altColor1,
+          altColor2: DEFAULT_STYLE.altColor2,
+          border: DEFAULT_STYLE.border,
+          bold: DEFAULT_STYLE.bold
+        };
+        if (style && typeof style === 'object') {
+          if (style.headerColor && String(style.headerColor).trim()) {
+            normalized.headerColor = String(style.headerColor).trim();
+          }
+          if (style.altColor1 && String(style.altColor1).trim()) {
+            normalized.altColor1 = String(style.altColor1).trim();
+          }
+          if (style.altColor2 && String(style.altColor2).trim()) {
+            normalized.altColor2 = String(style.altColor2).trim();
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'border')) {
+            normalized.border = !!style.border;
+          }
+          if (Object.prototype.hasOwnProperty.call(style, 'bold')) {
+            normalized.bold = !!style.bold;
+          }
+        }
+        return normalized;
+      }
+
+
+
+      
+
+function normalizeHexColor(color) {
+        if (typeof color !== 'string') {
+          return '';
+        }
+        const trimmed = color.trim();
+        if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) {
+          return '';
+        }
+        let digits = trimmed.slice(1);
+        if (digits.length === 3) {
+          digits = digits
+            .split('')
+            .map(function(char) {
+              return char + char;
+            })
+            .join('');
+        }
+        return '#' + digits.toUpperCase();
+      }
+
+
+
+      
+
+function getReadableTextColor(hexColor) {
+        const normalized = normalizeHexColor(hexColor);
+        if (!normalized) {
+          return '#111827';
+        }
+        const r = parseInt(normalized.slice(1, 3), 16) / 255;
+        const g = parseInt(normalized.slice(3, 5), 16) / 255;
+        const b = parseInt(normalized.slice(5, 7), 16) / 255;
+        function channelToLinear(channel) {
+          return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        }
+        const luminance =
+          0.2126 * channelToLinear(r) +
+          0.7152 * channelToLinear(g) +
+          0.0722 * channelToLinear(b);
+        return luminance > 0.55 ? '#111827' : '#FFFFFF';
+      }
+
+
+
+      
+
+function styleOptionWithHeaderColor(option, entry) {
+        if (!option) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          option.style.removeProperty('background-color');
+          option.style.removeProperty('color');
+          option.style.removeProperty('background-image');
+          option.style.removeProperty('background-size');
+          option.style.removeProperty('background-repeat');
+          if (option.dataset) {
+            delete option.dataset.headerColor;
+          }
+          return;
+        }
+        option.style.backgroundColor = normalizedColor;
+        option.style.color = getReadableTextColor(normalizedColor);
+        option.style.backgroundImage =
+          'linear-gradient(90deg, ' + normalizedColor + ' 0 16px, rgba(255,255,255,0) 16px 100%)';
+        option.style.backgroundSize = '100% 100%';
+        option.style.backgroundRepeat = 'no-repeat';
+        if (option.dataset) {
+          option.dataset.headerColor = normalizedColor;
+        }
+      }
+
+
+
+      
+
+function styleEditListItem(item, entry) {
+        if (!item) {
+          return;
+        }
+        const styleModel = normalizeStyleModel(entry && entry.style ? entry.style : {});
+        const normalizedColor = normalizeHexColor(styleModel.headerColor);
+        if (!normalizedColor) {
+          item.style.removeProperty('--header-color');
+          item.style.removeProperty('--header-text-color');
+          item.dataset.headerColor = '';
+          return;
+        }
+        item.style.setProperty('--header-color', normalizedColor);
+        item.style.setProperty('--header-text-color', getReadableTextColor(normalizedColor));
+        item.dataset.headerColor = normalizedColor;
+      }
+
+
+
+      
+
+
+
+      
+
+function getLocalStorage() {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            return window.localStorage;
+          }
+        } catch (err) {
+          console.log('El almacenamiento local no está disponible.', err);
+        }
+        return null;
+      }
+
+
+
+      
+
+function persistSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          return;
+        }
+        try {
+          const payload = JSON.stringify(
+            savedTablesCache.map(function(entry) {
+              if (!entry || !entry.id) {
+                return null;
+              }
+              return {
+                id: entry.id,
+                name: entry.name || '',
+                rangeA1: entry.rangeA1 || '',
+                fullRangeA1: entry.fullRangeA1 || (entry.sheetName && entry.rangeA1 ? entry.sheetName + '!' + entry.rangeA1 : ''),
+                description: entry.description || '',
+                sheetName: entry.sheetName || '',
+                cols: entry.cols || 0,
+                rows: entry.rows || 0,
+                style: normalizeStyleModel(entry.style || {}),
+                headers: cloneHeaderModels(entry.headers || []),
+                updateFormulaReferences: normalizeFormulaPreference(entry.updateFormulaReferences)
+              };
+            }).filter(function(item) {
+              return !!item;
+            })
+          );
+          storage.setItem(SAVED_TABLES_STORAGE_KEY, payload);
+        } catch (err) {
+          console.log('No se pudo guardar la caché de tablas guardadas.', err);
+        }
+      }
+
+
+
+      
+
+function restoreSavedTablesCache() {
+        const storage = getLocalStorage();
+        if (!storage) {
+          savedTablesCacheInitialized = false;
+          return [];
+        }
+        try {
+          const raw = storage.getItem(SAVED_TABLES_STORAGE_KEY);
+          if (!raw) {
+            savedTablesCache = [];
+            savedTablesCacheInitialized = false;
+            return savedTablesCache.slice();
+          }
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            savedTablesCache = [];
+            savedTablesCacheInitialized = false;
+            return savedTablesCache.slice();
+          }
+          const restored = parsed
+            .map(function(entry) {
+              return normalizeMetaForPopulate(entry);
+            })
+            .filter(function(item) {
+              return !!item;
+            });
+          savedTablesCache = restored;
+          savedTablesCacheInitialized = savedTablesCache.length > 0;
+          return savedTablesCache.slice();
+        } catch (err) {
+          console.log('No se pudo restaurar la caché de tablas guardadas.', err);
+          savedTablesCache = [];
+          savedTablesCacheInitialized = false;
+          return [];
+        }
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function normalizeMetaForPopulate(meta) {
+        if (!meta || typeof meta !== 'object') {
+          return null;
+        }
+        const id = meta.id ? String(meta.id).trim() : '';
+        if (!id) {
+          return null;
+        }
+        const headers = cloneHeaderModels(meta.headers || []);
+        const style = normalizeStyleModel(meta.style || {});
+        const cols = typeof meta.cols === 'number' ? meta.cols : parseInt(meta.cols, 10) || headers.length;
+        const rows = typeof meta.rows === 'number' ? meta.rows : parseInt(meta.rows, 10) || 0;
+        const rawFullRange = meta.fullRangeA1 ? String(meta.fullRangeA1).trim() : '';
+        let sheetName = meta.sheetName ? String(meta.sheetName).trim() : '';
+        let rangeA1 = meta.rangeA1 ? String(meta.rangeA1).trim() : '';
+        if ((!sheetName || !rangeA1) && rawFullRange) {
+          const bangIndex = rawFullRange.lastIndexOf('!');
+          if (bangIndex !== -1) {
+            if (!sheetName) {
+              let candidateSheet = rawFullRange.substring(0, bangIndex);
+              if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+              }
+              sheetName = candidateSheet;
+            }
+            if (!rangeA1) {
+              rangeA1 = rawFullRange.substring(bangIndex + 1);
+            }
+          }
+        }
+        const fullRangeA1 = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
+        return {
+          id: id,
+          name: meta.name ? String(meta.name).trim() : '',
+          description: meta.description ? String(meta.description).trim() : '',
+          sheetName: sheetName,
+          rangeA1: rangeA1,
+          fullRangeA1: fullRangeA1,
+          cols: cols,
+          rows: rows,
+          createdAt: meta.createdAt || '',
+          updatedAt: meta.updatedAt || '',
+          style: style,
+          headers: headers,
+          updateFormulaReferences: normalizeFormulaPreference(meta.updateFormulaReferences)
+        };
+      }
+
+
+
+      
+
+function upsertSavedTablesCache(entry) {
+        if (!entry || !entry.id) {
+          return;
+        }
+        const normalized = {
+          id: entry.id,
+          name: entry.name ? String(entry.name).trim() : '',
+          rangeA1: entry.rangeA1 ? String(entry.rangeA1).trim() : '',
+          fullRangeA1:
+            entry.fullRangeA1
+              ? String(entry.fullRangeA1).trim()
+              : entry.sheetName && entry.rangeA1
+              ? entry.sheetName + '!' + entry.rangeA1
+              : '',
+          description: entry.description ? String(entry.description).trim() : '',
+          sheetName: entry.sheetName ? String(entry.sheetName).trim() : '',
+          cols: typeof entry.cols === 'number' ? entry.cols : parseInt(entry.cols, 10) || 0,
+          rows: typeof entry.rows === 'number' ? entry.rows : parseInt(entry.rows, 10) || 0,
+          style: normalizeStyleModel(entry.style),
+          headers: cloneHeaderModels(entry.headers || []),
+          updateFormulaReferences: normalizeFormulaPreference(entry.updateFormulaReferences)
+        };
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalized.id;
+        });
+        if (index >= 0) {
+          savedTablesCache[index] = normalized;
+        } else {
+          savedTablesCache.push(normalized);
+        }
+        savedTablesCacheInitialized = true;
+        persistSavedTablesCache();
+      }
+
+
+
+      
+
+function removeSavedTableFromCache(id) {
+        if (!id) {
+          return;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return;
+        }
+        const index = savedTablesCache.findIndex(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (index >= 0) {
+          savedTablesCache.splice(index, 1);
+          persistSavedTablesCache();
+        }
+        savedTablesCacheInitialized = true;
+      }
+
+
+
+      
+
+function buildSavedTableCacheEntry(id, values, rangeInfo, style, headers) {
+        if (!id) {
+          return null;
+        }
+        const info = rangeInfo || {};
+        const normalizedHeaders = cloneHeaderModels(headers || []);
+        const normalizedStyle = normalizeStyleModel(style || {});
+        const preferenceFromValues =
+          values && typeof values.updateFormulaReferences === 'boolean'
+            ? values.updateFormulaReferences
+            : undefined;
+        const preferenceFromInfo =
+          typeof info.updateFormulaReferences === 'boolean'
+            ? info.updateFormulaReferences
+            : undefined;
+        const updateFormulaReferences =
+          preferenceFromValues !== undefined
+            ? preferenceFromValues
+            : preferenceFromInfo !== undefined
+            ? preferenceFromInfo
+            : true;
+        const sheetName = info.sheetName || (values && values.sheetName) || '';
+        const a1Notation = info.a1Notation || (values && values.rangeA1) || '';
+        const fullRangeA1 = sheetName && a1Notation ? sheetName + '!' + a1Notation : (values && values.fullRangeA1) || '';
+        return {
+          id: id,
+          name: values && values.name ? values.name : '',
+          description: values && values.description ? values.description : '',
+          sheetName: sheetName,
+          rangeA1: a1Notation,
+          fullRangeA1: fullRangeA1,
+          cols: typeof info.cols === 'number' ? info.cols : normalizedHeaders.length,
+          rows: typeof info.rows === 'number' ? info.rows : 0,
+          style: normalizedStyle,
+          headers: normalizedHeaders,
+          updateFormulaReferences: normalizeFormulaPreference(updateFormulaReferences)
+        };
+      }
+
+
+
+      
+
+function getSavedTableFromCache(id) {
+        if (!id) {
+          return null;
+        }
+        const normalizedId = String(id).trim();
+        if (!normalizedId) {
+          return null;
+        }
+        const found = savedTablesCache.find(function(item) {
+          return item && item.id === normalizedId;
+        });
+        if (!found) {
+          return null;
+        }
+        return normalizeMetaForPopulate(found);
+      }
+
+
+
+      
+
+function resolveSelectOption(options, id, key, fallback) {
+        if (!options || typeof options !== 'object') {
+          return fallback;
+        }
+        const value = options[key];
+        if (value === undefined) {
+          return fallback;
+        }
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.prototype.hasOwnProperty.call(value, id)) {
+            return value[id];
+          }
+          return fallback;
+        }
+        return value;
+      }
+
+
+
+      
+
+function updateSavedTableSelects(targetIds, list, config) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        const entries = Array.isArray(list) ? list : [];
+        const options = config || {};
+        const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+
+        ids.forEach(function(id) {
+          const select = document.getElementById(id);
+          if (!select) {
+            return;
+          }
+
+          const previousValues = [];
+          if (select.options && select.options.length) {
+            for (let idx = 0; idx < select.options.length; idx++) {
+              const opt = select.options[idx];
+              if (opt && opt.selected && opt.value) {
+                previousValues.push(opt.value);
+              }
+            }
+          }
+
+          let defaultSettings = {
+            placeholder: '-- Seleccione --',
+            multi: false,
+            groupBySheet: false,
+            includeAllOption: false,
+            allOptionLabel: 'Todas las tablas',
+            size: null
+          };
+
+          if (id === 'aiSavedTables') {
+            const totalOptions = entries.length + 1;
+            defaultSettings = {
+              placeholder: '-- Seleccione una o más tablas --',
+              multi: true,
+              groupBySheet: true,
+              includeAllOption: true,
+              allOptionLabel: 'Todas las tablas',
+              size: Math.min(Math.max(totalOptions, 4), 12)
+            };
+          } else if (id === 'editSavedTables') {
+            defaultSettings.groupBySheet = true;
+          }
+
+          const isMulti = !!resolveSelectOption(options, id, 'multi', defaultSettings.multi);
+          const groupBySheet = !!resolveSelectOption(options, id, 'groupBySheet', defaultSettings.groupBySheet);
+          const includeAll = !!resolveSelectOption(options, id, 'includeAllOption', defaultSettings.includeAllOption);
+          const allOptionLabel = resolveSelectOption(options, id, 'allOptionLabel', defaultSettings.allOptionLabel) || 'Todas las tablas';
+          const placeholder = resolveSelectOption(options, id, 'placeholder', defaultSettings.placeholder);
+          const customSize = resolveSelectOption(options, id, 'size', defaultSettings.size);
+
+          select.multiple = isMulti;
+          if (isMulti) {
+            const total = entries.length + (includeAll ? 1 : 0);
+            const computedSize = customSize || Math.min(Math.max(total, 4), 12);
+            select.size = computedSize;
+          } else {
+            select.size = 1;
+          }
+
+          select.innerHTML = '';
+
+          if (!isMulti) {
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = placeholder || '-- Seleccione --';
+            select.appendChild(defaultOption);
+          } else if (placeholder) {
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = placeholder;
+            placeholderOption.disabled = true;
+            select.appendChild(placeholderOption);
+          }
+
+          const validValues = {};
+          entries.forEach(function(entry) {
+            if (entry && entry.id) {
+              validValues[entry.id] = true;
+            }
+          });
+
+          if (includeAll) {
+            validValues[ALL_TABLES_OPTION_VALUE] = true;
+            const allOption = document.createElement('option');
+            allOption.value = ALL_TABLES_OPTION_VALUE;
+            allOption.textContent = allOptionLabel;
+            select.appendChild(allOption);
+          }
+
+          if (groupBySheet) {
+            const grouped = Object.create(null);
+            const order = [];
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const sheetLabel = entry.sheetName ? entry.sheetName : 'Sin hoja';
+              if (!grouped[sheetLabel]) {
+                grouped[sheetLabel] = [];
+                order.push(sheetLabel);
+              }
+              grouped[sheetLabel].push(entry);
+            });
+            order.forEach(function(sheetLabel) {
+              const optgroup = document.createElement('optgroup');
+              optgroup.label = sheetLabel;
+              grouped[sheetLabel].forEach(function(entry) {
+                const opt = document.createElement('option');
+                opt.value = entry.id;
+                opt.textContent = entry.name || entry.id;
+                styleOptionWithHeaderColor(opt, entry);
+                optgroup.appendChild(opt);
+              });
+              select.appendChild(optgroup);
+            });
+          } else {
+            entries.forEach(function(entry) {
+              if (!entry || !entry.id) {
+                return;
+              }
+              const opt = document.createElement('option');
+              opt.value = entry.id;
+              opt.textContent = entry.name || entry.id;
+              styleOptionWithHeaderColor(opt, entry);
+              select.appendChild(opt);
+            });
+          }
+
+          const configuredSelectId = resolveSelectOption(options, id, 'selectId', '');
+          const configuredSelectedIds = resolveSelectOption(options, id, 'selectedIds', []);
+          let targetValues = [];
+
+          if (isMulti) {
+            let candidate = [];
+            if (Array.isArray(configuredSelectedIds) && configuredSelectedIds.length) {
+              candidate = configuredSelectedIds;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidate = configuredSelectId;
+            } else if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidate = [configuredSelectId];
+            } else {
+              candidate = previousValues;
+            }
+            targetValues = candidate
+              .map(function(value) {
+                return String(value);
+              })
+              .filter(function(value) {
+                return !!validValues[value];
+              });
+            if (includeAll && targetValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1) {
+              targetValues = [ALL_TABLES_OPTION_VALUE];
+            }
+          } else {
+            let candidateValue = '';
+            if (typeof configuredSelectId === 'string' && configuredSelectId) {
+              candidateValue = configuredSelectId;
+            } else if (Array.isArray(configuredSelectId) && configuredSelectId.length) {
+              candidateValue = configuredSelectId[0];
+            } else if (id === 'editSavedTables' && activeEditingId && validValues[activeEditingId]) {
+              candidateValue = activeEditingId;
+            } else if (previousValues.length && validValues[previousValues[0]]) {
+              candidateValue = previousValues[0];
+            }
+            targetValues = candidateValue ? [String(candidateValue)] : [];
+          }
+
+          const valueSet = Object.create(null);
+          targetValues.forEach(function(value) {
+            valueSet[value] = true;
+          });
+
+          let hasSelection = false;
+          const optionList = Array.prototype.slice.call(select.options);
+          optionList.forEach(function(option) {
+            if (!option.value) {
+              option.selected = false;
+              return;
+            }
+            if (valueSet[option.value]) {
+              option.selected = true;
+              hasSelection = true;
+            } else if (!isMulti) {
+              option.selected = false;
+            } else if (option.selected) {
+              option.selected = false;
+            }
+          });
+
+          if (!isMulti) {
+            if (hasSelection) {
+              select.value = targetValues[0];
+            } else if (select.options.length > 0) {
+              select.selectedIndex = 0;
+            }
+          } else if (!hasSelection) {
+            optionList.forEach(function(option) {
+              if (option.value === '' && option.disabled) {
+                option.selected = true;
+              }
+            });
+          }
+
+          if (entries.length === 0) {
+            if (isMulti) {
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '';
+              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.disabled = true;
+              emptyOption.selected = true;
+              select.appendChild(emptyOption);
+            }
+            select.disabled = true;
+          } else {
+            select.disabled = false;
+          }
+
+          if (id === 'editSavedTables') {
+            renderEditSavedTablesList(entries, {
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValue: !select.disabled ? select.value : ''
+            });
+            syncEditSavedTablesHighlight();
+          }
+
+          if (id === 'aiSavedTables') {
+            select.dataset.allValue = includeAll ? ALL_TABLES_OPTION_VALUE : '';
+            renderAiSavedTablesList(entries, {
+              includeAll: includeAll,
+              allValue: includeAll ? ALL_TABLES_OPTION_VALUE : '',
+              allLabel: allOptionLabel,
+              groupBySheet: groupBySheet,
+              disabled: select.disabled,
+              selectedValues: getSelectedOptionValues(select)
+            });
+          }
+        });
+      }
+
+
+
+      
+
+function applySavedTablesFromCache(targetIds, config) {
+        updateSavedTableSelects(targetIds, savedTablesCache, config || {});
+      }
+
+
+
+      
+
+function getSelectedOptionValues(select) {
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function normalizeNameForComparison(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim().toLowerCase();
+      }
+
+
+
+      
+
+function findDuplicateTableName(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return null;
+        }
+        const opts = options || {};
+        const ignoreId = opts.ignoreId ? String(opts.ignoreId).trim() : '';
+        if (!Array.isArray(savedTablesCache)) {
+          return null;
+        }
+        const duplicate = savedTablesCache.find(function(entry) {
+          if (!entry || !entry.id) {
+            return false;
+          }
+          if (ignoreId && entry.id === ignoreId) {
+            return false;
+          }
+          const entryName = normalizeNameForComparison(entry.name);
+          return entryName && entryName === normalized;
+        });
+        return duplicate || null;
+      }
+
+
+
+      
+
+async function ensureUniqueTableNameOrAlert(name, options) {
+        const normalized = normalizeNameForComparison(name);
+        if (!normalized) {
+          return true;
+        }
+        const opts = options || {};
+        try {
+          await ensureSavedTablesLoaded();
+        } catch (err) {
+          console.log('No se pudo actualizar la lista de tablas antes de validar duplicados.', err);
+        }
+        const duplicate = findDuplicateTableName(name, { ignoreId: opts.ignoreId });
+        if (duplicate) {
+          await showMessageModal(
+            opts.message || 'Ya existe una tabla guardada con ese nombre. Elija un nombre diferente.',
+            {
+              title: opts.title || 'Nombre duplicado',
+              variant: opts.variant || 'error'
+            }
+          );
+          return false;
+        }
+        return true;
+      }
+
+
+
+      
+
+function ensureSavedTablesLoaded() {
+        if (savedTablesCacheInitialized) {
+          return Promise.resolve(savedTablesCache.slice());
+        }
+        if (!ensureSavedTablesLoaded._pending) {
+          ensureSavedTablesLoaded._pending = refreshSavedTables([])
+            .then(function(result) {
+              ensureSavedTablesLoaded._pending = null;
+              if (Array.isArray(result)) {
+                return result;
+              }
+              return savedTablesCache.slice();
+            })
+            .catch(function(err) {
+              ensureSavedTablesLoaded._pending = null;
+              throw err;
+            });
+        }
+        return ensureSavedTablesLoaded._pending;
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function getFullRangeNotation(info) {
+        if (!info || !info.sheetName || !info.a1Notation) {
+          return '';
+        }
+        return info.sheetName + '!' + info.a1Notation;
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function callServerFunction(functionName) {
+        const args = Array.prototype.slice.call(arguments, 1);
+        return new Promise(function(resolve, reject) {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(function(err) {
+              reject(err);
+            });
+          if (typeof runner[functionName] === 'function') {
+            runner[functionName].apply(runner, args);
+          } else {
+            reject(new Error('Función no disponible: ' + functionName));
+          }
+        });
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function validateTableDetails(config) {
+        const options = config || {};
+        const nameInput = document.getElementById(options.nameInputId || 'tableName');
+        const descInput = document.getElementById(options.descInputId || 'tableDesc');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const description = descInput ? descInput.value.trim() : '';
+        const headerSource = Array.isArray(options.headers) ? options.headers : currentHeaders;
+        const headers = cloneHeaderModels(headerSource);
+        const missingMessages = [];
+        const missingHeaderIndexes = [];
+
+        if (!name) {
+          missingMessages.push('Nombre de la tabla');
+        }
+        if (!description) {
+          missingMessages.push('Descripción');
+        }
+
+        if (headers.length === 0) {
+          missingMessages.push('Al menos un título en la sección de encabezados');
+        } else {
+          headers.forEach(function(header, index) {
+            if (!header.label) {
+              missingHeaderIndexes.push(index + 1);
+            }
+          });
+        }
+
+        if (missingHeaderIndexes.length > 0) {
+          missingMessages.push(
+            'Títulos sin completar: ' +
+              missingHeaderIndexes
+                .map(function(idx) {
+                  return 'Encabezado ' + idx;
+                })
+                .join(', ')
+          );
+        }
+
+        return {
+          valid: missingMessages.length === 0,
+          missing: missingMessages,
+          values: {
+            name: name,
+            description: description,
+            headers: headers
+          }
+        };
+      }
+
+
+
+      
+
+function buildMissingFieldsMessage(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+          return '';
+        }
+        return (
+          'Complete los siguientes campos antes de continuar:\n' +
+          items
+            .map(function(item) {
+              return '• ' + item;
+            })
+            .join('\n')
+        );
+      }
+
+
+
+      
+
+function defaultTitleForVariant(variant) {
+        switch (variant) {
+          case 'error':
+            return 'Ocurrió un problema';
+          case 'success':
+            return 'Operación completada';
+          case 'warning':
+            return 'Atención';
+          default:
+            return 'Aviso';
+        }
+      }
+
+
+
+      
+
+function openModal(options) {
+        const overlay = document.getElementById('tcModalOverlay');
+        const icon = document.getElementById('tcModalIcon');
+        const titleEl = document.getElementById('tcModalTitle');
+        const messageEl = document.getElementById('tcModalMessage');
+        const primaryBtn = document.getElementById('tcModalPrimary');
+        const secondaryBtn = document.getElementById('tcModalSecondary');
+        const variant = options.variant || 'info';
+        const allowEscape = options.allowEscape !== false;
+
+        if (!overlay || !icon || !titleEl || !messageEl || !primaryBtn || !secondaryBtn) {
+          return Promise.resolve('dismissed');
+        }
+
+        overlay.dataset.variant = variant;
+        icon.textContent = options.icon || (variant === 'error' ? '⚠️' : variant === 'success' ? '✅' : variant === 'warning' ? '⚠️' : 'ℹ️');
+        titleEl.textContent = options.title || defaultTitleForVariant(variant);
+        messageEl.textContent = options.message || '';
+
+        primaryBtn.textContent = options.primaryText || 'Aceptar';
+        secondaryBtn.textContent = options.secondaryText || 'Cancelar';
+
+        if (options.secondaryText) {
+          secondaryBtn.style.display = 'inline-flex';
+        } else {
+          secondaryBtn.style.display = 'none';
+        }
+
+        const previouslyFocused = document.activeElement;
+
+        return new Promise(function(resolve) {
+          function cleanup(result) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', keyListener, true);
+            primaryBtn.removeEventListener('click', primaryHandler);
+            secondaryBtn.removeEventListener('click', secondaryHandler);
+            if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+              previouslyFocused.focus();
+            }
+            resolve(result);
+          }
+
+          function primaryHandler() {
+            cleanup('primary');
+          }
+
+          function secondaryHandler() {
+            cleanup('secondary');
+          }
+
+          function keyListener(evt) {
+            if (evt.key === 'Escape' && allowEscape) {
+              evt.preventDefault();
+              cleanup('escape');
+            } else if (evt.key === 'Tab') {
+              const focusables = Array.prototype.filter.call(overlay.querySelectorAll('button'), function(btn) {
+                return btn.offsetParent !== null;
+              });
+              if (focusables.length === 0) {
+                return;
+              }
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              if (evt.shiftKey) {
+                if (document.activeElement === first) {
+                  evt.preventDefault();
+                  last.focus();
+                }
+              } else if (document.activeElement === last) {
+                evt.preventDefault();
+                first.focus();
+              }
+            }
+          }
+
+          overlay.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('show');
+
+          document.addEventListener('keydown', keyListener, true);
+          primaryBtn.addEventListener('click', primaryHandler);
+          secondaryBtn.addEventListener('click', secondaryHandler);
+
+          requestAnimationFrame(function() {
+            primaryBtn.focus();
+          });
+        });
+      }
+
+
+
+      
+
+function showMessageModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant || 'info');
+        }
+        options.primaryText = options.primaryText || 'Aceptar';
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options);
+      }
+
+
+
+      
+
+function showConfirmModal(message, opts) {
+        const options = Object.assign({ message: message }, opts || {});
+        options.primaryText = options.confirmText || 'Aceptar';
+        options.secondaryText = options.cancelText || 'Cancelar';
+        options.variant = options.variant || 'warning';
+        if (!options.title) {
+          options.title = defaultTitleForVariant(options.variant);
+        }
+        options.allowEscape = options.allowEscape !== false;
+        return openModal(options).then(function(result) {
+          return result === 'primary';
+        });
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function renderHeaderList(listId, headers) {
+        const list = document.getElementById(listId);
+        if (!list) {
+          return;
+        }
+        list.innerHTML = '';
+        if (!Array.isArray(headers)) {
+          return;
+        }
+        for (let i = 0; i < headers.length; i++) {
+          headers[i] = normalizeHeaderModel(headers[i]);
+        }
+        const isEditList = listId === 'editHeadersList';
+        function markHeadersDirty() {
+          if (isEditList) {
+            if (editingId) {
+              markEditFormatDirty();
+            }
+          } else if (listId === 'headersList') {
+            markCreateFormatDirty();
+          }
+        }
+        headers.forEach((header, index) => {
+          const li = document.createElement('li');
+          li.className = 'header-item';
+
+          const topRow = document.createElement('div');
+          topRow.className = 'header-item-row';
+
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.value = header.label;
+          inp.placeholder = 'Encabezado ' + (index + 1);
+          inp.addEventListener('input', function() {
+            headers[index].label = this.value;
+            markHeadersDirty();
+          });
+          topRow.appendChild(inp);
+
+          const actions = document.createElement('div');
+          actions.className = 'header-item-actions';
+
+          const upBtn = document.createElement('button');
+          upBtn.textContent = '↑';
+          upBtn.title = 'Subir';
+          upBtn.addEventListener('click', function() {
+            if (index > 0) {
+              const tmp = headers[index - 1];
+              headers[index - 1] = headers[index];
+              headers[index] = tmp;
+              markHeadersDirty();
+              renderHeaderList(listId, headers);
+            }
+          });
+          actions.appendChild(upBtn);
+
+          const downBtn = document.createElement('button');
+          downBtn.textContent = '↓';
+          downBtn.title = 'Bajar';
+          downBtn.addEventListener('click', function() {
+            if (index < headers.length - 1) {
+              const tmp = headers[index + 1];
+              headers[index + 1] = headers[index];
+              headers[index] = tmp;
+              markHeadersDirty();
+              renderHeaderList(listId, headers);
+            }
+          });
+          actions.appendChild(downBtn);
+
+          topRow.appendChild(actions);
+          li.appendChild(topRow);
+
+          const descField = document.createElement('textarea');
+          descField.className = 'header-desc-field';
+          descField.placeholder = 'Descripción de la columna';
+          descField.rows = 2;
+          descField.value = header.hasDescription ? header.description || '' : '';
+          if (!header.hasDescription) {
+            descField.classList.add('hidden');
+            descField.disabled = true;
+          }
+          descField.addEventListener('input', function() {
+            headers[index].description = this.value;
+            markHeadersDirty();
+          });
+
+          const toggleLabel = document.createElement('label');
+          toggleLabel.className = 'header-desc-toggle js-comment-hint-trigger';
+          const toggle = document.createElement('input');
+          toggle.type = 'checkbox';
+          toggle.checked = !!header.hasDescription;
+          toggle.addEventListener('change', function() {
+            headers[index].hasDescription = this.checked;
+            if (!this.checked) {
+              headers[index].description = '';
+              descField.value = '';
+              descField.classList.add('hidden');
+              descField.disabled = true;
+            } else {
+              descField.classList.remove('hidden');
+              descField.disabled = false;
+              descField.focus();
+            }
+            markHeadersDirty();
+          });
+          toggleLabel.appendChild(toggle);
+          toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
+
+          li.appendChild(toggleLabel);
+          li.appendChild(descField);
+
+          list.appendChild(li);
+        });
+        applyOptionalCommentHints();
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function refreshSavedTables(targetIds, config) {
+        const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+        const options = config || {};
+        return callServerFunction('listSavedTables')
+          .then(function(tables) {
+            const list = Array.isArray(tables) ? tables : [];
+            const previousCache = Array.isArray(savedTablesCache) ? savedTablesCache.slice() : [];
+            const normalizedList = list
+              .map(function(item) {
+                if (!item || !item.id) {
+                  return null;
+                }
+                const rawFullRange = item.fullRangeA1 ? String(item.fullRangeA1).trim() : '';
+                let sheetName = item.sheetName ? String(item.sheetName).trim() : '';
+                let rangeA1 = item.rangeA1 ? String(item.rangeA1).trim() : '';
+                if ((!sheetName || !rangeA1) && rawFullRange) {
+                  const bangIndex = rawFullRange.lastIndexOf('!');
+                  if (bangIndex !== -1) {
+                    if (!sheetName) {
+                      let candidateSheet = rawFullRange.substring(0, bangIndex);
+                      if (candidateSheet.length >= 2 && candidateSheet.charAt(0) === "'" && candidateSheet.charAt(candidateSheet.length - 1) === "'") {
+                        candidateSheet = candidateSheet.substring(1, candidateSheet.length - 1).replace(/''/g, "'");
+                      }
+                      sheetName = candidateSheet;
+                    }
+                    if (!rangeA1) {
+                      rangeA1 = rawFullRange.substring(bangIndex + 1);
+                    }
+                  }
+                }
+                const normalizedFullRange = sheetName && rangeA1 ? sheetName + '!' + rangeA1 : rawFullRange || rangeA1;
+                return {
+                  id: item.id,
+                  name: item.name ? String(item.name).trim() : '',
+                  rangeA1: rangeA1,
+                  fullRangeA1: normalizedFullRange,
+                  description: item.description ? String(item.description).trim() : '',
+                  sheetName: sheetName,
+                  cols: item.cols || 0,
+                  rows: item.rows || 0,
+                  style: normalizeStyleModel(item.style || {}),
+                  headers: cloneHeaderModels(item.headers || []),
+                  updateFormulaReferences: normalizeFormulaPreference(item.updateFormulaReferences)
+                };
+              })
+              .filter(function(entry) {
+                return !!entry;
+              });
+            if (normalizedList.length === 0 && previousCache.length > 0) {
+              savedTablesCacheInitialized = true;
+              updateSavedTableSelects(ids, previousCache, options);
+              return previousCache.slice();
+            }
+            savedTablesCache = normalizedList;
+            savedTablesCacheInitialized = true;
+            persistSavedTablesCache();
+            updateSavedTableSelects(ids, savedTablesCache, options);
+            return savedTablesCache.slice();
+          })
+          .catch(function(err) {
+            const message = err && err.message ? err.message : err;
+            showMessageModal('No se pudieron obtener las tablas guardadas: ' + message, {
+              title: 'No se pudo cargar',
+              variant: 'error'
+            });
+          });
+      }
+
+
+
+      
+
+function checkApiKey() {
+        google.script.run.withSuccessHandler(function(res) {
+          const warn = document.getElementById('apiWarning');
+          if (!warn) return;
+          if (!res || !res.key) {
+            warn.innerHTML = 'Configure su API Key para usar la IA (menú Configurar API).';
+          } else {
+            warn.innerHTML = '';
+          }
+        }).getApiKey();
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function getCheckedValuesFromList(listId) {
+        const list = document.getElementById(listId);
+        if (!list) {
+          return [];
+        }
+        return Array.prototype.slice
+          .call(list.querySelectorAll('input[type="checkbox"]:checked'))
+          .map(function(input) {
+            return input ? input.value : '';
+          })
+          .filter(function(value) {
+            return !!value;
+          });
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function normalizeListOrderValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ORDER_DEFAULT;
+        }
+        if (REPORT_LIST_ORDER_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ORDER_DEFAULT;
+      }
+
+
+
+      
+
+
+
+      
+
+function normalizeListEnumerateValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ENUMERATE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ENUMERATE_DEFAULT;
+        }
+        if (REPORT_LIST_ENUMERATE_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ENUMERATE_DEFAULT;
+      }
+
+
+
+      
+
+
+
+      
+
+function normalizeListEnumStyleValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_LIST_ENUM_STYLE_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_LIST_ENUM_STYLE_DEFAULT;
+        }
+        if (REPORT_LIST_ENUM_STYLE_SET[normalized]) {
+          return normalized;
+        }
+        return REPORT_LIST_ENUM_STYLE_DEFAULT;
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function applyOptionalCommentHints() {
+        const hintText = OPTIONAL_COMMENT_HINT_TEXT;
+        const triggers = document.querySelectorAll('.js-comment-hint-trigger');
+        triggers.forEach(function(trigger) {
+          if (!trigger) {
+            return;
+          }
+          if (trigger.classList && !trigger.classList.contains('ai-comment-hint')) {
+            trigger.classList.add('ai-comment-hint');
+          }
+          if (!trigger.dataset) {
+            return;
+          }
+          if (!trigger.dataset.commentHint) {
+            trigger.setAttribute('data-comment-hint', hintText);
+          }
+          if (!trigger.dataset.commentVisible) {
+            trigger.setAttribute('data-comment-visible', 'false');
+          }
+          if (trigger.dataset.commentHintBound === 'true') {
+            return;
+          }
+          const showHint = function() {
+            trigger.setAttribute('data-comment-visible', 'true');
+          };
+          const hideHint = function() {
+            trigger.setAttribute('data-comment-visible', 'false');
+          };
+          trigger.addEventListener('mouseenter', showHint);
+          trigger.addEventListener('mouseleave', hideHint);
+          trigger.addEventListener('focusin', showHint);
+          trigger.addEventListener('focusout', hideHint);
+          const focusables = trigger.querySelectorAll('input, textarea, select, button');
+          focusables.forEach(function(element) {
+            element.addEventListener('focus', showHint);
+            element.addEventListener('blur', hideHint);
+          });
+          trigger.dataset.commentHintBound = 'true';
+        });
+
+        const fields = document.querySelectorAll('.js-comment-hint-field');
+        fields.forEach(function(field) {
+          if (!field) {
+            return;
+          }
+          if (field.classList && !field.classList.contains('ai-comment-hint')) {
+            field.classList.add('ai-comment-hint');
+          }
+          if (!field.dataset) {
+            return;
+          }
+          if (!field.dataset.commentHint) {
+            field.setAttribute('data-comment-hint', hintText);
+          }
+          if (!field.dataset.commentVisible) {
+            field.setAttribute('data-comment-visible', 'false');
+          }
+          if (field.dataset.commentHintBound === 'true') {
+            return;
+          }
+          const showHint = function() {
+            field.setAttribute('data-comment-visible', 'true');
+          };
+          const hideHint = function() {
+            field.setAttribute('data-comment-visible', 'false');
+          };
+          const inputs = field.querySelectorAll('textarea');
+          inputs.forEach(function(input) {
+            input.addEventListener('focus', showHint);
+            input.addEventListener('blur', hideHint);
+            input.addEventListener('mouseenter', showHint);
+            input.addEventListener('mouseleave', hideHint);
+          });
+          field.dataset.commentHintBound = 'true';
+        });
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function getActionTypeLabel(type) {
+        const normalized = (type || '').toLowerCase();
+        if (normalized === 'reportfavorite') {
+          return 'Reporte favorito';
+        }
+        if (normalized === 'table') {
+          return 'Tabla';
+        }
+        return 'Acción';
+      }
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function setActiveTab(tabId, options) {
+        options = options || {};
+        if (currentTab === tabId && !options.force) {
+          return;
+        }
+        const previousTab = currentTab;
+        currentTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+          if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+          if (content.id === tabId) {
+            content.classList.add('active');
+          } else {
+            content.classList.remove('active');
+          }
+        });
+
+        if (previousTab === 'editTab' && tabId !== 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
+        }
+
+        if (previousTab === 'createTab' && tabId !== 'createTab') {
+          resetCreateTabView({
+            preserveRange: false,
+            preserveFields: false,
+            preserveHeaders: false
+          });
+        }
+
+        if (tabId === 'createTab') {
+          if (!options.preserveForm) {
+            const preserveHeaders = options && options.keepHeaders === true;
+            resetCreateTabView({
+              preserveRange: false,
+              preserveFields: false,
+              preserveHeaders: preserveHeaders
+            });
+          }
+        } else if (tabId === 'editTab') {
+          resetEditTabView({ preserveSelection: false, clearEditingId: true });
+          applySavedTablesFromCache('editSavedTables');
+          refreshSavedTables('editSavedTables');
+        } else if (tabId === 'aiTab') {
+          applySavedTablesFromCache('aiSavedTables', { selectId: lastSavedTableId });
+          refreshSavedTables('aiSavedTables', { selectId: lastSavedTableId });
+          updateAiActionState();
+          checkApiKey();
+        } else if (tabId === 'actionsTab') {
+          refreshSavedActions({ selectId: currentSavedActionId });
+        }
+      }
+
+
+
+      
+
+async function attemptTabChange(tabId, options) {
+        options = options || {};
+        const leavingCreate = currentTab === 'createTab' && tabId !== 'createTab';
+        if (leavingCreate && isFormatLockActive() && !options.force) {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            setActiveTab(tabId, options);
+          }
+          return;
+        }
+        setActiveTab(tabId, options);
+      }
+
+
+
+      document.getElementById('applyFormatBtn').addEventListener('click', function() {
+        handleApplyFormat();
+      });
+
+      
+
+
+
+      
+
+
+
+      
+
+
+
+      
+
+function handleSidebarBeforeUnload(event) {
+        if (allowSidebarUnload || !isFormatLockActive()) {
+          return;
+        }
+        event.preventDefault();
+        event.returnValue = '';
+        if (sidebarClosePromptActive) {
+          return '';
+        }
+        sidebarClosePromptActive = true;
+        setTimeout(function() {
+          processSidebarCloseRequest();
+        }, 0);
+        return '';
+      }
+
+
+
+      
+
+async function processSidebarCloseRequest() {
+        try {
+          const resolved = await resolvePendingFormatting();
+          if (resolved === 'saved' || resolved === 'cleared') {
+            allowSidebarUnload = true;
+            if (
+              typeof google !== 'undefined' &&
+              google.script &&
+              google.script.host &&
+              typeof google.script.host.close === 'function'
+            ) {
+              google.script.host.close();
+            }
+          } else {
+            allowSidebarUnload = false;
+          }
+        } finally {
+          sidebarClosePromptActive = false;
+        }
+      }
+
+
+
+      
+</script>

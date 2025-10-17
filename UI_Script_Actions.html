@@ -1,0 +1,408 @@
+<script>
+let savedActionsCache = [];
+let savedActionsLoaded = false;
+let loadingSavedActions = false;
+let currentSavedActionId = '';
+
+function getCurrentSavedActionId() {
+  return currentSavedActionId;
+}
+
+function getSavedActionsSnapshot() {
+  return savedActionsCache.slice();
+}
+
+function dispatchSavedActionsUpdated() {
+  const detail = {
+    actions: getSavedActionsSnapshot(),
+    currentId: currentSavedActionId
+  };
+  document.dispatchEvent(new CustomEvent('tc:savedActionsUpdated', { detail: detail }));
+}
+
+function updateSavedActionsEmptyState(hasEntries) {
+  const emptyMessage = document.getElementById('aiActionsEmptyMessage');
+  if (!emptyMessage) {
+    return;
+  }
+  if (hasEntries) {
+    emptyMessage.classList.add('ai-hidden');
+  } else {
+    emptyMessage.classList.remove('ai-hidden');
+  }
+}
+
+function renderSavedActionsSelect(actions, selectedId) {
+  const select = document.getElementById('aiSavedActions');
+  if (!select) {
+    return;
+  }
+  const list = Array.isArray(actions) ? actions : [];
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Seleccionar...';
+  select.appendChild(placeholder);
+  if (list.length === 0) {
+    select.disabled = true;
+    updateSavedActionsEmptyState(false);
+    return;
+  }
+  const tooltipMap = Object.create(null);
+  list
+    .slice()
+    .sort(function(a, b) {
+      const nameA = (a && a.name ? a.name : '').toLowerCase();
+      const nameB = (b && b.name ? b.name : '').toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    })
+    .forEach(function(action) {
+      if (!action || !action.id) {
+        return;
+      }
+      const option = document.createElement('option');
+      option.value = action.id;
+      const label = action.name ? action.name : 'Acción sin nombre';
+      option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+      const tooltip = buildSavedActionTooltip(action);
+      if (tooltip) {
+        option.title = tooltip;
+        tooltipMap[action.id] = tooltip;
+      }
+      select.appendChild(option);
+    });
+  select.disabled = false;
+  updateSavedActionsEmptyState(true);
+  let fallbackTooltipUpdater = null;
+  if (typeof bindSelectTooltipWithMap === 'function') {
+    bindSelectTooltipWithMap(select, tooltipMap);
+  } else {
+    fallbackTooltipUpdater = function() {
+      const tip = tooltipMap[select.value] || '';
+      if (tip) {
+        select.dataset.tooltip = tip;
+        select.setAttribute('title', tip);
+        select.classList.add('tc-tooltip-target');
+      } else {
+        select.removeAttribute('data-tooltip');
+        select.removeAttribute('title');
+      }
+    };
+    fallbackTooltipUpdater();
+    if (!select.dataset.tooltipBound) {
+      select.addEventListener('change', fallbackTooltipUpdater);
+      select.addEventListener('focus', fallbackTooltipUpdater);
+      select.addEventListener('mouseenter', fallbackTooltipUpdater);
+      select.dataset.tooltipBound = 'true';
+    }
+  }
+  if (selectedId) {
+    const normalized = String(selectedId);
+    const match = Array.prototype.find.call(select.options, function(item) {
+      return item && item.value === normalized;
+    });
+    if (match) {
+      select.value = normalized;
+    } else {
+      select.value = '';
+      currentSavedActionId = '';
+    }
+  } else {
+    select.value = '';
+  }
+  if (typeof updateSelectTooltip === 'function') {
+    updateSelectTooltip(select, tooltipMap);
+  } else if (fallbackTooltipUpdater) {
+    fallbackTooltipUpdater();
+  }
+}
+
+function clearSavedActionDetails() {
+  const container = document.getElementById('aiActionDetails');
+  if (!container) {
+    return;
+  }
+  container.innerHTML = '';
+  container.classList.add('ai-hidden');
+}
+
+function buildReportFavoriteSummary(action) {
+  if (!action) {
+    return '';
+  }
+  const parts = [];
+  if (action.format) {
+    const formatLabel = REPORT_FORMAT_LABELS[action.format] || action.format;
+    parts.push('Formato: ' + formatLabel);
+  }
+  if (Array.isArray(action.features) && action.features.length > 0) {
+    const labels = action.features
+      .map(function(feature) {
+        return REPORT_FEATURE_LABELS[feature] || feature;
+      })
+      .filter(function(label) {
+        return !!label;
+      });
+    if (labels.length) {
+      parts.push('Características: ' + labels.join(', '));
+    }
+  }
+  if (Array.isArray(action.channels) && action.channels.length > 0) {
+    parts.push('Canales: ' + action.channels.join(', '));
+  }
+  if (action.fileName) {
+    parts.push('Archivo: ' + action.fileName + (action.fileExtension ? '.' + action.fileExtension : ''));
+  }
+  if (action.descriptionEnabled && action.descriptionText) {
+    parts.push('Descripción del reporte incluida.');
+  }
+  return parts.join('\n');
+}
+
+function buildSavedActionTooltip(action) {
+  if (!action) {
+    return '';
+  }
+  const parts = [];
+  const typeLabel = getActionTypeLabel(action.type);
+  if (action.description) {
+    parts.push(String(action.description));
+  }
+  if (action.type === 'reportFavorite') {
+    const summary = buildReportFavoriteSummary(action);
+    if (summary) {
+      parts.push(summary);
+    }
+  } else if (action.type === 'table') {
+    const meta = [];
+    if (action.sheetName) {
+      meta.push('Hoja: ' + action.sheetName);
+    }
+    if (action.rangeA1) {
+      meta.push('Rango: ' + action.rangeA1);
+    }
+    if (action.rows) {
+      meta.push('Filas: ' + action.rows);
+    }
+    if (action.cols) {
+      meta.push('Columnas: ' + action.cols);
+    }
+    if (meta.length) {
+      parts.push(meta.join(' • '));
+    }
+  }
+  if (!parts.length) {
+    parts.push('Tipo: ' + typeLabel);
+  } else {
+    parts.unshift('Tipo: ' + typeLabel);
+  }
+  return parts.join('\n');
+}
+
+function renderSavedActionDetails(action) {
+  const container = document.getElementById('aiActionDetails');
+  if (!container) {
+    return;
+  }
+  container.innerHTML = '';
+  if (!action || !action.id) {
+    container.classList.add('ai-hidden');
+    return;
+  }
+  const card = document.createElement('div');
+  card.className = 'ai-action-card';
+  const title = document.createElement('h4');
+  title.textContent = action.name || 'Acción sin nombre';
+  card.appendChild(title);
+  const meta = document.createElement('div');
+  meta.className = 'ai-action-meta';
+  const typeBadge = document.createElement('span');
+  typeBadge.textContent = getActionTypeLabel(action.type);
+  meta.appendChild(typeBadge);
+  if (action.updatedAt) {
+    const updated = document.createElement('span');
+    updated.textContent = 'Actualizado: ' + action.updatedAt;
+    meta.appendChild(updated);
+  }
+  if (action.createdAt) {
+    const created = document.createElement('span');
+    created.textContent = 'Creado: ' + action.createdAt;
+    meta.appendChild(created);
+  }
+  card.appendChild(meta);
+  if (action.type === 'table') {
+    if (action.description) {
+      const description = document.createElement('p');
+      description.className = 'ai-action-summary';
+      description.textContent = action.description;
+      card.appendChild(description);
+    }
+    const extra = document.createElement('p');
+    extra.className = 'ai-action-summary';
+    const rangeInfo = [];
+    if (action.sheetName) {
+      rangeInfo.push('Hoja: ' + action.sheetName);
+    }
+    if (action.rangeA1) {
+      rangeInfo.push('Rango: ' + action.rangeA1);
+    }
+    if (action.rows) {
+      rangeInfo.push('Filas: ' + action.rows);
+    }
+    if (action.cols) {
+      rangeInfo.push('Columnas: ' + action.cols);
+    }
+    extra.textContent = rangeInfo.join(' • ');
+    card.appendChild(extra);
+  } else if (action.type === 'reportFavorite') {
+    const summaryText = buildReportFavoriteSummary(action);
+    if (summaryText) {
+      const summary = document.createElement('p');
+      summary.className = 'ai-action-summary';
+      summary.textContent = summaryText;
+      card.appendChild(summary);
+    }
+    if (Array.isArray(action.tables) && action.tables.length > 0) {
+      const tablesInfo = document.createElement('p');
+      tablesInfo.className = 'ai-action-summary';
+      tablesInfo.textContent = 'Tablas vinculadas: ' + action.tables.join(', ');
+      card.appendChild(tablesInfo);
+    }
+  }
+  const buttons = document.createElement('div');
+  buttons.className = 'ai-action-buttons';
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'btn-secondary';
+  editBtn.textContent = action.type === 'table' ? 'Editar tabla' : 'Editar reporte';
+  editBtn.addEventListener('click', function() {
+    openActionForEditing(action);
+  });
+  buttons.appendChild(editBtn);
+  card.appendChild(buttons);
+  container.appendChild(card);
+  container.classList.remove('ai-hidden');
+}
+
+async function loadSavedActionDetails(actionId) {
+  if (!actionId) {
+    clearSavedActionDetails();
+    currentSavedActionId = '';
+    return;
+  }
+  let response;
+  try {
+    response = await callServerFunction('getSavedActionDetails', actionId);
+  } catch (err) {
+    await showMessageModal(
+      'No se pudo cargar la acción seleccionada: ' + (err && err.message ? err.message : err),
+      {
+        title: 'Error al cargar',
+        variant: 'error'
+      }
+    );
+    return;
+  }
+  if (!response || response.error) {
+    await showMessageModal((response && response.error) || 'No se encontró la acción seleccionada.', {
+      title: 'Acción no disponible',
+      variant: 'warning'
+    });
+    clearSavedActionDetails();
+    currentSavedActionId = '';
+    return;
+  }
+  currentSavedActionId = actionId;
+  renderSavedActionDetails(response);
+}
+
+async function ensureSavedActionsCache(options) {
+  const opts = options || {};
+  if (!opts.force && savedActionsLoaded) {
+    return savedActionsCache;
+  }
+  let result;
+  try {
+    result = await callServerFunction('listSavedActions');
+  } catch (err) {
+    savedActionsLoaded = false;
+    throw err;
+  }
+  savedActionsCache = Array.isArray(result) ? result.slice() : [];
+  savedActionsLoaded = true;
+  dispatchSavedActionsUpdated();
+  return savedActionsCache;
+}
+
+async function refreshSavedActions(options) {
+  const opts = options || {};
+  if (loadingSavedActions) {
+    return;
+  }
+  loadingSavedActions = true;
+  try {
+    const result = await callServerFunction('listSavedActions');
+    savedActionsCache = Array.isArray(result) ? result.slice() : [];
+    savedActionsLoaded = true;
+    renderSavedActionsSelect(savedActionsCache, opts.selectId || currentSavedActionId);
+    const targetId = opts.selectId || currentSavedActionId;
+    if (targetId) {
+      const exists = savedActionsCache.some(function(entry) {
+        return entry && entry.id === targetId;
+      });
+      if (exists) {
+        await loadSavedActionDetails(targetId);
+      } else {
+        clearSavedActionDetails();
+        currentSavedActionId = '';
+      }
+    } else {
+      clearSavedActionDetails();
+    }
+    dispatchSavedActionsUpdated();
+  } catch (err) {
+    savedActionsCache = [];
+    savedActionsLoaded = false;
+    renderSavedActionsSelect([], '');
+    dispatchSavedActionsUpdated();
+    await showMessageModal(
+      'No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err),
+      {
+        title: 'Error al listar acciones',
+        variant: 'error'
+      }
+    );
+  } finally {
+    loadingSavedActions = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const savedActionsSelect = document.getElementById('aiSavedActions');
+  if (savedActionsSelect) {
+    savedActionsSelect.addEventListener('change', function() {
+      loadSavedActionDetails(savedActionsSelect.value);
+    });
+  }
+  const savedActionsRefreshBtn = document.getElementById('aiSavedActionsRefreshBtn');
+  if (savedActionsRefreshBtn) {
+    savedActionsRefreshBtn.addEventListener('click', function() {
+      refreshSavedActions({ selectId: getCurrentSavedActionId(), force: true });
+    });
+  }
+  refreshSavedActions();
+});
+
+if (typeof window !== 'undefined') {
+  window.getSavedActionsSnapshot = getSavedActionsSnapshot;
+  window.getCurrentSavedActionId = getCurrentSavedActionId;
+  window.refreshSavedActions = refreshSavedActions;
+  window.ensureSavedActionsCache = ensureSavedActionsCache;
+}
+</script>

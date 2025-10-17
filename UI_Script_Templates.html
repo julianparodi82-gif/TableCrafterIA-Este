@@ -1,0 +1,203 @@
+<script>
+let templateEntries = [];
+let activeTemplateId = '';
+
+const TEMPLATE_SEED = [
+  {
+    id: 'template:monthly-report',
+    name: 'Reporte mensual ejecutivo',
+    description: 'Incluye resumen principal, tabla de indicadores y lista de próximos pasos.',
+    sections: ['Resumen ejecutivo', 'Tabla comparativa', 'Lista de acciones'],
+    example: true
+  },
+  {
+    id: 'template:okr-tracker',
+    name: 'Seguimiento de OKR trimestral',
+    description: 'Tabla de objetivos, lista de riesgos y comentarios priorizados.',
+    sections: ['Tabla de métricas', 'Riesgos destacados', 'Comentarios enfocados'],
+    example: true
+  }
+];
+
+function ensureTemplateSeed() {
+  if (!Array.isArray(templateEntries) || templateEntries.length === 0) {
+    templateEntries = TEMPLATE_SEED.map(function(entry) {
+      return Object.assign({}, entry);
+    });
+  }
+}
+
+function updateTemplateEmptyState(hasItems) {
+  const empty = document.getElementById('templateGridEmpty');
+  if (!empty) {
+    return;
+  }
+  if (hasItems) {
+    empty.classList.add('ai-hidden');
+  } else {
+    empty.classList.remove('ai-hidden');
+  }
+}
+
+function renderTemplateGrid(list) {
+  const grid = document.getElementById('templateGrid');
+  if (!grid) {
+    return;
+  }
+  grid.innerHTML = '';
+  if (!Array.isArray(list) || list.length === 0) {
+    updateTemplateEmptyState(false);
+    return;
+  }
+  updateTemplateEmptyState(true);
+  list.forEach(function(template) {
+    if (!template) {
+      return;
+    }
+    const card = document.createElement('div');
+    card.className = 'tc-template-card';
+    card.tabIndex = 0;
+    card.role = 'listitem';
+    card.dataset.id = template.id || '';
+    if (template.id && template.id === activeTemplateId) {
+      card.classList.add('active');
+    }
+    const heading = document.createElement('h4');
+    heading.textContent = template.name || 'Plantilla sin nombre';
+    card.appendChild(heading);
+    if (template.example) {
+      const badge = document.createElement('span');
+      badge.className = 'tc-badge';
+      badge.textContent = 'Ejemplo';
+      card.appendChild(badge);
+    }
+    if (template.description) {
+      const description = document.createElement('p');
+      description.textContent = template.description;
+      card.appendChild(description);
+    }
+    card.addEventListener('click', function() {
+      setActiveTemplate(template.id);
+    });
+    card.addEventListener('keypress', function(event) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+        event.preventDefault();
+        setActiveTemplate(template.id);
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderTemplateDetails(template) {
+  const details = document.getElementById('templateDetails');
+  const duplicateBtn = document.getElementById('templateDuplicateBtn');
+  const applyBtn = document.getElementById('templateApplyBtn');
+  if (!details) {
+    return;
+  }
+  if (!template) {
+    details.textContent = 'Selecciona una plantilla para ver más información.';
+    if (duplicateBtn) {
+      duplicateBtn.disabled = true;
+    }
+    if (applyBtn) {
+      applyBtn.disabled = true;
+    }
+    return;
+  }
+  const lines = [];
+  if (template.description) {
+    lines.push(template.description);
+  }
+  if (Array.isArray(template.sections) && template.sections.length > 0) {
+    lines.push('Incluye: ' + template.sections.join(', '));
+  }
+  if (template.example) {
+    lines.push('Ejemplo base para personalizar.');
+  }
+  details.textContent = lines.join('\n');
+  if (duplicateBtn) {
+    duplicateBtn.disabled = false;
+  }
+  if (applyBtn) {
+    applyBtn.disabled = false;
+  }
+}
+
+function findTemplateById(id) {
+  if (!id) {
+    return null;
+  }
+  return templateEntries.find(function(entry) {
+    return entry && entry.id === id;
+  }) || null;
+}
+
+function setActiveTemplate(templateId) {
+  activeTemplateId = templateId || '';
+  const template = findTemplateById(activeTemplateId);
+  renderTemplateGrid(templateEntries);
+  renderTemplateDetails(template);
+}
+
+function loadTemplates(options) {
+  const opts = options || {};
+  if (opts.force) {
+    templateEntries = templateEntries.slice();
+  }
+  ensureTemplateSeed();
+  renderTemplateGrid(templateEntries);
+  renderTemplateDetails(findTemplateById(activeTemplateId));
+}
+
+function handleTemplateDuplicate() {
+  const template = findTemplateById(activeTemplateId);
+  if (!template) {
+    showMessageModal('Selecciona una plantilla para duplicarla.', {
+      title: 'Sin selección',
+      variant: 'warning'
+    });
+    return;
+  }
+  showMessageModal('Duplicaremos la plantilla cuando conectemos el almacenamiento.', {
+    title: 'Próximo paso',
+    variant: 'info'
+  });
+}
+
+function handleTemplateApply() {
+  const template = findTemplateById(activeTemplateId);
+  if (!template) {
+    showMessageModal('Selecciona una plantilla para aplicarla.', {
+      title: 'Sin selección',
+      variant: 'warning'
+    });
+    return;
+  }
+  showMessageModal('Aplicaremos la plantilla al reporte cuando se integre el flujo completo.', {
+    title: 'Funcionalidad en desarrollo',
+    variant: 'info'
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const refreshBtn = document.getElementById('templateRefreshBtn');
+  const duplicateBtn = document.getElementById('templateDuplicateBtn');
+  const applyBtn = document.getElementById('templateApplyBtn');
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function() {
+      loadTemplates({ force: true });
+    });
+  }
+  if (duplicateBtn) {
+    duplicateBtn.addEventListener('click', handleTemplateDuplicate);
+  }
+  if (applyBtn) {
+    applyBtn.addEventListener('click', handleTemplateApply);
+  }
+
+  loadTemplates();
+});
+</script>
