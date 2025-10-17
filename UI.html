@@ -163,7 +163,7 @@
       .tab-nav {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
+        gap: 14px;
         margin-bottom: 16px;
       }
       .secondary-tab-nav {
@@ -176,15 +176,12 @@
         border: 1px solid var(--tc-border);
         background: rgba(255, 255, 255, 0.92);
         color: var(--tc-text);
-        padding: 16px 24px;
-        min-height: 60px;
+        padding: 14px 22px;
+        min-height: 56px;
         border-radius: 10px;
         cursor: pointer;
         font-weight: 600;
-        transition: background var(--tc-transition-duration) ease,
-          background-color 0.2s ease,
-          color 0.2s ease,
-          border-color 0.2s ease,
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
           box-shadow 0.2s ease;
         display: inline-flex;
         align-items: center;
@@ -194,7 +191,7 @@
         width: 100%;
         position: relative;
         overflow: visible;
-        box-shadow: var(--tc-shadow-base);
+        box-shadow: 0 4px 12px rgba(15, 76, 129, 0.08);
       }
       .tab-btn:hover {
         background-color: var(--tc-primary-light);
@@ -1113,16 +1110,6 @@
         .ai-comment-hint[data-comment-hint]::before,
         .ai-comment-hint[data-comment-hint]::after {
           transition: none;
-        }
-      }
-      @media (max-width: 720px) {
-        .tab-nav {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-      @media (max-width: 520px) {
-        .tab-nav {
-          grid-template-columns: 1fr;
         }
       }
       @media (max-width: 480px) {
