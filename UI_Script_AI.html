@@ -30,7 +30,7 @@
         summary:
           'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".',
         comments:
-          'Añadirá comentarios con el enfoque estratégico que elijas. Ej: "Acciones clave tras la reunión comercial".'
+          'Añadirá comentarios con el enfoque seleccionado (acciones, insights, riesgos, etc.). Ej: "Próximo paso para el equipo comercial".'
       });
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
         summary: true,
@@ -131,28 +131,17 @@
         map[option.value] = true;
         return map;
       }, {});
-      const REPORT_INSIGHT_FOCUS_DEFAULT = 'growth';
-      const REPORT_INSIGHT_FOCUS_OPTIONS = Object.freeze([
-        { value: 'growth', label: 'Crecimiento y expansión' },
-        { value: 'efficiency', label: 'Eficiencia operativa' },
-        { value: 'risk', label: 'Riesgos y alertas' },
-        { value: 'customer', label: 'Experiencia del cliente' },
-        { value: 'custom', label: 'Otro (definir manualmente)' }
-      ]);
-      const REPORT_INSIGHT_FOCUS_SET = REPORT_INSIGHT_FOCUS_OPTIONS.reduce(function(map, option) {
-        map[option.value] = true;
-        return map;
-      }, {});
       const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
         outputLanguage: 'Idioma de salida',
         tone: 'Tono del reporte',
-        insightFocus: 'Enfoque estratégico'
+        overview: 'Contexto general'
       });
       const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze([
         'outputLanguage',
         'tone',
-        'insightFocus'
+        'overview'
       ]);
+      const REPORT_OVERVIEW_DEFAULT = '';
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -1874,28 +1863,11 @@ function normalizeToneValue(value) {
         return REPORT_TONE_SET[normalized] ? normalized : REPORT_TONE_DEFAULT;
       }
 
-function normalizeInsightFocusValue(value) {
-        if (value === null || value === undefined) {
-          return REPORT_INSIGHT_FOCUS_DEFAULT;
-        }
-        const normalized = String(value).trim().toLowerCase();
-        if (!normalized) {
-          return REPORT_INSIGHT_FOCUS_DEFAULT;
-        }
-        return REPORT_INSIGHT_FOCUS_SET[normalized]
-          ? normalized
-          : REPORT_INSIGHT_FOCUS_DEFAULT;
-      }
-
 function createDefaultCustomizationState() {
         return {
           outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
           tone: { enabled: false, value: REPORT_TONE_DEFAULT },
-          insightFocus: {
-            enabled: false,
-            value: REPORT_INSIGHT_FOCUS_DEFAULT,
-            customText: ''
-          }
+          overview: { enabled: false, text: REPORT_OVERVIEW_DEFAULT }
         };
       }
 
@@ -1912,12 +1884,9 @@ function normalizeReportCustomizationInput(source) {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
         }
-        if (source.insightFocus && typeof source.insightFocus === 'object') {
-          base.insightFocus.enabled = !!source.insightFocus.enabled;
-          base.insightFocus.value = normalizeInsightFocusValue(source.insightFocus.value);
-          base.insightFocus.customText = source.insightFocus.customText
-            ? String(source.insightFocus.customText).trim()
-            : '';
+        if (source.overview && typeof source.overview === 'object') {
+          base.overview.enabled = !!source.overview.enabled;
+          base.overview.text = source.overview.text ? String(source.overview.text).trim() : REPORT_OVERVIEW_DEFAULT;
         }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
@@ -1925,11 +1894,8 @@ function normalizeReportCustomizationInput(source) {
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
         }
-        if (!base.insightFocus.enabled) {
-          base.insightFocus.value = REPORT_INSIGHT_FOCUS_DEFAULT;
-          base.insightFocus.customText = '';
-        } else if (base.insightFocus.value !== 'custom') {
-          base.insightFocus.customText = '';
+        if (!base.overview.enabled) {
+          base.overview.text = REPORT_OVERVIEW_DEFAULT;
         }
         return {
           outputLanguage: {
@@ -1940,10 +1906,9 @@ function normalizeReportCustomizationInput(source) {
             enabled: base.tone.enabled,
             value: base.tone.value
           },
-          insightFocus: {
-            enabled: base.insightFocus.enabled,
-            value: base.insightFocus.value,
-            customText: base.insightFocus.value === 'custom' ? base.insightFocus.customText : ''
+          overview: {
+            enabled: base.overview.enabled,
+            text: base.overview.enabled ? base.overview.text : REPORT_OVERVIEW_DEFAULT
           }
         };
       }
@@ -2026,24 +1991,11 @@ function refreshReportCustomizationOption(option) {
             const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
             select.value = value;
           }
-        } else if (option === 'insightFocus') {
-          const focusSelect = element.querySelector('[data-custom-select="insightFocus"]');
-          const customWrapper = element.querySelector('[data-insight-custom="insightFocus"]');
-          const customInput = element.querySelector('[data-custom-insight-input="insightFocus"]');
-          const focusValue = isEnabled
-            ? normalizeInsightFocusValue(state.value)
-            : REPORT_INSIGHT_FOCUS_DEFAULT;
-          if (focusSelect) {
-            focusSelect.value = focusValue;
-            focusSelect.disabled = !isEnabled;
-          }
-          const showCustom = isEnabled && focusValue === 'custom';
-          if (customWrapper) {
-            customWrapper.classList.toggle('ai-hidden', !showCustom);
-          }
-          if (customInput) {
-            customInput.disabled = !showCustom;
-            customInput.value = showCustom ? state.customText || '' : '';
+        } else if (option === 'overview') {
+          const textarea = element.querySelector('[data-custom-text="overview"]');
+          if (textarea) {
+            textarea.disabled = !isEnabled;
+            textarea.value = isEnabled ? state.text || '' : '';
           }
         }
       }
@@ -2082,15 +2034,9 @@ function handleReportCustomizationSelection(option, checked) {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
-          } else if (option === 'insightFocus') {
-            state.value = REPORT_INSIGHT_FOCUS_DEFAULT;
-            state.customText = '';
+          } else if (option === 'overview') {
+            state.text = REPORT_OVERVIEW_DEFAULT;
           }
-        } else if (option === 'insightFocus' && !state.value) {
-          state.value = REPORT_INSIGHT_FOCUS_DEFAULT;
-        }
-        if (option === 'insightFocus' && state.value !== 'custom') {
-          state.customText = '';
         }
         setReportCustomizationOptionOpen(option, state.enabled);
         refreshReportCustomizationOption(option);
@@ -2106,35 +2052,19 @@ function handleReportCustomizationValueChange(option, value) {
           state.value = normalizeOutputLanguageValue(value);
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
-        } else if (option === 'insightFocus') {
-          state.value = normalizeInsightFocusValue(value);
-          if (state.value !== 'custom') {
-            state.customText = '';
-          }
+        } else if (option === 'overview') {
+          state.text = value === null || value === undefined ? REPORT_OVERVIEW_DEFAULT : String(value).trim();
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
       }
 
-function handleReportInsightFocusChange(value) {
-        const state = ensureReportCustomizationOption('insightFocus');
+function handleReportOverviewInput(value) {
+        const state = ensureReportCustomizationOption('overview');
         if (!state.enabled) {
           return;
         }
-        state.value = normalizeInsightFocusValue(value);
-        if (state.value !== 'custom') {
-          state.customText = '';
-        }
-        refreshReportCustomizationOption('insightFocus');
-        updateReportCustomizationSummary();
-      }
-
-function handleReportInsightCustomInput(value) {
-        const state = ensureReportCustomizationOption('insightFocus');
-        if (!state.enabled || state.value !== 'custom') {
-          return;
-        }
-        state.customText = value === null || value === undefined ? '' : String(value);
+        state.text = value === null || value === undefined ? REPORT_OVERVIEW_DEFAULT : String(value).trim();
       }
 
 function resetReportCustomizationState() {
@@ -2181,20 +2111,13 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
-          } else if (option === 'insightFocus') {
-            const focusSelect = wrapper.querySelector('[data-custom-select="insightFocus"]');
-            if (focusSelect && !focusSelect.dataset.bound) {
-              focusSelect.addEventListener('change', function() {
-                handleReportInsightFocusChange(focusSelect.value);
+          } else if (option === 'overview') {
+            const textarea = wrapper.querySelector('[data-custom-text="overview"]');
+            if (textarea && !textarea.dataset.bound) {
+              textarea.addEventListener('input', function() {
+                handleReportOverviewInput(textarea.value);
               });
-              focusSelect.dataset.bound = 'true';
-            }
-            const customInput = wrapper.querySelector('[data-custom-insight-input="insightFocus"]');
-            if (customInput && !customInput.dataset.bound) {
-              customInput.addEventListener('input', function() {
-                handleReportInsightCustomInput(customInput.value);
-              });
-              customInput.dataset.bound = 'true';
+              textarea.dataset.bound = 'true';
             }
           }
         });
@@ -2206,7 +2129,7 @@ function applyReportCustomizationState(source) {
         reportCustomizationState = {
           outputLanguage: Object.assign({}, normalized.outputLanguage),
           tone: Object.assign({}, normalized.tone),
-          insightFocus: Object.assign({}, normalized.insightFocus)
+          overview: Object.assign({}, normalized.overview)
         };
         REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
           setReportCustomizationOptionOpen(option, !!reportCustomizationState[option].enabled);
@@ -2226,13 +2149,9 @@ function getReportCustomizationPayload() {
             enabled: normalized.tone.enabled,
             value: normalized.tone.value
           },
-          insightFocus: {
-            enabled: normalized.insightFocus.enabled,
-            value: normalized.insightFocus.value,
-            customText:
-              normalized.insightFocus.value === 'custom'
-                ? normalized.insightFocus.customText
-                : ''
+          overview: {
+            enabled: normalized.overview.enabled,
+            text: normalized.overview.enabled ? normalized.overview.text : REPORT_OVERVIEW_DEFAULT
           }
         };
       }

@@ -140,13 +140,11 @@ var META_INDEX = {
 var REPORT_FEATURE_MAX_QUANTITY = 3;
 var REPORT_FEATURES_WITHOUT_QUANTITY = {
   summary: true,
-  comments: true,
-  metrics: true
+  comments: true
 };
 var REPORT_FEATURE_FIXED_QUANTITY = {
   summary: 1,
-  comments: 1,
-  metrics: 1
+  comments: 1
 };
 var REPORT_CHART_TYPE_DEFAULT = 'auto';
 var REPORT_CHART_TYPE_ALLOWED = {
@@ -195,14 +193,7 @@ var REPORT_TONE_ALLOWED = {
   friendly: true,
   analytical: true
 };
-var REPORT_INSIGHT_FOCUS_DEFAULT = 'growth';
-var REPORT_INSIGHT_FOCUS_ALLOWED = {
-  growth: true,
-  efficiency: true,
-  risk: true,
-  customer: true,
-  custom: true
-};
+var REPORT_OVERVIEW_DEFAULT = '';
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
 
@@ -2218,19 +2209,6 @@ function normalizeToneValue(value) {
   return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
 }
 
-function normalizeInsightFocusValue(value) {
-  if (value === null || value === undefined) {
-    return REPORT_INSIGHT_FOCUS_DEFAULT;
-  }
-  var text = String(value).trim().toLowerCase();
-  if (!text) {
-    return REPORT_INSIGHT_FOCUS_DEFAULT;
-  }
-  return REPORT_INSIGHT_FOCUS_ALLOWED[text]
-    ? text
-    : REPORT_INSIGHT_FOCUS_DEFAULT;
-}
-
 function normalizeReportCustomization(source) {
   var base = {
     outputLanguage: {
@@ -2241,10 +2219,9 @@ function normalizeReportCustomization(source) {
       enabled: false,
       value: REPORT_TONE_DEFAULT
     },
-    insightFocus: {
+    overview: {
       enabled: false,
-      value: REPORT_INSIGHT_FOCUS_DEFAULT,
-      customText: ''
+      text: REPORT_OVERVIEW_DEFAULT
     }
   };
   if (!source || typeof source !== 'object') {
@@ -2258,12 +2235,11 @@ function normalizeReportCustomization(source) {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
   }
-  if (source.insightFocus && typeof source.insightFocus === 'object') {
-    base.insightFocus.enabled = !!source.insightFocus.enabled;
-    base.insightFocus.value = normalizeInsightFocusValue(source.insightFocus.value);
-    base.insightFocus.customText = source.insightFocus.customText
-      ? String(source.insightFocus.customText).trim()
-      : '';
+  if (source.overview && typeof source.overview === 'object') {
+    base.overview.enabled = !!source.overview.enabled;
+    base.overview.text = source.overview.text
+      ? String(source.overview.text).trim()
+      : REPORT_OVERVIEW_DEFAULT;
   }
   if (!base.outputLanguage.enabled) {
     base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
@@ -2271,11 +2247,8 @@ function normalizeReportCustomization(source) {
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
   }
-  if (!base.insightFocus.enabled) {
-    base.insightFocus.value = REPORT_INSIGHT_FOCUS_DEFAULT;
-    base.insightFocus.customText = '';
-  } else if (base.insightFocus.value !== 'custom') {
-    base.insightFocus.customText = '';
+  if (!base.overview.enabled) {
+    base.overview.text = REPORT_OVERVIEW_DEFAULT;
   }
   return base;
 }
@@ -2315,8 +2288,7 @@ function saveReportFavorite(payload) {
     table: 'Tabla',
     list: 'Lista',
     summary: 'Resumen',
-    comments: 'Comentarios',
-    metrics: 'Datos destacados'
+    comments: 'Comentarios'
   };
   var tables = Array.isArray(payload.tables) ? payload.tables : [];
   var seenTables = {};
