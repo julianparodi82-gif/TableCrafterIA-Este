@@ -195,11 +195,12 @@ var REPORT_TONE_ALLOWED = {
   friendly: true,
   analytical: true
 };
-var REPORT_TEMPORAL_REFERENCE_DEFAULT = 'auto';
-var REPORT_TEMPORAL_REFERENCE_ALLOWED = {
-  auto: true,
-  currentPeriod: true,
-  lastPeriod: true,
+var REPORT_INSIGHT_FOCUS_DEFAULT = 'growth';
+var REPORT_INSIGHT_FOCUS_ALLOWED = {
+  growth: true,
+  efficiency: true,
+  risk: true,
+  customer: true,
   custom: true
 };
 
@@ -2217,17 +2218,17 @@ function normalizeToneValue(value) {
   return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
 }
 
-function normalizeTemporalReferenceValue(value) {
+function normalizeInsightFocusValue(value) {
   if (value === null || value === undefined) {
-    return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+    return REPORT_INSIGHT_FOCUS_DEFAULT;
   }
-  var text = String(value).trim();
+  var text = String(value).trim().toLowerCase();
   if (!text) {
-    return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+    return REPORT_INSIGHT_FOCUS_DEFAULT;
   }
-  return REPORT_TEMPORAL_REFERENCE_ALLOWED[text]
+  return REPORT_INSIGHT_FOCUS_ALLOWED[text]
     ? text
-    : REPORT_TEMPORAL_REFERENCE_DEFAULT;
+    : REPORT_INSIGHT_FOCUS_DEFAULT;
 }
 
 function normalizeReportCustomization(source) {
@@ -2240,9 +2241,9 @@ function normalizeReportCustomization(source) {
       enabled: false,
       value: REPORT_TONE_DEFAULT
     },
-    temporalReference: {
+    insightFocus: {
       enabled: false,
-      mode: REPORT_TEMPORAL_REFERENCE_DEFAULT,
+      value: REPORT_INSIGHT_FOCUS_DEFAULT,
       customText: ''
     }
   };
@@ -2257,11 +2258,11 @@ function normalizeReportCustomization(source) {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
   }
-  if (source.temporalReference && typeof source.temporalReference === 'object') {
-    base.temporalReference.enabled = !!source.temporalReference.enabled;
-    base.temporalReference.mode = normalizeTemporalReferenceValue(source.temporalReference.mode);
-    base.temporalReference.customText = source.temporalReference.customText
-      ? String(source.temporalReference.customText).trim()
+  if (source.insightFocus && typeof source.insightFocus === 'object') {
+    base.insightFocus.enabled = !!source.insightFocus.enabled;
+    base.insightFocus.value = normalizeInsightFocusValue(source.insightFocus.value);
+    base.insightFocus.customText = source.insightFocus.customText
+      ? String(source.insightFocus.customText).trim()
       : '';
   }
   if (!base.outputLanguage.enabled) {
@@ -2270,11 +2271,11 @@ function normalizeReportCustomization(source) {
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
   }
-  if (!base.temporalReference.enabled) {
-    base.temporalReference.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
-    base.temporalReference.customText = '';
-  } else if (base.temporalReference.mode !== 'custom') {
-    base.temporalReference.customText = '';
+  if (!base.insightFocus.enabled) {
+    base.insightFocus.value = REPORT_INSIGHT_FOCUS_DEFAULT;
+    base.insightFocus.customText = '';
+  } else if (base.insightFocus.value !== 'custom') {
+    base.insightFocus.customText = '';
   }
   return base;
 }

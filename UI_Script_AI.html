@@ -21,8 +21,7 @@
         { value: 'table', label: 'Tabla' },
         { value: 'list', label: 'Lista' },
         { value: 'summary', label: 'Resumen' },
-        { value: 'comments', label: 'Comentarios' },
-        { value: 'metrics', label: 'Datos destacados' }
+        { value: 'comments', label: 'Comentarios' }
       ]);
       const REPORT_FEATURE_TOOLTIPS = Object.freeze({
         chart: 'Generará gráficos comparativos o de tendencia. Ej: "Ventas mensuales vs objetivo".',
@@ -31,19 +30,15 @@
         summary:
           'Generará un resumen narrativo de todas las tablas seleccionadas. Ej: "Síntesis de resultados del trimestre".',
         comments:
-          'Añadirá notas y contexto adicional redactado para el reporte. Ej: "Recomendaciones del equipo comercial".',
-        metrics:
-          'Resaltará cifras puntuales fáciles de leer. Ej: "Ingresos totales y variación semanal".'
+          'Añadirá comentarios con el enfoque estratégico que elijas. Ej: "Acciones clave tras la reunión comercial".'
       });
       const REPORT_FEATURES_WITHOUT_QUANTITY = Object.freeze({
         summary: true,
-        comments: true,
-        metrics: true
+        comments: true
       });
       const REPORT_FEATURE_FIXED_QUANTITY = Object.freeze({
         summary: 1,
-        comments: 1,
-        metrics: 1
+        comments: 1
       });
       const REPORT_CHART_TYPE_DEFAULT = 'auto';
       const REPORT_CHART_TYPE_OPTIONS = Object.freeze([
@@ -101,6 +96,18 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_COMMENT_FOCUS_DEFAULT = 'actions';
+      const REPORT_COMMENT_FOCUS_OPTIONS = Object.freeze([
+        { value: 'actions', label: 'Acciones recomendadas' },
+        { value: 'insights', label: 'Insights clave' },
+        { value: 'risks', label: 'Alertas y riesgos' },
+        { value: 'celebration', label: 'Reconocimiento de logros' },
+        { value: 'culture', label: 'Equipo y cultura' }
+      ]);
+      const REPORT_COMMENT_FOCUS_SET = REPORT_COMMENT_FOCUS_OPTIONS.reduce(function(map, option) {
+        map[option.value] = true;
+        return map;
+      }, {});
       const REPORT_OUTPUT_LANGUAGE_DEFAULT = 'auto';
       const REPORT_OUTPUT_LANGUAGE_OPTIONS = Object.freeze([
         { value: 'auto', label: 'Detección automática (IA)' },
@@ -124,26 +131,27 @@
         map[option.value] = true;
         return map;
       }, {});
-      const REPORT_TEMPORAL_REFERENCE_DEFAULT = 'auto';
-      const REPORT_TEMPORAL_REFERENCE_OPTIONS = Object.freeze([
-        { value: 'auto', label: 'Detectar periodo automáticamente' },
-        { value: 'currentPeriod', label: 'Enfocar el periodo actual' },
-        { value: 'lastPeriod', label: 'Comparar con el periodo anterior' },
-        { value: 'custom', label: 'Definir un periodo manualmente' }
+      const REPORT_INSIGHT_FOCUS_DEFAULT = 'growth';
+      const REPORT_INSIGHT_FOCUS_OPTIONS = Object.freeze([
+        { value: 'growth', label: 'Crecimiento y expansión' },
+        { value: 'efficiency', label: 'Eficiencia operativa' },
+        { value: 'risk', label: 'Riesgos y alertas' },
+        { value: 'customer', label: 'Experiencia del cliente' },
+        { value: 'custom', label: 'Otro (definir manualmente)' }
       ]);
-      const REPORT_TEMPORAL_REFERENCE_SET = REPORT_TEMPORAL_REFERENCE_OPTIONS.reduce(function(map, option) {
+      const REPORT_INSIGHT_FOCUS_SET = REPORT_INSIGHT_FOCUS_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
         return map;
       }, {});
       const REPORT_CUSTOMIZATION_LABELS = Object.freeze({
         outputLanguage: 'Idioma de salida',
         tone: 'Tono del reporte',
-        temporalReference: 'Referencia temporal'
+        insightFocus: 'Enfoque estratégico'
       });
       const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze([
         'outputLanguage',
         'tone',
-        'temporalReference'
+        'insightFocus'
       ]);
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
@@ -1154,6 +1162,10 @@ function createEmptyFeatureListEnumStyleArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_LIST_ENUM_STYLE_DEFAULT);
       }
 
+function createEmptyFeatureCommentFocusArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(REPORT_COMMENT_FOCUS_DEFAULT);
+      }
+
 function normalizeFeatureInstanceArray(source) {
         const base = createEmptyFeatureInstanceArray();
         if (Array.isArray(source)) {
@@ -1228,6 +1240,29 @@ function normalizeFeatureListEnumStyleArray(source) {
         return base;
       }
 
+function normalizeCommentFocusValue(value) {
+        if (value === null || value === undefined) {
+          return REPORT_COMMENT_FOCUS_DEFAULT;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (!normalized) {
+          return REPORT_COMMENT_FOCUS_DEFAULT;
+        }
+        return REPORT_COMMENT_FOCUS_SET[normalized]
+          ? normalized
+          : REPORT_COMMENT_FOCUS_DEFAULT;
+      }
+
+function normalizeFeatureCommentFocusArray(source) {
+        const base = createEmptyFeatureCommentFocusArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+            base[index] = normalizeCommentFocusValue(entry);
+          });
+        }
+        return base;
+      }
+
 function ensureReportFeatureState(feature) {
         const key = feature || '';
         if (!key) {
@@ -1242,7 +1277,8 @@ function ensureReportFeatureState(feature) {
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
-            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
+            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
+            instanceCommentFocus: createEmptyFeatureCommentFocusArray()
           };
           return reportFeatureState[key];
         }
@@ -1267,6 +1303,9 @@ function ensureReportFeatureState(feature) {
         }
         if (!Array.isArray(state.instanceListEnumStyles)) {
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
+        }
+        if (!Array.isArray(state.instanceCommentFocus)) {
+          state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
         }
         return state;
       }
@@ -1419,6 +1458,7 @@ function refreshReportFeatureOption(feature) {
           let normalizedListOrders = createEmptyFeatureListOrderArray();
           let normalizedListEnumerate = createEmptyFeatureListEnumerateArray();
           let normalizedListEnumStyles = createEmptyFeatureListEnumStyleArray();
+          let normalizedCommentFocus = createEmptyFeatureCommentFocusArray();
           if (feature === 'list') {
             normalizedListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
             normalizedListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
@@ -1427,6 +1467,8 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumerate = normalizedListEnumerate.slice();
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
+          const normalizedCommentFocusArray = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
+          state.instanceCommentFocus = normalizedCommentFocusArray.slice();
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
           state.quantity = quantityValue;
           instancesWrapper.classList.toggle('ai-hidden', !shouldShowInstances);
@@ -1455,6 +1497,9 @@ function refreshReportFeatureOption(feature) {
             );
             const enumStyleSelect = item.querySelector(
               '[data-feature-instance-list-style="' + feature + '"]'
+            );
+            const commentFocusSelect = item.querySelector(
+              '[data-feature-instance-comment-focus="' + feature + '"]'
             );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
@@ -1493,6 +1538,11 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
+            if (commentFocusSelect) {
+              const focusValue = normalizedCommentFocusArray[index] || REPORT_COMMENT_FOCUS_DEFAULT;
+              commentFocusSelect.value = focusValue;
+              commentFocusSelect.disabled = !withinRange;
+            }
           });
         }
       }
@@ -1520,6 +1570,7 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
           state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
           state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+          state.instanceCommentFocus = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -1528,6 +1579,7 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceListOrders = createEmptyFeatureListOrderArray();
           state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
           state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
+          state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -1549,6 +1601,7 @@ function handleReportFeatureQuantityChange(feature, value) {
         state.instanceListOrders = normalizeFeatureListOrderArray(state.instanceListOrders);
         state.instanceListEnumerate = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
         state.instanceListEnumStyles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
+        state.instanceCommentFocus = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
         refreshReportFeatureOption(feature);
       }
 
@@ -1647,6 +1700,39 @@ function handleReportFeatureInstanceListStyleChange(feature, index, value) {
         const styles = normalizeFeatureListEnumStyleArray(state.instanceListEnumStyles);
         styles[safeIndex] = normalizeListEnumStyleValue(value);
         state.instanceListEnumStyles = styles;
+        const enumerations = normalizeFeatureListEnumerateArray(state.instanceListEnumerate);
+        const enumerateValue = enumerations[safeIndex] || REPORT_LIST_ENUMERATE_DEFAULT;
+        const option = document.querySelector(
+          '#aiReportFeatureList .ai-feature-option[data-feature="' + feature + '"]'
+        );
+        if (!option) {
+          return;
+        }
+        const instance = option.querySelector(
+          '[data-feature-instance="' + feature + '"][data-instance-index="' + safeIndex + '"]'
+        );
+        if (!instance) {
+          return;
+        }
+        const styleSelect = instance.querySelector('[data-feature-instance-list-style="' + feature + '"]');
+        if (styleSelect) {
+          styleSelect.disabled = enumerateValue !== 'yes';
+        }
+      }
+
+function handleReportFeatureInstanceCommentFocusChange(feature, index, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const focusValues = normalizeFeatureCommentFocusArray(state.instanceCommentFocus);
+        focusValues[safeIndex] = normalizeCommentFocusValue(value);
+        state.instanceCommentFocus = focusValues;
       }
 
 function initializeReportFeatureControls() {
@@ -1746,6 +1832,19 @@ function initializeReportFeatureControls() {
             });
             selector.dataset.bound = 'true';
           });
+          const commentFocusSelectors = option.querySelectorAll(
+            '[data-feature-instance-comment-focus="' + feature + '"]'
+          );
+          commentFocusSelectors.forEach(function(selector) {
+            if (!selector || selector.dataset.bound) {
+              return;
+            }
+            selector.addEventListener('change', function() {
+              const index = parseInt(selector.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceCommentFocusChange(feature, index, selector.value);
+            });
+            selector.dataset.bound = 'true';
+          });
           refreshReportFeatureOption(feature);
         });
         updateSelectedReportFeatures();
@@ -1775,26 +1874,26 @@ function normalizeToneValue(value) {
         return REPORT_TONE_SET[normalized] ? normalized : REPORT_TONE_DEFAULT;
       }
 
-function normalizeTemporalModeValue(value) {
+function normalizeInsightFocusValue(value) {
         if (value === null || value === undefined) {
-          return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          return REPORT_INSIGHT_FOCUS_DEFAULT;
         }
-        const normalized = String(value).trim();
+        const normalized = String(value).trim().toLowerCase();
         if (!normalized) {
-          return REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          return REPORT_INSIGHT_FOCUS_DEFAULT;
         }
-        return REPORT_TEMPORAL_REFERENCE_SET[normalized]
+        return REPORT_INSIGHT_FOCUS_SET[normalized]
           ? normalized
-          : REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          : REPORT_INSIGHT_FOCUS_DEFAULT;
       }
 
 function createDefaultCustomizationState() {
         return {
           outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
           tone: { enabled: false, value: REPORT_TONE_DEFAULT },
-          temporalReference: {
+          insightFocus: {
             enabled: false,
-            mode: REPORT_TEMPORAL_REFERENCE_DEFAULT,
+            value: REPORT_INSIGHT_FOCUS_DEFAULT,
             customText: ''
           }
         };
@@ -1813,11 +1912,11 @@ function normalizeReportCustomizationInput(source) {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
         }
-        if (source.temporalReference && typeof source.temporalReference === 'object') {
-          base.temporalReference.enabled = !!source.temporalReference.enabled;
-          base.temporalReference.mode = normalizeTemporalModeValue(source.temporalReference.mode);
-          base.temporalReference.customText = source.temporalReference.customText
-            ? String(source.temporalReference.customText).trim()
+        if (source.insightFocus && typeof source.insightFocus === 'object') {
+          base.insightFocus.enabled = !!source.insightFocus.enabled;
+          base.insightFocus.value = normalizeInsightFocusValue(source.insightFocus.value);
+          base.insightFocus.customText = source.insightFocus.customText
+            ? String(source.insightFocus.customText).trim()
             : '';
         }
         if (!base.outputLanguage.enabled) {
@@ -1826,11 +1925,11 @@ function normalizeReportCustomizationInput(source) {
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
         }
-        if (!base.temporalReference.enabled) {
-          base.temporalReference.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
-          base.temporalReference.customText = '';
-        } else if (base.temporalReference.mode !== 'custom') {
-          base.temporalReference.customText = '';
+        if (!base.insightFocus.enabled) {
+          base.insightFocus.value = REPORT_INSIGHT_FOCUS_DEFAULT;
+          base.insightFocus.customText = '';
+        } else if (base.insightFocus.value !== 'custom') {
+          base.insightFocus.customText = '';
         }
         return {
           outputLanguage: {
@@ -1841,10 +1940,10 @@ function normalizeReportCustomizationInput(source) {
             enabled: base.tone.enabled,
             value: base.tone.value
           },
-          temporalReference: {
-            enabled: base.temporalReference.enabled,
-            mode: base.temporalReference.mode,
-            customText: base.temporalReference.customText
+          insightFocus: {
+            enabled: base.insightFocus.enabled,
+            value: base.insightFocus.value,
+            customText: base.insightFocus.value === 'custom' ? base.insightFocus.customText : ''
           }
         };
       }
@@ -1927,18 +2026,18 @@ function refreshReportCustomizationOption(option) {
             const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
             select.value = value;
           }
-        } else if (option === 'temporalReference') {
-          const modeSelect = element.querySelector('[data-custom-temporal-mode="temporalReference"]');
-          const customWrapper = element.querySelector('[data-temporal-custom="temporalReference"]');
-          const customInput = element.querySelector('[data-custom-temporal-input="temporalReference"]');
-          const modeValue = isEnabled
-            ? normalizeTemporalModeValue(state.mode)
-            : REPORT_TEMPORAL_REFERENCE_DEFAULT;
-          if (modeSelect) {
-            modeSelect.value = modeValue;
-            modeSelect.disabled = !isEnabled;
+        } else if (option === 'insightFocus') {
+          const focusSelect = element.querySelector('[data-custom-select="insightFocus"]');
+          const customWrapper = element.querySelector('[data-insight-custom="insightFocus"]');
+          const customInput = element.querySelector('[data-custom-insight-input="insightFocus"]');
+          const focusValue = isEnabled
+            ? normalizeInsightFocusValue(state.value)
+            : REPORT_INSIGHT_FOCUS_DEFAULT;
+          if (focusSelect) {
+            focusSelect.value = focusValue;
+            focusSelect.disabled = !isEnabled;
           }
-          const showCustom = isEnabled && modeValue === 'custom';
+          const showCustom = isEnabled && focusValue === 'custom';
           if (customWrapper) {
             customWrapper.classList.toggle('ai-hidden', !showCustom);
           }
@@ -1983,12 +2082,15 @@ function handleReportCustomizationSelection(option, checked) {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
-          } else if (option === 'temporalReference') {
-            state.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+          } else if (option === 'insightFocus') {
+            state.value = REPORT_INSIGHT_FOCUS_DEFAULT;
             state.customText = '';
           }
-        } else if (option === 'temporalReference' && !state.mode) {
-          state.mode = REPORT_TEMPORAL_REFERENCE_DEFAULT;
+        } else if (option === 'insightFocus' && !state.value) {
+          state.value = REPORT_INSIGHT_FOCUS_DEFAULT;
+        }
+        if (option === 'insightFocus' && state.value !== 'custom') {
+          state.customText = '';
         }
         setReportCustomizationOptionOpen(option, state.enabled);
         refreshReportCustomizationOption(option);
@@ -2004,27 +2106,32 @@ function handleReportCustomizationValueChange(option, value) {
           state.value = normalizeOutputLanguageValue(value);
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
+        } else if (option === 'insightFocus') {
+          state.value = normalizeInsightFocusValue(value);
+          if (state.value !== 'custom') {
+            state.customText = '';
+          }
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
       }
 
-function handleReportTemporalModeChange(value) {
-        const state = ensureReportCustomizationOption('temporalReference');
+function handleReportInsightFocusChange(value) {
+        const state = ensureReportCustomizationOption('insightFocus');
         if (!state.enabled) {
           return;
         }
-        state.mode = normalizeTemporalModeValue(value);
-        if (state.mode !== 'custom') {
+        state.value = normalizeInsightFocusValue(value);
+        if (state.value !== 'custom') {
           state.customText = '';
         }
-        refreshReportCustomizationOption('temporalReference');
+        refreshReportCustomizationOption('insightFocus');
         updateReportCustomizationSummary();
       }
 
-function handleReportTemporalCustomInput(value) {
-        const state = ensureReportCustomizationOption('temporalReference');
-        if (!state.enabled || state.mode !== 'custom') {
+function handleReportInsightCustomInput(value) {
+        const state = ensureReportCustomizationOption('insightFocus');
+        if (!state.enabled || state.value !== 'custom') {
           return;
         }
         state.customText = value === null || value === undefined ? '' : String(value);
@@ -2074,18 +2181,18 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
-          } else if (option === 'temporalReference') {
-            const modeSelect = wrapper.querySelector('[data-custom-temporal-mode="temporalReference"]');
-            if (modeSelect && !modeSelect.dataset.bound) {
-              modeSelect.addEventListener('change', function() {
-                handleReportTemporalModeChange(modeSelect.value);
+          } else if (option === 'insightFocus') {
+            const focusSelect = wrapper.querySelector('[data-custom-select="insightFocus"]');
+            if (focusSelect && !focusSelect.dataset.bound) {
+              focusSelect.addEventListener('change', function() {
+                handleReportInsightFocusChange(focusSelect.value);
               });
-              modeSelect.dataset.bound = 'true';
+              focusSelect.dataset.bound = 'true';
             }
-            const customInput = wrapper.querySelector('[data-custom-temporal-input="temporalReference"]');
+            const customInput = wrapper.querySelector('[data-custom-insight-input="insightFocus"]');
             if (customInput && !customInput.dataset.bound) {
               customInput.addEventListener('input', function() {
-                handleReportTemporalCustomInput(customInput.value);
+                handleReportInsightCustomInput(customInput.value);
               });
               customInput.dataset.bound = 'true';
             }
@@ -2099,7 +2206,7 @@ function applyReportCustomizationState(source) {
         reportCustomizationState = {
           outputLanguage: Object.assign({}, normalized.outputLanguage),
           tone: Object.assign({}, normalized.tone),
-          temporalReference: Object.assign({}, normalized.temporalReference)
+          insightFocus: Object.assign({}, normalized.insightFocus)
         };
         REPORT_CUSTOMIZATION_OPTIONS.forEach(function(option) {
           setReportCustomizationOptionOpen(option, !!reportCustomizationState[option].enabled);
@@ -2119,12 +2226,12 @@ function getReportCustomizationPayload() {
             enabled: normalized.tone.enabled,
             value: normalized.tone.value
           },
-          temporalReference: {
-            enabled: normalized.temporalReference.enabled,
-            mode: normalized.temporalReference.mode,
+          insightFocus: {
+            enabled: normalized.insightFocus.enabled,
+            value: normalized.insightFocus.value,
             customText:
-              normalized.temporalReference.mode === 'custom'
-                ? normalized.temporalReference.customText
+              normalized.insightFocus.value === 'custom'
+                ? normalized.insightFocus.customText
                 : ''
           }
         };
@@ -2175,6 +2282,7 @@ function applyReportFeatureSelections(features, featureDetails) {
             const instanceListEnumStyles = normalizeFeatureListEnumStyleArray(
               detail.instanceListEnumStyles
             );
+            const instanceCommentFocus = normalizeFeatureCommentFocusArray(detail.instanceCommentFocus);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -2182,7 +2290,8 @@ function applyReportFeatureSelections(features, featureDetails) {
               instanceChartTypes: instanceChartTypes,
               instanceListOrders: instanceListOrders,
               instanceListEnumerate: instanceListEnumerate,
-              instanceListEnumStyles: instanceListEnumStyles
+              instanceListEnumStyles: instanceListEnumStyles,
+              instanceCommentFocus: instanceCommentFocus
             };
           });
         }
@@ -2213,6 +2322,9 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListEnumStyles = detail
               ? normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
               : createEmptyFeatureListEnumStyleArray();
+            state.instanceCommentFocus = detail
+              ? normalizeFeatureCommentFocusArray(detail.instanceCommentFocus)
+              : createEmptyFeatureCommentFocusArray();
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2221,6 +2333,7 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.instanceListOrders = createEmptyFeatureListOrderArray();
             state.instanceListEnumerate = createEmptyFeatureListEnumerateArray();
             state.instanceListEnumStyles = createEmptyFeatureListEnumStyleArray();
+            state.instanceCommentFocus = createEmptyFeatureCommentFocusArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -2719,6 +2832,9 @@ async function handleReportFavoriteSave() {
           const baseListEnumStyles = normalizeFeatureListEnumStyleArray(
             state ? state.instanceListEnumStyles : []
           );
+          const baseCommentFocus = normalizeFeatureCommentFocusArray(
+            state ? state.instanceCommentFocus : []
+          );
           const trimmedDescriptions = baseDescriptions.map(function(text) {
             return text ? String(text).trim() : '';
           });
@@ -2735,6 +2851,7 @@ async function handleReportFavoriteSave() {
             state.instanceListOrders = baseListOrders.slice();
             state.instanceListEnumerate = baseListEnumerate.slice();
             state.instanceListEnumStyles = baseListEnumStyles.slice();
+            state.instanceCommentFocus = baseCommentFocus.slice();
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -2743,7 +2860,8 @@ async function handleReportFavoriteSave() {
             instanceChartTypes: baseChartTypes.slice(),
             instanceListOrders: baseListOrders.slice(),
             instanceListEnumerate: baseListEnumerate.slice(),
-            instanceListEnumStyles: baseListEnumStyles.slice()
+            instanceListEnumStyles: baseListEnumStyles.slice(),
+            instanceCommentFocus: baseCommentFocus.slice()
           };
         });
 
@@ -2831,7 +2949,8 @@ async function handleReportFavoriteSave() {
             instanceChartTypes: createEmptyFeatureChartTypeArray(),
             instanceListOrders: createEmptyFeatureListOrderArray(),
             instanceListEnumerate: createEmptyFeatureListEnumerateArray(),
-            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray()
+            instanceListEnumStyles: createEmptyFeatureListEnumStyleArray(),
+            instanceCommentFocus: createEmptyFeatureCommentFocusArray()
           };
           return {
             feature: feature,
@@ -2841,7 +2960,8 @@ async function handleReportFavoriteSave() {
             instanceChartTypes: normalizeFeatureChartTypeArray(detail.instanceChartTypes),
             instanceListOrders: normalizeFeatureListOrderArray(detail.instanceListOrders),
             instanceListEnumerate: normalizeFeatureListEnumerateArray(detail.instanceListEnumerate),
-            instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles)
+            instanceListEnumStyles: normalizeFeatureListEnumStyleArray(detail.instanceListEnumStyles),
+            instanceCommentFocus: normalizeFeatureCommentFocusArray(detail.instanceCommentFocus)
           };
         });
         const customizationPayload = getReportCustomizationPayload();
