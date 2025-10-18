@@ -231,6 +231,12 @@
         color: #FFFFFF;
         box-shadow: var(--tc-shadow-soft);
       }
+      .tab-btn[data-theme-hidden='true'] {
+        display: none;
+      }
+      .tab-content[data-theme-hidden='true'] {
+        display: none !important;
+      }
       .tab-btn[data-tooltip]::after {
         content: attr(data-tooltip);
         position: absolute;
@@ -268,11 +274,7 @@
         z-index: 12;
       }
       .tab-btn[data-tooltip]:hover::after,
-      .tab-btn[data-tooltip]:hover::before,
-      .tab-btn[data-tooltip]:focus::after,
-      .tab-btn[data-tooltip]:focus::before,
-      .tab-btn[data-tooltip]:focus-visible::after,
-      .tab-btn[data-tooltip]:focus-visible::before {
+      .tab-btn[data-tooltip]:hover::before {
         opacity: 1;
       }
       .tab-nav-primary .tab-btn[data-tooltip]::after {
@@ -1102,8 +1104,8 @@
       .ai-comment-hint[data-comment-hint]::before,
       .ai-comment-hint[data-comment-hint]::after {
         position: absolute;
-        right: 0;
-        bottom: calc(100% + 8px);
+        left: 0;
+        top: calc(100% + 8px);
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -1114,7 +1116,7 @@
         content: '💡';
         font-size: 1.15rem;
         line-height: 1;
-        transform: translateY(6px);
+        transform: translateY(-6px);
       }
       .ai-comment-hint[data-comment-hint]::after {
         content: attr(data-comment-hint);
@@ -1127,7 +1129,7 @@
         font-size: 12px;
         font-weight: 500;
         line-height: 1.35;
-        transform: translateY(6px);
+        transform: translateY(-6px);
         text-align: left;
         white-space: normal;
       }
@@ -1146,7 +1148,6 @@
       @media (max-width: 480px) {
         .ai-comment-hint[data-comment-hint]::before,
         .ai-comment-hint[data-comment-hint]::after {
-          right: auto;
           left: 0;
         }
       }
@@ -1875,6 +1876,48 @@
       .header-item button:hover {
         background-color: #D1D5DB;
       }
+      .header-ai-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--tc-primary);
+        cursor: pointer;
+      }
+      .header-ai-toggle input {
+        margin: 0;
+      }
+      .header-ai-prompt {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+      }
+      .header-ai-datatype {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+      }
+      .header-ai-datatype label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-muted);
+      }
+      .header-ai-datatype select {
+        min-height: 34px;
+      }
+      .header-ai-datatype.hidden {
+        display: none;
+      }
+      .header-ai-prompt-field {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+      }
+      .header-ai-prompt.hidden {
+        display: none;
+      }
       .header-desc-toggle {
         display: flex;
         align-items: center;
@@ -2226,12 +2269,12 @@
     <div class="sidebar-scroll-wrapper">
       <div class="container">
       <div class="theme-header">
-        <h2 id="appTitle"><?!= __isWordcrafter ? 'WordCrafter AI' : 'TableCrafter AI' ?></h2>
+        <h2 id="appTitle"><?!= __isWordcrafter ? 'WordCrafterAI' : 'TableCrafterAI' ?></h2>
         <label class="theme-toggle" for="themeToggle">
           <input
             type="checkbox"
             id="themeToggle"
-            aria-label="Activar vista WordCrafter AI"
+            aria-label="Activar vista WordCrafterAI"
             <? if (__isWordcrafter) { ?>checked<? } ?>
           />
           <span class="theme-toggle-switch">
@@ -2245,7 +2288,7 @@
         </button>
         <div id="themeMessageContent" class="theme-message-content">
           <? if (__isWordcrafter) { ?>
-          <p><strong>WordCrafter AI</strong> está por llegar para automatizar y editar textos con precisión.</p>
+          <p><strong>WordCrafterAI</strong> está por llegar para automatizar y editar textos con precisión.</p>
           <p>Pronto podrás:</p>
           <ul>
             <li>Crear resúmenes inteligentes adaptados a cada documento.</li>
@@ -2254,12 +2297,12 @@
           </ul>
           <p>Activa el modo celeste cuando quieras conocer sus avances.</p>
           <? } else { ?>
-          <p><strong>¡Bienvenido a TableCrafter AI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>
+          <p><strong>¡Bienvenido a TableCrafterAI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>
           <p>Empieza con la acción que necesites:</p>
           <ul>
             <li>Panel IA: solicita análisis, resúmenes o reportes en segundos.</li>
             <li>Editar tabla: mejora estilos existentes con un par de clics.</li>
-            <li>Crear tabla: diseña nuevas estructuras listas para reutilizar.</li>
+            <li>Crear tabla: diseña nuevas estructuras listas para reutilizar y configura columnas con IA.</li>
           </ul>
           <? } ?>
         </div>
@@ -2279,6 +2322,7 @@
         <button
           class="tab-btn active"
           data-tab="aiTab"
+          data-themes="table word"
           data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
         >
           Panel IA
@@ -2286,6 +2330,7 @@
         <button
           class="tab-btn"
           data-tab="editTab"
+          data-themes="table"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
         >
           Editar tabla
@@ -2293,6 +2338,7 @@
         <button
           class="tab-btn"
           data-tab="createTab"
+          data-themes="table"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
         >
           Crear tabla
@@ -2300,6 +2346,7 @@
         <button
           class="tab-btn"
           data-tab="triggersTab"
+          data-themes="table word"
           data-tooltip="Configura automatizaciones que mantengan tus datos al día."
         >
           Triggers
@@ -2307,6 +2354,7 @@
         <button
           class="tab-btn"
           data-tab="templatesTab"
+          data-themes="table"
           data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
         >
           <span class="tab-label"
@@ -2316,6 +2364,7 @@
         <button
           class="tab-btn"
           data-tab="actionsTab"
+          data-themes="table word"
           data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
         >
           <span class="tab-label"
@@ -2324,7 +2373,7 @@
         </button>
       </div>
 
-      <div id="createTab" class="tab-content">
+      <div id="createTab" class="tab-content" data-themes="table">
         <div class="section">
           <div class="range-row">
             <div>
@@ -2372,7 +2421,7 @@
         </div>
       </div>
 
-      <div id="editTab" class="tab-content">
+      <div id="editTab" class="tab-content" data-themes="table">
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
           <div class="edit-saved-container">
@@ -2397,7 +2446,10 @@
             </div>
           </div>
           <div class="toggle-group" style="margin-top:8px;">
-            <label class="checkbox-subtle">
+            <label
+              class="checkbox-subtle js-comment-hint-trigger"
+              data-comment-hint="Mantiene las fórmulas coherentes cuando reubicas la tabla. Ej.: si =B2*2 se mueve una columna a la derecha, se actualizará a =C2*2."
+            >
               <input type="checkbox" id="editUpdateFormulaRefs" checked />
               Actualizar referencias de fórmulas al mover tabla.
             </label>
@@ -2440,7 +2492,7 @@
         </div>
       </div>
 
-      <div id="aiTab" class="tab-content active">
+      <div id="aiTab" class="tab-content active" data-themes="table word">
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
           <div class="ai-multi-select">
@@ -3696,7 +3748,7 @@
           </div>
         </div>
       </div>
-      <div id="triggersTab" class="tab-content">
+      <div id="triggersTab" class="tab-content" data-themes="table word">
         <div class="section">
           <div class="tc-card">
             <div class="tc-card-header">
@@ -3745,7 +3797,7 @@
           </div>
         </div>
       </div>
-      <div id="templatesTab" class="tab-content">
+      <div id="templatesTab" class="tab-content" data-themes="table">
         <div class="section">
           <div class="tc-card">
             <div class="tc-card-header">
@@ -3774,7 +3826,7 @@
           </div>
         </div>
       </div>
-      <div id="actionsTab" class="tab-content">
+      <div id="actionsTab" class="tab-content" data-themes="table word">
         <div class="section">
           <div class="tc-card">
             <div class="tc-card-header">

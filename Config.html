@@ -56,6 +56,60 @@
       .btn-delete:hover {
         background-color: #DC2626;
       }
+      .preference-section {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid #E5E7EB;
+      }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+      .toggle-control {
+        position: relative;
+        width: 46px;
+        height: 24px;
+        display: inline-block;
+      }
+      .toggle-control input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-indicator {
+        position: absolute;
+        inset: 0;
+        background: #D1D5DB;
+        border-radius: 999px;
+        transition: background 0.2s ease;
+      }
+      .toggle-indicator::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+        transition: transform 0.2s ease;
+      }
+      .toggle-control input:checked + .toggle-indicator {
+        background: #2563EB;
+      }
+      .toggle-control input:checked + .toggle-indicator::after {
+        transform: translateX(22px);
+      }
+      .preference-hint {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #6B7280;
+      }
       .message {
         margin-top: 12px;
         font-size: 14px;
@@ -160,6 +214,17 @@
     <div>
       <button id="saveKeyBtn" class="btn-save">Guardar</button>
       <button id="deleteKeyBtn" class="btn-delete">Eliminar clave</button>
+    </div>
+    <div class="preference-section">
+      <h3>Preferencias</h3>
+      <label class="toggle-row" for="welcomeToggle">
+        <span>Mostrar mensaje de bienvenida de TableCrafterAI</span>
+        <span class="toggle-control">
+          <input type="checkbox" id="welcomeToggle" />
+          <span class="toggle-indicator"></span>
+        </span>
+      </label>
+      <p class="preference-hint">Activa esta opción para volver a ver el mensaje introductorio en la barra lateral.</p>
     </div>
     <div id="message" class="message"></div>
     <div id="tcModalOverlay" class="tc-modal-overlay" aria-hidden="true" data-variant="info">
@@ -277,13 +342,18 @@
         });
       }
 
-      // Cargar clave existente
+      // Cargar preferencias existentes
       document.addEventListener('DOMContentLoaded', function() {
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.key) {
             document.getElementById('apiKeyInput').value = res.key;
           }
         }).getApiKey();
+        google.script.run.withSuccessHandler(function(res) {
+          const toggle = document.getElementById('welcomeToggle');
+          if (!toggle) return;
+          toggle.checked = !(res && res.hideWelcome);
+        }).getWelcomeMessagePreference();
       });
       // Guardar clave
       document.getElementById('saveKeyBtn').addEventListener('click', function() {
@@ -307,6 +377,15 @@
           document.getElementById('apiKeyInput').value = '';
           document.getElementById('message').textContent = 'Clave eliminada.';
         }).saveApiKey('');
+      });
+      // Actualizar preferencia de bienvenida
+      document.getElementById('welcomeToggle').addEventListener('change', function() {
+        const shouldShow = this.checked;
+        google.script.run.withSuccessHandler(function() {
+          document.getElementById('message').textContent = shouldShow
+            ? 'El mensaje de bienvenida volverá a mostrarse.'
+            : 'El mensaje de bienvenida permanecerá oculto.';
+        }).setWelcomeMessagePreference(shouldShow);
       });
     </script>
   </body>
