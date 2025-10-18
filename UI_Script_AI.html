@@ -104,7 +104,8 @@
         { value: 'es', label: 'Español' },
         { value: 'en', label: 'Inglés' },
         { value: 'pt', label: 'Portugués' },
-        { value: 'fr', label: 'Francés' }
+        { value: 'fr', label: 'Francés' },
+        { value: 'other', label: 'Otro' }
       ]);
       const REPORT_OUTPUT_LANGUAGE_SET = REPORT_OUTPUT_LANGUAGE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
@@ -115,7 +116,8 @@
         { value: 'neutral', label: 'Neutral profesional' },
         { value: 'executive', label: 'Resumen ejecutivo' },
         { value: 'friendly', label: 'Cercano y motivador' },
-        { value: 'analytical', label: 'Analítico y detallado' }
+        { value: 'analytical', label: 'Analítico y detallado' },
+        { value: 'custom', label: 'Personalizado' }
       ]);
       const REPORT_TONE_SET = REPORT_TONE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
@@ -126,13 +128,15 @@
         es: 'Redacta todo el reporte en español neutro.',
         en: 'Entrega el reporte completo en inglés profesional.',
         pt: 'Genera cada sección en portugués.',
-        fr: 'Produce el reporte final en francés.'
+        fr: 'Produce el reporte final en francés.',
+        other: 'Define manualmente el idioma exacto en el que deseas el reporte.'
       });
       const REPORT_TONE_TOOLTIPS = Object.freeze({
         neutral: 'Mantiene un tono formal y equilibrado para cualquier audiencia.',
         executive: 'Resume hallazgos con foco directivo y conclusiones rápidas.',
         friendly: 'Utiliza un lenguaje cercano y motivador para equipos.',
-        analytical: 'Profundiza en datos y justificativos con detalle.'
+        analytical: 'Profundiza en datos y justificativos con detalle.',
+        custom: 'Describe con tus palabras el estilo comunicacional que necesitas.'
       });
       const REPORT_SUMMARY_LENGTH_TOOLTIPS = Object.freeze({
         concise: 'Entre 1 y 2 oraciones con los resultados clave. Ej: "Ventas +12% vs. objetivo trimestral."',
@@ -3210,10 +3214,24 @@ function normalizePersonaCustomNote(value) {
         return String(value).trim();
       }
 
+function normalizeOutputLanguageCustomValue(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
+function normalizeToneCustomValue(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
 function createDefaultCustomizationState() {
         return {
-          outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
-          tone: { enabled: false, value: REPORT_TONE_DEFAULT },
+          outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT, customValue: '' },
+          tone: { enabled: false, value: REPORT_TONE_DEFAULT, customValue: '' },
           persona: { enabled: false, value: REPORT_PERSONA_DEFAULT, customNote: '' }
         };
       }
@@ -3226,10 +3244,14 @@ function normalizeReportCustomizationInput(source) {
         if (source.outputLanguage && typeof source.outputLanguage === 'object') {
           base.outputLanguage.enabled = !!source.outputLanguage.enabled;
           base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+          base.outputLanguage.customValue = normalizeOutputLanguageCustomValue(
+            source.outputLanguage.customValue
+          );
         }
         if (source.tone && typeof source.tone === 'object') {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
+          base.tone.customValue = normalizeToneCustomValue(source.tone.customValue);
         }
         if (source.persona && typeof source.persona === 'object') {
           base.persona.enabled = !!source.persona.enabled;
@@ -3238,13 +3260,21 @@ function normalizeReportCustomizationInput(source) {
         }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+          base.outputLanguage.customValue = '';
         }
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
+          base.tone.customValue = '';
         }
         if (!base.persona.enabled) {
           base.persona.value = REPORT_PERSONA_DEFAULT;
           base.persona.customNote = '';
+        }
+        if (base.outputLanguage.value !== 'other') {
+          base.outputLanguage.customValue = '';
+        }
+        if (base.tone.value !== 'custom') {
+          base.tone.customValue = '';
         }
         if (base.persona.value !== 'custom') {
           base.persona.customNote = '';
@@ -3252,11 +3282,13 @@ function normalizeReportCustomizationInput(source) {
         return {
           outputLanguage: {
             enabled: base.outputLanguage.enabled,
-            value: base.outputLanguage.value
+            value: base.outputLanguage.value,
+            customValue: base.outputLanguage.customValue
           },
           tone: {
             enabled: base.tone.enabled,
-            value: base.tone.value
+            value: base.tone.value,
+            customValue: base.tone.customValue
           },
           persona: {
             enabled: base.persona.enabled,
@@ -3273,8 +3305,17 @@ function ensureReportCustomizationOption(option) {
         if (!reportCustomizationState[option]) {
           const defaults = createDefaultCustomizationState();
           reportCustomizationState[option] = Object.assign({}, defaults[option]);
+          return reportCustomizationState[option];
         }
-        return reportCustomizationState[option];
+        const defaults = createDefaultCustomizationState();
+        const state = reportCustomizationState[option];
+        const defaultState = defaults[option] || {};
+        Object.keys(defaultState).forEach(function(key) {
+          if (!Object.prototype.hasOwnProperty.call(state, key)) {
+            state[key] = defaultState[key];
+          }
+        });
+        return state;
       }
 
 function getReportCustomizationOptionElement(option) {
@@ -3343,12 +3384,36 @@ function refreshReportCustomizationOption(option) {
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_OUTPUT_LANGUAGE_TOOLTIPS);
           }
+          const customWrapper = element.querySelector('[data-custom-output-language-wrapper]');
+          if (customWrapper) {
+            const shouldShowCustom = isEnabled && normalizeOutputLanguageValue(state.value) === 'other';
+            customWrapper.classList.toggle('ai-hidden', !shouldShowCustom);
+            const customInput = customWrapper.querySelector('[data-custom-output-language-input]');
+            if (customInput) {
+              customInput.disabled = !shouldShowCustom;
+              customInput.required = shouldShowCustom;
+              customInput.value = shouldShowCustom
+                ? normalizeOutputLanguageCustomValue(state.customValue)
+                : '';
+            }
+          }
         } else if (option === 'tone') {
           const select = element.querySelector('[data-custom-select="tone"]');
           if (select) {
             const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_TONE_TOOLTIPS);
+          }
+          const customWrapper = element.querySelector('[data-custom-tone-wrapper]');
+          if (customWrapper) {
+            const shouldShowCustom = isEnabled && normalizeToneValue(state.value) === 'custom';
+            customWrapper.classList.toggle('ai-hidden', !shouldShowCustom);
+            const customInput = customWrapper.querySelector('[data-custom-tone-input]');
+            if (customInput) {
+              customInput.disabled = !shouldShowCustom;
+              customInput.required = shouldShowCustom;
+              customInput.value = shouldShowCustom ? normalizeToneCustomValue(state.customValue) : '';
+            }
           }
         } else if (option === 'persona') {
           const select = element.querySelector('[data-custom-select="persona"]');
@@ -3402,8 +3467,10 @@ function handleReportCustomizationSelection(option, checked) {
         if (!state.enabled) {
           if (option === 'outputLanguage') {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+            state.customValue = '';
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
+            state.customValue = '';
           } else if (option === 'persona') {
             state.value = REPORT_PERSONA_DEFAULT;
             state.customNote = '';
@@ -3421,8 +3488,14 @@ function handleReportCustomizationValueChange(option, value) {
         }
         if (option === 'outputLanguage') {
           state.value = normalizeOutputLanguageValue(value);
+          if (state.value !== 'other') {
+            state.customValue = '';
+          }
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
+          if (state.value !== 'custom') {
+            state.customValue = '';
+          }
         } else if (option === 'persona') {
           state.value = normalizePersonaValue(value);
           if (state.value !== 'custom') {
@@ -3431,6 +3504,24 @@ function handleReportCustomizationValueChange(option, value) {
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
+      }
+
+function handleReportCustomizationOutputLanguageCustomChange(value) {
+        const state = ensureReportCustomizationOption('outputLanguage');
+        if (!state.enabled || normalizeOutputLanguageValue(state.value) !== 'other') {
+          state.customValue = '';
+          return;
+        }
+        state.customValue = normalizeOutputLanguageCustomValue(value);
+      }
+
+function handleReportCustomizationToneCustomChange(value) {
+        const state = ensureReportCustomizationOption('tone');
+        if (!state.enabled || normalizeToneValue(state.value) !== 'custom') {
+          state.customValue = '';
+          return;
+        }
+        state.customValue = normalizeToneCustomValue(value);
       }
 
 function handleReportCustomizationPersonaNoteChange(value) {
@@ -3486,6 +3577,24 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
+            if (option === 'outputLanguage') {
+              const customInput = wrapper.querySelector('[data-custom-output-language-input]');
+              if (customInput && !customInput.dataset.bound) {
+                customInput.addEventListener('input', function() {
+                  handleReportCustomizationOutputLanguageCustomChange(customInput.value);
+                });
+                customInput.dataset.bound = 'true';
+              }
+            }
+            if (option === 'tone') {
+              const customInput = wrapper.querySelector('[data-custom-tone-input]');
+              if (customInput && !customInput.dataset.bound) {
+                customInput.addEventListener('input', function() {
+                  handleReportCustomizationToneCustomChange(customInput.value);
+                });
+                customInput.dataset.bound = 'true';
+              }
+            }
             if (option === 'persona') {
               const noteInput = wrapper.querySelector('[data-custom-persona-note-input]');
               if (noteInput && !noteInput.dataset.bound) {
@@ -3519,11 +3628,13 @@ function getReportCustomizationPayload() {
         return {
           outputLanguage: {
             enabled: normalized.outputLanguage.enabled,
-            value: normalized.outputLanguage.value
+            value: normalized.outputLanguage.value,
+            customValue: normalized.outputLanguage.customValue
           },
           tone: {
             enabled: normalized.tone.enabled,
-            value: normalized.tone.value
+            value: normalized.tone.value,
+            customValue: normalized.tone.customValue
           },
           persona: {
             enabled: normalized.persona.enabled,
@@ -3531,6 +3642,29 @@ function getReportCustomizationPayload() {
             customNote: normalized.persona.customNote
           }
         };
+      }
+
+function validateReportCustomization(customization) {
+        if (!customization || typeof customization !== 'object') {
+          return '';
+        }
+        if (
+          customization.outputLanguage &&
+          customization.outputLanguage.enabled &&
+          customization.outputLanguage.value === 'other' &&
+          !customization.outputLanguage.customValue
+        ) {
+          return 'Indica el idioma personalizado del reporte.';
+        }
+        if (
+          customization.tone &&
+          customization.tone.enabled &&
+          customization.tone.value === 'custom' &&
+          !customization.tone.customValue
+        ) {
+          return 'Describe el tono personalizado del reporte.';
+        }
+        return '';
       }
 
 function normalizeFeatureId(value) {
@@ -4064,6 +4198,14 @@ async function handleReportFavoriteSave() {
           };
         });
         const customizationPayload = getReportCustomizationPayload();
+        const customizationError = validateReportCustomization(customizationPayload);
+        if (customizationError) {
+          await showMessageModal(customizationError, {
+            title: 'Información requerida',
+            variant: 'warning'
+          });
+          return;
+        }
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,

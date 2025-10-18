@@ -4444,11 +4444,30 @@
                             <option value="en">Inglés</option>
                             <option value="pt">Portugués</option>
                             <option value="fr">Francés</option>
+                            <option value="other">Otro</option>
                           </select>
+                        </div>
+                        <div
+                          class="ai-custom-field ai-hidden"
+                          data-custom-output-language-wrapper
+                        >
+                          <label
+                            for="aiReportOutputLanguageCustom"
+                            class="tc-tooltip-target"
+                            data-tooltip="Especifica el idioma exacto que debe usar la IA."
+                          >
+                            Idioma personalizado
+                          </label>
+                          <input
+                            type="text"
+                            id="aiReportOutputLanguageCustom"
+                            data-custom-output-language-input
+                            placeholder="Ej: Alemán (Alemania)"
+                          />
                         </div>
                         <p
                           class="ai-custom-helper"
-                          
+
                         >
                           La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
                         </p>
@@ -4503,7 +4522,23 @@
                             <option value="executive">Resumen ejecutivo</option>
                             <option value="friendly">Cercano y motivador</option>
                             <option value="analytical">Analítico y detallado</option>
+                            <option value="custom">Personalizado</option>
                           </select>
+                        </div>
+                        <div class="ai-custom-field ai-hidden" data-custom-tone-wrapper>
+                          <label
+                            for="aiReportToneCustom"
+                            class="tc-tooltip-target"
+                            data-tooltip="Describe con tus palabras el tono deseado."
+                          >
+                            Detalle del tono personalizado
+                          </label>
+                          <input
+                            type="text"
+                            id="aiReportToneCustom"
+                            data-custom-tone-input
+                            placeholder="Ej: Inspirador con foco en logros del equipo"
+                          />
                         </div>
                         <p
                           class="ai-custom-helper"

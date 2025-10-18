@@ -239,14 +239,16 @@ var REPORT_OUTPUT_LANGUAGE_ALLOWED = {
   es: true,
   en: true,
   pt: true,
-  fr: true
+  fr: true,
+  other: true
 };
 var REPORT_TONE_DEFAULT = 'neutral';
 var REPORT_TONE_ALLOWED = {
   neutral: true,
   executive: true,
   friendly: true,
-  analytical: true
+  analytical: true,
+  custom: true
 };
 var REPORT_SUMMARY_LENGTH_DEFAULT = 'standard';
 var REPORT_SUMMARY_LENGTH_ALLOWED = {
@@ -2480,6 +2482,13 @@ function normalizeToneValue(value) {
   return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
 }
 
+function normalizeCustomTextValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+}
+
 function normalizePersonaValue(value) {
   if (value === null || value === undefined) {
     return REPORT_PERSONA_DEFAULT;
@@ -2495,15 +2504,18 @@ function normalizeReportCustomization(source) {
   var base = {
     outputLanguage: {
       enabled: false,
-      value: REPORT_OUTPUT_LANGUAGE_DEFAULT
+      value: REPORT_OUTPUT_LANGUAGE_DEFAULT,
+      customValue: ''
     },
     tone: {
       enabled: false,
-      value: REPORT_TONE_DEFAULT
+      value: REPORT_TONE_DEFAULT,
+      customValue: ''
     },
     persona: {
       enabled: false,
-      value: REPORT_PERSONA_DEFAULT
+      value: REPORT_PERSONA_DEFAULT,
+      customNote: ''
     }
   };
   if (!source || typeof source !== 'object') {
@@ -2512,23 +2524,40 @@ function normalizeReportCustomization(source) {
   if (source.outputLanguage && typeof source.outputLanguage === 'object') {
     base.outputLanguage.enabled = !!source.outputLanguage.enabled;
     base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+    base.outputLanguage.customValue = normalizeCustomTextValue(
+      source.outputLanguage.customValue
+    );
   }
   if (source.tone && typeof source.tone === 'object') {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
+    base.tone.customValue = normalizeCustomTextValue(source.tone.customValue);
   }
   if (source.persona && typeof source.persona === 'object') {
     base.persona.enabled = !!source.persona.enabled;
     base.persona.value = normalizePersonaValue(source.persona.value);
+    base.persona.customNote = normalizeCustomTextValue(source.persona.customNote);
   }
   if (!base.outputLanguage.enabled) {
     base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+    base.outputLanguage.customValue = '';
   }
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
+    base.tone.customValue = '';
   }
   if (!base.persona.enabled) {
     base.persona.value = REPORT_PERSONA_DEFAULT;
+    base.persona.customNote = '';
+  }
+  if (base.outputLanguage.value !== 'other') {
+    base.outputLanguage.customValue = '';
+  }
+  if (base.tone.value !== 'custom') {
+    base.tone.customValue = '';
+  }
+  if (base.persona.value !== 'custom') {
+    base.persona.customNote = '';
   }
   return base;
 }
@@ -2689,6 +2718,17 @@ function saveReportFavorite(payload) {
   if (normalizedChannels.length === 0) {
     missing.push('al menos un canal para compartir');
   }
+  var customization = normalizeReportCustomization(payload.customization);
+  if (
+    customization.outputLanguage.enabled &&
+    customization.outputLanguage.value === 'other' &&
+    !customization.outputLanguage.customValue
+  ) {
+    missing.push('el idioma personalizado del reporte');
+  }
+  if (customization.tone.enabled && customization.tone.value === 'custom' && !customization.tone.customValue) {
+    missing.push('el tono personalizado del reporte');
+  }
   if (missingFeatureDescriptions.length > 0) {
     missingFeatureDescriptions.forEach(function(message) {
       if (missing.indexOf(message) === -1) {
@@ -2735,7 +2775,6 @@ function saveReportFavorite(payload) {
       normalizedPhones.push(text);
     }
   });
-  var customization = normalizeReportCustomization(payload.customization);
   var quantityMapForOrder = buildFeatureQuantityMap(normalizedFeatureDetails);
   var normalizedFeatureOrder = normalizeFeatureOrderEntries(payload.featureOrder, quantityMapForOrder);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
