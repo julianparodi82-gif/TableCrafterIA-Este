@@ -2208,54 +2208,17 @@
         font-size: 14px;
         margin: 0 0 12px;
       }
-      .ai-theme-shortcut {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 12px;
-      }
-      .ai-theme-shortcut .btn-tertiary {
-        min-width: auto;
-      }
       .ai-ask-customization {
-        margin-bottom: 12px;
-        padding: 14px;
-        border: 1px solid var(--tc-border);
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(236, 244, 255, 0.92) 100%);
+        margin: 12px 0 16px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
       }
-      .ai-ask-custom-field {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+      .ai-ask-option .ai-custom-top {
+        padding-right: 0;
       }
-      .ai-ask-custom-field > label {
-        font-size: 10px;
-        font-weight: 600;
-        color: var(--tc-muted);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-      .ai-ask-custom-field select,
-      .ai-ask-custom-field textarea {
-        border-radius: 10px;
-        border: 1px solid var(--tc-border);
-        background-color: var(--tc-surface);
-        font-size: 12px;
-        padding: 8px 12px;
-        color: var(--tc-text);
-        box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
-      }
-      .ai-ask-custom-field textarea {
-        min-height: 64px;
-        resize: vertical;
-      }
-      .ai-ask-custom-extra {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+      .ai-ask-option .ai-custom-intro {
+        margin-bottom: 0;
       }
       .ai-answer-output {
         min-height: 120px;
@@ -2970,11 +2933,6 @@
       </div>
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
-        <div class="ai-theme-shortcut">
-          <button type="button" id="aiOpenWordcrafterBtn" class="btn-tertiary">
-            Abrir panel WordCrafterAI
-          </button>
-        </div>
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
           <div class="ai-multi-select">
@@ -2999,58 +2957,78 @@
             <p class="ai-action-description">
               Selecciona las tablas y formula una consulta para recibir una respuesta generada automáticamente.
             </p>
-            <div class="ai-ask-customization">
-              <div class="ai-ask-custom-field">
-                <label
-                  for="aiAskTone"
-                  class="tc-tooltip-target"
-                  data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
-                >
-                  Tono de la respuesta
-                </label>
-                <select id="aiAskTone">
-                  <option value="neutral">Neutral profesional</option>
-                  <option value="executive">Resumen ejecutivo</option>
-                  <option value="friendly">Cercano y motivador</option>
-                  <option value="analytical">Analítico y detallado</option>
-                  <option value="custom">Personalizado</option>
-                </select>
-                <div class="ai-ask-custom-extra ai-hidden" id="aiAskToneCustomWrapper">
-                  <label for="aiAskToneCustom">Describe el tono personalizado</label>
-                  <textarea
-                    id="aiAskToneCustom"
-                    placeholder="Ej. Comunicativo, inspirador y orientado a logros"
-                    disabled
-                  ></textarea>
+            <div class="ai-customization-list ai-ask-customization">
+              <div class="ai-custom-option ai-ask-option" data-ask-option="tone">
+                <div class="ai-custom-top">
+                  <h4 class="ai-action-title">Tono de la respuesta</h4>
+                  <p class="ai-custom-intro">
+                    Elige el estilo de redacción que prefieres para la respuesta generada.
+                  </p>
+                </div>
+                <div class="ai-custom-fields">
+                  <div class="ai-custom-field">
+                    <label
+                      for="aiAskTone"
+                      class="tc-tooltip-target"
+                      data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
+                    >
+                      Tono de la respuesta
+                    </label>
+                    <select id="aiAskTone">
+                      <option value="neutral">Neutral profesional</option>
+                      <option value="executive">Resumen ejecutivo</option>
+                      <option value="friendly">Cercano y motivador</option>
+                      <option value="analytical">Analítico y detallado</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-custom-field ai-hidden" id="aiAskToneCustomWrapper">
+                    <label for="aiAskToneCustom">Describe el tono personalizado</label>
+                    <textarea
+                      id="aiAskToneCustom"
+                      placeholder="Ej. Comunicativo, inspirador y orientado a logros"
+                      disabled
+                    ></textarea>
+                  </div>
                 </div>
               </div>
-              <div class="ai-ask-custom-field">
-                <label
-                  for="aiAskPersona"
-                  class="tc-tooltip-target"
-                  data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
-                >
-                  Perfil profesional de la respuesta
-                </label>
-                <select id="aiAskPersona">
-                  <option value="auto">Elegir automáticamente (IA)</option>
-                  <option value="executive">Dirección general</option>
-                  <option value="data-analyst">Analista de datos</option>
-                  <option value="finance">Dirección financiera</option>
-                  <option value="operations">Gerencia de operaciones</option>
-                  <option value="marketing">Marketing y comunicación</option>
-                  <option value="hr">Recursos humanos</option>
-                  <option value="it">Especialista en IT / Sistemas</option>
-                  <option value="sales">Liderazgo comercial</option>
-                  <option value="custom">Personalizado</option>
-                </select>
-                <div class="ai-ask-custom-extra ai-hidden" id="aiAskPersonaCustomWrapper">
-                  <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
-                  <textarea
-                    id="aiAskPersonaCustom"
-                    placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
-                    disabled
-                  ></textarea>
+              <div class="ai-custom-option ai-ask-option" data-ask-option="persona">
+                <div class="ai-custom-top">
+                  <h4 class="ai-action-title">Perfil profesional de la respuesta</h4>
+                  <p class="ai-custom-intro">
+                    Indica a qué rol profesional debe dirigirse la respuesta de la IA.
+                  </p>
+                </div>
+                <div class="ai-custom-fields">
+                  <div class="ai-custom-field">
+                    <label
+                      for="aiAskPersona"
+                      class="tc-tooltip-target"
+                      data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
+                    >
+                      Perfil profesional de la respuesta
+                    </label>
+                    <select id="aiAskPersona">
+                      <option value="auto">Elegir automáticamente (IA)</option>
+                      <option value="executive">Dirección general</option>
+                      <option value="data-analyst">Analista de datos</option>
+                      <option value="finance">Dirección financiera</option>
+                      <option value="operations">Gerencia de operaciones</option>
+                      <option value="marketing">Marketing y comunicación</option>
+                      <option value="hr">Recursos humanos</option>
+                      <option value="it">Especialista en IT / Sistemas</option>
+                      <option value="sales">Liderazgo comercial</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-custom-field ai-hidden" id="aiAskPersonaCustomWrapper">
+                    <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
+                    <textarea
+                      id="aiAskPersonaCustom"
+                      placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
+                      disabled
+                    ></textarea>
+                  </div>
                 </div>
               </div>
             </div>

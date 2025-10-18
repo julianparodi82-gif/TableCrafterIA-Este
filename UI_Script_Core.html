@@ -31,7 +31,7 @@ let sidebarEntryCleanupTimeout = null;
 let currentTheme = null;
 let tabButtonsList = [];
 let tabContentsList = [];
-let hideWelcomePreference = null;
+let hideWelcomePreference = { table: null, word: null };
 let welcomePreferenceResolved = false;
 
 function generateHeaderKey() {
@@ -2723,8 +2723,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeMessageContent = document.getElementById('themeMessageContent');
         const themeMessageClose = document.getElementById('themeMessageClose');
         const themeMessageDismiss = document.getElementById('themeMessageDismiss');
-        const wordShortcut = document.querySelector('.ai-theme-shortcut');
-        const openWordButton = document.getElementById('aiOpenWordcrafterBtn');
         const body = document.body;
         const container = document.querySelector('.container');
         sidebarContainer = container;
@@ -2788,16 +2786,19 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
+          const themeKey = currentTheme === 'word' ? 'word' : 'table';
           const resolved = welcomePreferenceResolved;
-          const shouldHide = resolved ? !!hideWelcomePreference : true;
+          const themePreference = hideWelcomePreference[themeKey];
+          const shouldHide = resolved ? !!themePreference : true;
           themeMessage.classList.toggle('is-hidden', shouldHide);
           if (themeMessageDismiss) {
-            themeMessageDismiss.checked = resolved && !!hideWelcomePreference;
+            themeMessageDismiss.checked = resolved ? !!themePreference : false;
           }
         }
 
         function persistWelcomePreference(value, options) {
-          hideWelcomePreference = !!value;
+          const themeKey = currentTheme === 'word' ? 'word' : 'table';
+          hideWelcomePreference[themeKey] = !!value;
           welcomePreferenceResolved = true;
           const opts = options || {};
           if (opts.sync !== false) {
@@ -2807,7 +2808,29 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
           try {
-            google.script.run.withFailureHandler(function() {}).setWelcomeMessagePreference(!hideWelcomePreference);
+            google.script.run
+              .withSuccessHandler(function(res) {
+                if (res && typeof res === 'object') {
+                  var parseHidden = function(entry) {
+                    return entry === true || entry === 'true';
+                  };
+                  if (
+                    Object.prototype.hasOwnProperty.call(res, 'hideTable') ||
+                    Object.prototype.hasOwnProperty.call(res, 'hideWord')
+                  ) {
+                    hideWelcomePreference.table = parseHidden(res.hideTable);
+                    hideWelcomePreference.word = parseHidden(res.hideWord);
+                  } else if (Object.prototype.hasOwnProperty.call(res, 'hideWelcome')) {
+                    var legacy = parseHidden(res.hideWelcome);
+                    hideWelcomePreference.table = legacy;
+                    hideWelcomePreference.word = legacy;
+                  }
+                  welcomePreferenceResolved = true;
+                  syncMessageVisibility();
+                }
+              })
+              .withFailureHandler(function() {})
+              .setWelcomeMessagePreference(!hideWelcomePreference[themeKey], themeKey);
           } catch (error) {
             // Si no se puede comunicar con Apps Script, ignoramos para no bloquear la UI.
           }
@@ -2815,7 +2838,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function fetchWelcomePreference() {
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
-            hideWelcomePreference = false;
+            hideWelcomePreference.table = false;
+            hideWelcomePreference.word = false;
             welcomePreferenceResolved = true;
             syncMessageVisibility();
             return;
@@ -2823,18 +2847,35 @@ document.addEventListener('DOMContentLoaded', function() {
           try {
             google.script.run
               .withSuccessHandler(function(res) {
-                hideWelcomePreference = !!(res && res.hideWelcome);
+                const data = res && typeof res === 'object' ? res : {};
+                const parseHidden = function(entry) {
+                  return entry === true || entry === 'true';
+                };
+                if (
+                  !Object.prototype.hasOwnProperty.call(data, 'hideTable') &&
+                  !Object.prototype.hasOwnProperty.call(data, 'hideWord') &&
+                  Object.prototype.hasOwnProperty.call(data, 'hideWelcome')
+                ) {
+                  const legacy = parseHidden(data.hideWelcome);
+                  hideWelcomePreference.table = legacy;
+                  hideWelcomePreference.word = legacy;
+                } else {
+                  hideWelcomePreference.table = parseHidden(data.hideTable);
+                  hideWelcomePreference.word = parseHidden(data.hideWord);
+                }
                 welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .withFailureHandler(function() {
-                hideWelcomePreference = false;
+                hideWelcomePreference.table = false;
+                hideWelcomePreference.word = false;
                 welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .getWelcomeMessagePreference();
           } catch (error) {
-            hideWelcomePreference = false;
+            hideWelcomePreference.table = false;
+            hideWelcomePreference.word = false;
             welcomePreferenceResolved = true;
             syncMessageVisibility();
           }
@@ -2889,23 +2930,11 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
-          if (wordShortcut) {
-            wordShortcut.classList.toggle('ai-hidden', isWordcrafter);
-          }
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
           if (nextTheme !== previousTheme || settings.forceSync) {
             syncAddonThemeMode(nextTheme);
           }
-        }
-
-        if (openWordButton && themeToggle) {
-          openWordButton.addEventListener('click', function() {
-            if (!themeToggle.checked) {
-              themeToggle.checked = true;
-            }
-            applyTheme(true, { animate: true });
-          });
         }
 
         if (themeMessageClose) {

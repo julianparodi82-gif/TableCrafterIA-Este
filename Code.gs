@@ -25,6 +25,8 @@ var SIDEBAR_THEME_PROPERTY_KEY = 'tablecrafter.sidebarThemeMode';
 var SIDEBAR_THEME_WORD = 'word';
 var SIDEBAR_THEME_TABLE = 'table';
 var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
+var WELCOME_MESSAGE_PROPERTY_KEY_TABLE = 'tablecrafter.hideWelcomeMessage.table';
+var WELCOME_MESSAGE_PROPERTY_KEY_WORD = 'tablecrafter.hideWelcomeMessage.word';
 var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 
 function onOpen() {
@@ -100,7 +102,8 @@ function refreshAddonMenuForTheme(themeMode) {
     } catch (error) {}
   }
   ui.createMenu('TableCrafterAI')
-    .addItem('Mostrar TableCrafterAI', 'showSidebar')
+    .addItem('Abrir TableCrafterAI', 'showTablecrafterSidebar')
+    .addItem('Abrir WordCrafterAI', 'showWordcrafterSidebar')
     .addItem('Configurar API', 'showConfig')
     .addItem('Ayuda', 'showHelp')
     .addToUi();
@@ -113,19 +116,59 @@ function setSidebarThemeMode(mode) {
   return normalized;
 }
 
-function getWelcomeMessagePreference() {
-  var value = PropertiesService.getUserProperties().getProperty(WELCOME_MESSAGE_PROPERTY_KEY);
-  return { hideWelcome: value === 'true' };
+function showTablecrafterSidebar() {
+  setSidebarThemeMode(SIDEBAR_THEME_TABLE);
+  showSidebar();
 }
 
-function setWelcomeMessagePreference(showMessage) {
+function showWordcrafterSidebar() {
+  setSidebarThemeMode(SIDEBAR_THEME_WORD);
+  showSidebar();
+}
+
+function getWelcomeMessagePreference() {
   var userProperties = PropertiesService.getUserProperties();
-  if (showMessage) {
-    userProperties.deleteProperty(WELCOME_MESSAGE_PROPERTY_KEY);
-  } else {
-    userProperties.setProperty(WELCOME_MESSAGE_PROPERTY_KEY, 'true');
+  var tableValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY_TABLE);
+  var wordValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY_WORD);
+  var legacyValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  var hasExplicitTable = tableValue !== null && tableValue !== undefined;
+  var hasExplicitWord = wordValue !== null && wordValue !== undefined;
+  var hideTable = hasExplicitTable ? tableValue === 'true' : false;
+  var hideWord = hasExplicitWord ? wordValue === 'true' : false;
+  if (!hasExplicitTable && !hasExplicitWord && legacyValue !== null && legacyValue !== undefined) {
+    var legacyHidden = legacyValue === 'true';
+    hideTable = legacyHidden;
+    hideWord = legacyHidden;
   }
-  return { hideWelcome: !showMessage };
+  return { hideTable: hideTable, hideWord: hideWord };
+}
+
+function setWelcomeMessagePreference(showMessage, theme) {
+  var userProperties = PropertiesService.getUserProperties();
+  var themesToUpdate;
+  if (theme === SIDEBAR_THEME_WORD) {
+    themesToUpdate = [SIDEBAR_THEME_WORD];
+  } else if (theme === SIDEBAR_THEME_TABLE) {
+    themesToUpdate = [SIDEBAR_THEME_TABLE];
+  } else if (theme === 'all') {
+    themesToUpdate = [SIDEBAR_THEME_TABLE, SIDEBAR_THEME_WORD];
+  } else if (theme === undefined || theme === null) {
+    themesToUpdate = [SIDEBAR_THEME_TABLE, SIDEBAR_THEME_WORD];
+  } else {
+    themesToUpdate = [SIDEBAR_THEME_TABLE];
+  }
+  for (var i = 0; i < themesToUpdate.length; i += 1) {
+    var targetTheme = themesToUpdate[i];
+    var propertyKey =
+      targetTheme === SIDEBAR_THEME_WORD ? WELCOME_MESSAGE_PROPERTY_KEY_WORD : WELCOME_MESSAGE_PROPERTY_KEY_TABLE;
+    if (showMessage) {
+      userProperties.deleteProperty(propertyKey);
+    } else {
+      userProperties.setProperty(propertyKey, 'true');
+    }
+  }
+  userProperties.deleteProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  return getWelcomeMessagePreference();
 }
 
 /**
