@@ -1293,16 +1293,73 @@
         flex-direction: column;
         gap: 6px;
       }
-      .ai-feature-association-select select {
-        border-radius: 8px;
+      .ai-feature-association-list {
         border: 1px solid var(--tc-border);
+        border-radius: 8px;
         background-color: var(--tc-surface);
-        font-size: 12px;
-        padding: 6px 10px;
-        min-height: 88px;
+        padding: 6px 4px;
+        max-height: 180px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        scrollbar-gutter: stable;
       }
-      .ai-feature-association-select select:disabled {
+      .ai-feature-association-list.disabled {
         opacity: 0.6;
+        pointer-events: none;
+      }
+      .ai-feature-association-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 10px;
+        margin: 0 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        color: var(--tc-text);
+      }
+      .ai-feature-association-item:hover,
+      .ai-feature-association-item:focus {
+        background-color: var(--tc-primary-soft);
+        outline: none;
+      }
+      .ai-feature-association-item.selected {
+        box-shadow: 0 0 0 2px var(--tc-primary-ring);
+      }
+      .ai-feature-association-label {
+        flex: 1 1 auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .ai-feature-association-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid var(--tc-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        color: transparent;
+        background-color: rgba(255, 255, 255, 0.9);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+      .ai-feature-association-item.selected .ai-feature-association-check {
+        background-color: var(--tc-primary);
+        border-color: var(--tc-primary);
+        color: #FFFFFF;
+      }
+      .ai-feature-association-item.selected .ai-feature-association-check::after {
+        content: '\2713';
+      }
+      .ai-feature-association-hidden-select {
+        display: none;
       }
       .ai-feature-association-note {
         font-size: 10px;
@@ -1696,10 +1753,10 @@
         background: linear-gradient(180deg, rgba(248, 250, 255, 0.98) 0%, #FFFFFF 22%);
         border-radius: 20px;
         box-shadow: 0 22px 48px rgba(15, 23, 42, 0.28);
-        padding: 26px 24px 24px;
+        padding: 22px 22px 20px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 14px;
         border: 1px solid rgba(99, 102, 241, 0.18);
         position: relative;
         overflow: hidden;
@@ -1729,9 +1786,9 @@
       .ai-report-order-title-group {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 12px;
         background: rgba(37, 99, 235, 0.08);
         border: 1px solid rgba(37, 99, 235, 0.14);
       }
@@ -1739,29 +1796,29 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
         background: linear-gradient(135deg, #2563EB 0%, #4338CA 100%);
         color: #FFFFFF;
-        font-size: 22px;
-        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+        font-size: 18px;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
       }
       .ai-report-order-heading {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
       }
       .ai-report-order-header h3 {
         margin: 0;
-        font-size: 20px;
+        font-size: 18px;
         color: #1E3A8A;
       }
       .ai-report-order-header p {
         margin: 0;
         color: #4B5563;
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 12px;
+        line-height: 1.4;
       }
       .ai-report-order-list {
         margin: 0;
@@ -3119,12 +3176,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3210,12 +3275,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3301,12 +3374,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3401,12 +3482,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3471,12 +3560,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3541,12 +3638,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3686,12 +3791,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -3801,12 +3914,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -3916,12 +4037,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -4047,12 +4176,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4107,12 +4244,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4167,12 +4312,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4742,9 +4895,7 @@
             <div class="ai-report-order-heading">
               <h3 id="aiReportOrderTitle">Orden del reporte</h3>
               <p id="aiReportOrderDescription">
-                Arrastra y suelta para elegir la secuencia de cada componente. Si no defines tablas específicas, se
-                usarán todas las seleccionadas. Pasa el cursor por las etiquetas para ver nombres, descripciones y
-                ajustes clave.
+                Arrastrá cada componente para definir el orden y usá las etiquetas para ver detalles rápidos.
               </p>
             </div>
           </div>

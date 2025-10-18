@@ -2202,13 +2202,94 @@ function getReportFeatureAssociationOptions() {
         };
       }
 
+function getFeatureAssociationListForSelect(select) {
+        if (!select) {
+          return null;
+        }
+        const feature = select.getAttribute('data-feature-instance-table-select');
+        const index = select.getAttribute('data-instance-index');
+        if (!feature || index === null) {
+          return null;
+        }
+        const wrapper = typeof select.closest === 'function'
+          ? select.closest('[data-feature-instance-table-select-wrapper="' + feature + '"]')
+          : null;
+        if (wrapper) {
+          const withinWrapper = wrapper.querySelector(
+            '[data-feature-instance-table-list="' + feature + '"][data-instance-index="' + index + '"]'
+          );
+          if (withinWrapper) {
+            return withinWrapper;
+          }
+        }
+        return document.querySelector(
+          '[data-feature-instance-table-list="' + feature + '"][data-instance-index="' + index + '"]'
+        );
+      }
+
+function syncFeatureAssociationListFromSelect(select) {
+        const list = getFeatureAssociationListForSelect(select);
+        if (!list) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        getSelectedOptionValues(select).forEach(function(value) {
+          selectedSet[String(value)] = true;
+        });
+        const items = list.querySelectorAll('.ai-feature-association-item');
+        items.forEach(function(item) {
+          if (!item || !item.dataset) {
+            return;
+          }
+          const value = item.dataset.value ? String(item.dataset.value) : '';
+          const isSelected = !!selectedSet[value];
+          item.classList.toggle('selected', isSelected);
+          item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        });
+      }
+
+function setFeatureAssociationListDisabled(select, disabled) {
+        const list = getFeatureAssociationListForSelect(select);
+        if (!list) {
+          return;
+        }
+        const isDisabled = !!disabled;
+        list.classList.toggle('disabled', isDisabled);
+        list.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
+        const items = list.querySelectorAll('.ai-feature-association-item');
+        items.forEach(function(item) {
+          if (!item) {
+            return;
+          }
+          item.tabIndex = isDisabled ? -1 : 0;
+        });
+      }
+
 function populateFeatureTableSelect(select, options, selectedValues) {
         if (!select) {
           return;
         }
-        const previousScroll = select.scrollTop;
-        const previousFocus = document.activeElement === select;
+        const list = getFeatureAssociationListForSelect(select);
+        let previousScroll = 0;
+        let previousFocusValue = '';
+        if (list) {
+          previousScroll = list.scrollTop;
+          const focusedItem = list.querySelector('.ai-feature-association-item:focus');
+          if (focusedItem && focusedItem.dataset && focusedItem.dataset.value) {
+            previousFocusValue = String(focusedItem.dataset.value);
+          }
+          list.setAttribute('role', 'listbox');
+          list.setAttribute('aria-multiselectable', 'true');
+        }
         select.innerHTML = '';
+        const selectedSet = Object.create(null);
+        if (Array.isArray(selectedValues)) {
+          selectedValues.forEach(function(value) {
+            if (value) {
+              selectedSet[String(value)] = true;
+            }
+          });
+        }
         options.forEach(function(option) {
           if (!option || !option.id) {
             return;
@@ -2216,24 +2297,78 @@ function populateFeatureTableSelect(select, options, selectedValues) {
           const opt = document.createElement('option');
           opt.value = option.id;
           opt.textContent = option.name || option.id;
+          opt.selected = !!selectedSet[String(option.id)];
           select.appendChild(opt);
         });
-        const selectedSet = Object.create(null);
-        if (Array.isArray(selectedValues)) {
-          selectedValues.forEach(function(value) {
-            selectedSet[String(value)] = true;
+        if (list) {
+          list.innerHTML = '';
+          options.forEach(function(option) {
+            if (!option || !option.id) {
+              return;
+            }
+            const item = document.createElement('div');
+            item.className = 'ai-feature-association-item';
+            item.dataset.value = option.id;
+            item.setAttribute('role', 'option');
+            item.tabIndex = 0;
+            const label = document.createElement('span');
+            label.className = 'ai-feature-association-label';
+            label.textContent = option.name || option.id;
+            item.appendChild(label);
+            const check = document.createElement('span');
+            check.className = 'ai-feature-association-check';
+            item.appendChild(check);
+            list.appendChild(item);
           });
         }
-        Array.prototype.forEach.call(select.options, function(option) {
-          if (!option || !option.value) {
-            return;
+        syncFeatureAssociationListFromSelect(select);
+        if (list) {
+          if (previousFocusValue) {
+            const focusItem = list.querySelector(
+              '.ai-feature-association-item[data-value="' + previousFocusValue + '"]'
+            );
+            if (focusItem) {
+              focusItem.focus();
+            }
           }
-          option.selected = !!selectedSet[option.value];
-        });
-        if (previousFocus) {
-          select.focus();
+          list.scrollTop = previousScroll;
         }
-        select.scrollTop = previousScroll;
+      }
+
+function toggleFeatureAssociationValue(feature, index, value) {
+        if (!feature) {
+          return;
+        }
+        const normalizedIndex = index === undefined || index === null ? '' : String(index);
+        if (!normalizedIndex) {
+          return;
+        }
+        const select = document.querySelector(
+          '[data-feature-instance-table-select="' + feature + '"][data-instance-index="' + normalizedIndex + '"]'
+        );
+        if (!select || select.disabled) {
+          return;
+        }
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        const options = select.options ? Array.prototype.slice.call(select.options) : [];
+        if (!options.length) {
+          return;
+        }
+        let targetOption = null;
+        options.forEach(function(option) {
+          if (option && option.value === targetValue) {
+            targetOption = option;
+          }
+        });
+        if (!targetOption) {
+          return;
+        }
+        targetOption.selected = !targetOption.selected;
+        syncFeatureAssociationListFromSelect(select);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
 function bindChartTypeTooltip(select) {
@@ -2511,9 +2646,15 @@ function refreshReportFeatureOption(feature) {
                   normalizedTableSelections[index]
                 );
                 tableSelect.disabled = false;
+                setFeatureAssociationListDisabled(tableSelect, false);
               } else {
                 tableSelect.innerHTML = '';
                 tableSelect.disabled = true;
+                const tableList = getFeatureAssociationListForSelect(tableSelect);
+                if (tableList) {
+                  tableList.innerHTML = '';
+                }
+                setFeatureAssociationListDisabled(tableSelect, true);
               }
             }
             if (tableEmptyMessage) {
@@ -2930,6 +3071,56 @@ function initializeReportFeatureControls() {
               handleReportFeatureInstanceTableSelection(feature, index, getSelectedOptionValues(select));
             });
             select.dataset.bound = 'true';
+          });
+          const tableLists = option.querySelectorAll(
+            '[data-feature-instance-table-list="' + feature + '"]'
+          );
+          tableLists.forEach(function(list) {
+            if (!list || list.dataset.bound) {
+              return;
+            }
+            list.addEventListener('click', function(event) {
+              if (list.classList.contains('disabled') || list.getAttribute('aria-disabled') === 'true') {
+                return;
+              }
+              const target = event.target;
+              if (!target) {
+                return;
+              }
+              const item = typeof target.closest === 'function' ? target.closest('.ai-feature-association-item') : null;
+              if (!item || !item.dataset || !item.dataset.value) {
+                return;
+              }
+              const index = list.dataset ? list.dataset.instanceIndex : undefined;
+              if (index === undefined || index === '') {
+                return;
+              }
+              toggleFeatureAssociationValue(feature, index, item.dataset.value);
+            });
+            list.addEventListener('keydown', function(event) {
+              if (
+                list.classList.contains('disabled') ||
+                list.getAttribute('aria-disabled') === 'true' ||
+                (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar')
+              ) {
+                return;
+              }
+              const target = event.target;
+              if (!target) {
+                return;
+              }
+              const item = typeof target.closest === 'function' ? target.closest('.ai-feature-association-item') : null;
+              if (!item || !item.dataset || !item.dataset.value) {
+                return;
+              }
+              event.preventDefault();
+              const index = list.dataset ? list.dataset.instanceIndex : undefined;
+              if (index === undefined || index === '') {
+                return;
+              }
+              toggleFeatureAssociationValue(feature, index, item.dataset.value);
+            });
+            list.dataset.bound = 'true';
           });
           const summaryLengthSelector = option.querySelector(
             '[data-feature-summary-length="' + feature + '"]'
