@@ -1651,6 +1651,12 @@ function renderHeaderList(listId, headers) {
               item.className = 'header-ai-web-item';
               const row = document.createElement('div');
               row.className = 'header-ai-web-row';
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'header-ai-web-remove';
+              removeBtn.textContent = '×';
+              removeBtn.setAttribute('aria-label', 'Eliminar enlace');
+              removeBtn.disabled = !allowEditing;
               const input = document.createElement('input');
               input.type = 'url';
               input.className = 'header-ai-web-input';
@@ -1701,26 +1707,26 @@ function renderHeaderList(listId, headers) {
               });
               descToggleLabel.appendChild(descToggle);
               descToggleLabel.appendChild(descToggleText);
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'header-ai-web-remove';
-              removeBtn.textContent = '×';
-              removeBtn.setAttribute('aria-label', 'Eliminar enlace');
-              removeBtn.disabled = !allowEditing;
               removeBtn.addEventListener('click', function() {
                 const current = ensureWebSourcesArray();
                 current.splice(sourceIndex, 1);
                 headers[index].aiWebSources = current;
-                renderWebSources({ allowEditing: allowEditing, focusNew: false, preserveEmpty: true });
-                if (typeof updateWebSourcesVisibility === 'function') {
-                  updateWebSourcesVisibility({ focusNew: false, preserveEmpty: true });
+                if (current.length === 0) {
+                  headers[index].aiWebSourcesEnabled = false;
+                  webToggle.checked = false;
+                  if (typeof updateWebSourcesVisibility === 'function') {
+                    updateWebSourcesVisibility({ focusNew: false, preserveEmpty: false });
+                  }
+                } else {
+                  renderWebSources({ allowEditing: allowEditing, focusNew: false, preserveEmpty: true });
                 }
                 markHeadersDirty();
               });
-              inputWrapper.appendChild(removeBtn);
+              row.appendChild(removeBtn);
               row.appendChild(inputWrapper);
-              row.appendChild(descToggleLabel);
               item.appendChild(row);
+
+              item.appendChild(descToggleLabel);
 
               descInput.classList.toggle('hidden', !descToggle.checked);
               descInput.addEventListener('input', function() {
@@ -3203,12 +3209,6 @@ function playSidebarAnimation() {
             themeMessageContent.innerHTML = tableMessage;
           }
           updateTabVisibilityForTheme(nextTheme);
-          if (themeChanged) {
-            const firstTab = findFirstTabForTheme(nextTheme);
-            if (firstTab && firstTab.dataset && firstTab.dataset.tab) {
-              setActiveTab(firstTab.dataset.tab, { force: true });
-            }
-          }
           syncMessageVisibility();
           if (themeChanged || settings.forceSync) {
             syncAddonThemeMode(nextTheme);
