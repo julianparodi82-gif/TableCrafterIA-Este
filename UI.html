@@ -304,6 +304,9 @@
         z-index: 14;
         white-space: pre-line;
       }
+      .ai-feature-association-toggle.tc-tooltip-target[data-tooltip]::after {
+        text-transform: none;
+      }
       .tc-tooltip-target[data-tooltip]::before,
       .ai-feature-chip-label[data-tooltip]::before {
         content: '';
@@ -2931,8 +2934,6 @@
             <option value="">Seleccionar</option>
             <option value="ask">Pregunta IA</option>
             <option value="report">Reporte</option>
-            <option value="autoTable">Tabla automática</option>
-            <option value="editTable">Editar tabla</option>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>
@@ -3169,7 +3170,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-1"
                             >
                               <input
@@ -3268,7 +3269,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-2"
                             >
                               <input
@@ -3367,7 +3368,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-3"
                             >
                               <input
@@ -3475,7 +3476,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-1"
                             >
                               <input
@@ -3553,7 +3554,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-2"
                             >
                               <input
@@ -3631,7 +3632,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-3"
                             >
                               <input
@@ -3784,7 +3785,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-1"
                             >
                               <input
@@ -3907,7 +3908,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-2"
                             >
                               <input
@@ -4030,7 +4031,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-3"
                             >
                               <input
@@ -4102,22 +4103,6 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <div class="ai-feature-summary-preferences">
-                        <div class="ai-feature-summary-title">
-                          <label
-                            for="aiFeatureSummaryTitle"
-                            class="tc-tooltip-target"
-                            data-tooltip="Añade un título breve si quieres que el resumen aparezca destacado."
-                          >
-                            Título del resumen (opcional)
-                          </label>
-                          <input
-                            type="text"
-                            id="aiFeatureSummaryTitle"
-                            data-feature-instance-title="summary"
-                            data-instance-index="0"
-                            placeholder="Ej. Resumen ejecutivo del trimestre"
-                          />
-                        </div>
                         <div class="ai-feature-summary-length">
                           <label
                             for="aiFeatureSummaryLength"
@@ -4163,13 +4148,44 @@
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
+                          <div class="ai-feature-summary-title">
+                            <label
+                              for="aiFeatureSummaryTitle"
+                              class="tc-tooltip-target"
+                              data-tooltip="Añade un título breve si quieres que el resumen aparezca destacado."
+                            >
+                              Título del resumen (opcional)
+                            </label>
+                            <input
+                              type="text"
+                              id="aiFeatureSummaryTitle"
+                              data-feature-instance-title="summary"
+                              data-instance-index="0"
+                              placeholder="Ej. Resumen ejecutivo del trimestre"
+                            />
+                          </div>
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-1"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción del resumen
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-1"
+                              data-feature-instance-input="summary"
+                              data-instance-index="0"
+                              placeholder="Explica el resumen general que debe redactar la IA"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-1"
                             >
                               <input
@@ -4210,34 +4226,34 @@
                               ></p>
                             </div>
                           </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción del resumen
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-1"
-                              data-feature-instance-input="summary"
-                              data-instance-index="0"
-                              placeholder="Explica el resumen general que debe redactar la IA"
-                            ></textarea>
-                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="1"
                         >
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-2"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 2
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-2"
+                              data-feature-instance-input="summary"
+                              data-instance-index="1"
+                              placeholder="Explica el segundo resumen que debe redactar la IA"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-2"
                             >
                               <input
@@ -4278,34 +4294,34 @@
                               ></p>
                             </div>
                           </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción 2
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-2"
-                              data-feature-instance-input="summary"
-                              data-instance-index="1"
-                              placeholder="Explica el segundo resumen que debe redactar la IA"
-                            ></textarea>
-                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
                           data-feature-instance="summary"
                           data-instance-index="2"
                         >
+                          <div class="ai-feature-description">
+                            <label
+                              for="aiFeatureInstance-summary-3"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 3
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-3"
+                              data-feature-instance-input="summary"
+                              data-instance-index="2"
+                              placeholder="Describe un tercer resumen si aplica"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Seleccioná tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-3"
                             >
                               <input
@@ -4345,21 +4361,6 @@
                                 data-instance-index="2"
                               ></p>
                             </div>
-                          </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción 3
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-3"
-                              data-feature-instance-input="summary"
-                              data-instance-index="2"
-                              placeholder="Describe un tercer resumen si aplica"
-                            ></textarea>
                           </div>
                         </div>
                       </div>
