@@ -2172,7 +2172,19 @@ function getReportFeatureAssociationOptions() {
           }
           return map;
         }, Object.create(null));
-        if (!hasAllOption) {
+        if (hasAllOption) {
+          cache.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const label = entry.name || entry.fullRangeA1 || entry.id;
+            if (allowedSet[entry.id]) {
+              return;
+            }
+            allowedSet[entry.id] = true;
+            entries.push({ id: entry.id, name: label });
+          });
+        } else {
           normalizedIds.forEach(function(id) {
             if (!id || id === ALL_TABLES_OPTION_VALUE) {
               return;
@@ -2182,6 +2194,9 @@ function getReportFeatureAssociationOptions() {
               return;
             }
             const label = entry.name || entry.fullRangeA1 || entry.id;
+            if (allowedSet[entry.id]) {
+              return;
+            }
             allowedSet[entry.id] = true;
             entries.push({ id: entry.id, name: label });
           });
@@ -2189,8 +2204,6 @@ function getReportFeatureAssociationOptions() {
         let message = '';
         if (normalizedIds.length === 0) {
           message = 'Selecciona tablas en la parte superior para asociarlas a cada característica.';
-        } else if (hasAllOption) {
-          message = 'Para asociar tablas específicas, elige tablas individuales en la parte superior.';
         } else if (entries.length === 0) {
           message = 'Las tablas seleccionadas ya no están disponibles. Actualiza la lista e inténtalo nuevamente.';
         }
@@ -2533,17 +2546,16 @@ function refreshReportFeatureOption(feature) {
           }
           const associationOptions = getReportFeatureAssociationOptions();
           const hasEntries = associationOptions.entries.length > 0;
-          const hasAllOption = associationOptions.hasAllOption;
-          const canAssociate = !!state.selected && hasEntries && !hasAllOption;
+          const canAssociate = !!state.selected && hasEntries;
           let normalizedTableToggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
           let normalizedTableSelections = normalizeFeatureTableSelectionArray(
             state.instanceTables,
-            hasAllOption ? null : associationOptions.allowedSet
+            associationOptions.allowedSet
           );
           if (!state.selected) {
             normalizedTableToggles = createEmptyFeatureTableToggleArray();
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
-          } else if (!hasEntries && !hasAllOption) {
+          } else if (!hasEntries) {
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
           }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
@@ -2897,7 +2909,7 @@ function handleReportFeatureInstanceTableToggle(feature, index, enabled) {
           normalizeFeatureTableSelectionArray(state.instanceTables)
         );
         const associationOptions = getReportFeatureAssociationOptions();
-        const canAssociate = associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+        const canAssociate = associationOptions.entries.length > 0;
         if (!enabled) {
           toggles[safeIndex] = false;
           selections[safeIndex] = [];
@@ -2922,7 +2934,7 @@ function handleReportFeatureInstanceTableSelection(feature, index, values) {
           return;
         }
         const associationOptions = getReportFeatureAssociationOptions();
-        if (associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+        if (associationOptions.entries.length === 0) {
           return;
         }
         const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
