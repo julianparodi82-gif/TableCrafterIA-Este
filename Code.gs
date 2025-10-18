@@ -396,6 +396,59 @@ function normalizeMetaRecordType(value) {
   return 'table';
 }
 
+function resolveMetaRecordType(row) {
+  if (!row) {
+    return 'table';
+  }
+  var normalized = normalizeMetaRecordType(row[META_INDEX.recordType]);
+  if (normalized !== 'table') {
+    return normalized;
+  }
+  var configCell = row.length > META_INDEX.reportConfig ? row[META_INDEX.reportConfig] : '';
+  var configText = configCell === null || configCell === undefined ? '' : String(configCell).trim();
+  if (!configText) {
+    return normalized;
+  }
+  var parsedConfig = parseJsonValue(configText, null);
+  if (!parsedConfig || typeof parsedConfig !== 'object') {
+    return normalized;
+  }
+  var hasReportSignals = false;
+  if (!hasReportSignals && Array.isArray(parsedConfig.features) && parsedConfig.features.length > 0) {
+    hasReportSignals = true;
+  }
+  if (!hasReportSignals && Array.isArray(parsedConfig.featureDetails) && parsedConfig.featureDetails.length > 0) {
+    hasReportSignals = true;
+  }
+  if (!hasReportSignals && Array.isArray(parsedConfig.tables) && parsedConfig.tables.length > 0) {
+    hasReportSignals = true;
+  }
+  if (!hasReportSignals && Array.isArray(parsedConfig.channels) && parsedConfig.channels.length > 0) {
+    hasReportSignals = true;
+  }
+  if (!hasReportSignals && parsedConfig.format) {
+    hasReportSignals = true;
+  }
+  if (!hasReportSignals && parsedConfig.fileName) {
+    hasReportSignals = true;
+  }
+  if (
+    !hasReportSignals &&
+    parsedConfig.customization &&
+    typeof parsedConfig.customization === 'object'
+  ) {
+    hasReportSignals = true;
+  }
+  if (
+    !hasReportSignals &&
+    (parsedConfig.descriptionEnabled ||
+      (parsedConfig.description && String(parsedConfig.description).trim() !== ''))
+  ) {
+    hasReportSignals = true;
+  }
+  return hasReportSignals ? 'reportFavorite' : normalized;
+}
+
 function parseBooleanValue(value, defaultValue) {
   if (value === null || value === undefined || value === '') {
     return defaultValue;
@@ -1044,7 +1097,7 @@ function listSavedTables() {
     var row = data[i];
     var entryId = normalizeMetaId(row[META_INDEX.id]);
     if (entryId) {
-      if (normalizeMetaRecordType(row[META_INDEX.recordType]) !== 'table') {
+      if (resolveMetaRecordType(row) !== 'table') {
         continue;
       }
       var style = parseJsonValue(row[META_INDEX.style], null);
@@ -1084,7 +1137,7 @@ function listSavedActions() {
     if (!entryId) {
       continue;
     }
-    var type = normalizeMetaRecordType(row[META_INDEX.recordType]);
+    var type = resolveMetaRecordType(row);
     if (type === 'table') {
       var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
       var sheetName = row[META_INDEX.sheet] || rangeParts.sheet || '';
@@ -1287,7 +1340,7 @@ function getSavedActionDetails(actionId) {
   if (!entry || !entry.data) {
     return { error: 'Acción no encontrada.' };
   }
-  var type = normalizeMetaRecordType(entry.data[META_INDEX.recordType]);
+  var type = resolveMetaRecordType(entry.data);
   if (type === 'table') {
     var row = entry.data;
     var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
@@ -1322,7 +1375,7 @@ function focusSavedTableRange(tableId) {
   if (!entry) {
     return { error: 'Tabla no encontrada.' };
   }
-  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
+  if (resolveMetaRecordType(entry.data) !== 'table') {
     return { error: 'Tabla no encontrada.' };
   }
   var rowData = entry.data || [];
@@ -1373,7 +1426,7 @@ function clearTable(tableId) {
   if (!entry) {
     return { error: 'Tabla no encontrada' };
   }
-  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
+  if (resolveMetaRecordType(entry.data) !== 'table') {
     return { error: 'Tabla no encontrada' };
   }
   var row = entry.row;
@@ -1421,7 +1474,7 @@ function deleteSavedTable(tableId) {
       message: 'Se ha retirado de la lista.'
     };
   }
-  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'table') {
+  if (resolveMetaRecordType(entry.data) !== 'table') {
     return { error: 'Tabla no encontrada.' };
   }
 
@@ -2261,7 +2314,7 @@ function findMetaByName(name, options) {
     if (!entryId) {
       continue;
     }
-    var recordType = normalizeMetaRecordType(row[META_INDEX.recordType]);
+    var recordType = resolveMetaRecordType(row);
     if (typeFilter.length > 0 && typeFilter.indexOf(recordType) === -1) {
       continue;
     }
@@ -3124,7 +3177,7 @@ function updateReportFavorite(favoriteId, payload) {
   if (!entry || !entry.data) {
     throw new Error('No se encontró el reporte favorito indicado.');
   }
-  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'reportFavorite') {
+  if (resolveMetaRecordType(entry.data) !== 'reportFavorite') {
     throw new Error('El elemento seleccionado no es un reporte favorito.');
   }
   var prepared = prepareReportFavoriteStorage(payload, { editingId: normalizedId });
@@ -3392,7 +3445,7 @@ function getTableMeta(tableId) {
   SpreadsheetApp.flush();
   var meta = findMetaById(tableId);
   if (!meta) return null;
-  if (normalizeMetaRecordType(meta.data[META_INDEX.recordType]) !== 'table') {
+  if (resolveMetaRecordType(meta.data) !== 'table') {
     return null;
   }
   var d = meta.data;
@@ -3429,7 +3482,7 @@ function getTableMeta(tableId) {
 function getTableHeaders(tableId) {
   var meta = findMetaById(tableId);
   if (!meta) return { error: 'Tabla no encontrada' };
-  if (normalizeMetaRecordType(meta.data[META_INDEX.recordType]) !== 'table') {
+  if (resolveMetaRecordType(meta.data) !== 'table') {
     return { error: 'Tabla no encontrada' };
   }
   var d = meta.data;
