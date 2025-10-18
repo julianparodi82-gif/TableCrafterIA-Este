@@ -27,11 +27,8 @@ var SIDEBAR_THEME_TABLE = 'table';
 var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
 var WELCOME_MESSAGE_PROPERTY_KEY_TABLE = 'tablecrafter.hideWelcomeMessage.table';
 var WELCOME_MESSAGE_PROPERTY_KEY_WORD = 'tablecrafter.hideWelcomeMessage.word';
-var DOWNLOAD_PATH_PROPERTY_KEY = 'tablecrafter.downloadsPath';
-var DEFAULT_DOWNLOAD_PATH = 'Escritorio';
 var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 var AI_WEB_SOURCE_LIMIT = 3;
-var FOLDER_PICKER_CHILD_LIMIT = 200;
 
 function onOpen() {
   var themeMode = getSidebarThemeMode();
@@ -76,17 +73,8 @@ function showHelp() {
 function getConfigurationSettings() {
   var props = PropertiesService.getUserProperties();
   var key = props.getProperty('TC_API_KEY');
-  var storedPath = props.getProperty(DOWNLOAD_PATH_PROPERTY_KEY);
-  var downloadsPath = DEFAULT_DOWNLOAD_PATH;
-  if (storedPath !== null && storedPath !== undefined) {
-    var trimmedPath = String(storedPath).trim();
-    if (trimmedPath) {
-      downloadsPath = trimmedPath;
-    }
-  }
   return {
-    key: key || '',
-    downloadsPath: downloadsPath
+    key: key || ''
   };
 }
 
@@ -103,95 +91,10 @@ function saveConfigurationSettings(settings) {
     userProps.deleteProperty('TC_API_KEY');
   }
 
-  var downloadsPath;
-  if (Object.prototype.hasOwnProperty.call(data, 'downloadsPath')) {
-    var rawPath = data.downloadsPath;
-    var trimmedPath = rawPath === null || rawPath === undefined ? '' : String(rawPath).trim();
-    if (trimmedPath) {
-      userProps.setProperty(DOWNLOAD_PATH_PROPERTY_KEY, trimmedPath);
-      downloadsPath = trimmedPath;
-    } else {
-      userProps.deleteProperty(DOWNLOAD_PATH_PROPERTY_KEY);
-      downloadsPath = DEFAULT_DOWNLOAD_PATH;
-    }
-  } else {
-    var storedPath = userProps.getProperty(DOWNLOAD_PATH_PROPERTY_KEY);
-    if (storedPath !== null && storedPath !== undefined && String(storedPath).trim()) {
-      downloadsPath = String(storedPath).trim();
-    } else {
-      downloadsPath = DEFAULT_DOWNLOAD_PATH;
-    }
-  }
-
   return {
     ok: true,
-    key: apiKeyValue,
-    downloadsPath: downloadsPath
+    key: apiKeyValue
   };
-}
-
-function listFolderPickerChildren(parentId) {
-  var folderId = parentId || 'root';
-  var folder;
-  try {
-    folder = folderId === 'root' ? DriveApp.getRootFolder() : DriveApp.getFolderById(folderId);
-  } catch (error) {
-    return {
-      parentId: folderId,
-      folders: [],
-      error: 'No se pudo acceder a la carpeta seleccionada.',
-      hasMore: false
-    };
-  }
-  var iterator = folder.getFolders();
-  var entries = [];
-  var hasMore = false;
-  while (iterator.hasNext()) {
-    var child = iterator.next();
-    entries.push({
-      id: child.getId(),
-      name: child.getName()
-    });
-    if (entries.length >= FOLDER_PICKER_CHILD_LIMIT) {
-      hasMore = iterator.hasNext();
-      break;
-    }
-  }
-  entries.sort(function(a, b) {
-    var nameA = (a.name || '').toLowerCase();
-    var nameB = (b.name || '').toLowerCase();
-    if (nameA < nameB) {
-      return -1;
-    }
-    if (nameA > nameB) {
-      return 1;
-    }
-    return 0;
-  });
-  return {
-    parentId: folderId,
-    folders: entries,
-    hasMore: hasMore,
-    error: ''
-  };
-}
-
-function ensureDriveAuthorization() {
-  try {
-    var root = DriveApp.getRootFolder();
-    var name = '';
-    if (root && typeof root.getName === 'function') {
-      try {
-        name = root.getName();
-      } catch (innerError) {}
-    }
-    return {
-      ok: true,
-      rootName: name || 'Mi unidad'
-    };
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**

@@ -1663,7 +1663,9 @@ function renderHeaderList(listId, headers) {
                 headers[index].aiWebSources = current;
                 markHeadersDirty();
               });
-              row.appendChild(input);
+              const inputWrapper = document.createElement('div');
+              inputWrapper.className = 'header-ai-web-input-wrapper';
+              inputWrapper.appendChild(input);
 
               const descInput = document.createElement('textarea');
               descInput.className = 'header-ai-web-desc';
@@ -1699,8 +1701,6 @@ function renderHeaderList(listId, headers) {
               });
               descToggleLabel.appendChild(descToggle);
               descToggleLabel.appendChild(descToggleText);
-              row.appendChild(descToggleLabel);
-
               const removeBtn = document.createElement('button');
               removeBtn.type = 'button';
               removeBtn.className = 'header-ai-web-remove';
@@ -1711,13 +1711,15 @@ function renderHeaderList(listId, headers) {
                 const current = ensureWebSourcesArray();
                 current.splice(sourceIndex, 1);
                 headers[index].aiWebSources = current;
-                renderWebSources({ allowEditing: allowEditing });
+                renderWebSources({ allowEditing: allowEditing, focusNew: false, preserveEmpty: true });
                 if (typeof updateWebSourcesVisibility === 'function') {
-                  updateWebSourcesVisibility({ focusNew: false });
+                  updateWebSourcesVisibility({ focusNew: false, preserveEmpty: true });
                 }
                 markHeadersDirty();
               });
-              row.appendChild(removeBtn);
+              inputWrapper.appendChild(removeBtn);
+              row.appendChild(inputWrapper);
+              row.appendChild(descToggleLabel);
               item.appendChild(row);
 
               descInput.classList.toggle('hidden', !descToggle.checked);
@@ -1745,6 +1747,8 @@ function renderHeaderList(listId, headers) {
           };
 
           const updateWebSourcesVisibility = function(options) {
+            options = options || {};
+            const preserveEmpty = !!options.preserveEmpty;
             const aiEnabled = !!aiToggle.checked;
             if (!aiEnabled) {
               headers[index].aiWebSourcesEnabled = false;
@@ -1752,12 +1756,16 @@ function renderHeaderList(listId, headers) {
             const webEnabled = aiEnabled && !!headers[index].aiWebSourcesEnabled;
             webToggle.checked = webEnabled;
             webToggle.disabled = false;
-            if (webEnabled && ensureWebSourcesArray().length === 0) {
+            if (webEnabled && ensureWebSourcesArray().length === 0 && !preserveEmpty) {
               headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
             }
             const shouldShow = webEnabled;
             webSourcesWrapper.classList.toggle('hidden', !shouldShow);
-            renderWebSources({ allowEditing: shouldShow, focusNew: options && options.focusNew });
+            renderWebSources({
+              allowEditing: shouldShow,
+              focusNew: options && options.focusNew,
+              preserveEmpty: preserveEmpty
+            });
             if (!shouldShow) {
               webAddButton.disabled = true;
             }
@@ -1793,9 +1801,6 @@ function renderHeaderList(listId, headers) {
             }
             const enabled = aiToggle.checked && webToggle.checked;
             headers[index].aiWebSourcesEnabled = enabled;
-            if (enabled && ensureWebSourcesArray().length === 0) {
-              headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
-            }
             updateWebSourcesVisibility({ focusNew: enabled });
             markHeadersDirty();
           });
@@ -3181,7 +3186,8 @@ function playSidebarAnimation() {
           const animate = Boolean(settings.animate);
           const nextTheme = isWordcrafter ? 'word' : 'table';
           const previousTheme = currentTheme;
-          if (animate && nextTheme !== previousTheme) {
+          const themeChanged = nextTheme !== previousTheme;
+          if (animate && themeChanged) {
             playSidebarAnimation();
           }
           currentTheme = nextTheme;
@@ -3197,8 +3203,14 @@ function playSidebarAnimation() {
             themeMessageContent.innerHTML = tableMessage;
           }
           updateTabVisibilityForTheme(nextTheme);
+          if (themeChanged) {
+            const firstTab = findFirstTabForTheme(nextTheme);
+            if (firstTab && firstTab.dataset && firstTab.dataset.tab) {
+              setActiveTab(firstTab.dataset.tab, { force: true });
+            }
+          }
           syncMessageVisibility();
-          if (nextTheme !== previousTheme || settings.forceSync) {
+          if (themeChanged || settings.forceSync) {
             syncAddonThemeMode(nextTheme);
           }
         }

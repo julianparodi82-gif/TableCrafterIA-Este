@@ -2860,9 +2860,6 @@ function refreshReportFeatureOption(feature) {
               ? state.instanceWebSources[index]
               : [];
             const shouldShowWebList = withinRange && normalizedWebToggles[index];
-            if (shouldShowWebList && currentWebList.length === 0) {
-              state.instanceWebSources[index] = [createEmptyFeatureWebSourceEntry()];
-            }
             if (webListWrapper) {
               webListWrapper.classList.toggle('ai-hidden', !shouldShowWebList);
             }
@@ -2883,17 +2880,20 @@ function refreshReportFeatureOption(feature) {
                   : cloneFeatureWebSourceEntry(entry);
                 const item = document.createElement('div');
                 item.className = 'ai-feature-web-item';
-                const row = document.createElement('div');
-                row.className = 'ai-feature-web-row';
-                const input = document.createElement('input');
-                input.type = 'url';
-                input.value = normalizedEntry.url || '';
-                input.placeholder = 'https://ejemplo.com';
-                input.disabled = !editable;
-                input.addEventListener('input', function() {
-                  handleReportFeatureInstanceWebSourceChange(feature, index, webIndex, input.value);
-                });
-                row.appendChild(input);
+              const row = document.createElement('div');
+              row.className = 'ai-feature-web-row';
+              const input = document.createElement('input');
+              input.type = 'url';
+              input.className = 'ai-feature-web-input';
+              input.value = normalizedEntry.url || '';
+              input.placeholder = 'https://ejemplo.com';
+              input.disabled = !editable;
+              input.addEventListener('input', function() {
+                handleReportFeatureInstanceWebSourceChange(feature, index, webIndex, input.value);
+              });
+              const inputWrapper = document.createElement('div');
+              inputWrapper.className = 'ai-feature-web-input-wrapper';
+              inputWrapper.appendChild(input);
 
                 const descInput = document.createElement('textarea');
                 descInput.className = 'ai-feature-web-desc';
@@ -2912,34 +2912,35 @@ function refreshReportFeatureOption(feature) {
                 const hasContent = normalizedEntry.description && normalizedEntry.description.trim();
                 descToggle.checked = !!(hasDescription || hasContent);
                 descToggleLabel.classList.toggle('is-active', descToggle.checked);
-                descToggle.addEventListener('change', function() {
-                  handleReportFeatureInstanceWebSourceDescriptionToggle(
-                    feature,
-                    index,
-                    webIndex,
-                    this.checked
-                  );
-                  descInput.classList.toggle('hidden', !this.checked);
-                  if (!this.checked) {
-                    descInput.value = '';
-                  }
-                  descToggleLabel.classList.toggle('is-active', this.checked);
-                });
-                descToggleLabel.appendChild(descToggle);
-                descToggleLabel.appendChild(descToggleText);
-                row.appendChild(descToggleLabel);
+              descToggle.addEventListener('change', function() {
+                handleReportFeatureInstanceWebSourceDescriptionToggle(
+                  feature,
+                  index,
+                  webIndex,
+                  this.checked
+                );
+                descInput.classList.toggle('hidden', !this.checked);
+                if (!this.checked) {
+                  descInput.value = '';
+                }
+                descToggleLabel.classList.toggle('is-active', this.checked);
+              });
+              descToggleLabel.appendChild(descToggle);
+              descToggleLabel.appendChild(descToggleText);
 
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'ai-feature-web-remove';
-                removeBtn.textContent = '×';
-                removeBtn.setAttribute('aria-label', 'Eliminar enlace');
-                removeBtn.disabled = !editable;
-                removeBtn.addEventListener('click', function() {
-                  handleReportFeatureInstanceWebSourceRemove(feature, index, webIndex);
-                });
-                row.appendChild(removeBtn);
-                item.appendChild(row);
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'ai-feature-web-remove';
+              removeBtn.textContent = '×';
+              removeBtn.setAttribute('aria-label', 'Eliminar enlace');
+              removeBtn.disabled = !editable;
+              removeBtn.addEventListener('click', function() {
+                handleReportFeatureInstanceWebSourceRemove(feature, index, webIndex);
+              });
+              inputWrapper.appendChild(removeBtn);
+              row.appendChild(inputWrapper);
+              row.appendChild(descToggleLabel);
+              item.appendChild(row);
 
                 descInput.classList.toggle('hidden', !descToggle.checked);
                 descInput.addEventListener('input', function() {
