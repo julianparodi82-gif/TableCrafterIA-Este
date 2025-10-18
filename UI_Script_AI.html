@@ -4831,11 +4831,30 @@ async function handleReportFavoriteSave() {
               variant: 'success'
             }
           );
-          if (typeof refreshSavedActions === 'function') {
+          const refreshTargetId =
+            savedId || (typeof getCurrentSavedActionId === 'function' ? getCurrentSavedActionId() : '');
+          if (typeof notifySavedActionMutation === 'function') {
+            notifySavedActionMutation({
+              id: refreshTargetId,
+              force: true,
+              delay: 0,
+              autoSelectFirst: false,
+              forceLoad: true
+            });
+          } else if (typeof requestSavedActionsRefresh === 'function') {
+            requestSavedActionsRefresh({
+              selectId: refreshTargetId,
+              force: true,
+              delay: 0,
+              forceLoad: true,
+              autoSelectFirst: false
+            });
+          } else if (typeof refreshSavedActions === 'function') {
             await refreshSavedActions({
-              selectId:
-                savedId || (typeof getCurrentSavedActionId === 'function' ? getCurrentSavedActionId() : ''),
-              force: true
+              selectId: refreshTargetId,
+              force: true,
+              forceLoad: true,
+              autoSelectFirst: false
             });
           }
         } catch (err) {

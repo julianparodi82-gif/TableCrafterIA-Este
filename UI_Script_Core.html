@@ -3015,7 +3015,18 @@ function setActiveTab(tabId, options) {
           updateAiActionState();
           checkApiKey();
         } else if (tabId === 'actionsTab') {
-          refreshSavedActions({ selectId: currentSavedActionId });
+          const activeActionId =
+            typeof getCurrentSavedActionId === 'function' ? getCurrentSavedActionId() : '';
+          if (typeof requestSavedActionsRefresh === 'function') {
+            requestSavedActionsRefresh({
+              selectId: activeActionId,
+              force: false,
+              delay: 0,
+              autoSelectFirst: true
+            });
+          } else if (typeof refreshSavedActions === 'function') {
+            refreshSavedActions({ selectId: activeActionId });
+          }
         }
       }
 

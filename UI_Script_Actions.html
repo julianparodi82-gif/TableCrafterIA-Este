@@ -14,6 +14,10 @@ let currentSavedActionId = '';
 let currentSavedActionDetails = null;
 let reportEditorPortal = null;
 let reportEditorMounted = false;
+let queuedSavedActionsRefresh = null;
+let savedActionsRefreshTimer = 0;
+let savedActionsPanelInitialized = false;
+let pendingSavedActionMutation = null;
 
 function getCurrentSavedActionId() {
   return currentSavedActionId;
@@ -208,11 +212,12 @@ function updateSavedActionsEmptyState(hasEntries) {
   }
 }
 
-function renderSavedActionsSelect(actions, selectedId) {
+function renderSavedActionsSelect(actions, selectedId, options) {
   const select = document.getElementById('aiSavedActions');
   if (!select) {
-    return;
+    return { hasEntries: false, selectedId: '' };
   }
+  const opts = options || {};
   const list = Array.isArray(actions) ? actions : [];
   select.innerHTML = '';
   const placeholder = document.createElement('option');
@@ -222,7 +227,7 @@ function renderSavedActionsSelect(actions, selectedId) {
   if (list.length === 0) {
     select.disabled = true;
     updateSavedActionsEmptyState(false);
-    return;
+    return { hasEntries: false, selectedId: '' };
   }
   const tooltipMap = Object.create(null);
   list
@@ -278,25 +283,85 @@ function renderSavedActionsSelect(actions, selectedId) {
       select.dataset.tooltipBound = 'true';
     }
   }
-  if (selectedId) {
-    const normalized = String(selectedId);
+  const normalized = selectedId ? String(selectedId) : '';
+  let autoSelectedFirst = false;
+  if (normalized) {
     const match = Array.prototype.find.call(select.options, function(item) {
       return item && item.value === normalized;
     });
     if (match) {
       select.value = normalized;
+    } else if (opts.autoSelectFirst !== false) {
+      const firstOption = Array.prototype.find.call(select.options, function(option) {
+        return option && option.value;
+      });
+      if (firstOption) {
+        select.value = firstOption.value;
+        autoSelectedFirst = true;
+      } else {
+        select.value = '';
+      }
     } else {
       select.value = '';
-      currentSavedActionId = '';
+    }
+  } else if (opts.autoSelectFirst !== false) {
+    const firstOption = Array.prototype.find.call(select.options, function(option) {
+      return option && option.value;
+    });
+    if (firstOption) {
+      select.value = firstOption.value;
+      autoSelectedFirst = true;
+    } else {
+      select.value = '';
     }
   } else {
     select.value = '';
+  }
+  if (!select.value && opts.previousValue) {
+    const fallbackMatch = Array.prototype.find.call(select.options, function(option) {
+      return option && option.value === String(opts.previousValue);
+    });
+    if (fallbackMatch) {
+      select.value = fallbackMatch.value;
+      autoSelectedFirst = false;
+    }
   }
   if (typeof updateSelectTooltip === 'function') {
     updateSelectTooltip(select, tooltipMap);
   } else if (fallbackTooltipUpdater) {
     fallbackTooltipUpdater();
   }
+  return {
+    hasEntries: list.length > 0,
+    selectedId: select.value || '',
+    autoSelected: autoSelectedFirst
+  };
+}
+
+async function syncSavedActionSelection(previousValue, options) {
+  const opts = options || {};
+  const select = document.getElementById('aiSavedActions');
+  const finalValue = select ? select.value || '' : '';
+  const hadEntries = !!(opts.hasEntries);
+  if (!hadEntries) {
+    clearSavedActionDetails();
+    currentSavedActionId = '';
+    return;
+  }
+  if (!finalValue) {
+    clearSavedActionDetails();
+    currentSavedActionId = '';
+    return;
+  }
+  const shouldLoad =
+    opts.forceLoad === true ||
+    finalValue !== (previousValue || '') ||
+    !currentSavedActionDetails ||
+    (currentSavedActionDetails && currentSavedActionDetails.id !== finalValue);
+  if (!shouldLoad) {
+    return;
+  }
+  await loadSavedActionDetails(finalValue);
 }
 
 function clearSavedActionDetails(options) {
@@ -618,7 +683,30 @@ async function ensureSavedActionsCache(options) {
 
 async function refreshSavedActions(options) {
   const opts = options || {};
+  const select = document.getElementById('aiSavedActions');
+  const previousValue = select ? select.value || '' : '';
+  const targetId = opts.selectId || previousValue || currentSavedActionId || '';
+  const autoSelectFirst = opts.autoSelectFirst !== false;
+  const forceLoad = opts.forceLoad === true;
+  if (!opts.force && savedActionsLoaded && !loadingSavedActions) {
+    const renderInfo = renderSavedActionsSelect(savedActionsCache, targetId, {
+      autoSelectFirst: autoSelectFirst,
+      previousValue: previousValue
+    });
+    await syncSavedActionSelection(previousValue, {
+      hasEntries: renderInfo.hasEntries,
+      forceLoad: forceLoad
+    });
+    dispatchSavedActionsUpdated();
+    return savedActionsCache;
+  }
   if (loadingSavedActions) {
+    queuedSavedActionsRefresh = {
+      selectId: targetId,
+      force: true,
+      autoSelectFirst: autoSelectFirst,
+      forceLoad: forceLoad
+    };
     return;
   }
   loadingSavedActions = true;
@@ -626,27 +714,20 @@ async function refreshSavedActions(options) {
     const result = await callServerFunction('listSavedActions');
     savedActionsCache = Array.isArray(result) ? result.slice() : [];
     savedActionsLoaded = true;
-    renderSavedActionsSelect(savedActionsCache, opts.selectId || currentSavedActionId);
-    const targetId = opts.selectId || currentSavedActionId;
-    if (targetId) {
-      const exists = savedActionsCache.some(function(entry) {
-        return entry && entry.id === targetId;
-      });
-      if (exists) {
-        await loadSavedActionDetails(targetId);
-      } else {
-        clearSavedActionDetails();
-        currentSavedActionId = '';
-      }
-    } else {
-      clearSavedActionDetails();
-    }
+    const renderInfo = renderSavedActionsSelect(savedActionsCache, targetId, {
+      autoSelectFirst: autoSelectFirst,
+      previousValue: previousValue
+    });
+    await syncSavedActionSelection(previousValue, {
+      hasEntries: renderInfo.hasEntries,
+      forceLoad: forceLoad
+    });
     dispatchSavedActionsUpdated();
   } catch (err) {
     savedActionsCache = [];
     savedActionsLoaded = false;
-    renderSavedActionsSelect([], '');
-    clearSavedActionDetails();
+    renderSavedActionsSelect([], '', { autoSelectFirst: false, previousValue: previousValue });
+    await syncSavedActionSelection(previousValue, { hasEntries: false, forceLoad: true });
     currentSavedActionId = '';
     dispatchSavedActionsUpdated();
     await showMessageModal(
@@ -658,10 +739,61 @@ async function refreshSavedActions(options) {
     );
   } finally {
     loadingSavedActions = false;
+    if (queuedSavedActionsRefresh) {
+      const next = queuedSavedActionsRefresh;
+      queuedSavedActionsRefresh = null;
+      refreshSavedActions(next);
+    }
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function notifySavedActionMutation(detail) {
+  const payload = detail && typeof detail === 'object' ? detail : {};
+  if (!savedActionsPanelInitialized) {
+    pendingSavedActionMutation = payload;
+  }
+  document.dispatchEvent(new CustomEvent('tc:savedActionMutated', { detail: payload }));
+}
+
+function requestSavedActionsRefresh(options) {
+  const opts = options || {};
+  const request = {
+    selectId: opts.selectId || '',
+    force: opts.force === true,
+    autoSelectFirst: opts.autoSelectFirst !== false,
+    forceLoad: opts.forceLoad === true,
+    delay: typeof opts.delay === 'number' ? opts.delay : 200
+  };
+  if (savedActionsRefreshTimer) {
+    window.clearTimeout(savedActionsRefreshTimer);
+    savedActionsRefreshTimer = 0;
+  }
+  if (request.delay <= 0) {
+    refreshSavedActions(request);
+    return;
+  }
+  savedActionsRefreshTimer = window.setTimeout(function() {
+    savedActionsRefreshTimer = 0;
+    refreshSavedActions(request);
+  }, request.delay);
+}
+
+function handleSavedActionMutationEvent(event) {
+  const detail = event && event.detail ? event.detail : {};
+  requestSavedActionsRefresh({
+    selectId: detail && detail.id ? detail.id : '',
+    force: detail.force !== false,
+    delay: typeof detail.delay === 'number' ? detail.delay : 200,
+    autoSelectFirst: detail.autoSelectFirst !== false,
+    forceLoad: detail.forceLoad === true
+  });
+}
+
+function initSavedActionsPanel() {
+  if (savedActionsPanelInitialized) {
+    return;
+  }
+  savedActionsPanelInitialized = true;
   initReportEditorPortal();
   const cardWrapper = document.getElementById('aiActionDetailCard');
   if (cardWrapper) {
@@ -680,11 +812,27 @@ document.addEventListener('DOMContentLoaded', function() {
   const savedActionsRefreshBtn = document.getElementById('aiSavedActionsRefreshBtn');
   if (savedActionsRefreshBtn) {
     savedActionsRefreshBtn.addEventListener('click', function() {
-      refreshSavedActions({ selectId: getCurrentSavedActionId(), force: true });
+      requestSavedActionsRefresh({
+        selectId: typeof getCurrentSavedActionId === 'function' ? getCurrentSavedActionId() : '',
+        force: true,
+        delay: 0,
+        forceLoad: true
+      });
     });
   }
-  refreshSavedActions();
-});
+  document.addEventListener('tc:savedActionMutated', handleSavedActionMutationEvent);
+  if (pendingSavedActionMutation) {
+    handleSavedActionMutationEvent({ detail: pendingSavedActionMutation });
+    pendingSavedActionMutation = null;
+  }
+  requestSavedActionsRefresh({ delay: 0, force: true });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSavedActionsPanel);
+} else {
+  initSavedActionsPanel();
+}
 
 if (typeof window !== 'undefined') {
   window.getSavedActionsSnapshot = getSavedActionsSnapshot;
@@ -692,5 +840,7 @@ if (typeof window !== 'undefined') {
   window.refreshSavedActions = refreshSavedActions;
   window.ensureSavedActionsCache = ensureSavedActionsCache;
   window.notifyActionsTabChanged = notifyActionsTabChanged;
+  window.requestSavedActionsRefresh = requestSavedActionsRefresh;
+  window.notifySavedActionMutation = notifySavedActionMutation;
 }
 </script>
