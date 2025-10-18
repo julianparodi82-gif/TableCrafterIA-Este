@@ -2931,6 +2931,13 @@ function setActiveTab(tabId, options) {
         }
         const previousTab = currentTab;
         currentTab = tabId;
+        if (typeof notifyActionsTabChanged === 'function') {
+          try {
+            notifyActionsTabChanged(tabId, previousTab);
+          } catch (err) {
+            console.log('No se pudo sincronizar la vista de Acciones con el cambio de pestaña.', err);
+          }
+        }
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
           if (btn.dataset.tab === tabId) {
             btn.classList.add('active');

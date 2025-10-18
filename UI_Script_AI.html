@@ -4350,11 +4350,14 @@ function updateReportFavoriteControls() {
         }
       }
 
-async function loadReportFavoriteIntoPanel(action) {
+async function loadReportFavoriteIntoPanel(action, options) {
         if (!action) {
           return;
         }
-        await attemptTabChange('aiTab', { force: true });
+        const opts = options || {};
+        if (!opts.skipTabChange) {
+          await attemptTabChange('aiTab', { force: true });
+        }
         const aiActionSelect = document.getElementById('aiActionSelect');
         if (aiActionSelect) {
           aiActionSelect.value = 'report';

@@ -4,11 +4,16 @@ const ACTION_CHANNEL_LABELS = Object.freeze({
   email: 'Correo electrónico',
   whatsapp: 'WhatsApp'
 });
+const ACTION_EDITOR_DEFAULT_SUBTITLE =
+  'Ajustá las características guardadas y actualizá el favorito directamente desde este panel.';
 
 let savedActionsCache = [];
 let savedActionsLoaded = false;
 let loadingSavedActions = false;
 let currentSavedActionId = '';
+let currentSavedActionDetails = null;
+let reportEditorPortal = null;
+let reportEditorMounted = false;
 
 function getCurrentSavedActionId() {
   return currentSavedActionId;
@@ -24,6 +29,171 @@ function dispatchSavedActionsUpdated() {
     currentId: currentSavedActionId
   };
   document.dispatchEvent(new CustomEvent('tc:savedActionsUpdated', { detail: detail }));
+}
+
+function getReportEditorPortal() {
+  if (reportEditorPortal) {
+    return reportEditorPortal;
+  }
+  const section = document.getElementById('aiReportSection');
+  const host = document.getElementById('aiActionEditorBody');
+  if (!section || !host) {
+    return null;
+  }
+  let placeholder = document.getElementById('aiReportSectionPlaceholder');
+  if (!placeholder) {
+    const parent = section.parentNode;
+    if (!parent) {
+      return null;
+    }
+    placeholder = document.createElement('div');
+    placeholder.id = 'aiReportSectionPlaceholder';
+    placeholder.style.display = 'contents';
+    parent.insertBefore(placeholder, section);
+  }
+  if (!placeholder.contains(section)) {
+    placeholder.appendChild(section);
+  }
+  reportEditorPortal = {
+    section: section,
+    host: host,
+    placeholder: placeholder
+  };
+  return reportEditorPortal;
+}
+
+function mountReportEditorInActions() {
+  const portal = getReportEditorPortal();
+  if (!portal || !portal.section || !portal.host) {
+    return false;
+  }
+  if (!portal.host.contains(portal.section)) {
+    portal.host.appendChild(portal.section);
+  }
+  reportEditorMounted = true;
+  return true;
+}
+
+function restoreReportEditorHome() {
+  const portal = getReportEditorPortal();
+  if (!portal || !portal.section || !portal.placeholder) {
+    return;
+  }
+  if (!portal.placeholder.contains(portal.section)) {
+    portal.placeholder.appendChild(portal.section);
+  }
+  reportEditorMounted = false;
+}
+
+function updateActionEditorHeader(action) {
+  const title = document.getElementById('aiActionEditorTitle');
+  const subtitle = document.getElementById('aiActionEditorSubtitle');
+  const meta = document.getElementById('aiActionEditorMeta');
+  const name = action && action.name ? action.name : 'Acción sin nombre';
+  if (title) {
+    title.textContent = name;
+  }
+  if (subtitle) {
+    if (action && action.description) {
+      subtitle.textContent = action.description;
+    } else {
+      subtitle.textContent = ACTION_EDITOR_DEFAULT_SUBTITLE;
+    }
+  }
+  if (meta) {
+    const pieces = [];
+    if (action && action.updatedAt) {
+      pieces.push('Actualizado: ' + action.updatedAt);
+    }
+    if (action && action.createdAt) {
+      pieces.push('Creado: ' + action.createdAt);
+    }
+    meta.textContent = pieces.join(' • ');
+  }
+}
+
+async function enterReportFavoriteEditor(action, options) {
+  const editor = document.getElementById('aiActionEditor');
+  const portal = getReportEditorPortal();
+  if (!editor || !portal || !portal.section || !portal.host) {
+    return false;
+  }
+  updateActionEditorHeader(action);
+  editor.classList.remove('ai-hidden');
+  const mounted = mountReportEditorInActions();
+  if (!mounted) {
+    return false;
+  }
+  const opts = options || {};
+  if (opts.skipReload === true) {
+    return true;
+  }
+  if (typeof loadReportFavoriteIntoPanel !== 'function') {
+    return true;
+  }
+  try {
+    await loadReportFavoriteIntoPanel(action, { skipTabChange: true });
+    return true;
+  } catch (err) {
+    console.log('No se pudo cargar el reporte favorito en Acciones.', err);
+    exitReportFavoriteEditor({ keepVisible: false, keepMounted: false, clearFavorite: false });
+    return false;
+  }
+}
+
+function exitReportFavoriteEditor(options) {
+  const opts = options || {};
+  if (!opts.keepMounted) {
+    restoreReportEditorHome();
+  }
+  const editor = document.getElementById('aiActionEditor');
+  if (editor && !opts.keepVisible) {
+    editor.classList.add('ai-hidden');
+  }
+  if (!opts.keepHeader) {
+    const title = document.getElementById('aiActionEditorTitle');
+    if (title) {
+      title.textContent = 'Editar reporte favorito';
+    }
+    const subtitle = document.getElementById('aiActionEditorSubtitle');
+    if (subtitle) {
+      subtitle.textContent = ACTION_EDITOR_DEFAULT_SUBTITLE;
+    }
+    const meta = document.getElementById('aiActionEditorMeta');
+    if (meta) {
+      meta.textContent = '';
+    }
+  }
+  if (opts.clearFavorite && typeof clearActiveReportFavorite === 'function') {
+    clearActiveReportFavorite();
+  }
+}
+
+function notifyActionsTabChanged(targetTab) {
+  if (targetTab === 'aiTab') {
+    if (reportEditorMounted || (currentSavedActionDetails && currentSavedActionDetails.type === 'reportFavorite')) {
+      exitReportFavoriteEditor({ clearFavorite: false });
+    }
+    return;
+  }
+  if (targetTab === 'actionsTab') {
+    if (currentSavedActionDetails && currentSavedActionDetails.type === 'reportFavorite') {
+      const container = document.getElementById('aiActionDetails');
+      if (container) {
+        container.classList.remove('ai-hidden');
+      }
+      const cardWrapper = document.getElementById('aiActionDetailCard');
+      if (cardWrapper) {
+        cardWrapper.innerHTML = '';
+        cardWrapper.classList.add('ai-hidden');
+      }
+      enterReportFavoriteEditor(currentSavedActionDetails, { skipReload: true }).then(function(success) {
+        if (!success) {
+          populateActionDetailCard(currentSavedActionDetails, { mode: 'fallback' });
+        }
+      });
+    }
+  }
 }
 
 function updateSavedActionsEmptyState(hasEntries) {
@@ -129,13 +299,28 @@ function renderSavedActionsSelect(actions, selectedId) {
   }
 }
 
-function clearSavedActionDetails() {
-  const container = document.getElementById('aiActionDetails');
-  if (!container) {
-    return;
+function clearSavedActionDetails(options) {
+  const opts = options || {};
+  currentSavedActionDetails = null;
+  exitReportFavoriteEditor({
+    keepVisible: false,
+    keepMounted: false,
+    keepHeader: !!opts.keepHeader,
+    clearFavorite: !opts.keepFavorite
+  });
+  const card = document.getElementById('aiActionDetailCard');
+  if (card) {
+    card.innerHTML = '';
+    card.classList.add('ai-hidden');
   }
-  container.innerHTML = '';
-  container.classList.add('ai-hidden');
+  const editor = document.getElementById('aiActionEditor');
+  if (editor) {
+    editor.classList.add('ai-hidden');
+  }
+  const container = document.getElementById('aiActionDetails');
+  if (container) {
+    container.classList.add('ai-hidden');
+  }
 }
 
 function formatActionChannel(value) {
@@ -211,6 +396,109 @@ function buildReportFavoriteSummary(action) {
   return parts.join('\n');
 }
 
+function buildActionDetailCard(action, options) {
+  const opts = options || {};
+  const card = document.createElement('div');
+  card.className = 'ai-action-card';
+  const title = document.createElement('h4');
+  title.textContent = action && action.name ? action.name : 'Acción sin nombre';
+  card.appendChild(title);
+  const meta = document.createElement('div');
+  meta.className = 'ai-action-meta';
+  const typeBadge = document.createElement('span');
+  typeBadge.textContent = getActionTypeLabel(action && action.type);
+  meta.appendChild(typeBadge);
+  if (action && action.updatedAt) {
+    const updated = document.createElement('span');
+    updated.textContent = 'Actualizado: ' + action.updatedAt;
+    meta.appendChild(updated);
+  }
+  if (action && action.createdAt) {
+    const created = document.createElement('span');
+    created.textContent = 'Creado: ' + action.createdAt;
+    meta.appendChild(created);
+  }
+  card.appendChild(meta);
+  if (action && action.description) {
+    const description = document.createElement('p');
+    description.className = 'ai-action-summary';
+    description.textContent = action.description;
+    card.appendChild(description);
+  }
+  if (action && action.type === 'table') {
+    const extra = document.createElement('p');
+    extra.className = 'ai-action-summary';
+    const rangeInfo = [];
+    if (action.sheetName) {
+      rangeInfo.push('Hoja: ' + action.sheetName);
+    }
+    if (action.rangeA1) {
+      rangeInfo.push('Rango: ' + action.rangeA1);
+    }
+    if (action.rows) {
+      rangeInfo.push('Filas: ' + action.rows);
+    }
+    if (action.cols) {
+      rangeInfo.push('Columnas: ' + action.cols);
+    }
+    extra.textContent = rangeInfo.join(' • ');
+    card.appendChild(extra);
+  } else if (action && action.type === 'reportFavorite') {
+    const summaryText = buildReportFavoriteSummary(action);
+    if (summaryText) {
+      const summary = document.createElement('p');
+      summary.className = 'ai-action-summary';
+      summary.textContent = summaryText;
+      card.appendChild(summary);
+    }
+    if (Array.isArray(action.tables) && action.tables.length > 0) {
+      const tablesInfo = document.createElement('p');
+      tablesInfo.className = 'ai-action-summary';
+      tablesInfo.textContent = 'Tablas vinculadas: ' + action.tables.join(', ');
+      card.appendChild(tablesInfo);
+    }
+    if (opts.mode === 'fallback') {
+      const notice = document.createElement('p');
+      notice.className = 'ai-action-summary';
+      notice.textContent =
+        'No se pudo mostrar el editor interactivo. Abrí el reporte en el panel IA para modificarlo.';
+      card.appendChild(notice);
+    }
+  }
+  if (opts.includeActions !== false) {
+    const buttons = document.createElement('div');
+    buttons.className = 'ai-action-buttons';
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'btn-secondary';
+    if (action && action.type === 'table') {
+      editBtn.textContent = 'Editar tabla';
+    } else {
+      editBtn.textContent = 'Editar en panel IA';
+    }
+    editBtn.addEventListener('click', function() {
+      openActionForEditing(action);
+    });
+    buttons.appendChild(editBtn);
+    card.appendChild(buttons);
+  }
+  return card;
+}
+
+function populateActionDetailCard(action, options) {
+  const wrapper = document.getElementById('aiActionDetailCard');
+  if (!wrapper) {
+    return;
+  }
+  wrapper.innerHTML = '';
+  if (!action) {
+    wrapper.classList.add('ai-hidden');
+    return;
+  }
+  wrapper.appendChild(buildActionDetailCard(action, options));
+  wrapper.classList.remove('ai-hidden');
+}
+
 function buildSavedActionTooltip(action) {
   if (!action) {
     return '';
@@ -251,89 +539,31 @@ function buildSavedActionTooltip(action) {
   return parts.join('\n');
 }
 
-function renderSavedActionDetails(action) {
+async function renderSavedActionDetails(action) {
   const container = document.getElementById('aiActionDetails');
   if (!container) {
     return;
   }
-  container.innerHTML = '';
   if (!action || !action.id) {
-    container.classList.add('ai-hidden');
+    clearSavedActionDetails();
     return;
   }
-  const card = document.createElement('div');
-  card.className = 'ai-action-card';
-  const title = document.createElement('h4');
-  title.textContent = action.name || 'Acción sin nombre';
-  card.appendChild(title);
-  const meta = document.createElement('div');
-  meta.className = 'ai-action-meta';
-  const typeBadge = document.createElement('span');
-  typeBadge.textContent = getActionTypeLabel(action.type);
-  meta.appendChild(typeBadge);
-  if (action.updatedAt) {
-    const updated = document.createElement('span');
-    updated.textContent = 'Actualizado: ' + action.updatedAt;
-    meta.appendChild(updated);
-  }
-  if (action.createdAt) {
-    const created = document.createElement('span');
-    created.textContent = 'Creado: ' + action.createdAt;
-    meta.appendChild(created);
-  }
-  card.appendChild(meta);
-  if (action.type === 'table') {
-    if (action.description) {
-      const description = document.createElement('p');
-      description.className = 'ai-action-summary';
-      description.textContent = action.description;
-      card.appendChild(description);
-    }
-    const extra = document.createElement('p');
-    extra.className = 'ai-action-summary';
-    const rangeInfo = [];
-    if (action.sheetName) {
-      rangeInfo.push('Hoja: ' + action.sheetName);
-    }
-    if (action.rangeA1) {
-      rangeInfo.push('Rango: ' + action.rangeA1);
-    }
-    if (action.rows) {
-      rangeInfo.push('Filas: ' + action.rows);
-    }
-    if (action.cols) {
-      rangeInfo.push('Columnas: ' + action.cols);
-    }
-    extra.textContent = rangeInfo.join(' • ');
-    card.appendChild(extra);
-  } else if (action.type === 'reportFavorite') {
-    const summaryText = buildReportFavoriteSummary(action);
-    if (summaryText) {
-      const summary = document.createElement('p');
-      summary.className = 'ai-action-summary';
-      summary.textContent = summaryText;
-      card.appendChild(summary);
-    }
-    if (Array.isArray(action.tables) && action.tables.length > 0) {
-      const tablesInfo = document.createElement('p');
-      tablesInfo.className = 'ai-action-summary';
-      tablesInfo.textContent = 'Tablas vinculadas: ' + action.tables.join(', ');
-      card.appendChild(tablesInfo);
-    }
-  }
-  const buttons = document.createElement('div');
-  buttons.className = 'ai-action-buttons';
-  const editBtn = document.createElement('button');
-  editBtn.type = 'button';
-  editBtn.className = 'btn-secondary';
-  editBtn.textContent = action.type === 'table' ? 'Editar tabla' : 'Editar reporte';
-  editBtn.addEventListener('click', function() {
-    openActionForEditing(action);
-  });
-  buttons.appendChild(editBtn);
-  card.appendChild(buttons);
-  container.appendChild(card);
+  currentSavedActionDetails = action;
   container.classList.remove('ai-hidden');
+  if (action.type === 'reportFavorite') {
+    const cardWrapper = document.getElementById('aiActionDetailCard');
+    if (cardWrapper) {
+      cardWrapper.innerHTML = '';
+      cardWrapper.classList.add('ai-hidden');
+    }
+    const loaded = await enterReportFavoriteEditor(action);
+    if (!loaded) {
+      populateActionDetailCard(action, { mode: 'fallback' });
+    }
+    return;
+  }
+  exitReportFavoriteEditor({ clearFavorite: true });
+  populateActionDetailCard(action);
 }
 
 async function loadSavedActionDetails(actionId) {
@@ -365,7 +595,7 @@ async function loadSavedActionDetails(actionId) {
     return;
   }
   currentSavedActionId = actionId;
-  renderSavedActionDetails(response);
+  await renderSavedActionDetails(response);
 }
 
 async function ensureSavedActionsCache(options) {
@@ -416,6 +646,8 @@ async function refreshSavedActions(options) {
     savedActionsCache = [];
     savedActionsLoaded = false;
     renderSavedActionsSelect([], '');
+    clearSavedActionDetails();
+    currentSavedActionId = '';
     dispatchSavedActionsUpdated();
     await showMessageModal(
       'No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err),
@@ -430,6 +662,15 @@ async function refreshSavedActions(options) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  initReportEditorPortal();
+  const cardWrapper = document.getElementById('aiActionDetailCard');
+  if (cardWrapper) {
+    cardWrapper.classList.add('ai-hidden');
+  }
+  const editor = document.getElementById('aiActionEditor');
+  if (editor) {
+    editor.classList.add('ai-hidden');
+  }
   const savedActionsSelect = document.getElementById('aiSavedActions');
   if (savedActionsSelect) {
     savedActionsSelect.addEventListener('change', function() {
@@ -450,5 +691,6 @@ if (typeof window !== 'undefined') {
   window.getCurrentSavedActionId = getCurrentSavedActionId;
   window.refreshSavedActions = refreshSavedActions;
   window.ensureSavedActionsCache = ensureSavedActionsCache;
+  window.notifyActionsTabChanged = notifyActionsTabChanged;
 }
 </script>

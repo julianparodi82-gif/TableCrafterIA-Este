@@ -1773,6 +1773,43 @@
         flex-direction: column;
         gap: 12px;
       }
+      .ai-action-editor {
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 16px;
+        background-color: #FFFFFF;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-action-editor-head {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-action-editor-head h4 {
+        margin: 0;
+        font-size: 16px;
+        color: var(--tc-text);
+      }
+      .ai-action-editor-subtitle {
+        margin: 0;
+        font-size: 13px;
+        color: #000000;
+      }
+      .ai-action-editor-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 12px;
+        color: #000000;
+      }
+      .ai-action-editor-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
       .ai-action-card {
         border: 1px solid #E5E7EB;
         border-radius: 10px;
@@ -5875,13 +5912,25 @@
               <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
           </div>
-          <div class="tc-card">
-            <h3 class="tc-card-heading">Detalle seleccionado</h3>
-            <p class="tc-card-subtitle">Revisa la información asociada y vuelve a editarla cuando quieras.</p>
-            <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite"></div>
+            <div class="tc-card">
+              <h3 class="tc-card-heading">Detalle seleccionado</h3>
+              <p class="tc-card-subtitle">Revisa la información asociada y vuelve a editarla cuando quieras.</p>
+              <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite">
+                <div id="aiActionDetailCard"></div>
+                <div id="aiActionEditor" class="ai-action-editor ai-hidden">
+                  <div class="ai-action-editor-head">
+                    <h4 id="aiActionEditorTitle">Editar reporte favorito</h4>
+                    <p id="aiActionEditorSubtitle" class="ai-action-editor-subtitle">
+                      Ajustá las características guardadas y actualizá el favorito directamente desde este panel.
+                    </p>
+                    <div id="aiActionEditorMeta" class="ai-action-editor-meta"></div>
+                  </div>
+                  <div id="aiActionEditorBody" class="ai-action-editor-body"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
 
