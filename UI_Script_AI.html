@@ -213,6 +213,7 @@
         return map;
       }, {});
       const REPORT_FEATURE_MAX_QUANTITY = 3;
+      const REPORT_FEATURE_WEB_SOURCE_LIMIT = 3;
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -1247,6 +1248,16 @@ function createEmptyFeatureTableSelectionArray() {
         });
       }
 
+function createEmptyFeatureWebToggleArray() {
+        return Array(REPORT_FEATURE_MAX_QUANTITY).fill(false);
+      }
+
+function createEmptyFeatureWebSourceArray() {
+        return Array.from({ length: REPORT_FEATURE_MAX_QUANTITY }, function() {
+          return [];
+        });
+      }
+
 function cloneFeatureTableSelectionArray(source) {
         const base = createEmptyFeatureTableSelectionArray();
         if (!Array.isArray(source)) {
@@ -1269,6 +1280,29 @@ function cloneFeatureTableSelectionArray(source) {
             }
             seen[text] = true;
             values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
+function cloneFeatureWebSourceArray(source) {
+        const base = createEmptyFeatureWebSourceArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const values = [];
+          entry.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT).forEach(function(value) {
+            if (value === null || value === undefined) {
+              values.push('');
+              return;
+            }
+            values.push(String(value));
           });
           base[index] = values;
         });
@@ -1310,6 +1344,42 @@ function normalizeFeatureTableSelectionArray(source, allowedSet) {
               return;
             }
             seen[text] = true;
+            values.push(text);
+          });
+          base[index] = values;
+        });
+        return base;
+      }
+
+function normalizeFeatureWebToggleArray(source) {
+        const base = createEmptyFeatureWebToggleArray();
+        if (Array.isArray(source)) {
+          source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(value, index) {
+            base[index] = !!value;
+          });
+        }
+        return base;
+      }
+
+function normalizeFeatureWebSourceArray(source) {
+        const base = createEmptyFeatureWebSourceArray();
+        if (!Array.isArray(source)) {
+          return base;
+        }
+        source.slice(0, REPORT_FEATURE_MAX_QUANTITY).forEach(function(entry, index) {
+          if (!Array.isArray(entry)) {
+            base[index] = [];
+            return;
+          }
+          const values = [];
+          entry.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT).forEach(function(value) {
+            if (value === null || value === undefined) {
+              return;
+            }
+            const text = String(value).trim();
+            if (!text || values.indexOf(text) !== -1) {
+              return;
+            }
             values.push(text);
           });
           base[index] = values;
@@ -2083,7 +2153,9 @@ function ensureReportFeatureState(feature) {
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
             summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
             instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
-            instanceTables: createEmptyFeatureTableSelectionArray()
+            instanceTables: createEmptyFeatureTableSelectionArray(),
+            instanceWebSourcesEnabled: createEmptyFeatureWebToggleArray(),
+            instanceWebSources: createEmptyFeatureWebSourceArray()
           };
           return reportFeatureState[key];
         }
@@ -2120,6 +2192,12 @@ function ensureReportFeatureState(feature) {
         }
         if (!Array.isArray(state.instanceTables)) {
           state.instanceTables = createEmptyFeatureTableSelectionArray();
+        }
+        if (!Array.isArray(state.instanceWebSourcesEnabled)) {
+          state.instanceWebSourcesEnabled = createEmptyFeatureWebToggleArray();
+        }
+        if (!Array.isArray(state.instanceWebSources)) {
+          state.instanceWebSources = createEmptyFeatureWebSourceArray();
         }
         return state;
       }
@@ -2578,6 +2656,14 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumerate = normalizedListEnumerate.slice();
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
+          const normalizedWebSources = cloneFeatureWebSourceArray(state.instanceWebSources);
+          state.instanceWebSources = normalizedWebSources.map(function(bucket) {
+            return Array.isArray(bucket)
+              ? bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
+              : [];
+          });
+          const normalizedWebToggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+          state.instanceWebSourcesEnabled = normalizedWebToggles.slice();
           const associationOptions = getReportFeatureAssociationOptions();
           const hasEntries = associationOptions.entries.length > 0;
           const canAssociate = !!state.selected && hasEntries;
@@ -2632,6 +2718,18 @@ function refreshReportFeatureOption(feature) {
             );
             const tableEmptyMessage = item.querySelector(
               '[data-feature-instance-table-empty="' + feature + '"]'
+            );
+            const webToggle = item.querySelector(
+              '[data-feature-instance-web-toggle="' + feature + '"]'
+            );
+            const webListWrapper = item.querySelector(
+              '[data-feature-instance-web-list="' + feature + '"]'
+            );
+            const webItemsContainer = item.querySelector(
+              '[data-feature-instance-web-items="' + feature + '"]'
+            );
+            const webAddButton = item.querySelector(
+              '[data-feature-instance-web-add="' + feature + '"]'
             );
             const withinRange = shouldShowInstances && index >= 0 && index < quantityValue;
             item.classList.toggle('ai-hidden', !withinRange);
@@ -2722,9 +2820,69 @@ function refreshReportFeatureOption(feature) {
                 tableEmptyMessage.textContent = associationOptions.message;
               }
             }
+            if (webToggle) {
+              const webToggleEnabled = withinRange && !!state.selected;
+              webToggle.disabled = !webToggleEnabled;
+              const currentWebToggle = webToggleEnabled && normalizedWebToggles[index];
+              webToggle.checked = !!currentWebToggle;
+              if (!webToggleEnabled) {
+                normalizedWebToggles[index] = false;
+              }
+            }
+            const currentWebList = Array.isArray(state.instanceWebSources[index])
+              ? state.instanceWebSources[index]
+              : [];
+            const shouldShowWebList = withinRange && normalizedWebToggles[index];
+            if (shouldShowWebList && currentWebList.length === 0) {
+              state.instanceWebSources[index] = [''];
+            }
+            if (webListWrapper) {
+              webListWrapper.classList.toggle('ai-hidden', !shouldShowWebList);
+            }
+            if (webAddButton) {
+              webAddButton.disabled =
+                !shouldShowWebList || currentWebList.length >= REPORT_FEATURE_WEB_SOURCE_LIMIT;
+              webAddButton.dataset.instanceIndex = String(index);
+            }
+            if (webItemsContainer) {
+              webItemsContainer.innerHTML = '';
+              const editable = shouldShowWebList;
+              const sources = Array.isArray(state.instanceWebSources[index])
+                ? state.instanceWebSources[index].slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
+                : [];
+              sources.forEach(function(value, webIndex) {
+                const row = document.createElement('div');
+                row.className = 'ai-feature-web-item';
+                const input = document.createElement('input');
+                input.type = 'url';
+                input.value = value || '';
+                input.placeholder = 'https://ejemplo.com';
+                input.disabled = !editable;
+                input.addEventListener('input', function() {
+                  handleReportFeatureInstanceWebSourceChange(feature, index, webIndex, input.value);
+                });
+                row.appendChild(input);
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'ai-feature-web-remove';
+                removeBtn.textContent = 'Eliminar';
+                removeBtn.disabled = !editable;
+                removeBtn.addEventListener('click', function() {
+                  handleReportFeatureInstanceWebSourceRemove(feature, index, webIndex);
+                });
+                row.appendChild(removeBtn);
+                webItemsContainer.appendChild(row);
+              });
+            }
           });
           state.instanceTablesEnabled = normalizedTableToggles.slice();
           state.instanceTables = cloneFeatureTableSelectionArray(normalizedTableSelections);
+          state.instanceWebSourcesEnabled = normalizedWebToggles.slice();
+          state.instanceWebSources = state.instanceWebSources.map(function(bucket) {
+            return Array.isArray(bucket)
+              ? bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
+              : [];
+          });
         }
       }
 
@@ -2773,6 +2931,10 @@ function handleReportFeatureSelection(feature, checked) {
           state.instanceTables = cloneFeatureTableSelectionArray(
             normalizeFeatureTableSelectionArray(state.instanceTables)
           );
+          state.instanceWebSourcesEnabled = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+          state.instanceWebSources = cloneFeatureWebSourceArray(
+            normalizeFeatureWebSourceArray(state.instanceWebSources)
+          );
         } else {
           state.quantity = getReportFeatureDefaultQuantity(feature);
           state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -2784,6 +2946,8 @@ function handleReportFeatureSelection(feature, checked) {
           state.summaryLength = REPORT_SUMMARY_LENGTH_DEFAULT;
           state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
           state.instanceTables = createEmptyFeatureTableSelectionArray();
+          state.instanceWebSourcesEnabled = createEmptyFeatureWebToggleArray();
+          state.instanceWebSources = createEmptyFeatureWebSourceArray();
         }
         refreshReportFeatureOption(feature);
         updateSelectedReportFeatures();
@@ -2984,6 +3148,108 @@ function handleReportFeatureInstanceTableSelection(feature, index, values) {
         refreshReportFeatureOption(feature);
       }
 
+function handleReportFeatureInstanceWebToggle(feature, index, enabled) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        if (!enabled) {
+          toggles[safeIndex] = false;
+        } else {
+          toggles[safeIndex] = true;
+          if (!Array.isArray(sources[safeIndex]) || sources[safeIndex].length === 0) {
+            sources[safeIndex] = [''];
+          }
+        }
+        state.instanceWebSourcesEnabled = toggles;
+        state.instanceWebSources = sources;
+        refreshReportFeatureOption(feature);
+      }
+
+function handleReportFeatureInstanceWebSourceAdd(feature, index) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        if (isNaN(parsedIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        if (!toggles[safeIndex]) {
+          return;
+        }
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
+        if (bucket.length >= REPORT_FEATURE_WEB_SOURCE_LIMIT) {
+          return;
+        }
+        bucket.push('');
+        sources[safeIndex] = bucket;
+        state.instanceWebSources = sources;
+        refreshReportFeatureOption(feature);
+      }
+
+function handleReportFeatureInstanceWebSourceChange(feature, index, sourceIndex, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        const parsedSourceIndex = parseInt(sourceIndex, 10);
+        if (isNaN(parsedIndex) || isNaN(parsedSourceIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const safeSourceIndex = Math.max(0, Math.min(REPORT_FEATURE_WEB_SOURCE_LIMIT - 1, parsedSourceIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        if (!toggles[safeIndex]) {
+          return;
+        }
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
+        while (bucket.length <= safeSourceIndex) {
+          bucket.push('');
+        }
+        bucket[safeSourceIndex] = value === null || value === undefined ? '' : String(value);
+        sources[safeIndex] = bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT);
+        state.instanceWebSources = sources;
+      }
+
+function handleReportFeatureInstanceWebSourceRemove(feature, index, sourceIndex) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        const parsedSourceIndex = parseInt(sourceIndex, 10);
+        if (isNaN(parsedIndex) || isNaN(parsedSourceIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        if (!toggles[safeIndex]) {
+          return;
+        }
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
+        if (safeSourceIndex < 0 || safeSourceIndex >= bucket.length) {
+          return;
+        }
+        bucket.splice(safeSourceIndex, 1);
+        sources[safeIndex] = bucket;
+        state.instanceWebSources = sources;
+        refreshReportFeatureOption(feature);
+      }
+
 function handleReportFeatureSummaryLengthChange(feature, value) {
         const state = ensureReportFeatureState(feature);
         if (!state || !state.selected) {
@@ -3116,6 +3382,19 @@ function initializeReportFeatureControls() {
             });
             toggle.dataset.bound = 'true';
           });
+          const webToggles = option.querySelectorAll(
+            '[data-feature-instance-web-toggle="' + feature + '"]'
+          );
+          webToggles.forEach(function(toggle) {
+            if (!toggle || toggle.dataset.bound) {
+              return;
+            }
+            toggle.addEventListener('change', function() {
+              const index = parseInt(toggle.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceWebToggle(feature, index, toggle.checked);
+            });
+            toggle.dataset.bound = 'true';
+          });
           const tableSelects = option.querySelectorAll(
             '[data-feature-instance-table-select="' + feature + '"]'
           );
@@ -3128,6 +3407,19 @@ function initializeReportFeatureControls() {
               handleReportFeatureInstanceTableSelection(feature, index, getSelectedOptionValues(select));
             });
             select.dataset.bound = 'true';
+          });
+          const webAddButtons = option.querySelectorAll(
+            '[data-feature-instance-web-add="' + feature + '"]'
+          );
+          webAddButtons.forEach(function(button) {
+            if (!button || button.dataset.bound) {
+              return;
+            }
+            button.addEventListener('click', function() {
+              const index = parseInt(button.dataset.instanceIndex, 10);
+              handleReportFeatureInstanceWebSourceAdd(feature, index);
+            });
+            button.dataset.bound = 'true';
           });
           const tableLists = option.querySelectorAll(
             '[data-feature-instance-table-list="' + feature + '"]'
@@ -3746,6 +4038,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             const summaryToneValue = normalizeSummaryToneValue(detail.summaryTone);
             const instanceTableToggles = normalizeFeatureTableToggleArray(detail.instanceTablesEnabled);
             const instanceTableSelections = normalizeFeatureTableSelectionArray(detail.instanceTables);
+            const instanceWebToggles = normalizeFeatureWebToggleArray(detail.instanceWebSourcesEnabled);
+            const instanceWebSources = normalizeFeatureWebSourceArray(detail.instanceWebSources);
             detailMap[featureId] = {
               quantity: quantityValue,
               instanceDescriptions: instanceDescriptions,
@@ -3757,7 +4051,9 @@ function applyReportFeatureSelections(features, featureDetails) {
               summaryLength: summaryLengthValue,
               summaryTone: summaryToneValue,
               instanceTablesEnabled: instanceTableToggles,
-              instanceTables: instanceTableSelections
+              instanceTables: instanceTableSelections,
+              instanceWebSourcesEnabled: instanceWebToggles,
+              instanceWebSources: instanceWebSources
             };
           });
         }
@@ -3802,6 +4098,12 @@ function applyReportFeatureSelections(features, featureDetails) {
                   normalizeFeatureTableSelectionArray(detail.instanceTables)
                 )
               : createEmptyFeatureTableSelectionArray();
+            state.instanceWebSourcesEnabled = detail
+              ? normalizeFeatureWebToggleArray(detail.instanceWebSourcesEnabled)
+              : createEmptyFeatureWebToggleArray();
+            state.instanceWebSources = detail
+              ? cloneFeatureWebSourceArray(normalizeFeatureWebSourceArray(detail.instanceWebSources))
+              : createEmptyFeatureWebSourceArray();
           } else {
             state.quantity = getReportFeatureDefaultQuantity(feature);
             state.instanceDescriptions = createEmptyFeatureInstanceArray();
@@ -3814,6 +4116,8 @@ function applyReportFeatureSelections(features, featureDetails) {
             state.summaryTone = REPORT_SUMMARY_TONE_DEFAULT;
             state.instanceTablesEnabled = createEmptyFeatureTableToggleArray();
             state.instanceTables = createEmptyFeatureTableSelectionArray();
+            state.instanceWebSourcesEnabled = createEmptyFeatureWebToggleArray();
+            state.instanceWebSources = createEmptyFeatureWebSourceArray();
           }
           refreshReportFeatureOption(feature);
         });
@@ -4067,6 +4371,18 @@ async function handleReportFavoriteSave() {
             state ? state.instanceTables : [],
             hasAllTablesOption ? null : allowedTableSet
           );
+          let baseWebToggles = normalizeFeatureWebToggleArray(
+            state ? state.instanceWebSourcesEnabled : []
+          );
+          let baseWebSources = cloneFeatureWebSourceArray(
+            state ? state.instanceWebSources : []
+          );
+          baseWebSources = cloneFeatureWebSourceArray(
+            normalizeFeatureWebSourceArray(baseWebSources)
+          );
+          baseWebToggles = baseWebToggles.map(function(enabled, idx) {
+            return !!enabled && baseWebSources[idx] && baseWebSources[idx].length > 0;
+          });
           if (hasAllTablesOption) {
             baseTableToggles = createEmptyFeatureTableToggleArray();
             baseTableSelections = createEmptyFeatureTableSelectionArray();
@@ -4094,6 +4410,8 @@ async function handleReportFavoriteSave() {
             state.summaryTone = summaryToneValue;
             state.instanceTablesEnabled = baseTableToggles.slice();
             state.instanceTables = cloneFeatureTableSelectionArray(baseTableSelections);
+            state.instanceWebSourcesEnabled = baseWebToggles.slice();
+            state.instanceWebSources = cloneFeatureWebSourceArray(baseWebSources);
           }
           featureDetailMap[feature] = {
             quantity: quantityValue,
@@ -4106,7 +4424,9 @@ async function handleReportFavoriteSave() {
             summaryLength: summaryLengthValue,
             summaryTone: summaryToneValue,
             instanceTablesEnabled: baseTableToggles.slice(),
-            instanceTables: cloneFeatureTableSelectionArray(baseTableSelections)
+            instanceTables: cloneFeatureTableSelectionArray(baseTableSelections),
+            instanceWebSourcesEnabled: baseWebToggles.slice(),
+            instanceWebSources: cloneFeatureWebSourceArray(baseWebSources)
           };
         });
 
@@ -4205,7 +4525,9 @@ async function handleReportFavoriteSave() {
             summaryLength: REPORT_SUMMARY_LENGTH_DEFAULT,
             summaryTone: REPORT_SUMMARY_TONE_DEFAULT,
             instanceTablesEnabled: createEmptyFeatureTableToggleArray(),
-            instanceTables: createEmptyFeatureTableSelectionArray()
+            instanceTables: createEmptyFeatureTableSelectionArray(),
+            instanceWebSourcesEnabled: createEmptyFeatureWebToggleArray(),
+            instanceWebSources: createEmptyFeatureWebSourceArray()
           };
           return {
             feature: feature,
@@ -4224,6 +4546,10 @@ async function handleReportFavoriteSave() {
                 detail.instanceTables,
                 hasAllTablesOption ? null : allowedTableSet
               )
+            ),
+            instanceWebSourcesEnabled: normalizeFeatureWebToggleArray(detail.instanceWebSourcesEnabled),
+            instanceWebSources: cloneFeatureWebSourceArray(
+              normalizeFeatureWebSourceArray(detail.instanceWebSources)
             )
           };
         });

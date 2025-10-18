@@ -1043,7 +1043,7 @@ function restoreTableHeaderRow(sheet, startColumn, targetStartRow, columnCount, 
     // Ignorar si no se puede aplicar la alineación.
   }
   var style = parseJsonValue(metaRow[META_INDEX.style], {}) || {};
-  var headerColor = style && style.headerColor ? style.headerColor : '#CFE8FC';
+  var headerColor = style && style.headerColor ? style.headerColor : '#66D68E';
   try {
     headerRange.setBackground(headerColor);
   } catch (err5) {
@@ -1621,7 +1621,7 @@ function ensureHeaderRowIntegrity(sheet, startRow, startColumn, columnCount, met
     // Ignorar errores al aplicar alineaciones.
   }
   var style = parseJsonValue(metaRow[META_INDEX.style], {}) || {};
-  var headerColor = style && style.headerColor ? style.headerColor : '#CFE8FC';
+  var headerColor = style && style.headerColor ? style.headerColor : '#66D68E';
   try {
     headerRange.setBackground(headerColor);
   } catch (err5) {

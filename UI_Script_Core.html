@@ -1,8 +1,8 @@
 <script>
 const DEFAULT_STYLE = Object.freeze({
-  headerColor: '#CDEFD9',
+  headerColor: '#66D68E',
   altColor1: '#FFFFFF',
-  altColor2: '#F1F8F3',
+  altColor2: '#DCDFE5',
   border: true,
   bold: true
 });
@@ -10,6 +10,7 @@ const DEFAULT_STYLE = Object.freeze({
 const ALL_TABLES_OPTION_VALUE = '__ALL__';
 const SAVED_TABLES_STORAGE_KEY = 'tablecrafter.savedTables.v1';
 const DEFAULT_AI_FILL_DATA_TYPE = 'datos';
+const AI_WEB_SOURCE_LIMIT = 3;
 const AI_FILL_DATA_TYPE_OPTIONS = [
   { value: 'datos', label: 'Datos generales' },
   { value: 'numericos', label: 'Números calculados' },
@@ -75,7 +76,9 @@ function normalizeHeaderModel(entry) {
           key: '',
           aiFillEnabled: false,
           aiFillPrompt: '',
-          aiFillDataType: DEFAULT_AI_FILL_DATA_TYPE
+          aiFillDataType: DEFAULT_AI_FILL_DATA_TYPE,
+          aiWebSourcesEnabled: false,
+          aiWebSources: []
         };
         if (entry && typeof entry === 'object') {
           const labelValue =
@@ -103,8 +106,11 @@ function normalizeHeaderModel(entry) {
             : '';
           const aiDataTypeValue =
             entry.aiFillDataType !== undefined && entry.aiFillDataType !== null ? entry.aiFillDataType : '';
+          const aiWebSourcesValue = Array.isArray(entry.aiWebSources) ? entry.aiWebSources : [];
+          const hasExplicitWebFlag = Object.prototype.hasOwnProperty.call(entry, 'aiWebSourcesEnabled');
           const trimmedPrompt = String(aiPromptValue || '').trim();
           const trimmedDataType = String(aiDataTypeValue || '').trim() || DEFAULT_AI_FILL_DATA_TYPE;
+          const normalizedWebSources = normalizeHeaderWebSourceArray(aiWebSourcesValue);
           const aiEnabled = hasExplicitAiFlag ? !!aiEnabledValue : trimmedPrompt !== '';
           normalized.label = trimmedLabel;
           normalized.description = hasDescription ? trimmedDescription : '';
@@ -113,6 +119,10 @@ function normalizeHeaderModel(entry) {
           normalized.aiFillEnabled = aiEnabled;
           normalized.aiFillPrompt = trimmedPrompt;
           normalized.aiFillDataType = trimmedDataType;
+          normalized.aiWebSources = normalizedWebSources;
+          normalized.aiWebSourcesEnabled = hasExplicitWebFlag
+            ? !!entry.aiWebSourcesEnabled
+            : normalizedWebSources.length > 0;
           if (!normalized.key) {
             normalized.key = generateHeaderKey();
           }
@@ -122,11 +132,13 @@ function normalizeHeaderModel(entry) {
           normalized.label = String(entry).trim();
         }
         if (!normalized.key) {
-          normalized.key = generateHeaderKey();
+        normalized.key = generateHeaderKey();
         }
         normalized.aiFillEnabled = false;
         normalized.aiFillPrompt = '';
         normalized.aiFillDataType = DEFAULT_AI_FILL_DATA_TYPE;
+        normalized.aiWebSourcesEnabled = false;
+        normalized.aiWebSources = [];
         return normalized;
       }
 
@@ -156,6 +168,9 @@ function cloneHeaderModels(source) {
             item.aiFillDataType !== undefined && item.aiFillDataType !== null
               ? String(item.aiFillDataType).trim()
               : '';
+          const normalizedWebSources = normalizeHeaderWebSourceArray(item.aiWebSources);
+          const explicitWebFlag = Object.prototype.hasOwnProperty.call(item, 'aiWebSourcesEnabled');
+          const webEnabled = explicitWebFlag ? !!item.aiWebSourcesEnabled : normalizedWebSources.length > 0;
           return {
             label: item.label,
             description: item.hasDescription ? item.description : '',
@@ -163,12 +178,39 @@ function cloneHeaderModels(source) {
             key: item.key || generateHeaderKey(),
             aiFillEnabled: aiEnabled,
             aiFillPrompt: hasPrompt,
-            aiFillDataType: normalizedDataType || DEFAULT_AI_FILL_DATA_TYPE
+            aiFillDataType: normalizedDataType || DEFAULT_AI_FILL_DATA_TYPE,
+            aiWebSourcesEnabled: webEnabled,
+            aiWebSources: normalizedWebSources
           };
         });
       }
 
 
+
+function normalizeHeaderWebSourceArray(source) {
+        if (!Array.isArray(source)) {
+          return [];
+        }
+        const values = [];
+        source.some(function(entry) {
+          if (values.length >= AI_WEB_SOURCE_LIMIT) {
+            return true;
+          }
+          if (entry === null || entry === undefined) {
+            return false;
+          }
+          const text = String(entry).trim();
+          if (!text) {
+            return false;
+          }
+          if (values.indexOf(text) !== -1) {
+            return false;
+          }
+          values.push(text);
+          return false;
+        });
+        return values;
+      }
 
       
 
@@ -1408,6 +1450,45 @@ function renderHeaderList(listId, headers) {
           topRow.appendChild(actions);
           li.appendChild(topRow);
 
+          const descField = document.createElement('textarea');
+          descField.className = 'header-desc-field';
+          descField.placeholder = 'Descripción de la columna';
+          descField.rows = 2;
+          descField.value = header.hasDescription ? header.description || '' : '';
+          if (!header.hasDescription) {
+            descField.classList.add('hidden');
+            descField.disabled = true;
+          }
+          descField.addEventListener('input', function() {
+            headers[index].description = this.value;
+            markHeadersDirty();
+          });
+
+          const toggleLabel = document.createElement('label');
+          toggleLabel.className = 'header-desc-toggle js-comment-hint-trigger';
+          const toggle = document.createElement('input');
+          toggle.type = 'checkbox';
+          toggle.checked = !!header.hasDescription;
+          toggle.addEventListener('change', function() {
+            headers[index].hasDescription = this.checked;
+            if (!this.checked) {
+              headers[index].description = '';
+              descField.value = '';
+              descField.classList.add('hidden');
+              descField.disabled = true;
+            } else {
+              descField.classList.remove('hidden');
+              descField.disabled = false;
+              descField.focus();
+            }
+            markHeadersDirty();
+          });
+          toggleLabel.appendChild(toggle);
+          toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
+
+          li.appendChild(toggleLabel);
+          li.appendChild(descField);
+
           const aiToggleLabel = document.createElement('label');
           aiToggleLabel.className = 'header-ai-toggle js-comment-hint-trigger';
           aiToggleLabel.setAttribute(
@@ -1455,6 +1536,7 @@ function renderHeaderList(listId, headers) {
                   headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
                 }
               }
+              updateWebSourcesVisibility({ focusNew: false });
             }
             markHeadersDirty();
           });
@@ -1495,6 +1577,146 @@ function renderHeaderList(listId, headers) {
           }
           li.appendChild(aiDataTypeWrapper);
 
+          const webToggleLabel = document.createElement('label');
+          webToggleLabel.className = 'header-ai-web-toggle js-comment-hint-trigger';
+          webToggleLabel.setAttribute(
+            'data-comment-hint',
+            'Añade enlaces a páginas específicas que la IA debe revisar para completar esta columna.'
+          );
+          const webToggle = document.createElement('input');
+          webToggle.type = 'checkbox';
+          webToggle.checked = !!header.aiWebSourcesEnabled && !!header.aiFillEnabled;
+          const webToggleText = document.createElement('span');
+          webToggleText.textContent = 'Usar información de páginas web específicas';
+          webToggleLabel.appendChild(webToggle);
+          webToggleLabel.appendChild(webToggleText);
+          li.appendChild(webToggleLabel);
+
+          const webSourcesWrapper = document.createElement('div');
+          webSourcesWrapper.className = 'header-ai-web-list';
+          const webItems = document.createElement('div');
+          webItems.className = 'header-ai-web-items';
+          const webAddButton = document.createElement('button');
+          webAddButton.type = 'button';
+          webAddButton.className = 'header-ai-web-add';
+          webAddButton.textContent = 'Agregar página';
+          webSourcesWrapper.appendChild(webItems);
+          webSourcesWrapper.appendChild(webAddButton);
+          li.appendChild(webSourcesWrapper);
+
+          const ensureWebSourcesArray = function() {
+            const existing = Array.isArray(headers[index].aiWebSources) ? headers[index].aiWebSources : [];
+            const normalized = [];
+            existing.forEach(function(entry) {
+              if (normalized.length >= AI_WEB_SOURCE_LIMIT) {
+                return;
+              }
+              if (entry === null || entry === undefined) {
+                normalized.push('');
+                return;
+              }
+              normalized.push(String(entry));
+            });
+            headers[index].aiWebSources = normalized.slice(0, AI_WEB_SOURCE_LIMIT);
+            return headers[index].aiWebSources;
+          };
+
+          const renderWebSources = function(options) {
+            const allowEditing = !!(options && options.allowEditing);
+            const focusNew = !!(options && options.focusNew);
+            const sources = ensureWebSourcesArray();
+            webItems.innerHTML = '';
+            sources.forEach(function(value, sourceIndex) {
+              const item = document.createElement('div');
+              item.className = 'header-ai-web-item';
+              const input = document.createElement('input');
+              input.type = 'url';
+              input.className = 'header-ai-web-input';
+              input.placeholder = 'https://ejemplo.com';
+              input.value = value || '';
+              input.disabled = !allowEditing;
+              input.addEventListener('input', function() {
+                const current = ensureWebSourcesArray();
+                current[sourceIndex] = this.value;
+                headers[index].aiWebSources = current;
+                markHeadersDirty();
+              });
+              item.appendChild(input);
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'header-ai-web-remove';
+              removeBtn.textContent = 'Eliminar';
+              removeBtn.disabled = !allowEditing;
+              removeBtn.addEventListener('click', function() {
+                const current = ensureWebSourcesArray();
+                current.splice(sourceIndex, 1);
+                headers[index].aiWebSources = current;
+                renderWebSources({ allowEditing: allowEditing });
+                markHeadersDirty();
+              });
+              item.appendChild(removeBtn);
+              webItems.appendChild(item);
+            });
+            webAddButton.disabled = !allowEditing || ensureWebSourcesArray().length >= AI_WEB_SOURCE_LIMIT;
+            if (focusNew && allowEditing) {
+              setTimeout(function() {
+                const lastInput = webItems.querySelector('.header-ai-web-item:last-child .header-ai-web-input');
+                if (lastInput) {
+                  lastInput.focus();
+                }
+              }, 0);
+            }
+          };
+
+          const updateWebSourcesVisibility = function(options) {
+            const aiEnabled = !!aiToggle.checked;
+            webToggle.disabled = !aiEnabled;
+            let allowEditing = false;
+            if (!aiEnabled) {
+              headers[index].aiWebSourcesEnabled = false;
+              webToggle.checked = false;
+            } else {
+              const desired = !!headers[index].aiWebSourcesEnabled;
+              webToggle.checked = desired;
+              allowEditing = desired;
+              if (allowEditing && ensureWebSourcesArray().length === 0) {
+                headers[index].aiWebSources = [''];
+              }
+            }
+            const shouldShow = aiEnabled && !!webToggle.checked;
+            webSourcesWrapper.classList.toggle('hidden', !shouldShow);
+            renderWebSources({ allowEditing: shouldShow, focusNew: options && options.focusNew });
+            if (!shouldShow) {
+              webAddButton.disabled = true;
+            }
+          };
+
+          webAddButton.addEventListener('click', function() {
+            const sources = ensureWebSourcesArray();
+            if (sources.length >= AI_WEB_SOURCE_LIMIT) {
+              return;
+            }
+            sources.push('');
+            headers[index].aiWebSources = sources;
+            renderWebSources({ allowEditing: true, focusNew: true });
+            markHeadersDirty();
+          });
+
+          webToggle.addEventListener('change', function() {
+            if (!aiToggle.checked) {
+              webToggle.checked = false;
+              headers[index].aiWebSourcesEnabled = false;
+              updateWebSourcesVisibility({ focusNew: false });
+              return;
+            }
+            headers[index].aiWebSourcesEnabled = !!webToggle.checked;
+            if (webToggle.checked && ensureWebSourcesArray().length === 0) {
+              headers[index].aiWebSources = [''];
+            }
+            updateWebSourcesVisibility({ focusNew: !!webToggle.checked });
+            markHeadersDirty();
+          });
+
           aiToggle.addEventListener('change', function() {
             headers[index].aiFillEnabled = this.checked;
             if (this.checked) {
@@ -1518,47 +1740,11 @@ function renderHeaderList(listId, headers) {
                 aiDataTypeSelect.disabled = true;
               }
             }
+            updateWebSourcesVisibility({ focusNew: false });
             markHeadersDirty();
           });
 
-          const descField = document.createElement('textarea');
-          descField.className = 'header-desc-field';
-          descField.placeholder = 'Descripción de la columna';
-          descField.rows = 2;
-          descField.value = header.hasDescription ? header.description || '' : '';
-          if (!header.hasDescription) {
-            descField.classList.add('hidden');
-            descField.disabled = true;
-          }
-          descField.addEventListener('input', function() {
-            headers[index].description = this.value;
-            markHeadersDirty();
-          });
-
-          const toggleLabel = document.createElement('label');
-          toggleLabel.className = 'header-desc-toggle js-comment-hint-trigger';
-          const toggle = document.createElement('input');
-          toggle.type = 'checkbox';
-          toggle.checked = !!header.hasDescription;
-          toggle.addEventListener('change', function() {
-            headers[index].hasDescription = this.checked;
-            if (!this.checked) {
-              headers[index].description = '';
-              descField.value = '';
-              descField.classList.add('hidden');
-              descField.disabled = true;
-            } else {
-              descField.classList.remove('hidden');
-              descField.disabled = false;
-              descField.focus();
-            }
-            markHeadersDirty();
-          });
-          toggleLabel.appendChild(toggle);
-          toggleLabel.appendChild(document.createTextNode('Agregar descripción'));
-
-          li.appendChild(toggleLabel);
-          li.appendChild(descField);
+          updateWebSourcesVisibility({ focusNew: false });
 
           list.appendChild(li);
         });

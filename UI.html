@@ -1301,7 +1301,23 @@
         flex-direction: column;
         gap: 6px;
       }
+      .ai-feature-web {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #E5E7EB;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       .ai-feature-association-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--tc-muted);
+        cursor: pointer;
+      }
+      .ai-feature-web-toggle {
         display: flex;
         align-items: center;
         gap: 6px;
@@ -1312,13 +1328,60 @@
       .ai-feature-association-toggle.tc-tooltip-target[data-tooltip] {
         cursor: pointer;
       }
+      .ai-feature-web-toggle.tc-tooltip-target[data-tooltip] {
+        cursor: pointer;
+      }
       .ai-feature-association-toggle input {
+        margin: 0;
+      }
+      .ai-feature-web-toggle input {
         margin: 0;
       }
       .ai-feature-association-select {
         display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+      .ai-feature-web-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-left: 18px;
+      }
+      .ai-feature-web-list.ai-hidden {
+        display: none;
+      }
+      .ai-feature-web-items {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-feature-web-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ai-feature-web-item input {
+        flex: 1;
+        min-width: 0;
+      }
+      .ai-feature-web-add,
+      .ai-feature-web-remove {
+        border: none;
+        background: transparent;
+        color: var(--accent-color, #2563EB);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0;
+      }
+      .ai-feature-web-add:disabled,
+      .ai-feature-web-remove:disabled {
+        color: var(--tc-muted);
+        cursor: default;
+      }
+      .ai-feature-web-add {
+        align-self: flex-start;
       }
       .ai-feature-association-list {
         border: 1px solid var(--tc-border);
@@ -2377,6 +2440,60 @@
       .header-ai-prompt.hidden {
         display: none;
       }
+      .header-ai-web-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: inherit;
+        margin-top: 6px;
+        cursor: pointer;
+      }
+      .header-ai-web-toggle input {
+        margin: 0;
+      }
+      .header-ai-web-list {
+        margin-left: 24px;
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .header-ai-web-list.hidden {
+        display: none;
+      }
+      .header-ai-web-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .header-ai-web-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .header-ai-web-input {
+        flex: 1;
+        min-width: 0;
+      }
+      .header-ai-web-remove,
+      .header-ai-web-add {
+        border: none;
+        background: transparent;
+        color: var(--accent-color, #2563EB);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0;
+      }
+      .header-ai-web-remove:disabled,
+      .header-ai-web-add:disabled {
+        color: var(--tc-muted);
+        cursor: default;
+      }
+      .header-ai-web-add {
+        align-self: flex-start;
+      }
       .header-desc-toggle {
         display: flex;
         align-items: center;
@@ -3342,11 +3459,49 @@
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
                               </p>
-                              <p
+                          <p
                                 class="ai-feature-association-empty ai-hidden"
                                 data-feature-instance-table-empty="chart"
                                 data-instance-index="0"
                               ></p>
+                            </div>
+                          </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="chart"
+                            data-instance-index="0"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-chart-1"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-chart-1"
+                                data-feature-instance-web-toggle="chart"
+                                data-instance-index="0"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="chart"
+                              data-instance-index="0"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="chart"
+                                data-instance-index="0"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="chart"
+                                data-instance-index="0"
+                              >
+                                Agregar página
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -3448,6 +3603,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="chart"
+                            data-instance-index="1"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-chart-2"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-chart-2"
+                                data-feature-instance-web-toggle="chart"
+                                data-instance-index="1"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="chart"
+                              data-instance-index="1"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="chart"
+                                data-instance-index="1"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="chart"
+                                data-instance-index="1"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -3545,6 +3738,44 @@
                                 data-feature-instance-table-empty="chart"
                                 data-instance-index="2"
                               ></p>
+                            </div>
+                          </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="chart"
+                            data-instance-index="2"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-chart-3"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-chart-3"
+                                data-feature-instance-web-toggle="chart"
+                                data-instance-index="2"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="chart"
+                              data-instance-index="2"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="chart"
+                                data-instance-index="2"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="chart"
+                                data-instance-index="2"
+                              >
+                                Agregar página
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -3655,6 +3886,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="table"
+                            data-instance-index="0"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-table-1"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-table-1"
+                                data-feature-instance-web-toggle="table"
+                                data-instance-index="0"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="table"
+                              data-instance-index="0"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="table"
+                                data-instance-index="0"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="table"
+                                data-instance-index="0"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -3733,6 +4002,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="table"
+                            data-instance-index="1"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-table-2"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-table-2"
+                                data-feature-instance-web-toggle="table"
+                                data-instance-index="1"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="table"
+                              data-instance-index="1"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="table"
+                                data-instance-index="1"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="table"
+                                data-instance-index="1"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -3809,6 +4116,44 @@
                                 data-feature-instance-table-empty="table"
                                 data-instance-index="2"
                               ></p>
+                            </div>
+                          </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="table"
+                            data-instance-index="2"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-table-3"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-table-3"
+                                data-feature-instance-web-toggle="table"
+                                data-instance-index="2"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="table"
+                              data-instance-index="2"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="table"
+                                data-instance-index="2"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="table"
+                                data-instance-index="2"
+                              >
+                                Agregar página
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -3964,6 +4309,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="list"
+                            data-instance-index="0"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-list-1"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-list-1"
+                                data-feature-instance-web-toggle="list"
+                                data-instance-index="0"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="list"
+                              data-instance-index="0"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="list"
+                                data-instance-index="0"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="list"
+                                data-instance-index="0"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -4087,6 +4470,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="list"
+                            data-instance-index="1"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-list-2"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-list-2"
+                                data-feature-instance-web-toggle="list"
+                                data-instance-index="1"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="list"
+                              data-instance-index="1"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="list"
+                                data-instance-index="1"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="list"
+                                data-instance-index="1"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -4208,6 +4629,44 @@
                                 data-feature-instance-table-empty="list"
                                 data-instance-index="2"
                               ></p>
+                            </div>
+                          </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="list"
+                            data-instance-index="2"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-list-3"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-list-3"
+                                data-feature-instance-web-toggle="list"
+                                data-instance-index="2"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="list"
+                              data-instance-index="2"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="list"
+                                data-instance-index="2"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="list"
+                                data-instance-index="2"
+                              >
+                                Agregar página
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -4364,6 +4823,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="summary"
+                            data-instance-index="0"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-summary-1"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-summary-1"
+                                data-feature-instance-web-toggle="summary"
+                                data-instance-index="0"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="summary"
+                              data-instance-index="0"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="summary"
+                                data-instance-index="0"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="summary"
+                                data-instance-index="0"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -4432,6 +4929,44 @@
                               ></p>
                             </div>
                           </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="summary"
+                            data-instance-index="1"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-summary-2"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-summary-2"
+                                data-feature-instance-web-toggle="summary"
+                                data-instance-index="1"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="summary"
+                              data-instance-index="1"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="summary"
+                                data-instance-index="1"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="summary"
+                                data-instance-index="1"
+                              >
+                                Agregar página
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div
                           class="ai-feature-instance ai-hidden ai-optional-comment"
@@ -4498,6 +5033,44 @@
                                 data-feature-instance-table-empty="summary"
                                 data-instance-index="2"
                               ></p>
+                            </div>
+                          </div>
+                          <div
+                            class="ai-feature-web"
+                            data-feature-instance-web-wrapper="summary"
+                            data-instance-index="2"
+                          >
+                            <label
+                              class="ai-feature-web-toggle tc-tooltip-target"
+                              data-tooltip="Comparte enlaces que la IA debe revisar para este bloque."
+                              for="aiFeatureWebToggle-summary-3"
+                            >
+                              <input
+                                type="checkbox"
+                                id="aiFeatureWebToggle-summary-3"
+                                data-feature-instance-web-toggle="summary"
+                                data-instance-index="2"
+                              />
+                              Usar información de páginas web específicas
+                            </label>
+                            <div
+                              class="ai-feature-web-list ai-hidden"
+                              data-feature-instance-web-list="summary"
+                              data-instance-index="2"
+                            >
+                              <div
+                                class="ai-feature-web-items"
+                                data-feature-instance-web-items="summary"
+                                data-instance-index="2"
+                              ></div>
+                              <button
+                                type="button"
+                                class="ai-feature-web-add"
+                                data-feature-instance-web-add="summary"
+                                data-instance-index="2"
+                              >
+                                Agregar página
+                              </button>
                             </div>
                           </div>
                         </div>
