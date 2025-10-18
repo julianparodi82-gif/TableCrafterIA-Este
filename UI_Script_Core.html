@@ -1458,6 +1458,7 @@ function renderHeaderList(listId, headers) {
           actions.className = 'header-item-actions';
 
           const upBtn = document.createElement('button');
+          upBtn.classList.add('header-item-move');
           upBtn.textContent = '↑';
           upBtn.title = 'Subir';
           upBtn.addEventListener('click', function() {
@@ -1472,6 +1473,7 @@ function renderHeaderList(listId, headers) {
           actions.appendChild(upBtn);
 
           const downBtn = document.createElement('button');
+          downBtn.classList.add('header-item-move');
           downBtn.textContent = '↓';
           downBtn.title = 'Bajar';
           downBtn.addEventListener('click', function() {

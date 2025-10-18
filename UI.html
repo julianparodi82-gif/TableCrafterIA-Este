@@ -2484,6 +2484,12 @@
         font-size: 16px;
         line-height: 1;
       }
+      .header-item button.header-item-move {
+        min-width: 26px;
+        height: 26px;
+        font-size: 14px;
+        padding: 2px 6px;
+      }
       .header-item button:hover {
         background-color: #D1D5DB;
       }
@@ -2491,21 +2497,22 @@
         opacity: 0.5;
         cursor: default;
       }
-      .header-item-collapse,
-      .header-ai-web-collapse {
-        min-width: 28px;
-        height: 28px;
-        font-size: 16px;
+      .header-item button.header-item-collapse,
+      .header-item button.header-ai-web-collapse {
+        min-width: 22px;
+        height: 22px;
+        font-size: 12px;
         background-color: #D1FAE5;
         color: #047857;
+        padding: 0;
       }
-      .header-item-collapse:hover,
-      .header-ai-web-collapse:hover {
+      .header-item button.header-item-collapse:hover,
+      .header-item button.header-ai-web-collapse:hover {
         background-color: #A7F3D0;
         color: #065F46;
       }
-      .header-item-collapse:disabled,
-      .header-ai-web-collapse:disabled {
+      .header-item button.header-item-collapse:disabled,
+      .header-item button.header-ai-web-collapse:disabled {
         background-color: #E5E7EB;
         color: #9CA3AF;
       }
@@ -2648,16 +2655,24 @@
       .header-ai-web-add {
         align-self: flex-start;
         border: none;
-        background: transparent;
+        background: rgba(37, 99, 235, 0.08);
         color: var(--accent-color, #2563EB);
         cursor: pointer;
-        font-size: 13px;
-        font-weight: 600;
-        padding: 0;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 6px;
+        line-height: 1.2;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .header-ai-web-add:hover {
+        background: rgba(37, 99, 235, 0.16);
+        color: #1D4ED8;
       }
       .header-ai-web-add:disabled {
         color: var(--tc-muted);
         cursor: default;
+        background: rgba(37, 99, 235, 0.04);
       }
       .header-ai-web-desc-toggle {
         display: inline-flex;
