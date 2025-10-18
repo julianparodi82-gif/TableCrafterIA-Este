@@ -1133,6 +1133,19 @@
         visibility: visible;
         transform: translateY(0);
       }
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::after {
+        top: auto;
+        bottom: calc(100% + 8px);
+      }
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::after {
+        transform: translateY(6px);
+      }
+      .ai-feature-description.ai-comment-hint[data-comment-hint][data-comment-visible='true']::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint][data-comment-visible='true']::after {
+        transform: translateY(0);
+      }
       @media (prefers-reduced-motion: reduce) {
         .ai-comment-hint[data-comment-hint]::before,
         .ai-comment-hint[data-comment-hint]::after {
@@ -2195,6 +2208,55 @@
         font-size: 14px;
         margin: 0 0 12px;
       }
+      .ai-theme-shortcut {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+      }
+      .ai-theme-shortcut .btn-tertiary {
+        min-width: auto;
+      }
+      .ai-ask-customization {
+        margin-bottom: 12px;
+        padding: 14px;
+        border: 1px solid var(--tc-border);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(236, 244, 255, 0.92) 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-ask-custom-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-ask-custom-field > label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--tc-muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .ai-ask-custom-field select,
+      .ai-ask-custom-field textarea {
+        border-radius: 10px;
+        border: 1px solid var(--tc-border);
+        background-color: var(--tc-surface);
+        font-size: 12px;
+        padding: 8px 12px;
+        color: var(--tc-text);
+        box-shadow: inset 0 1px 2px rgba(15, 76, 129, 0.08);
+      }
+      .ai-ask-custom-field textarea {
+        min-height: 64px;
+        resize: vertical;
+      }
+      .ai-ask-custom-extra {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       .ai-answer-output {
         min-height: 120px;
         resize: vertical;
@@ -2908,6 +2970,11 @@
       </div>
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
+        <div class="ai-theme-shortcut">
+          <button type="button" id="aiOpenWordcrafterBtn" class="btn-tertiary">
+            Abrir panel WordCrafterAI
+          </button>
+        </div>
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
           <div class="ai-multi-select">
@@ -2924,14 +2991,69 @@
           </label>
           <select id="aiActionSelect" class="ai-action-select">
             <option value="">Seleccionar</option>
-            <option value="ask">Pregunta IA</option>
             <option value="report">Reporte</option>
+            <option value="ask">Pregunta IA</option>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>
             <p class="ai-action-description">
               Selecciona las tablas y formula una consulta para recibir una respuesta generada automáticamente.
             </p>
+            <div class="ai-ask-customization">
+              <div class="ai-ask-custom-field">
+                <label
+                  for="aiAskTone"
+                  class="tc-tooltip-target"
+                  data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
+                >
+                  Tono de la respuesta
+                </label>
+                <select id="aiAskTone">
+                  <option value="neutral">Neutral profesional</option>
+                  <option value="executive">Resumen ejecutivo</option>
+                  <option value="friendly">Cercano y motivador</option>
+                  <option value="analytical">Analítico y detallado</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+                <div class="ai-ask-custom-extra ai-hidden" id="aiAskToneCustomWrapper">
+                  <label for="aiAskToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="aiAskToneCustom"
+                    placeholder="Ej. Comunicativo, inspirador y orientado a logros"
+                    disabled
+                  ></textarea>
+                </div>
+              </div>
+              <div class="ai-ask-custom-field">
+                <label
+                  for="aiAskPersona"
+                  class="tc-tooltip-target"
+                  data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
+                >
+                  Perfil profesional de la respuesta
+                </label>
+                <select id="aiAskPersona">
+                  <option value="auto">Elegir automáticamente (IA)</option>
+                  <option value="executive">Dirección general</option>
+                  <option value="data-analyst">Analista de datos</option>
+                  <option value="finance">Dirección financiera</option>
+                  <option value="operations">Gerencia de operaciones</option>
+                  <option value="marketing">Marketing y comunicación</option>
+                  <option value="hr">Recursos humanos</option>
+                  <option value="it">Especialista en IT / Sistemas</option>
+                  <option value="sales">Liderazgo comercial</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+                <div class="ai-ask-custom-extra ai-hidden" id="aiAskPersonaCustomWrapper">
+                  <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
+                  <textarea
+                    id="aiAskPersonaCustom"
+                    placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
+                    disabled
+                  ></textarea>
+                </div>
+              </div>
+            </div>
             <label for="questionInput">Pregunta para la IA</label>
             <textarea
               id="questionInput"
@@ -3106,7 +3228,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="0"
                         >
@@ -3126,7 +3248,7 @@
                               placeholder="Ej. Evolución mensual de ventas"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-chart-1"
@@ -3205,7 +3327,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="1"
                         >
@@ -3225,7 +3347,7 @@
                               placeholder="Ej. Distribución por categorías"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-chart-2"
@@ -3304,7 +3426,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="2"
                         >
@@ -3324,7 +3446,7 @@
                               placeholder="Ej. Comparativo anual proyectado"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-chart-3"
@@ -3433,7 +3555,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="0"
                         >
@@ -3453,7 +3575,7 @@
                               placeholder="Ej. Indicadores comerciales por trimestre"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-table-1"
@@ -3511,7 +3633,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="1"
                         >
@@ -3531,7 +3653,7 @@
                               placeholder="Ej. Rendimiento por equipo y objetivo"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-table-2"
@@ -3589,7 +3711,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="2"
                         >
@@ -3609,7 +3731,7 @@
                               placeholder="Ej. Proyección de ingresos por escenario"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-table-3"
@@ -3697,7 +3819,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="0"
                         >
@@ -3717,7 +3839,7 @@
                               placeholder="Ej. Prioridades clave para el comité ejecutivo"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-list-1"
@@ -3820,7 +3942,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="1"
                         >
@@ -3840,7 +3962,7 @@
                               placeholder="Ej. Riesgos a monitorear en la operación"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-list-2"
@@ -3943,7 +4065,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="2"
                         >
@@ -3963,7 +4085,7 @@
                               placeholder="Ej. Acciones recomendadas por área"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-list-3"
@@ -4136,7 +4258,7 @@
                       </div>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
@@ -4156,7 +4278,7 @@
                               placeholder="Ej. Resumen ejecutivo del trimestre"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label
                               for="aiFeatureInstance-summary-1"
                               class="tc-tooltip-target"
@@ -4220,11 +4342,11 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="1"
                         >
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label
                               for="aiFeatureInstance-summary-2"
                               class="tc-tooltip-target"
@@ -4288,11 +4410,11 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="2"
                         >
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label
                               for="aiFeatureInstance-summary-3"
                               class="tc-tooltip-target"

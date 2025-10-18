@@ -196,6 +196,8 @@
         persona: 'Perfil profesional'
       });
       const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze(['outputLanguage', 'tone', 'persona']);
+      const ASK_TONE_DEFAULT = REPORT_TONE_DEFAULT;
+      const ASK_PERSONA_DEFAULT = REPORT_PERSONA_DEFAULT;
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -4810,6 +4812,71 @@ function updateAiActionState() {
         }
       }
 
+function updateAskToneCustom() {
+        const toneSelect = document.getElementById('aiAskTone');
+        const customWrapper = document.getElementById('aiAskToneCustomWrapper');
+        const customInput = document.getElementById('aiAskToneCustom');
+        const value = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const shouldShow = value === 'custom';
+        if (customWrapper) {
+          customWrapper.classList.toggle('ai-hidden', !shouldShow);
+        }
+        if (customInput) {
+          customInput.disabled = !shouldShow;
+          customInput.required = shouldShow;
+          if (!shouldShow) {
+            customInput.value = '';
+          }
+        }
+      }
+
+function updateAskPersonaCustom() {
+        const personaSelect = document.getElementById('aiAskPersona');
+        const customWrapper = document.getElementById('aiAskPersonaCustomWrapper');
+        const customInput = document.getElementById('aiAskPersonaCustom');
+        const value = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const shouldShow = value === 'custom';
+        if (customWrapper) {
+          customWrapper.classList.toggle('ai-hidden', !shouldShow);
+        }
+        if (customInput) {
+          customInput.disabled = !shouldShow;
+          customInput.required = shouldShow;
+          if (!shouldShow) {
+            customInput.value = '';
+          }
+        }
+      }
+
+function collectAskCustomization() {
+        const toneSelect = document.getElementById('aiAskTone');
+        const personaSelect = document.getElementById('aiAskPersona');
+        const toneValue = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const personaValue = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const toneCustomInput = document.getElementById('aiAskToneCustom');
+        const personaCustomInput = document.getElementById('aiAskPersonaCustom');
+        const toneCustomText = toneCustomInput ? toneCustomInput.value.trim() : '';
+        const personaCustomText = personaCustomInput ? personaCustomInput.value.trim() : '';
+        if (toneValue === 'custom' && !toneCustomText) {
+          return {
+            error: 'Describe el tono personalizado antes de enviar la consulta.',
+            focus: toneCustomInput
+          };
+        }
+        if (personaValue === 'custom' && !personaCustomText) {
+          return {
+            error: 'Describe el perfil profesional personalizado antes de enviar la consulta.',
+            focus: personaCustomInput
+          };
+        }
+        return {
+          tone: toneValue,
+          toneCustom: toneValue === 'custom' ? toneCustomText : '',
+          persona: personaValue,
+          personaCustom: personaValue === 'custom' ? personaCustomText : ''
+        };
+      }
+
 
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
@@ -4996,6 +5063,17 @@ function updateAiActionState() {
           });
           return;
         }
+        const customization = collectAskCustomization();
+        if (customization && customization.error) {
+          showMessageModal(customization.error, {
+            title: 'Dato faltante',
+            variant: 'error'
+          });
+          if (customization.focus && typeof customization.focus.focus === 'function') {
+            customization.focus.focus();
+          }
+          return;
+        }
         const payload = selectedValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1 ? ALL_TABLES_OPTION_VALUE : selectedValues;
         const answerField = document.getElementById('answerBox');
         if (answerField) {
@@ -5012,7 +5090,7 @@ function updateAiActionState() {
               answerField.value = res.answer || '';
             }
           }
-        }).askQuestion(payload, question);
+        }).askQuestion(payload, question, customization || null);
       });
 
       document.addEventListener('DOMContentLoaded', function() {
@@ -5058,6 +5136,16 @@ function updateAiActionState() {
         if (aiActionSelect) {
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
+        }
+        const askToneSelect = document.getElementById('aiAskTone');
+        if (askToneSelect) {
+          askToneSelect.addEventListener('change', updateAskToneCustom);
+          updateAskToneCustom();
+        }
+        const askPersonaSelect = document.getElementById('aiAskPersona');
+        if (askPersonaSelect) {
+          askPersonaSelect.addEventListener('change', updateAskPersonaCustom);
+          updateAskPersonaCustom();
         }
         applyReportFeatureTooltips();
         applyReportChartTypeTooltips();

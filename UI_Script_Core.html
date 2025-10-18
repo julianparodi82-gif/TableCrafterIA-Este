@@ -2723,6 +2723,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeMessageContent = document.getElementById('themeMessageContent');
         const themeMessageClose = document.getElementById('themeMessageClose');
         const themeMessageDismiss = document.getElementById('themeMessageDismiss');
+        const wordShortcut = document.querySelector('.ai-theme-shortcut');
+        const openWordButton = document.getElementById('aiOpenWordcrafterBtn');
         const body = document.body;
         const container = document.querySelector('.container');
         sidebarContainer = container;
@@ -2887,11 +2889,23 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          if (wordShortcut) {
+            wordShortcut.classList.toggle('ai-hidden', isWordcrafter);
+          }
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
           if (nextTheme !== previousTheme || settings.forceSync) {
             syncAddonThemeMode(nextTheme);
           }
+        }
+
+        if (openWordButton && themeToggle) {
+          openWordButton.addEventListener('click', function() {
+            if (!themeToggle.checked) {
+              themeToggle.checked = true;
+            }
+            applyTheme(true, { animate: true });
+          });
         }
 
         if (themeMessageClose) {

@@ -261,14 +261,37 @@ var REPORT_PERSONA_DEFAULT = 'auto';
 var REPORT_PERSONA_ALLOWED = {
   auto: true,
   executive: true,
+  'data-analyst': true,
   finance: true,
   marketing: true,
   operations: true,
   hr: true,
-  sales: true
+  it: true,
+  sales: true,
+  custom: true
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
+
+var ASK_TONE_INSTRUCTIONS = {
+  neutral: 'Responde con un tono neutral y profesional, evitando juicios subjetivos.',
+  executive: 'Mantén un tono ejecutivo con foco en decisiones y conclusiones accionables.',
+  friendly: 'Utiliza un tono cercano y motivador que refuerce la colaboración del equipo.',
+  analytical: 'Redacta con un tono analítico y detallado destacando datos y métricas relevantes.'
+};
+
+var ASK_PERSONA_INSTRUCTIONS = {
+  auto: '',
+  executive: 'Enmarca la explicación para la dirección general, resaltando impacto y riesgos estratégicos.',
+  'data-analyst': 'Incluye detalles técnicos, tendencias y cálculos útiles para un analista de datos.',
+  finance: 'Prioriza indicadores financieros, márgenes, costos y retornos esperados.',
+  marketing: 'Resalta métricas de marketing, comportamiento de audiencias y posicionamiento de marca.',
+  operations: 'Destaca eficiencia operativa, tiempos de entrega y procesos clave.',
+  hr: 'Enfoca la información en talento, clima laboral y desarrollo del equipo.',
+  it: 'Incluye consideraciones técnicas, integraciones y requisitos de sistemas.',
+  sales: 'Orienta la respuesta a objetivos comerciales, conversiones y próximos pasos de ventas.',
+  custom: ''
+};
 
 function normalizeMetaId(value) {
   if (value === null || value === undefined) {
@@ -2856,15 +2879,35 @@ function saveApiKey(key) {
  * @param {string} question Pregunta del usuario.
  * @returns {Object} Objeto con answer o error.
  */
-function askQuestion(tableSelection, question) {
+function askQuestion(tableSelection, question, customization) {
   var apiKey = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
   if (!apiKey) {
     return { error: 'No hay API Key configurada. Configure su clave en la sección de configuración.' };
   }
 
+  var customizationData = customization && typeof customization === 'object' ? customization : {};
+  var toneValue = normalizeToneValue(customizationData.tone);
+  var personaValue = normalizePersonaValue(customizationData.persona);
+  var toneCustom = normalizeCustomTextValue(customizationData.toneCustom);
+  var personaCustom = normalizeCustomTextValue(customizationData.personaCustom);
+  if (toneValue !== 'custom') {
+    toneCustom = '';
+  }
+  if (personaValue !== 'custom') {
+    personaCustom = '';
+  }
+
   var normalizedIds = normalizeTableSelection(tableSelection);
   if (normalizedIds.length === 0) {
     return { error: 'Seleccione al menos una tabla válida para consultar.' };
+  }
+
+  var normalizedQuestion = '';
+  if (question !== null && question !== undefined) {
+    normalizedQuestion = String(question).trim();
+  }
+  if (!normalizedQuestion) {
+    return { error: 'Escriba una pregunta.' };
   }
 
   var ss = SpreadsheetApp.getActive();
@@ -2922,13 +2965,34 @@ function askQuestion(tableSelection, question) {
   }
 
   var context = contexts.join('\n\n');
+  var baseInstruction =
+    'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.';
+  var systemParts = [baseInstruction];
+  var toneInstruction = '';
+  if (toneValue === 'custom' && toneCustom) {
+    toneInstruction = 'Adapta el tono de la respuesta según esta indicación: ' + toneCustom + '.';
+  } else if (ASK_TONE_INSTRUCTIONS[toneValue]) {
+    toneInstruction = ASK_TONE_INSTRUCTIONS[toneValue];
+  }
+  if (toneInstruction) {
+    systemParts.push(toneInstruction);
+  }
+  var personaInstruction = '';
+  if (personaValue === 'custom' && personaCustom) {
+    personaInstruction = 'Enfoca la respuesta para este perfil profesional: ' + personaCustom + '.';
+  } else if (ASK_PERSONA_INSTRUCTIONS[personaValue]) {
+    personaInstruction = ASK_PERSONA_INSTRUCTIONS[personaValue];
+  }
+  if (personaInstruction) {
+    systemParts.push(personaInstruction);
+  }
+  var systemContent = systemParts.join(' ');
   var messages = [
     {
       role: 'system',
-      content:
-        'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.'
+      content: systemContent
     },
-    { role: 'user', content: context + '\n\nPregunta: ' + question }
+    { role: 'user', content: context + '\n\nPregunta: ' + normalizedQuestion }
   ];
 
   var payload = {
