@@ -560,15 +560,20 @@
       .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
         transform: translateX(16px);
       }
-      .tab-btn .tab-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
+      .tab-btn--starred {
+        padding-right: 28px;
       }
-      .tab-btn .favorite-icon {
+      .tab-btn--starred::after {
+        content: "★";
+        font-size: 12px;
         color: #D4AF37;
-        font-size: 11px;
-        line-height: 1;
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        pointer-events: none;
+      }
+      .tab-btn--starred.active::after {
+        color: #FCE588;
       }
       .section {
         margin-bottom: 22px;
@@ -2721,24 +2726,20 @@
           Triggers
         </button>
         <button
-          class="tab-btn"
+          class="tab-btn tab-btn--starred"
           data-tab="templatesTab"
           data-themes="table"
           data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
         >
-          <span class="tab-label"
-            >Plantillas<span class="favorite-icon" aria-hidden="true">⭐</span></span
-          >
+          Plantillas
         </button>
         <button
-          class="tab-btn"
+          class="tab-btn tab-btn--starred"
           data-tab="actionsTab"
           data-themes="table word"
           data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
         >
-          <span class="tab-label"
-            >Acciones<span class="favorite-icon" aria-hidden="true">⭐</span></span
-          >
+          Acciones
         </button>
       </div>
 
