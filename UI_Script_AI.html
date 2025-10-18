@@ -2532,15 +2532,18 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
           const associationOptions = getReportFeatureAssociationOptions();
+          const hasEntries = associationOptions.entries.length > 0;
+          const hasAllOption = associationOptions.hasAllOption;
+          const canAssociate = !!state.selected && hasEntries && !hasAllOption;
           let normalizedTableToggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
           let normalizedTableSelections = normalizeFeatureTableSelectionArray(
             state.instanceTables,
-            associationOptions.hasAllOption ? null : associationOptions.allowedSet
+            hasAllOption ? null : associationOptions.allowedSet
           );
           if (!state.selected) {
             normalizedTableToggles = createEmptyFeatureTableToggleArray();
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
-          } else if (associationOptions.entries.length === 0 && !associationOptions.hasAllOption) {
+          } else if (!hasEntries && !hasAllOption) {
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
           }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
@@ -2621,8 +2624,6 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
-            const canAssociate =
-              !!state.selected && associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
             if (tableToggle) {
               const toggleEnabled = withinRange && !!state.selected;
               tableToggle.disabled = !toggleEnabled;
@@ -2633,20 +2634,27 @@ function refreshReportFeatureOption(feature) {
                 normalizedTableSelections[index] = [];
               }
             }
-            const shouldShowTableSelect =
-              withinRange && normalizedTableToggles[index] && canAssociate;
+            const shouldShowTableSelect = withinRange && normalizedTableToggles[index];
             if (tableSelectWrapper) {
               tableSelectWrapper.classList.toggle('ai-hidden', !shouldShowTableSelect);
             }
             if (tableSelect) {
               if (shouldShowTableSelect) {
-                populateFeatureTableSelect(
-                  tableSelect,
-                  associationOptions.entries,
-                  normalizedTableSelections[index]
-                );
-                tableSelect.disabled = false;
-                setFeatureAssociationListDisabled(tableSelect, false);
+                if (hasEntries) {
+                  populateFeatureTableSelect(
+                    tableSelect,
+                    associationOptions.entries,
+                    normalizedTableSelections[index]
+                  );
+                } else {
+                  tableSelect.innerHTML = '';
+                  const tableList = getFeatureAssociationListForSelect(tableSelect);
+                  if (tableList) {
+                    tableList.innerHTML = '';
+                  }
+                }
+                tableSelect.disabled = !canAssociate;
+                setFeatureAssociationListDisabled(tableSelect, !canAssociate);
               } else {
                 tableSelect.innerHTML = '';
                 tableSelect.disabled = true;
@@ -2659,7 +2667,10 @@ function refreshReportFeatureOption(feature) {
             }
             if (tableEmptyMessage) {
               const shouldShowEmpty =
-                withinRange && normalizedTableToggles[index] && !!associationOptions.message && !canAssociate;
+                withinRange &&
+                normalizedTableToggles[index] &&
+                !!associationOptions.message &&
+                (!canAssociate || !hasEntries);
               tableEmptyMessage.classList.toggle('ai-hidden', !shouldShowEmpty);
               if (shouldShowEmpty) {
                 tableEmptyMessage.textContent = associationOptions.message;
