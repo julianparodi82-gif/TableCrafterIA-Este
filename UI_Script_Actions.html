@@ -1,4 +1,10 @@
 <script>
+const ACTION_CHANNEL_LABELS = Object.freeze({
+  download: 'Descargar',
+  email: 'Correo electrónico',
+  whatsapp: 'WhatsApp'
+});
+
 let savedActionsCache = [];
 let savedActionsLoaded = false;
 let loadingSavedActions = false;
@@ -132,6 +138,14 @@ function clearSavedActionDetails() {
   container.classList.add('ai-hidden');
 }
 
+function formatActionChannel(value) {
+  if (!value) {
+    return '';
+  }
+  const key = String(value).toLowerCase();
+  return ACTION_CHANNEL_LABELS[key] || value;
+}
+
 function buildReportFavoriteSummary(action) {
   if (!action) {
     return '';
@@ -141,7 +155,27 @@ function buildReportFavoriteSummary(action) {
     const formatLabel = REPORT_FORMAT_LABELS[action.format] || action.format;
     parts.push('Formato: ' + formatLabel);
   }
-  if (Array.isArray(action.features) && action.features.length > 0) {
+  if (Array.isArray(action.featureDetails) && action.featureDetails.length > 0) {
+    const labels = action.featureDetails
+      .map(function(detail) {
+        if (!detail || !detail.feature) {
+          return '';
+        }
+        const featureId = detail.feature;
+        const baseLabel = REPORT_FEATURE_LABELS[featureId] || featureId;
+        const quantity = detail.quantity;
+        if (typeof quantity === 'number' && quantity > 1) {
+          return baseLabel + ' × ' + quantity;
+        }
+        return baseLabel;
+      })
+      .filter(function(label) {
+        return !!label;
+      });
+    if (labels.length) {
+      parts.push('Características: ' + labels.join(', '));
+    }
+  } else if (Array.isArray(action.features) && action.features.length > 0) {
     const labels = action.features
       .map(function(feature) {
         return REPORT_FEATURE_LABELS[feature] || feature;
@@ -154,13 +188,25 @@ function buildReportFavoriteSummary(action) {
     }
   }
   if (Array.isArray(action.channels) && action.channels.length > 0) {
-    parts.push('Canales: ' + action.channels.join(', '));
+    const channelLabels = action.channels
+      .map(function(channel) {
+        return formatActionChannel(channel);
+      })
+      .filter(function(label) {
+        return !!label;
+      });
+    if (channelLabels.length) {
+      parts.push('Canales: ' + channelLabels.join(', '));
+    }
   }
   if (action.fileName) {
     parts.push('Archivo: ' + action.fileName + (action.fileExtension ? '.' + action.fileExtension : ''));
   }
   if (action.descriptionEnabled && action.descriptionText) {
     parts.push('Descripción del reporte incluida.');
+  }
+  if (action.appendDateToFile) {
+    parts.push('Se agregará la fecha al nombre del archivo.');
   }
   return parts.join('\n');
 }
