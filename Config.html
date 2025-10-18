@@ -76,6 +76,163 @@
       .download-picker input[type="text"] {
         flex: 1;
       }
+      .folder-picker-modal {
+        max-width: 520px;
+        width: 100%;
+        text-align: left;
+      }
+      .folder-picker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .folder-picker-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+      }
+      .folder-picker-close {
+        background: none;
+        border: none;
+        color: #6B7280;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 4px;
+        margin-top: 0;
+        border-radius: 6px;
+      }
+      .folder-picker-close:hover,
+      .folder-picker-close:focus-visible {
+        color: #111827;
+        background: rgba(17, 24, 39, 0.08);
+        outline: none;
+      }
+      .folder-picker-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .folder-picker-breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .folder-picker-breadcrumb {
+        background: #E5E7EB;
+        color: #111827;
+        border: none;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 0;
+      }
+      .folder-picker-breadcrumb[aria-current="page"] {
+        background: #2563EB;
+        color: #FFFFFF;
+        cursor: default;
+      }
+      .folder-picker-current {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+        color: #6B7280;
+      }
+      .folder-picker-current strong {
+        color: #111827;
+      }
+      .folder-picker-current .btn-secondary {
+        margin-top: 0;
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: 32px;
+      }
+      .folder-picker-list {
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        max-height: 280px;
+        min-height: 200px;
+        overflow-y: auto;
+        background: #FFFFFF;
+      }
+      .folder-picker-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #E5E7EB;
+        cursor: pointer;
+      }
+      .folder-picker-item:last-child {
+        border-bottom: none;
+      }
+      .folder-picker-item.is-selected {
+        background: #EFF6FF;
+        border-left: 4px solid #2563EB;
+      }
+      .folder-picker-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .folder-picker-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+      }
+      .folder-picker-meta {
+        font-size: 12px;
+        color: #6B7280;
+      }
+      .folder-picker-item-actions {
+        display: flex;
+        align-items: center;
+      }
+      .folder-picker-open {
+        background: #E5E7EB;
+        color: #111827;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 0;
+        min-height: 32px;
+      }
+      .folder-picker-open:hover,
+      .folder-picker-open:focus-visible {
+        background: #D1D5DB;
+        outline: none;
+      }
+      .folder-picker-empty {
+        padding: 18px;
+        text-align: center;
+        font-size: 13px;
+        color: #6B7280;
+      }
+      .folder-picker-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .folder-picker-selection {
+        font-size: 13px;
+        color: #6B7280;
+      }
+      .folder-picker-actions button {
+        margin-top: 0;
+      }
       button {
         margin-top: 16px;
         padding: 10px 16px;
@@ -294,6 +451,51 @@
         </div>
       </div>
     </div>
+    <div id="folderPickerOverlay" class="tc-modal-overlay" aria-hidden="true">
+      <div
+        class="tc-modal folder-picker-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="folderPickerTitle"
+      >
+        <div class="folder-picker-header">
+          <h3 id="folderPickerTitle" class="folder-picker-title">Seleccionar carpeta</h3>
+          <button
+            type="button"
+            id="folderPickerCloseBtn"
+            class="folder-picker-close"
+            aria-label="Cerrar selector de carpetas"
+          >
+            ×
+          </button>
+        </div>
+        <div class="folder-picker-body">
+          <div class="folder-picker-breadcrumbs" id="folderPickerBreadcrumbs"></div>
+          <div class="folder-picker-current">
+            <span>
+              Carpeta actual: <strong id="folderPickerCurrentName">Mi unidad</strong>
+            </span>
+            <button type="button" id="folderPickerUseCurrentBtn" class="btn-secondary">Usar esta carpeta</button>
+          </div>
+          <div
+            class="folder-picker-list"
+            id="folderPickerList"
+            tabindex="0"
+            role="listbox"
+            aria-label="Subcarpetas disponibles"
+          ></div>
+        </div>
+        <div class="folder-picker-footer">
+          <div class="folder-picker-selection" id="folderPickerSelectionLabel">
+            Selecciona una carpeta para continuar.
+          </div>
+          <div class="folder-picker-actions">
+            <button type="button" id="folderPickerCancelBtn" class="btn-secondary">Cancelar</button>
+            <button type="button" id="folderPickerSelectBtn" class="btn-save">Usar carpeta</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
       function defaultTitleForVariant(variant) {
         switch (variant) {
@@ -403,6 +605,309 @@
       const messageEl = document.getElementById('message');
       const eyeToggleBtn = document.getElementById('toggleApiVisibility');
       const downloadBrowseBtn = document.getElementById('downloadBrowseBtn');
+      const folderPickerOverlay = document.getElementById('folderPickerOverlay');
+      const folderPickerList = document.getElementById('folderPickerList');
+      const folderPickerBreadcrumbs = document.getElementById('folderPickerBreadcrumbs');
+      const folderPickerSelectBtn = document.getElementById('folderPickerSelectBtn');
+      const folderPickerCancelBtn = document.getElementById('folderPickerCancelBtn');
+      const folderPickerCloseBtn = document.getElementById('folderPickerCloseBtn');
+      const folderPickerSelectionLabel = document.getElementById('folderPickerSelectionLabel');
+      const folderPickerCurrentName = document.getElementById('folderPickerCurrentName');
+      const folderPickerUseCurrentBtn = document.getElementById('folderPickerUseCurrentBtn');
+
+      let folderPickerStack = [];
+      let folderPickerSelection = null;
+      let folderPickerRequestToken = 0;
+      let folderPickerLastFocused = null;
+
+      function ensureFolderPickerStack() {
+        if (!Array.isArray(folderPickerStack) || folderPickerStack.length === 0) {
+          folderPickerStack = [{ id: 'root', name: 'Mi unidad' }];
+        }
+      }
+
+      function composeFolderPickerPath(selection) {
+        if (!selection || !selection.id) {
+          return '';
+        }
+        ensureFolderPickerStack();
+        const names = folderPickerStack.map(function(entry) {
+          return entry && entry.name ? entry.name : 'Mi unidad';
+        });
+        const index =
+          typeof selection.stackIndex === 'number' && !isNaN(selection.stackIndex)
+            ? selection.stackIndex
+            : folderPickerStack.length;
+        if (index < names.length) {
+          return names.slice(0, index + 1).join(' / ');
+        }
+        const extended = names.slice();
+        extended.push(selection.name || 'Carpeta sin nombre');
+        return extended.join(' / ');
+      }
+
+      function updateFolderPickerBreadcrumbs() {
+        if (!folderPickerBreadcrumbs) {
+          return;
+        }
+        ensureFolderPickerStack();
+        folderPickerBreadcrumbs.innerHTML = '';
+        folderPickerStack.forEach(function(entry, index) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'folder-picker-breadcrumb';
+          button.dataset.breadcrumbIndex = String(index);
+          const name = entry && entry.name ? entry.name : 'Carpeta sin nombre';
+          button.textContent = name;
+          if (index === folderPickerStack.length - 1) {
+            button.setAttribute('aria-current', 'page');
+          }
+          folderPickerBreadcrumbs.appendChild(button);
+        });
+      }
+
+      function updateFolderPickerCurrentLabel() {
+        if (!folderPickerCurrentName) {
+          return;
+        }
+        ensureFolderPickerStack();
+        const current = folderPickerStack[folderPickerStack.length - 1];
+        folderPickerCurrentName.textContent = current && current.name ? current.name : 'Mi unidad';
+      }
+
+      function updateFolderPickerSelectionSummary() {
+        if (!folderPickerSelectionLabel) {
+          return;
+        }
+        if (!folderPickerSelection || !folderPickerSelection.id) {
+          folderPickerSelectionLabel.textContent = 'Selecciona una carpeta para continuar.';
+          return;
+        }
+        const path = composeFolderPickerPath(folderPickerSelection);
+        folderPickerSelectionLabel.textContent =
+          'Carpeta seleccionada: ' + (path || folderPickerSelection.name || 'Mi unidad');
+      }
+
+      function updateFolderPickerListSelectionHighlight() {
+        if (!folderPickerList) {
+          return;
+        }
+        const selectedId = folderPickerSelection ? folderPickerSelection.id : '';
+        const selectedIndex = folderPickerSelection ? folderPickerSelection.stackIndex : -1;
+        const items = folderPickerList.querySelectorAll('.folder-picker-item');
+        items.forEach(function(item) {
+          const itemId = item.dataset.folderId || '';
+          const isSelected =
+            selectedId &&
+            itemId === selectedId &&
+            selectedIndex === folderPickerStack.length;
+          item.classList.toggle('is-selected', !!isSelected);
+          if (isSelected) {
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.removeAttribute('aria-selected');
+          }
+        });
+      }
+
+      function renderFolderPickerList(folders, options) {
+        if (!folderPickerList) {
+          return;
+        }
+        folderPickerList.innerHTML = '';
+        const entries = Array.isArray(folders) ? folders : [];
+        if (entries.length === 0) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'folder-picker-empty';
+          const text =
+            options && typeof options.placeholder === 'string' && options.placeholder.trim()
+              ? options.placeholder
+              : 'No hay subcarpetas en esta carpeta.';
+          placeholder.textContent = text;
+          folderPickerList.appendChild(placeholder);
+          return;
+        }
+        entries.forEach(function(entry) {
+          const item = document.createElement('div');
+          item.className = 'folder-picker-item';
+          item.dataset.folderId = entry && entry.id ? entry.id : '';
+          item.dataset.folderName = entry && entry.name ? entry.name : '';
+          item.setAttribute('role', 'option');
+          const info = document.createElement('div');
+          info.className = 'folder-picker-info';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'folder-picker-name';
+          nameEl.textContent = entry && entry.name ? entry.name : 'Carpeta sin nombre';
+          info.appendChild(nameEl);
+          if (entry && entry.id) {
+            const meta = document.createElement('div');
+            meta.className = 'folder-picker-meta';
+            meta.textContent = 'ID: ' + entry.id;
+            info.appendChild(meta);
+          }
+          item.appendChild(info);
+          const actions = document.createElement('div');
+          actions.className = 'folder-picker-item-actions';
+          const openBtn = document.createElement('button');
+          openBtn.type = 'button';
+          openBtn.className = 'folder-picker-open';
+          openBtn.dataset.folderEnter = 'true';
+          const labelName = entry && entry.name ? entry.name : 'carpeta sin nombre';
+          openBtn.setAttribute('aria-label', 'Abrir ' + labelName);
+          openBtn.textContent = 'Abrir';
+          actions.appendChild(openBtn);
+          item.appendChild(actions);
+          folderPickerList.appendChild(item);
+        });
+        updateFolderPickerListSelectionHighlight();
+      }
+
+      function setFolderPickerSelection(selection) {
+        if (!selection || !selection.id) {
+          folderPickerSelection = null;
+          if (folderPickerSelectBtn) {
+            folderPickerSelectBtn.disabled = true;
+          }
+          updateFolderPickerSelectionSummary();
+          updateFolderPickerListSelectionHighlight();
+          return;
+        }
+        const stackIndex =
+          typeof selection.stackIndex === 'number' && !isNaN(selection.stackIndex)
+            ? selection.stackIndex
+            : folderPickerStack.length;
+        folderPickerSelection = {
+          id: selection.id,
+          name: selection.name || 'Carpeta sin nombre',
+          stackIndex: stackIndex
+        };
+        if (folderPickerSelectBtn) {
+          folderPickerSelectBtn.disabled = false;
+        }
+        updateFolderPickerSelectionSummary();
+        updateFolderPickerListSelectionHighlight();
+      }
+
+      function loadFolderPickerChildren(folderId, options) {
+        folderPickerRequestToken += 1;
+        const requestId = folderPickerRequestToken;
+        const targetId = folderId || 'root';
+        const opts = options || {};
+        renderFolderPickerList([], { placeholder: 'Cargando carpetas…' });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (requestId !== folderPickerRequestToken) {
+              return;
+            }
+            const data = res && typeof res === 'object' ? res : {};
+            const folders = Array.isArray(data.folders) ? data.folders : [];
+            const placeholder = data && data.error ? data.error : '';
+            renderFolderPickerList(folders, {
+              placeholder: placeholder || 'No hay subcarpetas en esta carpeta.'
+            });
+            if (opts.focusList && folderPickerList) {
+              folderPickerList.focus();
+            }
+          })
+          .withFailureHandler(function(error) {
+            if (requestId !== folderPickerRequestToken) {
+              return;
+            }
+            if (typeof opts.onError === 'function') {
+              opts.onError();
+            }
+            const message =
+              error && error.message ? error.message : 'No se pudieron cargar las carpetas.';
+            renderFolderPickerList([], { placeholder: message });
+          })
+          .listFolderPickerChildren(targetId);
+      }
+
+      function enterFolder(folderId, folderName) {
+        if (!folderId) {
+          return;
+        }
+        ensureFolderPickerStack();
+        const previousStack = folderPickerStack.slice();
+        const normalizedName = folderName && folderName.trim() ? folderName : 'Carpeta sin nombre';
+        const existingIndex = folderPickerStack.findIndex(function(entry) {
+          return entry && entry.id === folderId;
+        });
+        if (existingIndex >= 0) {
+          folderPickerStack = folderPickerStack.slice(0, existingIndex + 1);
+        } else {
+          folderPickerStack.push({ id: folderId, name: normalizedName });
+        }
+        setFolderPickerSelection({
+          id: folderId,
+          name: normalizedName,
+          stackIndex: folderPickerStack.length - 1
+        });
+        updateFolderPickerBreadcrumbs();
+        updateFolderPickerCurrentLabel();
+        loadFolderPickerChildren(folderId, {
+          focusList: true,
+          onError: function() {
+            folderPickerStack = previousStack;
+            ensureFolderPickerStack();
+            const current = folderPickerStack[folderPickerStack.length - 1];
+            setFolderPickerSelection({
+              id: current && current.id ? current.id : 'root',
+              name: current && current.name ? current.name : 'Mi unidad',
+              stackIndex: folderPickerStack.length - 1
+            });
+            updateFolderPickerBreadcrumbs();
+            updateFolderPickerCurrentLabel();
+          }
+        });
+      }
+
+      function navigateToBreadcrumb(index) {
+        ensureFolderPickerStack();
+        if (index < 0 || index >= folderPickerStack.length) {
+          return;
+        }
+        const target = folderPickerStack[index];
+        const id = target && target.id ? target.id : 'root';
+        const name = target && target.name ? target.name : 'Mi unidad';
+        folderPickerStack = folderPickerStack.slice(0, index + 1);
+        setFolderPickerSelection({ id: id, name: name, stackIndex: folderPickerStack.length - 1 });
+        updateFolderPickerBreadcrumbs();
+        updateFolderPickerCurrentLabel();
+        loadFolderPickerChildren(id, { focusList: true });
+      }
+
+      function openFolderPickerDialog() {
+        if (!folderPickerOverlay) {
+          return;
+        }
+        folderPickerLastFocused = document.activeElement;
+        folderPickerStack = [{ id: 'root', name: 'Mi unidad' }];
+        setFolderPickerSelection({ id: 'root', name: 'Mi unidad', stackIndex: 0 });
+        updateFolderPickerBreadcrumbs();
+        updateFolderPickerCurrentLabel();
+        folderPickerOverlay.classList.add('show');
+        folderPickerOverlay.setAttribute('aria-hidden', 'false');
+        loadFolderPickerChildren('root', { focusList: true });
+      }
+
+      function closeFolderPickerDialog() {
+        if (!folderPickerOverlay) {
+          return;
+        }
+        folderPickerOverlay.classList.remove('show');
+        folderPickerOverlay.setAttribute('aria-hidden', 'true');
+        folderPickerRequestToken += 1;
+        if (folderPickerList) {
+          folderPickerList.innerHTML = '';
+        }
+        if (folderPickerLastFocused && typeof folderPickerLastFocused.focus === 'function') {
+          folderPickerLastFocused.focus();
+        } else if (downloadBrowseBtn && typeof downloadBrowseBtn.focus === 'function') {
+          downloadBrowseBtn.focus();
+        }
+        folderPickerLastFocused = null;
+      }
 
       // Cargar preferencias existentes
       document.addEventListener('DOMContentLoaded', function() {
@@ -522,30 +1027,122 @@
       }
       if (downloadBrowseBtn) {
         downloadBrowseBtn.addEventListener('click', function() {
-          if (!downloadInput) {
-            return;
-          }
-          const currentValue = downloadInput.value || 'Escritorio';
-          const promptResult = google.script.host.showPrompt(
-            'Seleccionar carpeta',
-            'Ingrese la ruta o URL donde se guardarán las descargas.',
-            currentValue
-          );
-          if (promptResult && typeof promptResult.getSelectedButton === 'function') {
-            const button = promptResult.getSelectedButton();
-            const buttonsEnum = (google.script.host && google.script.host.Buttons) || {};
-            if (button === buttonsEnum.OK || button === 'ok') {
-              const response =
-                typeof promptResult.getResponseText === 'function'
-                  ? promptResult.getResponseText()
-                  : '';
-              const nextValue = typeof response === 'string' ? response.trim() : '';
-              downloadInput.value = nextValue || 'Escritorio';
-              downloadInput.focus();
-            }
+          openFolderPickerDialog();
+        });
+      }
+      if (folderPickerOverlay) {
+        folderPickerOverlay.addEventListener('click', function(event) {
+          if (event.target === folderPickerOverlay) {
+            closeFolderPickerDialog();
           }
         });
       }
+      if (folderPickerCloseBtn) {
+        folderPickerCloseBtn.addEventListener('click', function() {
+          closeFolderPickerDialog();
+        });
+      }
+      if (folderPickerCancelBtn) {
+        folderPickerCancelBtn.addEventListener('click', function() {
+          closeFolderPickerDialog();
+        });
+      }
+      if (folderPickerUseCurrentBtn) {
+        folderPickerUseCurrentBtn.addEventListener('click', function() {
+          ensureFolderPickerStack();
+          const current = folderPickerStack[folderPickerStack.length - 1];
+          setFolderPickerSelection({
+            id: current && current.id ? current.id : 'root',
+            name: current && current.name ? current.name : 'Mi unidad',
+            stackIndex: folderPickerStack.length - 1
+          });
+        });
+      }
+      if (folderPickerSelectBtn) {
+        folderPickerSelectBtn.addEventListener('click', function() {
+          if (!folderPickerSelection || !folderPickerSelection.id) {
+            return;
+          }
+          const path = composeFolderPickerPath(folderPickerSelection);
+          const label = path || folderPickerSelection.name || 'Carpeta seleccionada';
+          const displayValue = label + ' (ID: ' + folderPickerSelection.id + ')';
+          if (downloadInput) {
+            downloadInput.value = displayValue;
+            downloadInput.focus();
+            if (typeof downloadInput.setSelectionRange === 'function') {
+              const length = downloadInput.value.length;
+              downloadInput.setSelectionRange(length, length);
+            }
+          }
+          closeFolderPickerDialog();
+        });
+      }
+      if (folderPickerList) {
+        folderPickerList.addEventListener('click', function(event) {
+          const target = event.target;
+          if (!target) {
+            return;
+          }
+          if (target.dataset && target.dataset.folderEnter === 'true') {
+            const itemEnter = target.closest('.folder-picker-item');
+            if (!itemEnter) {
+              return;
+            }
+            const folderId = itemEnter.dataset.folderId;
+            const folderName = itemEnter.dataset.folderName;
+            enterFolder(folderId, folderName);
+            return;
+          }
+          const item = target.closest('.folder-picker-item');
+          if (!item) {
+            return;
+          }
+          const folderId = item.dataset.folderId;
+          const folderName = item.dataset.folderName;
+          if (!folderId) {
+            return;
+          }
+          setFolderPickerSelection({
+            id: folderId,
+            name: folderName,
+            stackIndex: folderPickerStack.length
+          });
+        });
+        folderPickerList.addEventListener('dblclick', function(event) {
+          const item = event.target.closest('.folder-picker-item');
+          if (!item) {
+            return;
+          }
+          const folderId = item.dataset.folderId;
+          const folderName = item.dataset.folderName;
+          if (!folderId) {
+            return;
+          }
+          enterFolder(folderId, folderName);
+        });
+      }
+      if (folderPickerBreadcrumbs) {
+        folderPickerBreadcrumbs.addEventListener('click', function(event) {
+          const button = event.target.closest('.folder-picker-breadcrumb');
+          if (!button || button.getAttribute('aria-current') === 'page') {
+            return;
+          }
+          const index = parseInt(button.dataset.breadcrumbIndex, 10);
+          if (isNaN(index)) {
+            return;
+          }
+          navigateToBreadcrumb(index);
+        });
+      }
+      document.addEventListener('keydown', function(event) {
+        if (!folderPickerOverlay || !folderPickerOverlay.classList.contains('show')) {
+          return;
+        }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeFolderPickerDialog();
+        }
+      });
     </script>
   </body>
 </html>

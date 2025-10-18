@@ -1746,20 +1746,16 @@ function renderHeaderList(listId, headers) {
 
           const updateWebSourcesVisibility = function(options) {
             const aiEnabled = !!aiToggle.checked;
-            webToggle.disabled = !aiEnabled;
-            let allowEditing = false;
             if (!aiEnabled) {
               headers[index].aiWebSourcesEnabled = false;
-              webToggle.checked = false;
-            } else {
-              const desired = !!headers[index].aiWebSourcesEnabled;
-              webToggle.checked = desired;
-              allowEditing = desired;
-              if (allowEditing && ensureWebSourcesArray().length === 0) {
-                headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
-              }
             }
-            const shouldShow = aiEnabled && !!webToggle.checked;
+            const webEnabled = aiEnabled && !!headers[index].aiWebSourcesEnabled;
+            webToggle.checked = webEnabled;
+            webToggle.disabled = false;
+            if (webEnabled && ensureWebSourcesArray().length === 0) {
+              headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
+            }
+            const shouldShow = webEnabled;
             webSourcesWrapper.classList.toggle('hidden', !shouldShow);
             renderWebSources({ allowEditing: shouldShow, focusNew: options && options.focusNew });
             if (!shouldShow) {
@@ -1782,17 +1778,25 @@ function renderHeaderList(listId, headers) {
           });
 
           webToggle.addEventListener('change', function() {
-            if (!aiToggle.checked) {
-              webToggle.checked = false;
-              headers[index].aiWebSourcesEnabled = false;
-              updateWebSourcesVisibility({ focusNew: false });
-              return;
+            if (webToggle.checked && !aiToggle.checked) {
+              aiToggle.checked = true;
+              headers[index].aiFillEnabled = true;
+              aiPromptWrapper.classList.remove('hidden');
+              aiPromptField.disabled = false;
+              if (aiDataTypeWrapper && aiDataTypeSelect) {
+                aiDataTypeWrapper.classList.remove('hidden');
+                aiDataTypeSelect.disabled = false;
+                if (!headers[index].aiFillDataType) {
+                  headers[index].aiFillDataType = aiDataTypeSelect.value || DEFAULT_AI_FILL_DATA_TYPE;
+                }
+              }
             }
-            headers[index].aiWebSourcesEnabled = !!webToggle.checked;
-            if (webToggle.checked && ensureWebSourcesArray().length === 0) {
+            const enabled = aiToggle.checked && webToggle.checked;
+            headers[index].aiWebSourcesEnabled = enabled;
+            if (enabled && ensureWebSourcesArray().length === 0) {
               headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
             }
-            updateWebSourcesVisibility({ focusNew: !!webToggle.checked });
+            updateWebSourcesVisibility({ focusNew: enabled });
             markHeadersDirty();
           });
 
@@ -1818,6 +1822,7 @@ function renderHeaderList(listId, headers) {
                 aiDataTypeWrapper.classList.add('hidden');
                 aiDataTypeSelect.disabled = true;
               }
+              headers[index].aiWebSourcesEnabled = false;
             }
             updateWebSourcesVisibility({ focusNew: false });
             markHeadersDirty();

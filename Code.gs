@@ -31,6 +31,7 @@ var DOWNLOAD_PATH_PROPERTY_KEY = 'tablecrafter.downloadsPath';
 var DEFAULT_DOWNLOAD_PATH = 'Escritorio';
 var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 var AI_WEB_SOURCE_LIMIT = 3;
+var FOLDER_PICKER_CHILD_LIMIT = 200;
 
 function onOpen() {
   var themeMode = getSidebarThemeMode();
@@ -126,6 +127,52 @@ function saveConfigurationSettings(settings) {
     ok: true,
     key: apiKeyValue,
     downloadsPath: downloadsPath
+  };
+}
+
+function listFolderPickerChildren(parentId) {
+  var folderId = parentId || 'root';
+  var folder;
+  try {
+    folder = folderId === 'root' ? DriveApp.getRootFolder() : DriveApp.getFolderById(folderId);
+  } catch (error) {
+    return {
+      parentId: folderId,
+      folders: [],
+      error: 'No se pudo acceder a la carpeta seleccionada.',
+      hasMore: false
+    };
+  }
+  var iterator = folder.getFolders();
+  var entries = [];
+  var hasMore = false;
+  while (iterator.hasNext()) {
+    var child = iterator.next();
+    entries.push({
+      id: child.getId(),
+      name: child.getName()
+    });
+    if (entries.length >= FOLDER_PICKER_CHILD_LIMIT) {
+      hasMore = iterator.hasNext();
+      break;
+    }
+  }
+  entries.sort(function(a, b) {
+    var nameA = (a.name || '').toLowerCase();
+    var nameB = (b.name || '').toLowerCase();
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+    return 0;
+  });
+  return {
+    parentId: folderId,
+    folders: entries,
+    hasMore: hasMore,
+    error: ''
   };
 }
 
