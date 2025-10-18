@@ -258,6 +258,7 @@
         z-index: 12;
         box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
         white-space: pre-line;
+        text-transform: none;
       }
       .tab-btn[data-tooltip]::before {
         content: '';
@@ -303,6 +304,7 @@
         pointer-events: none;
         z-index: 14;
         white-space: pre-line;
+        text-transform: none;
       }
       .ai-feature-association-toggle.tc-tooltip-target[data-tooltip]::after {
         text-transform: none;
@@ -581,6 +583,13 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
+      }
+      .tc-card-footer {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .tc-card-footer--right {
+        justify-content: flex-end;
       }
       .tc-card-title {
         display: flex;
@@ -1041,6 +1050,12 @@
       }
       .ai-report-file-preview[data-empty='true'] {
         color: #000000;
+      }
+      .ai-question-hint {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+        line-height: 1.45;
       }
       .ai-report-features {
         margin-top: 12px;
@@ -1681,7 +1696,7 @@
         border-color: #000000;
       }
       .ai-report-favorite-btn .ai-favorite-icon {
-        color: #000000;
+        color: #C38F00;
         font-size: 16px;
         line-height: 1;
       }
@@ -2957,77 +2972,107 @@
             <p class="ai-action-description">
               Selecciona las tablas y formula una consulta para recibir una respuesta generada automáticamente.
             </p>
-            <div class="ai-customization-list ai-ask-customization">
-              <div class="ai-custom-option ai-ask-option" data-ask-option="tone">
-                <div class="ai-custom-top">
-                  <h4 class="ai-action-title">Tono de la respuesta</h4>
-                  <p class="ai-custom-intro">
-                    Elige el estilo de redacción que prefieres para la respuesta generada.
-                  </p>
+            <div
+              id="aiAskCustomizationWrapper"
+              class="ai-collapsible"
+              data-open="true"
+            >
+              <div class="ai-collapsible-header">
+                <div class="ai-collapsible-title">
+                  <h3 class="ai-action-title">Contexto y personalización</h3>
+                  <span id="aiAskCustomizationSummary" class="ai-collapsible-badge ai-hidden"></span>
                 </div>
-                <div class="ai-custom-fields">
-                  <div class="ai-custom-field">
-                    <label
-                      for="aiAskTone"
-                      class="tc-tooltip-target"
-                      data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
-                    >
-                      Tono de la respuesta
-                    </label>
-                    <select id="aiAskTone">
-                      <option value="neutral">Neutral profesional</option>
-                      <option value="executive">Resumen ejecutivo</option>
-                      <option value="friendly">Cercano y motivador</option>
-                      <option value="analytical">Analítico y detallado</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                  </div>
-                  <div class="ai-custom-field ai-hidden" id="aiAskToneCustomWrapper">
-                    <label for="aiAskToneCustom">Describe el tono personalizado</label>
-                    <textarea
-                      id="aiAskToneCustom"
-                      placeholder="Ej. Comunicativo, inspirador y orientado a logros"
-                      disabled
-                    ></textarea>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  class="ai-collapse-toggle"
+                  id="aiAskCustomizationToggle"
+                  data-target="aiAskCustomizationWrapper"
+                  data-open-text="Replegar"
+                  data-closed-text="Desplegar"
+                  aria-expanded="true"
+                  aria-controls="aiAskCustomizationBody"
+                >
+                  <span class="ai-collapse-toggle-text">Replegar</span>
+                  <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                </button>
               </div>
-              <div class="ai-custom-option ai-ask-option" data-ask-option="persona">
-                <div class="ai-custom-top">
-                  <h4 class="ai-action-title">Perfil profesional de la respuesta</h4>
-                  <p class="ai-custom-intro">
-                    Indica a qué rol profesional debe dirigirse la respuesta de la IA.
-                  </p>
-                </div>
-                <div class="ai-custom-fields">
-                  <div class="ai-custom-field">
-                    <label
-                      for="aiAskPersona"
-                      class="tc-tooltip-target"
-                      data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
-                    >
-                      Perfil profesional de la respuesta
-                    </label>
-                    <select id="aiAskPersona">
-                      <option value="auto">Elegir automáticamente (IA)</option>
-                      <option value="executive">Dirección general</option>
-                      <option value="data-analyst">Analista de datos</option>
-                      <option value="finance">Dirección financiera</option>
-                      <option value="operations">Gerencia de operaciones</option>
-                      <option value="marketing">Marketing y comunicación</option>
-                      <option value="hr">Recursos humanos</option>
-                      <option value="it">Especialista en IT / Sistemas</option>
-                      <option value="sales">Liderazgo comercial</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
+              <div class="ai-collapsible-body" id="aiAskCustomizationBody">
+                <p class="ai-report-helper" style="margin-top:0;">
+                  Define el tono y el perfil profesional antes de enviar tu consulta a la IA.
+                </p>
+                <div class="ai-customization-list ai-ask-customization">
+                  <div class="ai-custom-option ai-ask-option" data-ask-option="tone">
+                    <div class="ai-custom-top">
+                      <h4 class="ai-action-title">Tono de la respuesta</h4>
+                      <p class="ai-custom-intro">
+                        Elige el estilo de redacción que prefieres para la respuesta generada.
+                      </p>
+                    </div>
+                    <div class="ai-custom-fields">
+                      <div class="ai-custom-field">
+                        <label
+                          for="aiAskTone"
+                          class="tc-tooltip-target"
+                          data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
+                        >
+                          Tono de la respuesta
+                        </label>
+                        <select id="aiAskTone">
+                          <option value="neutral">Neutral profesional</option>
+                          <option value="executive">Resumen ejecutivo</option>
+                          <option value="friendly">Cercano y motivador</option>
+                          <option value="analytical">Analítico y detallado</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </div>
+                      <div class="ai-custom-field ai-hidden" id="aiAskToneCustomWrapper">
+                        <label for="aiAskToneCustom">Describe el tono personalizado</label>
+                        <textarea
+                          id="aiAskToneCustom"
+                          placeholder="Ej. Comunicativo, inspirador y orientado a logros"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
                   </div>
-                  <div class="ai-custom-field ai-hidden" id="aiAskPersonaCustomWrapper">
-                    <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
-                    <textarea
-                      id="aiAskPersonaCustom"
-                      placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
-                      disabled
-                    ></textarea>
+                  <div class="ai-custom-option ai-ask-option" data-ask-option="persona">
+                    <div class="ai-custom-top">
+                      <h4 class="ai-action-title">Perfil profesional de la respuesta</h4>
+                      <p class="ai-custom-intro">
+                        Indica a qué rol profesional debe dirigirse la respuesta de la IA.
+                      </p>
+                    </div>
+                    <div class="ai-custom-fields">
+                      <div class="ai-custom-field">
+                        <label
+                          for="aiAskPersona"
+                          class="tc-tooltip-target"
+                          data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
+                        >
+                          Perfil profesional de la respuesta
+                        </label>
+                        <select id="aiAskPersona">
+                          <option value="auto">Elegir automáticamente (IA)</option>
+                          <option value="executive">Dirección general</option>
+                          <option value="data-analyst">Analista de datos</option>
+                          <option value="finance">Dirección financiera</option>
+                          <option value="operations">Gerencia de operaciones</option>
+                          <option value="marketing">Marketing y comunicación</option>
+                          <option value="hr">Recursos humanos</option>
+                          <option value="it">Especialista en IT / Sistemas</option>
+                          <option value="sales">Liderazgo comercial</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </div>
+                      <div class="ai-custom-field ai-hidden" id="aiAskPersonaCustomWrapper">
+                        <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
+                        <textarea
+                          id="aiAskPersonaCustom"
+                          placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3036,9 +3081,13 @@
             <textarea
               id="questionInput"
               class="ai-question-input"
-              placeholder="Escribe tu pregunta..."
+              placeholder="Ej: ¿Qué productos registraron el mayor crecimiento este trimestre?"
+              aria-describedby="aiQuestionExamples"
               disabled
             ></textarea>
+            <p id="aiQuestionExamples" class="ai-question-hint">
+              Ejemplos: ¿Qué tendencias detecta la IA en las ventas por región? • ¿Qué riesgos debo comunicar al directorio? • Resume los logros clave del equipo comercial.
+            </p>
             <button id="askBtn" class="btn-secondary" style="margin-top:8px;" disabled>Preguntar</button>
             <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
             <label for="answerBox" style="margin-top:12px;">Respuesta de la IA</label>
@@ -3077,9 +3126,10 @@
               </div>
               <p id="aiReportFilePreview" class="ai-report-file-preview" data-empty="true"></p>
               <label
-                class="ai-report-date-toggle"
+                class="ai-report-date-toggle tc-tooltip-target"
+                id="aiReportDateToggleLabel"
                 for="aiReportFileDateToggle"
-                
+                data-tooltip="Agrega la fecha al final del nombre del archivo. Ej: Reporte_12_03_24.pdf"
               >
                 <input type="checkbox" id="aiReportFileDateToggle" /> Agregar fecha al nombre
               </label>
@@ -4950,10 +5000,12 @@
                   <p class="tc-card-subtitle">Guarda estructuras listas para reutilizar en nuevos reportes.</p>
                 </div>
               </div>
-              <button type="button" id="templateRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
             <div id="templateGridEmpty" class="tc-card-empty">Aún no guardaste plantillas.</div>
             <div id="templateGrid" class="tc-template-grid" role="list"></div>
+            <div class="tc-card-footer tc-card-footer--right">
+              <button type="button" id="templateRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
           </div>
           <div class="tc-card">
             <h3 class="tc-card-heading">Detalles de la plantilla</h3>
@@ -4981,7 +5033,6 @@
                   </p>
                 </div>
               </div>
-              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
             <div class="tc-form-field">
               <label for="aiSavedActions">Lista de acciones</label>
@@ -4990,6 +5041,9 @@
               </select>
             </div>
             <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay acciones guardadas todavía.</div>
+            <div class="tc-card-footer tc-card-footer--right">
+              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
           </div>
           <div class="tc-card">
             <h3 class="tc-card-heading">Detalle seleccionado</h3>

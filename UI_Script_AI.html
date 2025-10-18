@@ -123,6 +123,10 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_TONE_LABELS = REPORT_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
       const REPORT_OUTPUT_LANGUAGE_TOOLTIPS = Object.freeze({
         auto: 'La IA detecta el idioma adecuado según tus tablas y contexto.',
         es: 'Redacta todo el reporte en español neutro.',
@@ -176,6 +180,10 @@
       ]);
       const REPORT_PERSONA_SET = REPORT_PERSONA_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_PERSONA_LABELS = REPORT_PERSONA_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
         return map;
       }, {});
       const REPORT_PERSONA_TOOLTIPS = Object.freeze({
@@ -1082,6 +1090,23 @@ function sanitizeReportFileName(value) {
         return text;
       }
 
+function updateReportDateTooltip() {
+        const label = document.getElementById('aiReportDateToggleLabel');
+        if (!label) {
+          return;
+        }
+        const input = document.getElementById('aiReportFileName');
+        const rawValue = input ? input.value : '';
+        const baseName = sanitizeReportFileName(rawValue) || 'Reporte';
+        const suffix = getReportDateSuffix().replace(/^_/, '');
+        const extension = getCurrentReportExtension() || 'pdf';
+        let example = baseName + '_' + suffix;
+        if (extension) {
+          example += '.' + extension;
+        }
+        label.dataset.tooltip = 'Agrega la fecha al final del nombre del archivo. Ej: ' + example;
+      }
+
 function updateReportFileExtension() {
         const preview = document.getElementById('aiReportFilePreview');
         if (!preview) {
@@ -1095,12 +1120,15 @@ function updateReportFileExtension() {
         let finalName = '';
         if (sanitizedBase) {
           finalName = sanitizedBase + suffix;
-          if (ext) {
-            finalName += '.' + ext;
-          }
+        } else if (suffix) {
+          finalName = suffix.slice(1);
+        }
+        if (finalName && ext) {
+          finalName += '.' + ext;
         }
         preview.textContent = finalName || '—';
         preview.dataset.empty = finalName ? 'false' : 'true';
+        updateReportDateTooltip();
       }
 
 function handleReportFileDateToggle(checked) {
@@ -4812,6 +4840,22 @@ function updateAiActionState() {
         }
       }
 
+function updateAskCustomizationSummary() {
+        const summary = document.getElementById('aiAskCustomizationSummary');
+        if (!summary) {
+          return;
+        }
+        const toneSelect = document.getElementById('aiAskTone');
+        const personaSelect = document.getElementById('aiAskPersona');
+        const toneValue = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const personaValue = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const toneLabel = REPORT_TONE_LABELS[toneValue] || REPORT_TONE_LABELS[ASK_TONE_DEFAULT];
+        const personaLabel = REPORT_PERSONA_LABELS[personaValue] || REPORT_PERSONA_LABELS[ASK_PERSONA_DEFAULT];
+        const summaryText = 'Tono: ' + toneLabel + ' • Perfil: ' + personaLabel;
+        summary.textContent = summaryText;
+        summary.classList.remove('ai-hidden');
+      }
+
 function updateAskToneCustom() {
         const toneSelect = document.getElementById('aiAskTone');
         const customWrapper = document.getElementById('aiAskToneCustomWrapper');
@@ -4828,6 +4872,7 @@ function updateAskToneCustom() {
             customInput.value = '';
           }
         }
+        updateAskCustomizationSummary();
       }
 
 function updateAskPersonaCustom() {
@@ -4846,6 +4891,7 @@ function updateAskPersonaCustom() {
             customInput.value = '';
           }
         }
+        updateAskCustomizationSummary();
       }
 
 function collectAskCustomization() {
@@ -5097,6 +5143,10 @@ function collectAskCustomization() {
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        const askSection = document.getElementById('aiAskSection');
+        if (askSection) {
+          setupCollapsibleControls(askSection);
+        }
         const aiSelect = document.getElementById('aiSavedTables');
         const aiList = document.getElementById('aiSavedTablesList');
         if (aiSelect) {
