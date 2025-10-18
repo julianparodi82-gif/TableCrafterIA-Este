@@ -1656,6 +1656,10 @@ function renderHeaderList(listId, headers) {
           webToggleLabel.appendChild(webToggleText);
           const webSection = document.createElement('div');
           webSection.className = 'header-ai-web-section';
+          if (!header.aiFillEnabled) {
+            webSection.classList.add('hidden');
+            webToggle.disabled = true;
+          }
           const webToggleRow = document.createElement('div');
           webToggleRow.className = 'header-ai-web-toggle-row';
           webToggleRow.appendChild(webToggleLabel);
@@ -1819,16 +1823,27 @@ function renderHeaderList(listId, headers) {
             options = options || {};
             const preserveEmpty = !!options.preserveEmpty;
             const aiEnabled = !!aiToggle.checked;
+            webSection.classList.toggle('hidden', !aiEnabled);
             if (!aiEnabled) {
               headers[index].aiWebSourcesEnabled = false;
               headerState.webCollapsed = false;
+              webToggle.checked = false;
+              webToggle.disabled = true;
+              renderWebSources({
+                allowEditing: false,
+                focusNew: false,
+                preserveEmpty: true
+              });
+              updateWebCollapseState(false);
+              webAddButton.disabled = true;
+              return;
             }
-            const webEnabled = aiEnabled && !!headers[index].aiWebSourcesEnabled;
+            webToggle.disabled = false;
+            const webEnabled = !!headers[index].aiWebSourcesEnabled;
             if (!webEnabled) {
               headerState.webCollapsed = false;
             }
             webToggle.checked = webEnabled;
-            webToggle.disabled = false;
             if (webEnabled && ensureWebSourcesArray().length === 0 && !preserveEmpty) {
               headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
             }
