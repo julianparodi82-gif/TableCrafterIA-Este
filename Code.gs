@@ -379,7 +379,15 @@ function normalizeMetaRecordType(value) {
   if (!text) {
     return 'table';
   }
-  if (text === 'reportfavorite' || text === 'report_favorite' || text === 'report-favorite') {
+  if (
+    text === 'reportfavorite' ||
+    text === 'report_favorite' ||
+    text === 'report-favorite' ||
+    text === 'report' ||
+    text === 'reporte' ||
+    text === 'reporte_favorito' ||
+    text === 'reporte-favorito'
+  ) {
     return 'reportFavorite';
   }
   if (text === 'table') {

@@ -2946,43 +2946,15 @@ function setActiveTab(tabId, options) {
           }
         });
         const nextContent = document.getElementById(tabId);
-        const previousContent = previousTab && previousTab !== tabId ? document.getElementById(previousTab) : null;
-
         document.querySelectorAll('.tab-content').forEach(function(content) {
-          if (content === nextContent) {
-            content.classList.add('is-visible');
-          } else if (content !== previousContent) {
+          const isTarget = content === nextContent;
+          if (isTarget) {
+            content.classList.add('active', 'is-visible');
+            content.classList.remove('is-entering', 'is-leaving');
+          } else {
             content.classList.remove('active', 'is-visible', 'is-entering', 'is-leaving');
           }
         });
-
-        if (previousContent && previousContent !== nextContent) {
-          previousContent.classList.remove('is-entering');
-          previousContent.classList.add('is-visible', 'is-leaving');
-          previousContent.classList.remove('active');
-          const handleLeaveEnd = function(event) {
-            if (event.target !== previousContent || event.propertyName !== 'opacity') {
-              return;
-            }
-            previousContent.classList.remove('is-visible', 'is-leaving');
-            previousContent.removeEventListener('transitionend', handleLeaveEnd);
-          };
-          previousContent.addEventListener('transitionend', handleLeaveEnd);
-          window.setTimeout(function() {
-            previousContent.classList.remove('is-visible', 'is-leaving');
-            previousContent.removeEventListener('transitionend', handleLeaveEnd);
-          }, 650);
-        }
-
-        if (nextContent) {
-          nextContent.classList.remove('is-leaving');
-          nextContent.classList.add('is-visible', 'is-entering');
-          void nextContent.offsetWidth; // reinicia la animación de entrada
-          nextContent.classList.add('active');
-          window.setTimeout(function() {
-            nextContent.classList.remove('is-entering');
-          }, 450);
-        }
 
         if (previousTab === 'editTab' && tabId !== 'editTab') {
           resetEditTabView({ preserveSelection: false, clearEditingId: true });
