@@ -31,7 +31,8 @@ let sidebarEntryCleanupTimeout = null;
 let currentTheme = null;
 let tabButtonsList = [];
 let tabContentsList = [];
-let hideWelcomePreference = false;
+let hideWelcomePreference = { table: null, word: null };
+let welcomePreferenceResolved = false;
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -1330,6 +1331,7 @@ function renderHeaderList(listId, headers) {
         if (!list) {
           return;
         }
+        cleanupHeaderListDnD(list);
         list.innerHTML = '';
         if (!Array.isArray(headers)) {
           return;
@@ -1350,9 +1352,17 @@ function renderHeaderList(listId, headers) {
         headers.forEach((header, index) => {
           const li = document.createElement('li');
           li.className = 'header-item';
+          li.dataset.key = header.key || '';
 
           const topRow = document.createElement('div');
           topRow.className = 'header-item-row';
+
+          const dragHandle = document.createElement('span');
+          dragHandle.className = 'header-item-drag';
+          dragHandle.title = 'Arrastra para reordenar';
+          dragHandle.setAttribute('aria-hidden', 'true');
+          dragHandle.textContent = '⋮⋮';
+          topRow.appendChild(dragHandle);
 
           const inp = document.createElement('input');
           inp.type = 'text';
@@ -1552,7 +1562,161 @@ function renderHeaderList(listId, headers) {
 
           list.appendChild(li);
         });
+        initializeHeaderListDnD(list, headers, markHeadersDirty, listId);
         applyOptionalCommentHints();
+      }
+
+
+function cleanupHeaderListDnD(list) {
+        if (!list) {
+          return;
+        }
+        list.classList.remove('header-list-dragging');
+        if (list._dndHandlers) {
+          const handlers = list._dndHandlers;
+          if (handlers.dragover) {
+            list.removeEventListener('dragover', handlers.dragover);
+          }
+          if (handlers.drop) {
+            list.removeEventListener('drop', handlers.drop);
+          }
+          if (handlers.dragleave) {
+            list.removeEventListener('dragleave', handlers.dragleave);
+          }
+          delete list._dndHandlers;
+        }
+      }
+
+function initializeHeaderListDnD(list, headers, markHeadersDirty, listId) {
+        if (!list || !Array.isArray(headers)) {
+          return;
+        }
+        const items = Array.from(list.querySelectorAll('.header-item'));
+        if (items.length <= 1) {
+          items.forEach(function(item) {
+            item.removeAttribute('draggable');
+          });
+          return;
+        }
+        let activeDragKey = null;
+        let dropHandled = false;
+        function getHeaderAfterElement(y) {
+          const elements = Array.from(list.querySelectorAll('.header-item:not(.dragging)'));
+          for (let i = 0; i < elements.length; i++) {
+            const box = elements[i].getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0) {
+              return elements[i];
+            }
+          }
+          return null;
+        }
+        const handleDragOver = function(event) {
+          if (!activeDragKey) {
+            return;
+          }
+          const draggingItem = list.querySelector('.header-item.dragging');
+          if (!draggingItem) {
+            return;
+          }
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+          }
+          const afterElement = getHeaderAfterElement(event.clientY);
+          if (afterElement === null) {
+            list.appendChild(draggingItem);
+          } else if (afterElement !== draggingItem) {
+            list.insertBefore(draggingItem, afterElement);
+          }
+        };
+        const handleDrop = function(event) {
+          if (!activeDragKey) {
+            return;
+          }
+          event.preventDefault();
+          const orderedKeys = Array.from(list.querySelectorAll('.header-item')).map(function(item) {
+            return item.dataset.key;
+          });
+          const newOrder = orderedKeys
+            .map(function(key) {
+              return headers.find(function(entry) {
+                return entry.key === key;
+              });
+            })
+            .filter(Boolean);
+          if (newOrder.length === headers.length) {
+            headers.length = 0;
+            newOrder.forEach(function(item) {
+              headers.push(item);
+            });
+            markHeadersDirty();
+            dropHandled = true;
+            setTimeout(function() {
+              renderHeaderList(listId, headers);
+            }, 0);
+          }
+          list.classList.remove('header-list-dragging');
+          const draggingItem = list.querySelector('.header-item.dragging');
+          if (draggingItem) {
+            draggingItem.classList.remove('dragging');
+          }
+          activeDragKey = null;
+        };
+        const handleDragLeave = function(event) {
+          if (!list.contains(event.relatedTarget)) {
+            const draggingItem = list.querySelector('.header-item.dragging');
+            if (!draggingItem) {
+              list.classList.remove('header-list-dragging');
+            }
+          }
+        };
+        list.addEventListener('dragover', handleDragOver);
+        list.addEventListener('drop', handleDrop);
+        list.addEventListener('dragleave', handleDragLeave);
+        list._dndHandlers = {
+          dragover: handleDragOver,
+          drop: handleDrop,
+          dragleave: handleDragLeave
+        };
+        items.forEach(function(item) {
+          const dragHandleElement = item.querySelector('.header-item-drag');
+          const dragSource = dragHandleElement || item;
+          if (dragHandleElement) {
+            dragHandleElement.setAttribute('draggable', 'true');
+            item.removeAttribute('draggable');
+          } else {
+            item.setAttribute('draggable', 'true');
+          }
+          const startDrag = function(event) {
+            activeDragKey = item.dataset.key || '';
+            if (!activeDragKey) {
+              return;
+            }
+            dropHandled = false;
+            if (event.dataTransfer) {
+              try {
+                event.dataTransfer.setData('text/plain', activeDragKey);
+              } catch (err) {}
+              event.dataTransfer.effectAllowed = 'move';
+              try {
+                event.dataTransfer.setDragImage(item, Math.min(event.offsetX || 12, item.offsetWidth / 2), 12);
+              } catch (err) {}
+            }
+            item.classList.add('dragging');
+            list.classList.add('header-list-dragging');
+          };
+          const endDrag = function() {
+            if (!dropHandled) {
+              list.classList.remove('header-list-dragging');
+              item.classList.remove('dragging');
+            }
+            activeDragKey = null;
+            dropHandled = false;
+          };
+          dragSource.addEventListener('dragstart', startDrag);
+          dragSource.addEventListener('dragend', endDrag);
+        });
       }
 
 
@@ -2622,15 +2786,20 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
-          const shouldHide = !!hideWelcomePreference;
+          const themeKey = currentTheme === 'word' ? 'word' : 'table';
+          const resolved = welcomePreferenceResolved;
+          const themePreference = hideWelcomePreference[themeKey];
+          const shouldHide = resolved ? !!themePreference : true;
           themeMessage.classList.toggle('is-hidden', shouldHide);
           if (themeMessageDismiss) {
-            themeMessageDismiss.checked = shouldHide;
+            themeMessageDismiss.checked = resolved ? !!themePreference : false;
           }
         }
 
         function persistWelcomePreference(value, options) {
-          hideWelcomePreference = !!value;
+          const themeKey = currentTheme === 'word' ? 'word' : 'table';
+          hideWelcomePreference[themeKey] = !!value;
+          welcomePreferenceResolved = true;
           const opts = options || {};
           if (opts.sync !== false) {
             syncMessageVisibility();
@@ -2639,7 +2808,29 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
           try {
-            google.script.run.withFailureHandler(function() {}).setWelcomeMessagePreference(!hideWelcomePreference);
+            google.script.run
+              .withSuccessHandler(function(res) {
+                if (res && typeof res === 'object') {
+                  var parseHidden = function(entry) {
+                    return entry === true || entry === 'true';
+                  };
+                  if (
+                    Object.prototype.hasOwnProperty.call(res, 'hideTable') ||
+                    Object.prototype.hasOwnProperty.call(res, 'hideWord')
+                  ) {
+                    hideWelcomePreference.table = parseHidden(res.hideTable);
+                    hideWelcomePreference.word = parseHidden(res.hideWord);
+                  } else if (Object.prototype.hasOwnProperty.call(res, 'hideWelcome')) {
+                    var legacy = parseHidden(res.hideWelcome);
+                    hideWelcomePreference.table = legacy;
+                    hideWelcomePreference.word = legacy;
+                  }
+                  welcomePreferenceResolved = true;
+                  syncMessageVisibility();
+                }
+              })
+              .withFailureHandler(function() {})
+              .setWelcomeMessagePreference(!hideWelcomePreference[themeKey], themeKey);
           } catch (error) {
             // Si no se puede comunicar con Apps Script, ignoramos para no bloquear la UI.
           }
@@ -2647,20 +2838,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function fetchWelcomePreference() {
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            hideWelcomePreference.table = false;
+            hideWelcomePreference.word = false;
+            welcomePreferenceResolved = true;
             syncMessageVisibility();
             return;
           }
           try {
             google.script.run
               .withSuccessHandler(function(res) {
-                hideWelcomePreference = !!(res && res.hideWelcome);
+                const data = res && typeof res === 'object' ? res : {};
+                const parseHidden = function(entry) {
+                  return entry === true || entry === 'true';
+                };
+                if (
+                  !Object.prototype.hasOwnProperty.call(data, 'hideTable') &&
+                  !Object.prototype.hasOwnProperty.call(data, 'hideWord') &&
+                  Object.prototype.hasOwnProperty.call(data, 'hideWelcome')
+                ) {
+                  const legacy = parseHidden(data.hideWelcome);
+                  hideWelcomePreference.table = legacy;
+                  hideWelcomePreference.word = legacy;
+                } else {
+                  hideWelcomePreference.table = parseHidden(data.hideTable);
+                  hideWelcomePreference.word = parseHidden(data.hideWord);
+                }
+                welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .withFailureHandler(function() {
+                hideWelcomePreference.table = false;
+                hideWelcomePreference.word = false;
+                welcomePreferenceResolved = true;
                 syncMessageVisibility();
               })
               .getWelcomeMessagePreference();
           } catch (error) {
+            hideWelcomePreference.table = false;
+            hideWelcomePreference.word = false;
+            welcomePreferenceResolved = true;
             syncMessageVisibility();
           }
         }

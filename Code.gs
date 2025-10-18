@@ -25,6 +25,8 @@ var SIDEBAR_THEME_PROPERTY_KEY = 'tablecrafter.sidebarThemeMode';
 var SIDEBAR_THEME_WORD = 'word';
 var SIDEBAR_THEME_TABLE = 'table';
 var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
+var WELCOME_MESSAGE_PROPERTY_KEY_TABLE = 'tablecrafter.hideWelcomeMessage.table';
+var WELCOME_MESSAGE_PROPERTY_KEY_WORD = 'tablecrafter.hideWelcomeMessage.word';
 var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 
 function onOpen() {
@@ -40,7 +42,7 @@ function showSidebar() {
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
-  var html = template.evaluate().setTitle(sidebarTitle).setWidth(520);
+  var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
   SpreadsheetApp.getUi().showSidebar(html);
   refreshAddonMenuForTheme(themeMode);
 }
@@ -85,23 +87,23 @@ function getSidebarThemeMode() {
 
 function refreshAddonMenuForTheme(themeMode) {
   var ui = SpreadsheetApp.getUi();
-  var spreadsheet = SpreadsheetApp.getActive();
-  if (spreadsheet && typeof spreadsheet.removeMenu === 'function') {
+  if (ui && typeof ui.removeMenu === 'function') {
     try {
-      spreadsheet.removeMenu('TableCrafter AI');
+      ui.removeMenu('TableCrafter AI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('TableCrafterAI');
+      ui.removeMenu('TableCrafterAI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('WordCrafter AI');
+      ui.removeMenu('WordCrafter AI');
     } catch (error) {}
     try {
-      spreadsheet.removeMenu('WordCrafterAI');
+      ui.removeMenu('WordCrafterAI');
     } catch (error) {}
   }
   ui.createMenu('TableCrafterAI')
-    .addItem('Mostrar TableCrafterAI', 'showSidebar')
+    .addItem('Abrir TableCrafterAI', 'showTablecrafterSidebar')
+    .addItem('Abrir WordCrafterAI', 'showWordcrafterSidebar')
     .addItem('Configurar API', 'showConfig')
     .addItem('Ayuda', 'showHelp')
     .addToUi();
@@ -114,19 +116,59 @@ function setSidebarThemeMode(mode) {
   return normalized;
 }
 
-function getWelcomeMessagePreference() {
-  var value = PropertiesService.getUserProperties().getProperty(WELCOME_MESSAGE_PROPERTY_KEY);
-  return { hideWelcome: value === 'true' };
+function showTablecrafterSidebar() {
+  setSidebarThemeMode(SIDEBAR_THEME_TABLE);
+  showSidebar();
 }
 
-function setWelcomeMessagePreference(showMessage) {
+function showWordcrafterSidebar() {
+  setSidebarThemeMode(SIDEBAR_THEME_WORD);
+  showSidebar();
+}
+
+function getWelcomeMessagePreference() {
   var userProperties = PropertiesService.getUserProperties();
-  if (showMessage) {
-    userProperties.deleteProperty(WELCOME_MESSAGE_PROPERTY_KEY);
-  } else {
-    userProperties.setProperty(WELCOME_MESSAGE_PROPERTY_KEY, 'true');
+  var tableValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY_TABLE);
+  var wordValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY_WORD);
+  var legacyValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  var hasExplicitTable = tableValue !== null && tableValue !== undefined;
+  var hasExplicitWord = wordValue !== null && wordValue !== undefined;
+  var hideTable = hasExplicitTable ? tableValue === 'true' : false;
+  var hideWord = hasExplicitWord ? wordValue === 'true' : false;
+  if (!hasExplicitTable && !hasExplicitWord && legacyValue !== null && legacyValue !== undefined) {
+    var legacyHidden = legacyValue === 'true';
+    hideTable = legacyHidden;
+    hideWord = legacyHidden;
   }
-  return { hideWelcome: !showMessage };
+  return { hideTable: hideTable, hideWord: hideWord };
+}
+
+function setWelcomeMessagePreference(showMessage, theme) {
+  var userProperties = PropertiesService.getUserProperties();
+  var themesToUpdate;
+  if (theme === SIDEBAR_THEME_WORD) {
+    themesToUpdate = [SIDEBAR_THEME_WORD];
+  } else if (theme === SIDEBAR_THEME_TABLE) {
+    themesToUpdate = [SIDEBAR_THEME_TABLE];
+  } else if (theme === 'all') {
+    themesToUpdate = [SIDEBAR_THEME_TABLE, SIDEBAR_THEME_WORD];
+  } else if (theme === undefined || theme === null) {
+    themesToUpdate = [SIDEBAR_THEME_TABLE, SIDEBAR_THEME_WORD];
+  } else {
+    themesToUpdate = [SIDEBAR_THEME_TABLE];
+  }
+  for (var i = 0; i < themesToUpdate.length; i += 1) {
+    var targetTheme = themesToUpdate[i];
+    var propertyKey =
+      targetTheme === SIDEBAR_THEME_WORD ? WELCOME_MESSAGE_PROPERTY_KEY_WORD : WELCOME_MESSAGE_PROPERTY_KEY_TABLE;
+    if (showMessage) {
+      userProperties.deleteProperty(propertyKey);
+    } else {
+      userProperties.setProperty(propertyKey, 'true');
+    }
+  }
+  userProperties.deleteProperty(WELCOME_MESSAGE_PROPERTY_KEY);
+  return getWelcomeMessagePreference();
 }
 
 /**
@@ -240,14 +282,16 @@ var REPORT_OUTPUT_LANGUAGE_ALLOWED = {
   es: true,
   en: true,
   pt: true,
-  fr: true
+  fr: true,
+  other: true
 };
 var REPORT_TONE_DEFAULT = 'neutral';
 var REPORT_TONE_ALLOWED = {
   neutral: true,
   executive: true,
   friendly: true,
-  analytical: true
+  analytical: true,
+  custom: true
 };
 var REPORT_SUMMARY_LENGTH_DEFAULT = 'standard';
 var REPORT_SUMMARY_LENGTH_ALLOWED = {
@@ -260,14 +304,37 @@ var REPORT_PERSONA_DEFAULT = 'auto';
 var REPORT_PERSONA_ALLOWED = {
   auto: true,
   executive: true,
+  'data-analyst': true,
   finance: true,
   marketing: true,
   operations: true,
   hr: true,
-  sales: true
+  it: true,
+  sales: true,
+  custom: true
 };
 
 var ALL_TABLES_OPTION_VALUE = '__ALL__';
+
+var ASK_TONE_INSTRUCTIONS = {
+  neutral: 'Responde con un tono neutral y profesional, evitando juicios subjetivos.',
+  executive: 'Mantén un tono ejecutivo con foco en decisiones y conclusiones accionables.',
+  friendly: 'Utiliza un tono cercano y motivador que refuerce la colaboración del equipo.',
+  analytical: 'Redacta con un tono analítico y detallado destacando datos y métricas relevantes.'
+};
+
+var ASK_PERSONA_INSTRUCTIONS = {
+  auto: '',
+  executive: 'Enmarca la explicación para la dirección general, resaltando impacto y riesgos estratégicos.',
+  'data-analyst': 'Incluye detalles técnicos, tendencias y cálculos útiles para un analista de datos.',
+  finance: 'Prioriza indicadores financieros, márgenes, costos y retornos esperados.',
+  marketing: 'Resalta métricas de marketing, comportamiento de audiencias y posicionamiento de marca.',
+  operations: 'Destaca eficiencia operativa, tiempos de entrega y procesos clave.',
+  hr: 'Enfoca la información en talento, clima laboral y desarrollo del equipo.',
+  it: 'Incluye consideraciones técnicas, integraciones y requisitos de sistemas.',
+  sales: 'Orienta la respuesta a objetivos comerciales, conversiones y próximos pasos de ventas.',
+  custom: ''
+};
 
 function normalizeMetaId(value) {
   if (value === null || value === undefined) {
@@ -2481,6 +2548,13 @@ function normalizeToneValue(value) {
   return REPORT_TONE_ALLOWED[text] ? text : REPORT_TONE_DEFAULT;
 }
 
+function normalizeCustomTextValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+}
+
 function normalizePersonaValue(value) {
   if (value === null || value === undefined) {
     return REPORT_PERSONA_DEFAULT;
@@ -2496,15 +2570,18 @@ function normalizeReportCustomization(source) {
   var base = {
     outputLanguage: {
       enabled: false,
-      value: REPORT_OUTPUT_LANGUAGE_DEFAULT
+      value: REPORT_OUTPUT_LANGUAGE_DEFAULT,
+      customValue: ''
     },
     tone: {
       enabled: false,
-      value: REPORT_TONE_DEFAULT
+      value: REPORT_TONE_DEFAULT,
+      customValue: ''
     },
     persona: {
       enabled: false,
-      value: REPORT_PERSONA_DEFAULT
+      value: REPORT_PERSONA_DEFAULT,
+      customNote: ''
     }
   };
   if (!source || typeof source !== 'object') {
@@ -2513,23 +2590,40 @@ function normalizeReportCustomization(source) {
   if (source.outputLanguage && typeof source.outputLanguage === 'object') {
     base.outputLanguage.enabled = !!source.outputLanguage.enabled;
     base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+    base.outputLanguage.customValue = normalizeCustomTextValue(
+      source.outputLanguage.customValue
+    );
   }
   if (source.tone && typeof source.tone === 'object') {
     base.tone.enabled = !!source.tone.enabled;
     base.tone.value = normalizeToneValue(source.tone.value);
+    base.tone.customValue = normalizeCustomTextValue(source.tone.customValue);
   }
   if (source.persona && typeof source.persona === 'object') {
     base.persona.enabled = !!source.persona.enabled;
     base.persona.value = normalizePersonaValue(source.persona.value);
+    base.persona.customNote = normalizeCustomTextValue(source.persona.customNote);
   }
   if (!base.outputLanguage.enabled) {
     base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+    base.outputLanguage.customValue = '';
   }
   if (!base.tone.enabled) {
     base.tone.value = REPORT_TONE_DEFAULT;
+    base.tone.customValue = '';
   }
   if (!base.persona.enabled) {
     base.persona.value = REPORT_PERSONA_DEFAULT;
+    base.persona.customNote = '';
+  }
+  if (base.outputLanguage.value !== 'other') {
+    base.outputLanguage.customValue = '';
+  }
+  if (base.tone.value !== 'custom') {
+    base.tone.customValue = '';
+  }
+  if (base.persona.value !== 'custom') {
+    base.persona.customNote = '';
   }
   return base;
 }
@@ -2690,6 +2784,17 @@ function saveReportFavorite(payload) {
   if (normalizedChannels.length === 0) {
     missing.push('al menos un canal para compartir');
   }
+  var customization = normalizeReportCustomization(payload.customization);
+  if (
+    customization.outputLanguage.enabled &&
+    customization.outputLanguage.value === 'other' &&
+    !customization.outputLanguage.customValue
+  ) {
+    missing.push('el idioma personalizado del reporte');
+  }
+  if (customization.tone.enabled && customization.tone.value === 'custom' && !customization.tone.customValue) {
+    missing.push('el tono personalizado del reporte');
+  }
   if (missingFeatureDescriptions.length > 0) {
     missingFeatureDescriptions.forEach(function(message) {
       if (missing.indexOf(message) === -1) {
@@ -2736,7 +2841,6 @@ function saveReportFavorite(payload) {
       normalizedPhones.push(text);
     }
   });
-  var customization = normalizeReportCustomization(payload.customization);
   var quantityMapForOrder = buildFeatureQuantityMap(normalizedFeatureDetails);
   var normalizedFeatureOrder = normalizeFeatureOrderEntries(payload.featureOrder, quantityMapForOrder);
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
@@ -2818,15 +2922,35 @@ function saveApiKey(key) {
  * @param {string} question Pregunta del usuario.
  * @returns {Object} Objeto con answer o error.
  */
-function askQuestion(tableSelection, question) {
+function askQuestion(tableSelection, question, customization) {
   var apiKey = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
   if (!apiKey) {
     return { error: 'No hay API Key configurada. Configure su clave en la sección de configuración.' };
   }
 
+  var customizationData = customization && typeof customization === 'object' ? customization : {};
+  var toneValue = normalizeToneValue(customizationData.tone);
+  var personaValue = normalizePersonaValue(customizationData.persona);
+  var toneCustom = normalizeCustomTextValue(customizationData.toneCustom);
+  var personaCustom = normalizeCustomTextValue(customizationData.personaCustom);
+  if (toneValue !== 'custom') {
+    toneCustom = '';
+  }
+  if (personaValue !== 'custom') {
+    personaCustom = '';
+  }
+
   var normalizedIds = normalizeTableSelection(tableSelection);
   if (normalizedIds.length === 0) {
     return { error: 'Seleccione al menos una tabla válida para consultar.' };
+  }
+
+  var normalizedQuestion = '';
+  if (question !== null && question !== undefined) {
+    normalizedQuestion = String(question).trim();
+  }
+  if (!normalizedQuestion) {
+    return { error: 'Escriba una pregunta.' };
   }
 
   var ss = SpreadsheetApp.getActive();
@@ -2884,13 +3008,34 @@ function askQuestion(tableSelection, question) {
   }
 
   var context = contexts.join('\n\n');
+  var baseInstruction =
+    'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.';
+  var systemParts = [baseInstruction];
+  var toneInstruction = '';
+  if (toneValue === 'custom' && toneCustom) {
+    toneInstruction = 'Adapta el tono de la respuesta según esta indicación: ' + toneCustom + '.';
+  } else if (ASK_TONE_INSTRUCTIONS[toneValue]) {
+    toneInstruction = ASK_TONE_INSTRUCTIONS[toneValue];
+  }
+  if (toneInstruction) {
+    systemParts.push(toneInstruction);
+  }
+  var personaInstruction = '';
+  if (personaValue === 'custom' && personaCustom) {
+    personaInstruction = 'Enfoca la respuesta para este perfil profesional: ' + personaCustom + '.';
+  } else if (ASK_PERSONA_INSTRUCTIONS[personaValue]) {
+    personaInstruction = ASK_PERSONA_INSTRUCTIONS[personaValue];
+  }
+  if (personaInstruction) {
+    systemParts.push(personaInstruction);
+  }
+  var systemContent = systemParts.join(' ');
   var messages = [
     {
       role: 'system',
-      content:
-        'Eres un asistente experto en análisis de datos de Google Sheets. Responde de forma breve y clara en español.'
+      content: systemContent
     },
-    { role: 'user', content: context + '\n\nPregunta: ' + question }
+    { role: 'user', content: context + '\n\nPregunta: ' + normalizedQuestion }
   ];
 
   var payload = {
