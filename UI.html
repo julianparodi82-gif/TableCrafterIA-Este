@@ -2756,13 +2756,9 @@
           </ul>
           <p>Activa el modo celeste cuando quieras conocer sus avances.</p>
           <? } else { ?>
-          <p><strong>¡Bienvenido a TableCrafterAI!</strong> Ordena, resume y comparte tus datos con pasos guiados.</p>
-          <p>Empieza con la acción que necesites:</p>
-          <ul>
-            <li>Panel IA: solicita análisis, resúmenes o reportes en segundos.</li>
-            <li>Editar tabla: mejora estilos existentes con un par de clics.</li>
-            <li>Crear tabla: diseña nuevas estructuras listas para reutilizar y configura columnas con IA.</li>
-          </ul>
+          <p><strong>¡Bienvenido a TableCrafterAI!</strong> Crea y organiza tablas listas para compartir en minutos.</p>
+          <p>Combina formatos guiados y textos generados con IA para trabajar sin complicaciones.</p>
+          <p>Explora los paneles para construir, mejorar y explicar tus tablas con total facilidad.</p>
           <? } ?>
         </div>
         <div class="theme-message-footer">
@@ -3081,12 +3077,12 @@
             <textarea
               id="questionInput"
               class="ai-question-input"
-              placeholder="Ej: ¿Qué productos registraron el mayor crecimiento este trimestre?"
+              placeholder="Ej: ¿Cómo está organizada la tabla de ventas trimestrales?"
               aria-describedby="aiQuestionExamples"
               disabled
             ></textarea>
             <p id="aiQuestionExamples" class="ai-question-hint">
-              Ejemplos: ¿Qué tendencias detecta la IA en las ventas por región? • ¿Qué riesgos debo comunicar al directorio? • Resume los logros clave del equipo comercial.
+              Ejemplos: Describe qué columnas tiene la tabla de ingresos. • Explica cómo funcionan las fórmulas de seguimiento. • ¿Cómo recomienda la IA estructurar esta tabla?
             </p>
             <button id="askBtn" class="btn-secondary" style="margin-top:8px;" disabled>Preguntar</button>
             <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
@@ -4951,10 +4947,12 @@
                   <p class="tc-card-subtitle">Consulta las ejecuciones automáticas disponibles.</p>
                 </div>
               </div>
-              <button type="button" id="triggerRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
             <div id="triggerListEmpty" class="tc-card-empty">No hay triggers configurados todavía.</div>
             <ul id="triggerList" class="tc-card-list" aria-live="polite"></ul>
+            <div class="tc-card-footer tc-card-footer--right">
+              <button type="button" id="triggerRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
           </div>
           <div class="tc-card">
             <h3 class="tc-card-heading">Nuevo trigger</h3>

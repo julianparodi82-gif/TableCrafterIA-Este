@@ -4851,9 +4851,20 @@ function updateAskCustomizationSummary() {
         const personaValue = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
         const toneLabel = REPORT_TONE_LABELS[toneValue] || REPORT_TONE_LABELS[ASK_TONE_DEFAULT];
         const personaLabel = REPORT_PERSONA_LABELS[personaValue] || REPORT_PERSONA_LABELS[ASK_PERSONA_DEFAULT];
-        const summaryText = 'Tono: ' + toneLabel + ' • Perfil: ' + personaLabel;
-        summary.textContent = summaryText;
-        summary.classList.remove('ai-hidden');
+        const summaryParts = [];
+        if (toneValue !== ASK_TONE_DEFAULT) {
+          summaryParts.push('Tono: ' + toneLabel);
+        }
+        if (personaValue !== ASK_PERSONA_DEFAULT) {
+          summaryParts.push('Perfil: ' + personaLabel);
+        }
+        if (summaryParts.length === 0) {
+          summary.textContent = '';
+          summary.classList.add('ai-hidden');
+        } else {
+          summary.textContent = summaryParts.join(' • ');
+          summary.classList.remove('ai-hidden');
+        }
       }
 
 function updateAskToneCustom() {
