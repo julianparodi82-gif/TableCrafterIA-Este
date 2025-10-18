@@ -243,7 +243,7 @@
         left: 50%;
         bottom: calc(100% + 8px);
         transform: translateX(-50%);
-        background: rgba(17, 24, 39, 0.92);
+        background: var(--tc-tooltip-bg);
         color: #F9FAFB;
         padding: 8px 10px;
         border-radius: 6px;
@@ -267,7 +267,7 @@
         transform: translateX(-50%);
         border-width: 6px;
         border-style: solid;
-        border-color: rgba(17, 24, 39, 0.92) transparent transparent transparent;
+        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
         opacity: 0;
         transition: opacity 0.15s ease;
         pointer-events: none;
@@ -276,17 +276,6 @@
       .tab-btn[data-tooltip]:hover::after,
       .tab-btn[data-tooltip]:hover::before {
         opacity: 1;
-      }
-      .tab-nav-primary .tab-btn[data-tooltip]::after {
-        bottom: auto;
-        top: calc(100% + 8px);
-        transform: translateX(-50%);
-      }
-      .tab-nav-primary .tab-btn[data-tooltip]::before {
-        bottom: auto;
-        top: calc(100% + 4px);
-        transform: translateX(-50%) rotate(180deg);
-        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
       .tc-tooltip-target[data-tooltip],
       .ai-feature-chip-label[data-tooltip] {
@@ -560,20 +549,21 @@
       .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
         transform: translateX(16px);
       }
-      .tab-btn--starred {
-        padding-right: 28px;
-      }
       .tab-btn--starred::after {
-        content: "★";
-        font-size: 12px;
-        color: #D4AF37;
+        content: '';
         position: absolute;
         top: 6px;
-        right: 8px;
+        right: 6px;
+        width: 14px;
+        height: 14px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath fill='%23F5C044' d='M10 2l2.16 4.38 4.84.7-3.5 3.48.82 4.94L10 13.8l-4.32 2.72.82-4.94-3.5-3.48 4.84-.7z'/%3E%3C/svg%3E");
         pointer-events: none;
       }
       .tab-btn--starred.active::after {
-        color: #FCE588;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath fill='%23FFE27A' d='M10 2l2.16 4.38 4.84.7-3.5 3.48.82 4.94L10 13.8l-4.32 2.72.82-4.94-3.5-3.48 4.84-.7z'/%3E%3C/svg%3E");
       }
       .section {
         margin-bottom: 22px;
