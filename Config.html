@@ -1027,7 +1027,39 @@
       }
       if (downloadBrowseBtn) {
         downloadBrowseBtn.addEventListener('click', function() {
-          openFolderPickerDialog();
+          const browseButton = this;
+          if (browseButton) {
+            browseButton.disabled = true;
+            browseButton.setAttribute('aria-busy', 'true');
+          }
+          if (messageEl) {
+            messageEl.textContent = '';
+          }
+          google.script.run
+            .withSuccessHandler(function() {
+              if (browseButton) {
+                browseButton.disabled = false;
+                browseButton.removeAttribute('aria-busy');
+              }
+              openFolderPickerDialog();
+            })
+            .withFailureHandler(function(error) {
+              if (browseButton) {
+                browseButton.disabled = false;
+                browseButton.removeAttribute('aria-busy');
+              }
+              const needsAuthMessage =
+                'No se pudo acceder a Google Drive. Autorice el permiso y vuelva a intentarlo.';
+              const message = error && error.message ? error.message : needsAuthMessage;
+              if (messageEl) {
+                if (message.indexOf('Autorización requerida') >= 0 || message.indexOf('Authorization is required') >= 0) {
+                  messageEl.textContent = needsAuthMessage;
+                } else {
+                  messageEl.textContent = message;
+                }
+              }
+            })
+            .ensureDriveAuthorization();
         });
       }
       if (folderPickerOverlay) {

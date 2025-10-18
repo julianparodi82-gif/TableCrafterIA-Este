@@ -176,6 +176,24 @@ function listFolderPickerChildren(parentId) {
   };
 }
 
+function ensureDriveAuthorization() {
+  try {
+    var root = DriveApp.getRootFolder();
+    var name = '';
+    if (root && typeof root.getName === 'function') {
+      try {
+        name = root.getName();
+      } catch (innerError) {}
+    }
+    return {
+      ok: true,
+      rootName: name || 'Mi unidad'
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
 /**
  * Permite incluir archivos HTML parciales en las plantillas.
  */
