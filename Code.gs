@@ -2786,10 +2786,12 @@ function normalizeReportCustomization(source) {
   return base;
 }
 
-function saveReportFavorite(payload) {
+function prepareReportFavoriteStorage(payload, options) {
   if (!payload || typeof payload !== 'object') {
     throw new Error('No se recibieron datos del reporte.');
   }
+  var opts = options || {};
+  var editingId = normalizeMetaId(opts.editingId);
   var missing = [];
   var name = payload.name ? String(payload.name).trim() : '';
   if (!name) {
@@ -2977,7 +2979,7 @@ function saveReportFavorite(payload) {
     throw new Error('Faltan datos para guardar el reporte favorito:\n- ' + missing.join('\n- '));
   }
   if (name) {
-    var duplicateFavorite = findMetaByName(name, { type: 'reportFavorite' });
+    var duplicateFavorite = findMetaByName(name, { type: 'reportFavorite', ignoreId: editingId });
     if (duplicateFavorite) {
       throw new Error('Ya existe un reporte favorito con ese nombre. Elige otro diferente.');
     }
@@ -3007,33 +3009,41 @@ function saveReportFavorite(payload) {
   });
   var quantityMapForOrder = buildFeatureQuantityMap(normalizedFeatureDetails);
   var normalizedFeatureOrder = normalizeFeatureOrderEntries(payload.featureOrder, quantityMapForOrder);
-  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
-  var config = {
-    format: format,
-    fileName: fileName,
-    fileExtension: payload.fileExtension ? String(payload.fileExtension).trim() : '',
-    appendDateToFile: !!payload.appendDateToFile,
-    tables: normalizedTables,
-    channels: normalizedChannels,
-    descriptionEnabled: !!payload.descriptionEnabled,
-    description: payload.description ? String(payload.description) : '',
-    features: normalizedFeatures,
-    featureDetails: normalizedFeatureDetails,
-    featureOrder: normalizedFeatureOrder,
-    featureDescriptionsEnabled: false,
-    featureDescriptions: '',
-    emails: normalizedEmails,
-    phones: normalizedPhones,
-    customization: customization,
-    savedAt: now
+  return {
+    name: name,
+    config: {
+      format: format,
+      fileName: fileName,
+      fileExtension: payload.fileExtension ? String(payload.fileExtension).trim() : '',
+      appendDateToFile: !!payload.appendDateToFile,
+      tables: normalizedTables,
+      channels: normalizedChannels,
+      descriptionEnabled: !!payload.descriptionEnabled,
+      description: payload.description ? String(payload.description) : '',
+      features: normalizedFeatures,
+      featureDetails: normalizedFeatureDetails,
+      featureOrder: normalizedFeatureOrder,
+      featureDescriptionsEnabled: false,
+      featureDescriptions: '',
+      emails: normalizedEmails,
+      phones: normalizedPhones,
+      customization: customization,
+      savedAt: ''
+    }
   };
+}
+
+function saveReportFavorite(payload) {
+  var prepared = prepareReportFavoriteStorage(payload, {});
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  prepared.config.savedAt = now;
   var favoriteId = 'reportFavorite:' + Utilities.getUuid();
   var sheet = getMetaSheet();
   sheet.appendRow([
     favoriteId,
-    name,
+    prepared.name,
     '',
-    config.descriptionEnabled ? config.description : '',
+    prepared.config.descriptionEnabled ? prepared.config.description : '',
     '',
     '',
     '',
@@ -3043,10 +3053,50 @@ function saveReportFavorite(payload) {
     '',
     '',
     'reportFavorite',
-    stringifyJsonValue(config)
+    stringifyJsonValue(prepared.config)
   ]);
   SpreadsheetApp.flush();
   return { ok: true, id: favoriteId };
+}
+
+function updateReportFavorite(favoriteId, payload) {
+  var normalizedId = normalizeMetaId(favoriteId);
+  if (!normalizedId) {
+    throw new Error('No se pudo determinar el reporte favorito a actualizar.');
+  }
+  var entry = findMetaById(normalizedId);
+  if (!entry || !entry.data) {
+    throw new Error('No se encontró el reporte favorito indicado.');
+  }
+  if (normalizeMetaRecordType(entry.data[META_INDEX.recordType]) !== 'reportFavorite') {
+    throw new Error('El elemento seleccionado no es un reporte favorito.');
+  }
+  var prepared = prepareReportFavoriteStorage(payload, { editingId: normalizedId });
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  prepared.config.savedAt = now;
+  var createdAt = entry.data[META_INDEX.createdAt] || now;
+  getMetaSheet()
+    .getRange(entry.row, 1, 1, META_HEADERS.length)
+    .setValues([
+      [
+        normalizedId,
+        prepared.name,
+        '',
+        prepared.config.descriptionEnabled ? prepared.config.description : '',
+        '',
+        '',
+        '',
+        createdAt,
+        now,
+        '',
+        '',
+        '',
+        'reportFavorite',
+        stringifyJsonValue(prepared.config)
+      ]
+    ]);
+  SpreadsheetApp.flush();
+  return { ok: true, id: normalizedId };
 }
 
 /**

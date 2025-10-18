@@ -1840,6 +1840,38 @@
         font-size: 16px;
         line-height: 1;
       }
+      .ai-report-favorite-btn .ai-favorite-label {
+        line-height: 1;
+      }
+      .ai-report-favorite-notice {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        background-color: #F9FAFB;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+        color: #000000;
+      }
+      .ai-report-favorite-notice strong {
+        font-weight: 600;
+      }
+      .ai-report-favorite-clear-btn {
+        border: none;
+        background: none;
+        color: #1D4ED8;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+      }
+      .ai-report-favorite-clear-btn:hover {
+        text-decoration: underline;
+      }
       .ai-report-order-control {
         margin: 18px 0 12px;
         display: flex;
@@ -5712,7 +5744,20 @@
                 aria-controls="aiFavoriteModalOverlay"
               >
                 <span class="ai-favorite-icon" aria-hidden="true">★</span>
-                Agregar a favoritos
+                <span id="aiReportFavoriteBtnLabel" class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
+            </div>
+            <div
+              id="aiReportFavoriteEditNotice"
+              class="ai-report-favorite-notice ai-hidden"
+              role="status"
+              aria-live="polite"
+            >
+              <div class="ai-report-favorite-notice-text">
+                Editando favorito: <strong id="aiReportFavoriteEditName"></strong>
+              </div>
+              <button type="button" id="aiReportFavoriteClearBtn" class="ai-report-favorite-clear-btn">
+                Salir de edición
               </button>
             </div>
             <div class="ai-report-generate-row">

@@ -224,6 +224,8 @@
       let reportFeatureState = {};
       let reportCustomizationState = createDefaultCustomizationState();
       let reportFavoriteModalVisible = false;
+      let activeReportFavoriteId = '';
+      let activeReportFavoriteName = '';
       let reportFeatureOrder = [];
       let reportOrderDraft = [];
       let reportOrderOverlayVisible = false;
@@ -4305,6 +4307,49 @@ function setAiTablesSelection(values) {
         refreshAllReportFeatureOptions();
       }
 
+function setActiveReportFavorite(id, name) {
+        activeReportFavoriteId = id ? String(id) : '';
+        activeReportFavoriteName = name ? String(name) : '';
+        updateReportFavoriteControls();
+      }
+
+function clearActiveReportFavorite() {
+        activeReportFavoriteId = '';
+        activeReportFavoriteName = '';
+        updateReportFavoriteControls();
+        const nameInput = document.getElementById('aiReportFavoriteName');
+        if (nameInput) {
+          nameInput.value = '';
+        }
+      }
+
+function updateReportFavoriteControls() {
+        const editing = !!activeReportFavoriteId;
+        const label = document.getElementById('aiReportFavoriteBtnLabel');
+        if (label) {
+          label.textContent = editing ? 'Actualizar favorito' : 'Agregar a favoritos';
+        }
+        const btn = document.getElementById('aiReportFavoriteBtn');
+        if (btn) {
+          btn.setAttribute(
+            'aria-label',
+            editing ? 'Actualizar reporte favorito' : 'Agregar reporte a favoritos'
+          );
+        }
+        const notice = document.getElementById('aiReportFavoriteEditNotice');
+        if (notice) {
+          if (editing) {
+            notice.classList.remove('ai-hidden');
+          } else {
+            notice.classList.add('ai-hidden');
+          }
+        }
+        const nameEl = document.getElementById('aiReportFavoriteEditName');
+        if (nameEl) {
+          nameEl.textContent = editing ? activeReportFavoriteName : '';
+        }
+      }
+
 async function loadReportFavoriteIntoPanel(action) {
         if (!action) {
           return;
@@ -4315,6 +4360,7 @@ async function loadReportFavoriteIntoPanel(action) {
           aiActionSelect.value = 'report';
         }
         updateAiActionState();
+        setActiveReportFavorite(action.id || '', action.name || '');
         if (Array.isArray(action.tables) && action.tables.length > 0) {
           try {
             await refreshSavedTables(['aiSavedTables'], {});
@@ -4400,6 +4446,7 @@ function openReportFavoriteModal() {
         if (savingReportFavorite) {
           return;
         }
+        const editing = !!activeReportFavoriteId;
         const overlay = document.getElementById('aiFavoriteModalOverlay');
         const trigger = document.getElementById('aiReportFavoriteBtn');
         reportFavoriteModalVisible = true;
@@ -4410,8 +4457,23 @@ function openReportFavoriteModal() {
         if (trigger) {
           trigger.setAttribute('aria-expanded', 'true');
         }
+        const title = document.getElementById('aiFavoriteModalTitle');
+        if (title) {
+          title.textContent = editing ? 'Actualizar favorito' : 'Guardar en favoritos';
+        }
+        const description = document.getElementById('aiFavoriteModalDescription');
+        if (description) {
+          description.textContent = editing
+            ? 'Actualiza el nombre para identificar este reporte favorito.'
+            : 'Asigna un nombre para identificar este reporte más adelante.';
+        }
+        const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (saveBtn) {
+          saveBtn.textContent = editing ? 'Actualizar' : 'Guardar';
+        }
         const nameInput = document.getElementById('aiReportFavoriteName');
         if (nameInput) {
+          nameInput.value = editing ? activeReportFavoriteName : '';
           window.setTimeout(function() {
             nameInput.focus();
             nameInput.select();
@@ -4614,11 +4676,15 @@ async function handleReportFavoriteSave() {
           );
           return;
         }
+        const editingId = activeReportFavoriteId ? String(activeReportFavoriteId) : '';
         const normalizedFavoriteName = favoriteName.toLowerCase();
         const actionsSnapshot =
           typeof getSavedActionsSnapshot === 'function' ? getSavedActionsSnapshot() : [];
         const duplicateFavorite = actionsSnapshot.some(function(entry) {
           if (!entry || !entry.name) {
+            return false;
+          }
+          if (editingId && entry.id === editingId) {
             return false;
           }
           const type = (entry.type || '').toLowerCase();
@@ -4739,23 +4805,34 @@ async function handleReportFavoriteSave() {
           if (saveBtn) {
             saveBtn.disabled = true;
           }
-          const result = await callServerFunction('saveReportFavorite', payload);
+          let result;
+          if (editingId) {
+            result = await callServerFunction('updateReportFavorite', editingId, payload);
+          } else {
+            result = await callServerFunction('saveReportFavorite', payload);
+          }
           if (result && result.error) {
             throw new Error(result.error);
           }
-          closeReportFavoriteModal({ resetName: true });
-          await showMessageModal('Reporte guardado en favoritos.', {
-            title: 'Favorito guardado',
-            variant: 'success'
-          });
+          const savedId = result && result.id ? result.id : editingId;
+          if (savedId) {
+            setActiveReportFavorite(savedId, favoriteName);
+          } else {
+            setActiveReportFavorite('', '');
+          }
+          closeReportFavoriteModal({ resetName: !editingId, focusTrigger: true });
+          await showMessageModal(
+            editingId ? 'Reporte favorito actualizado.' : 'Reporte guardado en favoritos.',
+            {
+              title: editingId ? 'Favorito actualizado' : 'Favorito guardado',
+              variant: 'success'
+            }
+          );
           if (typeof refreshSavedActions === 'function') {
             await refreshSavedActions({
               selectId:
-                result && result.id
-                  ? result.id
-                  : typeof getCurrentSavedActionId === 'function'
-                  ? getCurrentSavedActionId()
-                  : ''
+                savedId || (typeof getCurrentSavedActionId === 'function' ? getCurrentSavedActionId() : ''),
+              force: true
             });
           }
         } catch (err) {
@@ -4977,6 +5054,7 @@ function resetReportSection() {
           favoriteSaveBtn.disabled = false;
         }
         savingReportFavorite = false;
+        clearActiveReportFavorite();
         closeReportFavoriteModal({ resetName: true });
       }
 
@@ -5227,6 +5305,13 @@ function initializeReportSection() {
             handleReportFavoriteSave();
           });
         }
+        const favoriteClearBtn = document.getElementById('aiReportFavoriteClearBtn');
+        if (favoriteClearBtn && !favoriteClearBtn.dataset.bound) {
+          favoriteClearBtn.addEventListener('click', function() {
+            clearActiveReportFavorite();
+          });
+          favoriteClearBtn.dataset.bound = 'true';
+        }
         const generateBtn = document.getElementById('aiReportGenerateBtn');
         if (generateBtn && !generateBtn.dataset.bound) {
           generateBtn.addEventListener('click', function() {
@@ -5252,6 +5337,7 @@ function initializeReportSection() {
           favoriteModalEscapeListenerAttached = true;
         }
         closeReportFavoriteModal({ resetName: true });
+        updateReportFavoriteControls();
         updateSelectedReportChannels();
         updateReportOrderButtonState();
         reportSectionInitialized = true;
