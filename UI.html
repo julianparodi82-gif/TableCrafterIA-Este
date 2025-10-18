@@ -2401,12 +2401,24 @@
       .header-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 8px;
-        border-bottom: 1px solid #E5E7EB;
+        padding: 10px 10px 8px;
+        border-bottom: 3px solid #66D68E;
+        background-color: #FFFFFF;
       }
       .header-item:last-child {
         border-bottom: none;
+      }
+      .header-item-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .header-item.is-collapsed .header-item-body {
+        display: none;
+      }
+      .header-item.is-collapsed .header-item-row {
+        margin-bottom: 0;
       }
       .header-item-row {
         display: flex;
@@ -2475,6 +2487,28 @@
       .header-item button:hover {
         background-color: #D1D5DB;
       }
+      .header-item button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .header-item-collapse,
+      .header-ai-web-collapse {
+        min-width: 28px;
+        height: 28px;
+        font-size: 16px;
+        background-color: #D1FAE5;
+        color: #047857;
+      }
+      .header-item-collapse:hover,
+      .header-ai-web-collapse:hover {
+        background-color: #A7F3D0;
+        color: #065F46;
+      }
+      .header-item-collapse:disabled,
+      .header-ai-web-collapse:disabled {
+        background-color: #E5E7EB;
+        color: #9CA3AF;
+      }
       .header-ai-toggle {
         display: flex;
         align-items: center;
@@ -2517,14 +2551,25 @@
       .header-ai-prompt.hidden {
         display: none;
       }
-      .header-ai-web-toggle {
+      .header-ai-web-section {
         display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .header-ai-web-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .header-ai-web-toggle {
+        display: inline-flex;
         align-items: center;
         gap: 6px;
         font-size: 13px;
         color: inherit;
-        margin-top: 6px;
         cursor: pointer;
+        flex: 1 1 auto;
       }
       .header-ai-web-toggle input {
         margin: 0;
