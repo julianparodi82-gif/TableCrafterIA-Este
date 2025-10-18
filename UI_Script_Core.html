@@ -187,27 +187,55 @@ function cloneHeaderModels(source) {
 
 
 
+function createEmptyHeaderWebSourceEntry() {
+        return { url: '', description: '', hasDescription: false };
+      }
+
+function cloneHeaderWebSourceEntry(entry) {
+        const base = createEmptyHeaderWebSourceEntry();
+        if (entry && typeof entry === 'object') {
+          if (entry.url !== undefined && entry.url !== null) {
+            base.url = String(entry.url).trim();
+          } else if (entry.href !== undefined && entry.href !== null) {
+            base.url = String(entry.href).trim();
+          } else if (entry.link !== undefined && entry.link !== null) {
+            base.url = String(entry.link).trim();
+          }
+          if (entry.description !== undefined && entry.description !== null) {
+            base.description = String(entry.description).trim();
+          }
+          if (entry.hasDescription === true) {
+            base.hasDescription = true;
+          }
+        } else if (entry !== null && entry !== undefined) {
+          base.url = String(entry).trim();
+        }
+        if (base.description && base.description.trim()) {
+          base.description = base.description.trim();
+          base.hasDescription = true;
+        } else if (!base.hasDescription) {
+          base.description = '';
+        }
+        return base;
+      }
+
 function normalizeHeaderWebSourceArray(source) {
         if (!Array.isArray(source)) {
           return [];
         }
+        const seen = Object.create(null);
         const values = [];
-        source.some(function(entry) {
-          if (values.length >= AI_WEB_SOURCE_LIMIT) {
-            return true;
+        source.slice(0, AI_WEB_SOURCE_LIMIT).forEach(function(entry) {
+          const clone = cloneHeaderWebSourceEntry(entry);
+          if (!clone.url) {
+            values.push(clone);
+            return;
           }
-          if (entry === null || entry === undefined) {
-            return false;
+          const key = clone.url.trim().toLowerCase();
+          if (key && !seen[key]) {
+            seen[key] = true;
+            values.push(clone);
           }
-          const text = String(entry).trim();
-          if (!text) {
-            return false;
-          }
-          if (values.indexOf(text) !== -1) {
-            return false;
-          }
-          values.push(text);
-          return false;
         });
         return values;
       }
@@ -1581,13 +1609,13 @@ function renderHeaderList(listId, headers) {
           webToggleLabel.className = 'header-ai-web-toggle js-comment-hint-trigger';
           webToggleLabel.setAttribute(
             'data-comment-hint',
-            'Añade enlaces a páginas específicas que la IA debe revisar para completar esta columna.'
+            'Añade enlaces que la IA debe revisar para completar esta columna.'
           );
           const webToggle = document.createElement('input');
           webToggle.type = 'checkbox';
           webToggle.checked = !!header.aiWebSourcesEnabled && !!header.aiFillEnabled;
           const webToggleText = document.createElement('span');
-          webToggleText.textContent = 'Usar información de páginas web específicas';
+          webToggleText.textContent = 'Usar información de páginas web';
           webToggleLabel.appendChild(webToggle);
           webToggleLabel.appendChild(webToggleText);
           li.appendChild(webToggleLabel);
@@ -1606,18 +1634,10 @@ function renderHeaderList(listId, headers) {
 
           const ensureWebSourcesArray = function() {
             const existing = Array.isArray(headers[index].aiWebSources) ? headers[index].aiWebSources : [];
-            const normalized = [];
-            existing.forEach(function(entry) {
-              if (normalized.length >= AI_WEB_SOURCE_LIMIT) {
-                return;
-              }
-              if (entry === null || entry === undefined) {
-                normalized.push('');
-                return;
-              }
-              normalized.push(String(entry));
+            const normalized = existing.slice(0, AI_WEB_SOURCE_LIMIT).map(function(entry) {
+              return cloneHeaderWebSourceEntry(entry);
             });
-            headers[index].aiWebSources = normalized.slice(0, AI_WEB_SOURCE_LIMIT);
+            headers[index].aiWebSources = normalized;
             return headers[index].aiWebSources;
           };
 
@@ -1626,35 +1646,91 @@ function renderHeaderList(listId, headers) {
             const focusNew = !!(options && options.focusNew);
             const sources = ensureWebSourcesArray();
             webItems.innerHTML = '';
-            sources.forEach(function(value, sourceIndex) {
+            sources.forEach(function(entry, sourceIndex) {
               const item = document.createElement('div');
               item.className = 'header-ai-web-item';
+              const row = document.createElement('div');
+              row.className = 'header-ai-web-row';
               const input = document.createElement('input');
               input.type = 'url';
               input.className = 'header-ai-web-input';
               input.placeholder = 'https://ejemplo.com';
-              input.value = value || '';
+              input.value = entry && entry.url ? entry.url : '';
               input.disabled = !allowEditing;
               input.addEventListener('input', function() {
                 const current = ensureWebSourcesArray();
-                current[sourceIndex] = this.value;
+                current[sourceIndex].url = this.value;
                 headers[index].aiWebSources = current;
                 markHeadersDirty();
               });
-              item.appendChild(input);
+              row.appendChild(input);
+
+              const descInput = document.createElement('textarea');
+              descInput.className = 'header-ai-web-desc';
+              descInput.placeholder = 'Describe qué información se debe buscar';
+              descInput.value = entry && entry.description ? entry.description : '';
+              descInput.disabled = !allowEditing;
+
+              const descToggleLabel = document.createElement('label');
+              descToggleLabel.className = 'header-ai-web-desc-toggle';
+              const descToggle = document.createElement('input');
+              descToggle.type = 'checkbox';
+              descToggle.disabled = !allowEditing;
+              const descToggleText = document.createElement('span');
+              descToggleText.textContent = 'Agregar descripción';
+              const hasDescription = entry && entry.hasDescription === true;
+              const hasContent = entry && entry.description && entry.description.trim();
+              descToggle.checked = !!(hasDescription || hasContent);
+              descToggleLabel.classList.toggle('is-active', descToggle.checked);
+              descToggle.addEventListener('change', function() {
+                const current = ensureWebSourcesArray();
+                const target = current[sourceIndex] || createEmptyHeaderWebSourceEntry();
+                if (this.checked) {
+                  target.hasDescription = true;
+                } else {
+                  target.hasDescription = false;
+                  target.description = '';
+                  descInput.value = '';
+                }
+                descInput.classList.toggle('hidden', !this.checked);
+                headers[index].aiWebSources = current;
+                descToggleLabel.classList.toggle('is-active', this.checked);
+                markHeadersDirty();
+              });
+              descToggleLabel.appendChild(descToggle);
+              descToggleLabel.appendChild(descToggleText);
+              row.appendChild(descToggleLabel);
+
               const removeBtn = document.createElement('button');
               removeBtn.type = 'button';
               removeBtn.className = 'header-ai-web-remove';
-              removeBtn.textContent = 'Eliminar';
+              removeBtn.textContent = '×';
+              removeBtn.setAttribute('aria-label', 'Eliminar enlace');
               removeBtn.disabled = !allowEditing;
               removeBtn.addEventListener('click', function() {
                 const current = ensureWebSourcesArray();
                 current.splice(sourceIndex, 1);
                 headers[index].aiWebSources = current;
                 renderWebSources({ allowEditing: allowEditing });
+                if (typeof updateWebSourcesVisibility === 'function') {
+                  updateWebSourcesVisibility({ focusNew: false });
+                }
                 markHeadersDirty();
               });
-              item.appendChild(removeBtn);
+              row.appendChild(removeBtn);
+              item.appendChild(row);
+
+              descInput.classList.toggle('hidden', !descToggle.checked);
+              descInput.addEventListener('input', function() {
+                const current = ensureWebSourcesArray();
+                const target = current[sourceIndex] || createEmptyHeaderWebSourceEntry();
+                target.description = this.value;
+                target.hasDescription = !!this.value.trim() || !!descToggle.checked;
+                headers[index].aiWebSources = current;
+                markHeadersDirty();
+              });
+              item.appendChild(descInput);
+
               webItems.appendChild(item);
             });
             webAddButton.disabled = !allowEditing || ensureWebSourcesArray().length >= AI_WEB_SOURCE_LIMIT;
@@ -1680,7 +1756,7 @@ function renderHeaderList(listId, headers) {
               webToggle.checked = desired;
               allowEditing = desired;
               if (allowEditing && ensureWebSourcesArray().length === 0) {
-                headers[index].aiWebSources = [''];
+                headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
               }
             }
             const shouldShow = aiEnabled && !!webToggle.checked;
@@ -1692,11 +1768,14 @@ function renderHeaderList(listId, headers) {
           };
 
           webAddButton.addEventListener('click', function() {
+            if (!aiToggle.checked || !webToggle.checked) {
+              return;
+            }
             const sources = ensureWebSourcesArray();
             if (sources.length >= AI_WEB_SOURCE_LIMIT) {
               return;
             }
-            sources.push('');
+            sources.push(createEmptyHeaderWebSourceEntry());
             headers[index].aiWebSources = sources;
             renderWebSources({ allowEditing: true, focusNew: true });
             markHeadersDirty();
@@ -1711,7 +1790,7 @@ function renderHeaderList(listId, headers) {
             }
             headers[index].aiWebSourcesEnabled = !!webToggle.checked;
             if (webToggle.checked && ensureWebSourcesArray().length === 0) {
-              headers[index].aiWebSources = [''];
+              headers[index].aiWebSources = [createEmptyHeaderWebSourceEntry()];
             }
             updateWebSourcesVisibility({ focusNew: !!webToggle.checked });
             markHeadersDirty();
@@ -2010,7 +2089,7 @@ function checkApiKey() {
           const warn = document.getElementById('apiWarning');
           if (!warn) return;
           if (!res || !res.key) {
-            warn.innerHTML = 'Configure su API Key para usar la IA (menú Configurar API).';
+            warn.innerHTML = 'Configure su API Key para usar la IA (menú Configuración).';
           } else {
             warn.innerHTML = '';
           }

@@ -27,6 +27,8 @@ var SIDEBAR_THEME_TABLE = 'table';
 var WELCOME_MESSAGE_PROPERTY_KEY = 'tablecrafter.hideWelcomeMessage';
 var WELCOME_MESSAGE_PROPERTY_KEY_TABLE = 'tablecrafter.hideWelcomeMessage.table';
 var WELCOME_MESSAGE_PROPERTY_KEY_WORD = 'tablecrafter.hideWelcomeMessage.word';
+var DOWNLOAD_PATH_PROPERTY_KEY = 'tablecrafter.downloadsPath';
+var DEFAULT_DOWNLOAD_PATH = 'Escritorio';
 var DEFAULT_AI_FILL_DATA_TYPE = 'datos';
 var AI_WEB_SOURCE_LIMIT = 3;
 
@@ -53,8 +55,8 @@ function showSidebar() {
  */
 function showConfig() {
   var html = HtmlService.createHtmlOutputFromFile('Config')
-    .setWidth(400)
-    .setHeight(220)
+    .setWidth(420)
+    .setHeight(360)
     .setTitle('Configuración de TableCrafterAI');
   SpreadsheetApp.getUi().showModalDialog(html, 'Configuración de TableCrafterAI');
 }
@@ -68,6 +70,63 @@ function showHelp() {
     .setHeight(500)
     .setTitle('Ayuda de TableCrafterAI');
   SpreadsheetApp.getUi().showModalDialog(html, 'Ayuda de TableCrafterAI');
+}
+
+function getConfigurationSettings() {
+  var props = PropertiesService.getUserProperties();
+  var key = props.getProperty('TC_API_KEY');
+  var storedPath = props.getProperty(DOWNLOAD_PATH_PROPERTY_KEY);
+  var downloadsPath = DEFAULT_DOWNLOAD_PATH;
+  if (storedPath !== null && storedPath !== undefined) {
+    var trimmedPath = String(storedPath).trim();
+    if (trimmedPath) {
+      downloadsPath = trimmedPath;
+    }
+  }
+  return {
+    key: key || '',
+    downloadsPath: downloadsPath
+  };
+}
+
+function saveConfigurationSettings(settings) {
+  var data = settings && typeof settings === 'object' ? settings : {};
+  var userProps = PropertiesService.getUserProperties();
+  var apiKeyValue = '';
+  if (data.apiKey !== null && data.apiKey !== undefined) {
+    apiKeyValue = String(data.apiKey).trim();
+  }
+  if (apiKeyValue) {
+    userProps.setProperty('TC_API_KEY', apiKeyValue);
+  } else {
+    userProps.deleteProperty('TC_API_KEY');
+  }
+
+  var downloadsPath;
+  if (Object.prototype.hasOwnProperty.call(data, 'downloadsPath')) {
+    var rawPath = data.downloadsPath;
+    var trimmedPath = rawPath === null || rawPath === undefined ? '' : String(rawPath).trim();
+    if (trimmedPath) {
+      userProps.setProperty(DOWNLOAD_PATH_PROPERTY_KEY, trimmedPath);
+      downloadsPath = trimmedPath;
+    } else {
+      userProps.deleteProperty(DOWNLOAD_PATH_PROPERTY_KEY);
+      downloadsPath = DEFAULT_DOWNLOAD_PATH;
+    }
+  } else {
+    var storedPath = userProps.getProperty(DOWNLOAD_PATH_PROPERTY_KEY);
+    if (storedPath !== null && storedPath !== undefined && String(storedPath).trim()) {
+      downloadsPath = String(storedPath).trim();
+    } else {
+      downloadsPath = DEFAULT_DOWNLOAD_PATH;
+    }
+  }
+
+  return {
+    ok: true,
+    key: apiKeyValue,
+    downloadsPath: downloadsPath
+  };
 }
 
 /**
@@ -105,7 +164,7 @@ function refreshAddonMenuForTheme(themeMode) {
   ui.createMenu('TableCrafterAI')
     .addItem('Abrir TableCrafterAI', 'showTablecrafterSidebar')
     .addItem('Abrir WordCrafterAI', 'showWordcrafterSidebar')
-    .addItem('Configurar API', 'showConfig')
+    .addItem('Configuración', 'showConfig')
     .addItem('Ayuda', 'showHelp')
     .addToUi();
 }
@@ -639,20 +698,59 @@ function normalizeHeaderWebSources(source) {
   if (!Array.isArray(source)) {
     return result;
   }
+  var seen = Object.create(null);
   source.forEach(function(entry) {
     if (result.length >= AI_WEB_SOURCE_LIMIT) {
       return;
     }
-    if (entry === null || entry === undefined) {
+    var normalized = normalizeWebSourceEntry(entry);
+    if (!normalized) {
       return;
     }
-    var text = String(entry).trim();
-    if (!text || result.indexOf(text) !== -1) {
+    if (seen[normalized.url]) {
       return;
     }
-    result.push(text);
+    seen[normalized.url] = true;
+    result.push(normalized);
   });
   return result;
+}
+
+function normalizeWebSourceEntry(entry) {
+  if (entry === null || entry === undefined) {
+    return null;
+  }
+  var url = '';
+  var description = '';
+  var hasDescription = false;
+  if (typeof entry === 'object') {
+    if (entry.url !== undefined && entry.url !== null) {
+      url = String(entry.url).trim();
+    } else if (entry.href !== undefined && entry.href !== null) {
+      url = String(entry.href).trim();
+    } else if (entry.link !== undefined && entry.link !== null) {
+      url = String(entry.link).trim();
+    }
+    if (entry.description !== undefined && entry.description !== null) {
+      description = String(entry.description).trim();
+    }
+    if (entry.hasDescription === true) {
+      hasDescription = true;
+    }
+  } else {
+    url = String(entry).trim();
+  }
+  if (!url) {
+    return null;
+  }
+  if (description) {
+    hasDescription = true;
+  }
+  return {
+    url: url,
+    description: hasDescription ? description : '',
+    hasDescription: hasDescription
+  };
 }
 
 function columnLetterToNumber(letter) {
@@ -2491,18 +2589,21 @@ function normalizeFeatureWebSourceArray(source) {
       base[index] = [];
       return;
     }
-    var seen = {};
+    var seen = Object.create(null);
     var values = [];
     entry.slice(0, AI_WEB_SOURCE_LIMIT).forEach(function(value) {
-      if (value === null || value === undefined) {
+      var normalized = normalizeWebSourceEntry(value);
+      if (!normalized) {
         return;
       }
-      var text = String(value).trim();
-      if (!text || seen[text]) {
+      var key = normalized.url ? normalized.url.toLowerCase() : '';
+      if (key && seen[key]) {
         return;
       }
-      seen[text] = true;
-      values.push(text);
+      if (key) {
+        seen[key] = true;
+      }
+      values.push(normalized);
     });
     base[index] = values;
   });
@@ -2986,8 +3087,7 @@ function saveReportFavorite(payload) {
  * @returns {Object} Objeto con key o null.
  */
 function getApiKey() {
-  var key = PropertiesService.getUserProperties().getProperty('TC_API_KEY');
-  return { key: key || '' };
+  return getConfigurationSettings();
 }
 
 /**
@@ -2997,13 +3097,7 @@ function getApiKey() {
  * @returns {Object} Resultado de guardado.
  */
 function saveApiKey(key) {
-  var userProps = PropertiesService.getUserProperties();
-  if (!key) {
-    userProps.deleteProperty('TC_API_KEY');
-    return { ok: true };
-  }
-  userProps.setProperty('TC_API_KEY', key.trim());
-  return { ok: true };
+  return saveConfigurationSettings({ apiKey: key });
 }
 
 /**

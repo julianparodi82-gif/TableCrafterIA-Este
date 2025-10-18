@@ -1252,6 +1252,10 @@ function createEmptyFeatureWebToggleArray() {
         return Array(REPORT_FEATURE_MAX_QUANTITY).fill(false);
       }
 
+function createEmptyFeatureWebSourceEntry() {
+        return { url: '', description: '', hasDescription: false };
+      }
+
 function createEmptyFeatureWebSourceArray() {
         return Array.from({ length: REPORT_FEATURE_MAX_QUANTITY }, function() {
           return [];
@@ -1286,6 +1290,34 @@ function cloneFeatureTableSelectionArray(source) {
         return base;
       }
 
+function cloneFeatureWebSourceEntry(entry) {
+        const base = createEmptyFeatureWebSourceEntry();
+        if (entry && typeof entry === 'object') {
+          if (entry.url !== undefined && entry.url !== null) {
+            base.url = String(entry.url).trim();
+          } else if (entry.href !== undefined && entry.href !== null) {
+            base.url = String(entry.href).trim();
+          } else if (entry.link !== undefined && entry.link !== null) {
+            base.url = String(entry.link).trim();
+          }
+          if (entry.description !== undefined && entry.description !== null) {
+            base.description = String(entry.description).trim();
+          }
+          if (entry.hasDescription === true) {
+            base.hasDescription = true;
+          }
+        } else if (entry !== null && entry !== undefined) {
+          base.url = String(entry).trim();
+        }
+        if (base.description && base.description.trim()) {
+          base.description = base.description.trim();
+          base.hasDescription = true;
+        } else if (!base.hasDescription) {
+          base.description = '';
+        }
+        return base;
+      }
+
 function cloneFeatureWebSourceArray(source) {
         const base = createEmptyFeatureWebSourceArray();
         if (!Array.isArray(source)) {
@@ -1298,11 +1330,7 @@ function cloneFeatureWebSourceArray(source) {
           }
           const values = [];
           entry.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT).forEach(function(value) {
-            if (value === null || value === undefined) {
-              values.push('');
-              return;
-            }
-            values.push(String(value));
+            values.push(cloneFeatureWebSourceEntry(value));
           });
           base[index] = values;
         });
@@ -1371,16 +1399,19 @@ function normalizeFeatureWebSourceArray(source) {
             base[index] = [];
             return;
           }
+          const seen = Object.create(null);
           const values = [];
           entry.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT).forEach(function(value) {
-            if (value === null || value === undefined) {
+            const clone = cloneFeatureWebSourceEntry(value);
+            if (!clone.url) {
+              values.push(clone);
               return;
             }
-            const text = String(value).trim();
-            if (!text || values.indexOf(text) !== -1) {
-              return;
+            const key = clone.url.trim().toLowerCase();
+            if (key && !seen[key]) {
+              seen[key] = true;
+              values.push(clone);
             }
-            values.push(text);
           });
           base[index] = values;
         });
@@ -1588,7 +1619,7 @@ function getReportOrderTablesMeta(feature, index) {
         const selections = normalizeFeatureTableSelectionArray(state.instanceTables);
         if (toggles[index] && Array.isArray(selections[index]) && selections[index].length > 0) {
           const count = selections[index].length;
-          return count === 1 ? 'Tablas: 1 específica' : 'Tablas: ' + count + ' específicas';
+          return count === 1 ? 'Tablas: 1 seleccionada' : 'Tablas: ' + count + ' seleccionadas';
         }
         const selectedIds = getSelectedAiTableIds();
         if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
@@ -1610,10 +1641,10 @@ function getReportOrderTablesDetail(feature, index) {
         if (toggles[index] && Array.isArray(selections[index]) && selections[index].length > 0) {
           const detail = formatReportTableLabelList(selections[index]);
           if (detail) {
-            return 'Tablas específicas: ' + detail;
+            return 'Tablas: ' + detail;
           }
           const count = selections[index].length;
-          return 'Tablas específicas: ' + (count === 1 ? '1 tabla' : count + ' tablas');
+          return 'Tablas: ' + (count === 1 ? '1 tabla' : count + ' tablas');
         }
         const selectedIds = getSelectedAiTableIds();
         if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
@@ -2657,11 +2688,7 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
           const normalizedWebSources = cloneFeatureWebSourceArray(state.instanceWebSources);
-          state.instanceWebSources = normalizedWebSources.map(function(bucket) {
-            return Array.isArray(bucket)
-              ? bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
-              : [];
-          });
+          state.instanceWebSources = normalizedWebSources;
           const normalizedWebToggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
           state.instanceWebSourcesEnabled = normalizedWebToggles.slice();
           const associationOptions = getReportFeatureAssociationOptions();
@@ -2834,7 +2861,7 @@ function refreshReportFeatureOption(feature) {
               : [];
             const shouldShowWebList = withinRange && normalizedWebToggles[index];
             if (shouldShowWebList && currentWebList.length === 0) {
-              state.instanceWebSources[index] = [''];
+              state.instanceWebSources[index] = [createEmptyFeatureWebSourceEntry()];
             }
             if (webListWrapper) {
               webListWrapper.classList.toggle('ai-hidden', !shouldShowWebList);
@@ -2850,39 +2877,89 @@ function refreshReportFeatureOption(feature) {
               const sources = Array.isArray(state.instanceWebSources[index])
                 ? state.instanceWebSources[index].slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
                 : [];
-              sources.forEach(function(value, webIndex) {
+              sources.forEach(function(entry, webIndex) {
+                const normalizedEntry = entry && typeof entry === 'object'
+                  ? entry
+                  : cloneFeatureWebSourceEntry(entry);
+                const item = document.createElement('div');
+                item.className = 'ai-feature-web-item';
                 const row = document.createElement('div');
-                row.className = 'ai-feature-web-item';
+                row.className = 'ai-feature-web-row';
                 const input = document.createElement('input');
                 input.type = 'url';
-                input.value = value || '';
+                input.value = normalizedEntry.url || '';
                 input.placeholder = 'https://ejemplo.com';
                 input.disabled = !editable;
                 input.addEventListener('input', function() {
                   handleReportFeatureInstanceWebSourceChange(feature, index, webIndex, input.value);
                 });
                 row.appendChild(input);
+
+                const descInput = document.createElement('textarea');
+                descInput.className = 'ai-feature-web-desc';
+                descInput.placeholder = 'Describe qué debe revisar la IA en este enlace';
+                descInput.value = normalizedEntry.description || '';
+                descInput.disabled = !editable;
+
+                const descToggleLabel = document.createElement('label');
+                descToggleLabel.className = 'ai-feature-web-desc-toggle';
+                const descToggle = document.createElement('input');
+                descToggle.type = 'checkbox';
+                descToggle.disabled = !editable;
+                const descToggleText = document.createElement('span');
+                descToggleText.textContent = 'Agregar descripción';
+                const hasDescription = normalizedEntry.hasDescription === true;
+                const hasContent = normalizedEntry.description && normalizedEntry.description.trim();
+                descToggle.checked = !!(hasDescription || hasContent);
+                descToggleLabel.classList.toggle('is-active', descToggle.checked);
+                descToggle.addEventListener('change', function() {
+                  handleReportFeatureInstanceWebSourceDescriptionToggle(
+                    feature,
+                    index,
+                    webIndex,
+                    this.checked
+                  );
+                  descInput.classList.toggle('hidden', !this.checked);
+                  if (!this.checked) {
+                    descInput.value = '';
+                  }
+                  descToggleLabel.classList.toggle('is-active', this.checked);
+                });
+                descToggleLabel.appendChild(descToggle);
+                descToggleLabel.appendChild(descToggleText);
+                row.appendChild(descToggleLabel);
+
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.className = 'ai-feature-web-remove';
-                removeBtn.textContent = 'Eliminar';
+                removeBtn.textContent = '×';
+                removeBtn.setAttribute('aria-label', 'Eliminar enlace');
                 removeBtn.disabled = !editable;
                 removeBtn.addEventListener('click', function() {
                   handleReportFeatureInstanceWebSourceRemove(feature, index, webIndex);
                 });
                 row.appendChild(removeBtn);
-                webItemsContainer.appendChild(row);
+                item.appendChild(row);
+
+                descInput.classList.toggle('hidden', !descToggle.checked);
+                descInput.addEventListener('input', function() {
+                  handleReportFeatureInstanceWebSourceDescriptionChange(
+                    feature,
+                    index,
+                    webIndex,
+                    descInput.value
+                  );
+                });
+                item.appendChild(descInput);
+
+                webItemsContainer.appendChild(item);
               });
             }
           });
           state.instanceTablesEnabled = normalizedTableToggles.slice();
           state.instanceTables = cloneFeatureTableSelectionArray(normalizedTableSelections);
           state.instanceWebSourcesEnabled = normalizedWebToggles.slice();
-          state.instanceWebSources = state.instanceWebSources.map(function(bucket) {
-            return Array.isArray(bucket)
-              ? bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT)
-              : [];
-          });
+          state.instanceWebSources = cloneFeatureWebSourceArray(state.instanceWebSources);
         }
       }
 
@@ -3165,7 +3242,7 @@ function handleReportFeatureInstanceWebToggle(feature, index, enabled) {
         } else {
           toggles[safeIndex] = true;
           if (!Array.isArray(sources[safeIndex]) || sources[safeIndex].length === 0) {
-            sources[safeIndex] = [''];
+            sources[safeIndex] = [createEmptyFeatureWebSourceEntry()];
           }
         }
         state.instanceWebSourcesEnabled = toggles;
@@ -3192,8 +3269,8 @@ function handleReportFeatureInstanceWebSourceAdd(feature, index) {
         if (bucket.length >= REPORT_FEATURE_WEB_SOURCE_LIMIT) {
           return;
         }
-        bucket.push('');
-        sources[safeIndex] = bucket;
+        bucket.push(createEmptyFeatureWebSourceEntry());
+        sources[safeIndex] = bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT);
         state.instanceWebSources = sources;
         refreshReportFeatureOption(feature);
       }
@@ -3217,9 +3294,10 @@ function handleReportFeatureInstanceWebSourceChange(feature, index, sourceIndex,
         const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
         const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
         while (bucket.length <= safeSourceIndex) {
-          bucket.push('');
+          bucket.push(createEmptyFeatureWebSourceEntry());
         }
-        bucket[safeSourceIndex] = value === null || value === undefined ? '' : String(value);
+        bucket[safeSourceIndex] = cloneFeatureWebSourceEntry(bucket[safeSourceIndex]);
+        bucket[safeSourceIndex].url = value === null || value === undefined ? '' : String(value);
         sources[safeIndex] = bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT);
         state.instanceWebSources = sources;
       }
@@ -3248,6 +3326,66 @@ function handleReportFeatureInstanceWebSourceRemove(feature, index, sourceIndex)
         sources[safeIndex] = bucket;
         state.instanceWebSources = sources;
         refreshReportFeatureOption(feature);
+      }
+
+function handleReportFeatureInstanceWebSourceDescriptionToggle(feature, index, sourceIndex, enabled) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        const parsedSourceIndex = parseInt(sourceIndex, 10);
+        if (isNaN(parsedIndex) || isNaN(parsedSourceIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const safeSourceIndex = Math.max(0, Math.min(REPORT_FEATURE_WEB_SOURCE_LIMIT - 1, parsedSourceIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        if (!toggles[safeIndex]) {
+          return;
+        }
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
+        while (bucket.length <= safeSourceIndex) {
+          bucket.push(createEmptyFeatureWebSourceEntry());
+        }
+        bucket[safeSourceIndex] = cloneFeatureWebSourceEntry(bucket[safeSourceIndex]);
+        bucket[safeSourceIndex].hasDescription = !!enabled;
+        if (!enabled) {
+          bucket[safeSourceIndex].description = '';
+        }
+        sources[safeIndex] = bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT);
+        state.instanceWebSources = sources;
+      }
+
+function handleReportFeatureInstanceWebSourceDescriptionChange(feature, index, sourceIndex, value) {
+        const state = ensureReportFeatureState(feature);
+        if (!state || !state.selected) {
+          return;
+        }
+        const parsedIndex = parseInt(index, 10);
+        const parsedSourceIndex = parseInt(sourceIndex, 10);
+        if (isNaN(parsedIndex) || isNaN(parsedSourceIndex)) {
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
+        const safeSourceIndex = Math.max(0, Math.min(REPORT_FEATURE_WEB_SOURCE_LIMIT - 1, parsedSourceIndex));
+        const toggles = normalizeFeatureWebToggleArray(state.instanceWebSourcesEnabled);
+        if (!toggles[safeIndex]) {
+          return;
+        }
+        const sources = cloneFeatureWebSourceArray(state.instanceWebSources);
+        const bucket = Array.isArray(sources[safeIndex]) ? sources[safeIndex] : [];
+        while (bucket.length <= safeSourceIndex) {
+          bucket.push(createEmptyFeatureWebSourceEntry());
+        }
+        bucket[safeSourceIndex] = cloneFeatureWebSourceEntry(bucket[safeSourceIndex]);
+        bucket[safeSourceIndex].description = value === null || value === undefined ? '' : String(value);
+        if (bucket[safeSourceIndex].description.trim()) {
+          bucket[safeSourceIndex].hasDescription = true;
+        }
+        sources[safeIndex] = bucket.slice(0, REPORT_FEATURE_WEB_SOURCE_LIMIT);
+        state.instanceWebSources = sources;
       }
 
 function handleReportFeatureSummaryLengthChange(feature, value) {

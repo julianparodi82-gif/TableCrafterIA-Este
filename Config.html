@@ -22,7 +22,8 @@
         margin-bottom: 4px;
         font-weight: 600;
       }
-      input[type="text"] {
+      input[type="text"],
+      input[type="password"] {
         width: 100%;
         padding: 8px;
         border: 1px solid #E5E7EB;
@@ -31,6 +32,49 @@
         color: #111827;
         box-sizing: border-box;
         min-height: 36px;
+      }
+      .btn-secondary {
+        background-color: #E5E7EB;
+        color: #111827;
+      }
+      .btn-secondary:hover {
+        background-color: #D1D5DB;
+      }
+      .input-with-action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .input-with-action input[type="password"],
+      .input-with-action input[type="text"] {
+        flex: 1;
+      }
+      .icon-btn {
+        margin-top: 0;
+        background-color: #E5E7EB;
+        color: #111827;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 36px;
+      }
+      .icon-btn:hover {
+        background-color: #D1D5DB;
+      }
+      .download-picker {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .download-picker button {
+        margin-top: 0;
+      }
+      .download-picker input[type="text"] {
+        flex: 1;
       }
       button {
         margin-top: 16px;
@@ -207,13 +251,25 @@
     </style>
   </head>
   <body>
-    <h2>Configuración de la API</h2>
-    <p>Introduzca su clave de API de OpenAI para habilitar las consultas de IA. Su clave se almacena de forma segura en las propiedades del script.</p>
+    <h2>Configuración</h2>
+    <p>Administre su clave de OpenAI y las preferencias generales del complemento.</p>
     <label for="apiKeyInput">API Key</label>
-    <input type="text" id="apiKeyInput" placeholder="sk-..." />
+    <div class="input-with-action">
+      <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off" />
+      <button type="button" id="toggleApiVisibility" class="icon-btn" aria-label="Mostrar clave">🙈</button>
+    </div>
     <div>
       <button id="saveKeyBtn" class="btn-save">Guardar</button>
       <button id="deleteKeyBtn" class="btn-delete">Eliminar clave</button>
+    </div>
+    <div class="preference-section">
+      <h3>Ubicación de descargas</h3>
+      <p class="preference-hint">Elija dónde se guardarán los archivos generados por TableCrafterAI.</p>
+      <div class="download-picker">
+        <button type="button" id="downloadBrowseBtn" class="btn-secondary">Seleccionar carpeta</button>
+        <input type="text" id="downloadPathInput" placeholder="Escritorio" />
+      </div>
+      <p class="preference-hint">Puede pegar la URL de una carpeta de Drive o una ruta local. Si deja el campo vacío se usará el Escritorio.</p>
     </div>
     <div class="preference-section">
       <h3>Preferencias</h3>
@@ -342,13 +398,27 @@
         });
       }
 
+      const apiInput = document.getElementById('apiKeyInput');
+      const downloadInput = document.getElementById('downloadPathInput');
+      const messageEl = document.getElementById('message');
+      const eyeToggleBtn = document.getElementById('toggleApiVisibility');
+      const downloadBrowseBtn = document.getElementById('downloadBrowseBtn');
+
       // Cargar preferencias existentes
       document.addEventListener('DOMContentLoaded', function() {
+        if (messageEl) {
+          messageEl.textContent = '';
+        }
         google.script.run.withSuccessHandler(function(res) {
-          if (res && res.key) {
-            document.getElementById('apiKeyInput').value = res.key;
+          const data = res && typeof res === 'object' ? res : {};
+          if (apiInput) {
+            apiInput.value = data.key || '';
+            apiInput.setAttribute('type', 'password');
           }
-        }).getApiKey();
+          if (downloadInput) {
+            downloadInput.value = data.downloadsPath || 'Escritorio';
+          }
+        }).getConfigurationSettings();
         google.script.run.withSuccessHandler(function(res) {
           const toggle = document.getElementById('welcomeToggle');
           if (!toggle) return;
@@ -373,12 +443,28 @@
           toggle.checked = !(hideTable && hideWord);
         }).getWelcomeMessagePreference();
       });
-      // Guardar clave
+      // Guardar configuraciones
       document.getElementById('saveKeyBtn').addEventListener('click', function() {
-        const key = document.getElementById('apiKeyInput').value.trim();
-        google.script.run.withSuccessHandler(function() {
-          document.getElementById('message').textContent = 'Clave guardada correctamente.';
-        }).saveApiKey(key);
+        if (messageEl) {
+          messageEl.textContent = '';
+        }
+        const key = apiInput ? apiInput.value.trim() : '';
+        const downloadsPath = downloadInput ? downloadInput.value.trim() : '';
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const data = res && typeof res === 'object' ? res : {};
+            if (downloadInput && data.downloadsPath) {
+              downloadInput.value = data.downloadsPath;
+            }
+            if (!data.key && apiInput) {
+              apiInput.value = '';
+              apiInput.setAttribute('type', 'password');
+            }
+            if (messageEl) {
+              messageEl.textContent = 'Preferencias guardadas correctamente.';
+            }
+          })
+          .saveConfigurationSettings({ apiKey: key, downloadsPath: downloadsPath });
       });
       // Eliminar clave
       document.getElementById('deleteKeyBtn').addEventListener('click', async function() {
@@ -391,20 +477,75 @@
         if (!confirmed) {
           return;
         }
-        google.script.run.withSuccessHandler(function() {
-          document.getElementById('apiKeyInput').value = '';
-          document.getElementById('message').textContent = 'Clave eliminada.';
-        }).saveApiKey('');
+        if (messageEl) {
+          messageEl.textContent = '';
+        }
+        const downloadsPath = downloadInput ? downloadInput.value.trim() : '';
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const data = res && typeof res === 'object' ? res : {};
+            if (apiInput) {
+              apiInput.value = '';
+              apiInput.setAttribute('type', 'password');
+            }
+            if (downloadInput && data.downloadsPath) {
+              downloadInput.value = data.downloadsPath;
+            }
+            if (messageEl) {
+              messageEl.textContent = 'Clave eliminada.';
+            }
+          })
+          .saveConfigurationSettings({ apiKey: '', downloadsPath: downloadsPath });
       });
       // Actualizar preferencia de bienvenida
       document.getElementById('welcomeToggle').addEventListener('change', function() {
         const shouldShow = this.checked;
         google.script.run.withSuccessHandler(function() {
-          document.getElementById('message').textContent = shouldShow
-            ? 'El mensaje de bienvenida volverá a mostrarse.'
-            : 'El mensaje de bienvenida permanecerá oculto.';
+          if (messageEl) {
+            messageEl.textContent = shouldShow
+              ? 'El mensaje de bienvenida volverá a mostrarse.'
+              : 'El mensaje de bienvenida permanecerá oculto.';
+          }
         }).setWelcomeMessagePreference(shouldShow, 'all');
       });
+      if (eyeToggleBtn) {
+        eyeToggleBtn.addEventListener('click', function() {
+          if (!apiInput) {
+            return;
+          }
+          const isHidden = apiInput.getAttribute('type') === 'password';
+          apiInput.setAttribute('type', isHidden ? 'text' : 'password');
+          this.textContent = isHidden ? '👁️' : '🙈';
+          this.setAttribute('aria-label', isHidden ? 'Ocultar clave' : 'Mostrar clave');
+          apiInput.focus();
+        });
+      }
+      if (downloadBrowseBtn) {
+        downloadBrowseBtn.addEventListener('click', function() {
+          if (!downloadInput) {
+            return;
+          }
+          const currentValue = downloadInput.value || 'Escritorio';
+          const promptResult = google.script.host.showPrompt(
+            'Seleccionar carpeta',
+            'Ingrese la ruta o URL donde se guardarán las descargas.',
+            currentValue
+          );
+          if (promptResult && typeof promptResult.getSelectedButton === 'function') {
+            const button = promptResult.getSelectedButton();
+            const buttonsEnum = (google.script.host && google.script.host.Buttons) || {};
+            if (button === buttonsEnum.OK || button === 'ok') {
+              const response =
+                typeof promptResult.getResponseText === 'function'
+                  ? promptResult.getResponseText()
+                  : '';
+              const nextValue = typeof response === 'string' ? response.trim() : '';
+              downloadInput.value = nextValue || 'Escritorio';
+              downloadInput.focus();
+            }
+          }
+        });
+      }
     </script>
   </body>
 </html>

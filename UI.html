@@ -1354,19 +1354,57 @@
       .ai-feature-web-items {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 10px;
       }
       .ai-feature-web-item {
         display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--tc-border, #E5E7EB);
+        border-radius: 10px;
+        background: #F9FAFB;
+      }
+      .ai-feature-web-row {
+        display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
+        row-gap: 4px;
       }
-      .ai-feature-web-item input {
+      .ai-feature-web-row input {
         flex: 1;
         min-width: 0;
       }
-      .ai-feature-web-add,
       .ai-feature-web-remove {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ai-feature-web-remove:hover:not(:disabled) {
+        background: #E5E7EB;
+        color: #1F2937;
+      }
+      .ai-feature-web-remove:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .ai-feature-web-remove:focus-visible {
+        outline: 2px solid var(--accent-color, #2563EB);
+        outline-offset: 2px;
+      }
+      .ai-feature-web-add {
+        align-self: flex-start;
         border: none;
         background: transparent;
         color: var(--accent-color, #2563EB);
@@ -1375,13 +1413,38 @@
         font-weight: 600;
         padding: 0;
       }
-      .ai-feature-web-add:disabled,
-      .ai-feature-web-remove:disabled {
+      .ai-feature-web-add:disabled {
         color: var(--tc-muted);
         cursor: default;
       }
-      .ai-feature-web-add {
-        align-self: flex-start;
+      .ai-feature-web-desc-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--tc-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .ai-feature-web-desc-toggle.is-active {
+        color: var(--accent-color, #2563EB);
+        font-weight: 600;
+      }
+      .ai-feature-web-desc-toggle input {
+        margin: 0;
+      }
+      .ai-feature-web-desc-toggle span {
+        line-height: 1.2;
+      }
+      .ai-feature-web-desc {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+        font-size: 13px;
+      }
+      .ai-feature-web-desc.hidden {
+        display: none;
       }
       .ai-feature-association-list {
         border: 1px solid var(--tc-border);
@@ -2465,19 +2528,57 @@
       .header-ai-web-items {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
       .header-ai-web-item {
         display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--tc-border, #E5E7EB);
+        border-radius: 10px;
+        background: #F9FAFB;
+      }
+      .header-ai-web-row {
+        display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
+        row-gap: 4px;
       }
       .header-ai-web-input {
         flex: 1;
         min-width: 0;
       }
-      .header-ai-web-remove,
+      .header-ai-web-remove {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .header-ai-web-remove:hover:not(:disabled) {
+        background: #E5E7EB;
+        color: #1F2937;
+      }
+      .header-ai-web-remove:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .header-ai-web-remove:focus-visible {
+        outline: 2px solid var(--accent-color, #2563EB);
+        outline-offset: 2px;
+      }
       .header-ai-web-add {
+        align-self: flex-start;
         border: none;
         background: transparent;
         color: var(--accent-color, #2563EB);
@@ -2486,13 +2587,38 @@
         font-weight: 600;
         padding: 0;
       }
-      .header-ai-web-remove:disabled,
       .header-ai-web-add:disabled {
         color: var(--tc-muted);
         cursor: default;
       }
-      .header-ai-web-add {
-        align-self: flex-start;
+      .header-ai-web-desc-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--tc-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .header-ai-web-desc-toggle.is-active {
+        color: var(--accent-color, #2563EB);
+        font-weight: 600;
+      }
+      .header-ai-web-desc-toggle input {
+        margin: 0;
+      }
+      .header-ai-web-desc-toggle span {
+        line-height: 1.2;
+      }
+      .header-ai-web-desc {
+        width: 100%;
+        min-height: 48px;
+        resize: vertical;
+        font-size: 13px;
+      }
+      .header-ai-web-desc.hidden {
+        display: none;
       }
       .header-desc-toggle {
         display: flex;
@@ -3336,7 +3462,7 @@
                 >
                   Selecciona los componentes que debe incluir tu reporte final.
                   <span class="ai-feature-helper-note"
-                    >Si no asociás una característica a tablas específicas, se usarán todas las tablas
+                    >Si no asociás una característica a tablas, se usarán todas las tablas
                     seleccionadas.</span
                   >
                 </p>
@@ -3425,7 +3551,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-chart-1"
                             >
                               <input
@@ -3434,7 +3560,7 @@
                                 data-feature-instance-table-toggle="chart"
                                 data-instance-index="0"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -3482,7 +3608,7 @@
                                 data-feature-instance-web-toggle="chart"
                                 data-instance-index="0"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -3562,7 +3688,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-chart-2"
                             >
                               <input
@@ -3571,7 +3697,7 @@
                                 data-feature-instance-table-toggle="chart"
                                 data-instance-index="1"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -3619,7 +3745,7 @@
                                 data-feature-instance-web-toggle="chart"
                                 data-instance-index="1"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -3699,7 +3825,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-chart-3"
                             >
                               <input
@@ -3708,7 +3834,7 @@
                                 data-feature-instance-table-toggle="chart"
                                 data-instance-index="2"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -3756,7 +3882,7 @@
                                 data-feature-instance-web-toggle="chart"
                                 data-instance-index="2"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -3845,7 +3971,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-table-1"
                             >
                               <input
@@ -3854,7 +3980,7 @@
                                 data-feature-instance-table-toggle="table"
                                 data-instance-index="0"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -3902,7 +4028,7 @@
                                 data-feature-instance-web-toggle="table"
                                 data-instance-index="0"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -3961,7 +4087,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-table-2"
                             >
                               <input
@@ -3970,7 +4096,7 @@
                                 data-feature-instance-table-toggle="table"
                                 data-instance-index="1"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4018,7 +4144,7 @@
                                 data-feature-instance-web-toggle="table"
                                 data-instance-index="1"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4077,7 +4203,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-table-3"
                             >
                               <input
@@ -4086,7 +4212,7 @@
                                 data-feature-instance-table-toggle="table"
                                 data-instance-index="2"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4134,7 +4260,7 @@
                                 data-feature-instance-web-toggle="table"
                                 data-instance-index="2"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4268,7 +4394,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-list-1"
                             >
                               <input
@@ -4277,7 +4403,7 @@
                                 data-feature-instance-table-toggle="list"
                                 data-instance-index="0"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4325,7 +4451,7 @@
                                 data-feature-instance-web-toggle="list"
                                 data-instance-index="0"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4429,7 +4555,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-list-2"
                             >
                               <input
@@ -4438,7 +4564,7 @@
                                 data-feature-instance-table-toggle="list"
                                 data-instance-index="1"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4486,7 +4612,7 @@
                                 data-feature-instance-web-toggle="list"
                                 data-instance-index="1"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4590,7 +4716,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-list-3"
                             >
                               <input
@@ -4599,7 +4725,7 @@
                                 data-feature-instance-table-toggle="list"
                                 data-instance-index="2"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4647,7 +4773,7 @@
                                 data-feature-instance-web-toggle="list"
                                 data-instance-index="2"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4782,7 +4908,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-summary-1"
                             >
                               <input
@@ -4791,7 +4917,7 @@
                                 data-feature-instance-table-toggle="summary"
                                 data-instance-index="0"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4839,7 +4965,7 @@
                                 data-feature-instance-web-toggle="summary"
                                 data-instance-index="0"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4888,7 +5014,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-summary-2"
                             >
                               <input
@@ -4897,7 +5023,7 @@
                                 data-feature-instance-table-toggle="summary"
                                 data-instance-index="1"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -4945,7 +5071,7 @@
                                 data-feature-instance-web-toggle="summary"
                                 data-instance-index="1"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
@@ -4994,7 +5120,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas para este bloque."
                               for="aiFeatureTableToggle-summary-3"
                             >
                               <input
@@ -5003,7 +5129,7 @@
                                 data-feature-instance-table-toggle="summary"
                                 data-instance-index="2"
                               />
-                              Asociar con tablas específicas
+                              Asociar con tablas
                             </label>
                             <div
                               class="ai-feature-association-select ai-hidden"
@@ -5051,7 +5177,7 @@
                                 data-feature-instance-web-toggle="summary"
                                 data-instance-index="2"
                               />
-                              Usar información de páginas web específicas
+                              Usar información de páginas web
                             </label>
                             <div
                               class="ai-feature-web-list ai-hidden"
