@@ -283,13 +283,33 @@ function normalizeMetaRecordType(value) {
   if (!text) {
     return 'table';
   }
-  if (text === 'reportfavorite' || text === 'report_favorite' || text === 'report-favorite') {
+  if (
+    text === 'reportfavorite' ||
+    text === 'report_favorite' ||
+    text === 'report-favorite' ||
+    text === 'favorite' ||
+    text === 'favorito' ||
+    text === 'reporte' ||
+    text === 'report'
+  ) {
     return 'reportFavorite';
   }
-  if (text === 'table') {
+  if (text === 'table' || text === 'tabla') {
     return 'table';
   }
-  return 'table';
+  if (
+    text === 'action' ||
+    text === 'acciones' ||
+    text === 'accion' ||
+    text === 'custom' ||
+    text === 'consulta' ||
+    text === 'query' ||
+    text === 'workflow' ||
+    text === 'macro'
+  ) {
+    return 'action';
+  }
+  return text;
 }
 
 function parseBooleanValue(value, defaultValue) {
@@ -914,17 +934,10 @@ function listSavedActions() {
       continue;
     }
     var type = normalizeMetaRecordType(row[META_INDEX.recordType]);
-    if (type !== 'table' && type !== 'reportFavorite') {
-      continue;
+    var actionEntry = buildSavedActionEntry(row, type, entryId);
+    if (actionEntry) {
+      actions.push(actionEntry);
     }
-    actions.push({
-      id: entryId,
-      type: type,
-      name: row[META_INDEX.name] || '',
-      description: row[META_INDEX.description] || '',
-      createdAt: row[META_INDEX.createdAt] || '',
-      updatedAt: row[META_INDEX.updatedAt] || ''
-    });
   }
   actions.sort(function(a, b) {
     var nameA = (a && a.name ? String(a.name) : '').toLowerCase();
@@ -938,6 +951,81 @@ function listSavedActions() {
     return 0;
   });
   return actions;
+}
+
+function buildSavedActionEntry(row, type, entryId) {
+  var normalizedType = type || 'table';
+  if (normalizedType === 'table') {
+    return buildSavedTableAction(row, entryId);
+  }
+  if (normalizedType === 'reportFavorite') {
+    try {
+      var favorite = buildReportFavoriteResponse({ data: row });
+      if (favorite && !favorite.error) {
+        return favorite;
+      }
+    } catch (error) {
+      return buildGenericSavedAction(row, entryId, 'reportFavorite', String(error && error.message ? error.message : error));
+    }
+    return buildGenericSavedAction(row, entryId, 'reportFavorite');
+  }
+  return buildGenericSavedAction(row, entryId, normalizedType);
+}
+
+function buildSavedTableAction(row, entryId) {
+  var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
+  var sheetName = row[META_INDEX.sheet] || rangeParts.sheet;
+  var pureRange = rangeParts.range || '';
+  return {
+    id: entryId,
+    type: 'table',
+    name: row[META_INDEX.name] || '',
+    description: row[META_INDEX.description] || '',
+    createdAt: row[META_INDEX.createdAt] || '',
+    updatedAt: row[META_INDEX.updatedAt] || '',
+    sheetName: sheetName || '',
+    rangeA1: pureRange,
+    fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
+    cols: row[META_INDEX.cols] || '',
+    rows: row[META_INDEX.rows] || '',
+    updateFormulaReferences: parseBooleanValue(row[META_INDEX.formulaRefs], true)
+  };
+}
+
+function buildGenericSavedAction(row, entryId, type, warning) {
+  var config = {};
+  try {
+    config = parseJsonValue(row[META_INDEX.reportConfig], {}) || {};
+  } catch (err) {
+    config = {};
+    warning = warning || String(err && err.message ? err.message : err);
+  }
+  var configType = config && config.type ? normalizeMetaRecordType(config.type) : '';
+  var resolvedType = type || configType || 'action';
+  var normalizedName = row[META_INDEX.name] || config.name || '';
+  var normalizedDescription = row[META_INDEX.description] || config.description || '';
+  var action = {
+    id: entryId,
+    type: resolvedType,
+    name: normalizedName,
+    description: normalizedDescription,
+    createdAt: row[META_INDEX.createdAt] || (config.savedAt || ''),
+    updatedAt: row[META_INDEX.updatedAt] || (config.updatedAt || config.savedAt || ''),
+    config: config
+  };
+  if (Array.isArray(config.tables)) {
+    action.tables = config.tables.slice();
+  }
+  if (Array.isArray(config.channels)) {
+    action.channels = config.channels.slice();
+  }
+  if (Array.isArray(config.features)) {
+    action.features = config.features.slice();
+  }
+  if (warning) {
+    action.warning = warning;
+  }
+  return action;
 }
 
 function buildReportFavoriteResponse(entry) {
@@ -1063,29 +1151,11 @@ function getSavedActionDetails(actionId) {
     return { error: 'Acción no encontrada.' };
   }
   var type = normalizeMetaRecordType(entry.data[META_INDEX.recordType]);
-  if (type === 'table') {
-    var row = entry.data;
-    var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
-    var sheetName = row[META_INDEX.sheet] || rangeParts.sheet;
-    var pureRange = rangeParts.range || '';
-    return {
-      id: normalizeMetaId(row[META_INDEX.id]),
-      type: 'table',
-      name: row[META_INDEX.name] || '',
-      description: row[META_INDEX.description] || '',
-      sheetName: sheetName || '',
-      rangeA1: pureRange,
-      fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
-      cols: row[META_INDEX.cols] || '',
-      rows: row[META_INDEX.rows] || '',
-      createdAt: row[META_INDEX.createdAt] || '',
-      updatedAt: row[META_INDEX.updatedAt] || ''
-    };
+  var action = buildSavedActionEntry(entry.data, type, id);
+  if (!action) {
+    return { error: 'Acción no soportada.' };
   }
-  if (type === 'reportFavorite') {
-    return buildReportFavoriteResponse(entry);
-  }
-  return { error: 'Acción no soportada.' };
+  return action;
 }
 
 function focusSavedTableRange(tableId) {
