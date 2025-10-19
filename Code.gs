@@ -3208,6 +3208,48 @@ function updateReportFavorite(favoriteId, payload) {
   return { ok: true, id: normalizedId };
 }
 
+function deleteReportFavorite(favoriteId) {
+  var normalizedId = normalizeMetaId(favoriteId);
+  if (!normalizedId) {
+    return {
+      ok: true,
+      removed: true
+    };
+  }
+  var entry = findMetaById(normalizedId);
+  if (!entry || !entry.data) {
+    return {
+      ok: true,
+      removed: true
+    };
+  }
+  if (resolveMetaRecordType(entry.data) !== 'reportFavorite') {
+    return { error: 'Reporte favorito no encontrado.' };
+  }
+  getMetaSheet().deleteRow(entry.row);
+  SpreadsheetApp.flush();
+  return { ok: true };
+}
+
+function deleteSavedAction(actionId) {
+  var normalizedId = normalizeMetaId(actionId);
+  if (!normalizedId) {
+    return { error: 'No se pudo identificar la acción a borrar.' };
+  }
+  var entry = findMetaById(normalizedId);
+  if (!entry || !entry.data) {
+    return { ok: true, removed: true };
+  }
+  var type = resolveMetaRecordType(entry.data);
+  if (type === 'table') {
+    return deleteSavedTable(normalizedId);
+  }
+  if (type === 'reportFavorite') {
+    return deleteReportFavorite(normalizedId);
+  }
+  return { error: 'Esta acción todavía no se puede borrar desde el panel.' };
+}
+
 /**
  * Devuelve la clave de API almacenada (si existe).
  *

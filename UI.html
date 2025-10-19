@@ -1812,6 +1812,14 @@
         flex-direction: column;
         gap: 16px;
       }
+      .ai-action-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ai-action-controls button {
+        width: 100%;
+      }
       .ai-action-card {
         border: 1px solid #E5E7EB;
         border-radius: 10px;
@@ -5932,6 +5940,10 @@
                   </div>
                   <div id="aiActionEditorBody" class="ai-action-editor-body"></div>
                 </div>
+              </div>
+              <div id="aiActionDetailControls" class="ai-action-controls ai-hidden">
+                <button type="button" id="aiActionSaveBtn" class="btn-primary">Guardar acción</button>
+                <button type="button" id="aiActionDeleteBtn" class="btn-danger">Borrar acción</button>
               </div>
             </div>
           </div>

@@ -18,6 +18,9 @@ let queuedSavedActionsRefresh = null;
 let savedActionsRefreshTimer = 0;
 let savedActionsPanelInitialized = false;
 let pendingSavedActionMutation = null;
+let currentActionSupportsSave = false;
+let savingSelectedAction = false;
+let deletingSelectedAction = false;
 
 function getCurrentSavedActionId() {
   return currentSavedActionId;
@@ -364,6 +367,43 @@ async function syncSavedActionSelection(previousValue, options) {
   await loadSavedActionDetails(finalValue);
 }
 
+function updateSavedActionControls(action, options) {
+  const controls = document.getElementById('aiActionDetailControls');
+  const saveBtn = document.getElementById('aiActionSaveBtn');
+  const deleteBtn = document.getElementById('aiActionDeleteBtn');
+  const hasElements = controls && saveBtn && deleteBtn;
+  const opts = options || {};
+  const hasAction = !!(action && action.id);
+  let supportsSave = false;
+  if (hasAction) {
+    if (opts.supportsSave !== undefined) {
+      supportsSave = !!opts.supportsSave;
+    } else if (action && action.type === 'reportFavorite') {
+      supportsSave = true;
+    }
+  }
+  currentActionSupportsSave = hasAction && supportsSave;
+  if (!hasElements) {
+    return;
+  }
+  if (!hasAction) {
+    controls.classList.add('ai-hidden');
+    saveBtn.disabled = true;
+    deleteBtn.disabled = true;
+    saveBtn.removeAttribute('title');
+    return;
+  }
+  controls.classList.remove('ai-hidden');
+  deleteBtn.disabled = !!deletingSelectedAction;
+  if (currentActionSupportsSave) {
+    saveBtn.disabled = !!savingSelectedAction;
+    saveBtn.removeAttribute('title');
+  } else {
+    saveBtn.disabled = true;
+    saveBtn.setAttribute('title', 'Esta acción no se puede guardar desde este panel.');
+  }
+}
+
 function clearSavedActionDetails(options) {
   const opts = options || {};
   currentSavedActionDetails = null;
@@ -386,6 +426,7 @@ function clearSavedActionDetails(options) {
   if (container) {
     container.classList.add('ai-hidden');
   }
+  updateSavedActionControls(null, { supportsSave: false });
 }
 
 function formatActionChannel(value) {
@@ -615,6 +656,7 @@ async function renderSavedActionDetails(action) {
   }
   currentSavedActionDetails = action;
   container.classList.remove('ai-hidden');
+  let supportsSave = false;
   if (action.type === 'reportFavorite') {
     const cardWrapper = document.getElementById('aiActionDetailCard');
     if (cardWrapper) {
@@ -622,13 +664,144 @@ async function renderSavedActionDetails(action) {
       cardWrapper.classList.add('ai-hidden');
     }
     const loaded = await enterReportFavoriteEditor(action);
+    supportsSave = !!loaded;
     if (!loaded) {
       populateActionDetailCard(action, { mode: 'fallback' });
     }
+  } else {
+    exitReportFavoriteEditor({ clearFavorite: true });
+    populateActionDetailCard(action);
+  }
+  updateSavedActionControls(action, { supportsSave: supportsSave });
+}
+
+async function handleSavedActionSaveClick() {
+  if (savingSelectedAction) {
     return;
   }
-  exitReportFavoriteEditor({ clearFavorite: true });
-  populateActionDetailCard(action);
+  const action = currentSavedActionDetails;
+  if (!action || !action.id) {
+    await showMessageModal('Seleccioná una acción guardada antes de guardarla.', {
+      title: 'Acción no seleccionada',
+      variant: 'warning'
+    });
+    return;
+  }
+  if (!currentActionSupportsSave || action.type !== 'reportFavorite') {
+    await showMessageModal('Esta acción no se puede guardar desde este panel. Usá el botón de edición para abrirla en su sección correspondiente.', {
+      title: 'Guardado no disponible',
+      variant: 'info'
+    });
+    return;
+  }
+  if (typeof handleReportFavoriteSave !== 'function') {
+    await showMessageModal('El editor de reportes no está disponible en este momento. Volvé a intentarlo más tarde.', {
+      title: 'Guardado no disponible',
+      variant: 'error'
+    });
+    return;
+  }
+  const nameInput = document.getElementById('aiReportFavoriteName');
+  if (nameInput && !nameInput.value && action.name) {
+    nameInput.value = action.name;
+  }
+  savingSelectedAction = true;
+  updateSavedActionControls(action, { supportsSave: true });
+  try {
+    await handleReportFavoriteSave();
+  } finally {
+    savingSelectedAction = false;
+    updateSavedActionControls(currentSavedActionDetails, { supportsSave: currentActionSupportsSave });
+  }
+}
+
+async function handleSavedActionDeleteClick() {
+  if (deletingSelectedAction) {
+    return;
+  }
+  const action = currentSavedActionDetails;
+  if (!action || !action.id) {
+    await showMessageModal('Seleccioná una acción guardada antes de borrarla.', {
+      title: 'Acción no seleccionada',
+      variant: 'warning'
+    });
+    return;
+  }
+  const actionLabel = action.name ? '"' + action.name + '"' : 'seleccionada';
+  let confirmed = true;
+  if (typeof showConfirmModal === 'function') {
+    confirmed = await showConfirmModal(
+      '¿Querés borrar la acción ' + actionLabel + '? Esta acción no se puede deshacer.',
+      {
+        title: 'Borrar acción guardada',
+        confirmText: 'Borrar',
+        cancelText: 'Cancelar',
+        variant: 'danger'
+      }
+    );
+  } else if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    confirmed = window.confirm('¿Querés borrar la acción ' + actionLabel + '? Esta acción no se puede deshacer.');
+  }
+  if (!confirmed) {
+    return;
+  }
+  deletingSelectedAction = true;
+  updateSavedActionControls(action, { supportsSave: currentActionSupportsSave });
+  try {
+    const result = await callServerFunction('deleteSavedAction', action.id);
+    if (result && result.error) {
+      throw new Error(result.error);
+    }
+    const warning = result && result.warning ? String(result.warning) : '';
+    if (warning) {
+      await showMessageModal('La acción se eliminó con advertencias: ' + warning, {
+        title: 'Acción eliminada con avisos',
+        variant: 'warning'
+      });
+    } else {
+      await showMessageModal('La acción seleccionada se eliminó correctamente.', {
+        title: 'Acción eliminada',
+        variant: 'success'
+      });
+    }
+    currentSavedActionId = '';
+    clearSavedActionDetails({ keepFavorite: false });
+    if (typeof notifySavedActionMutation === 'function') {
+      notifySavedActionMutation({
+        id: '',
+        force: true,
+        delay: 0,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    } else if (typeof requestSavedActionsRefresh === 'function') {
+      requestSavedActionsRefresh({
+        selectId: '',
+        force: true,
+        delay: 0,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    } else if (typeof refreshSavedActions === 'function') {
+      await refreshSavedActions({
+        selectId: '',
+        force: true,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    }
+  } catch (err) {
+    await showMessageModal(
+      'No se pudo borrar la acción seleccionada: ' + (err && err.message ? err.message : err),
+      {
+        title: 'No se pudo borrar',
+        variant: 'error'
+      }
+    );
+  } finally {
+    deletingSelectedAction = false;
+    updateSavedActionControls(currentSavedActionDetails, { supportsSave: currentActionSupportsSave });
+  }
 }
 
 async function loadSavedActionDetails(actionId) {
@@ -803,6 +976,7 @@ function initSavedActionsPanel() {
   if (editor) {
     editor.classList.add('ai-hidden');
   }
+  updateSavedActionControls(null, { supportsSave: false });
   const savedActionsSelect = document.getElementById('aiSavedActions');
   if (savedActionsSelect) {
     savedActionsSelect.addEventListener('change', function() {
@@ -818,6 +992,18 @@ function initSavedActionsPanel() {
         delay: 0,
         forceLoad: true
       });
+    });
+  }
+  const saveBtn = document.getElementById('aiActionSaveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      handleSavedActionSaveClick();
+    });
+  }
+  const deleteBtn = document.getElementById('aiActionDeleteBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      handleSavedActionDeleteClick();
     });
   }
   document.addEventListener('tc:savedActionMutated', handleSavedActionMutationEvent);
