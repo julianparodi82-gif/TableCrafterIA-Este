@@ -196,6 +196,16 @@ function buildSavedActionTooltip(action) {
     if (meta.length) {
       parts.push(meta.join(' • '));
     }
+  } else {
+    if (Array.isArray(action.features) && action.features.length > 0) {
+      parts.push('Componentes: ' + action.features.join(', '));
+    }
+    if (Array.isArray(action.channels) && action.channels.length > 0) {
+      parts.push('Canales: ' + action.channels.join(', '));
+    }
+  }
+  if (action.warning) {
+    parts.push('⚠️ ' + String(action.warning));
   }
   if (!parts.length) {
     parts.push('Tipo: ' + typeLabel);
@@ -274,6 +284,25 @@ function renderSavedActionDetails(action) {
       tablesInfo.textContent = 'Tablas vinculadas: ' + action.tables.join(', ');
       card.appendChild(tablesInfo);
     }
+  } else {
+    if (action.description) {
+      const genericDesc = document.createElement('p');
+      genericDesc.className = 'ai-action-summary';
+      genericDesc.textContent = action.description;
+      card.appendChild(genericDesc);
+    }
+    if (action.config && Object.keys(action.config).length > 0) {
+      const configBlock = document.createElement('pre');
+      configBlock.className = 'ai-action-config';
+      configBlock.textContent = JSON.stringify(action.config, null, 2);
+      card.appendChild(configBlock);
+    }
+  }
+  if (action.warning) {
+    const warning = document.createElement('p');
+    warning.className = 'ai-action-warning';
+    warning.textContent = '⚠️ ' + action.warning;
+    card.appendChild(warning);
   }
   const buttons = document.createElement('div');
   buttons.className = 'ai-action-buttons';
