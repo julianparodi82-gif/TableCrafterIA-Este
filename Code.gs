@@ -914,17 +914,32 @@ function listSavedActions() {
       continue;
     }
     var type = normalizeMetaRecordType(row[META_INDEX.recordType]);
-    if (type !== 'table' && type !== 'reportFavorite') {
+    if (type === 'table') {
+      var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
+      var sheetName = row[META_INDEX.sheet] || rangeParts.sheet;
+      var pureRange = rangeParts.range || '';
+      actions.push({
+        id: entryId,
+        type: 'table',
+        name: row[META_INDEX.name] || '',
+        description: row[META_INDEX.description] || '',
+        createdAt: row[META_INDEX.createdAt] || '',
+        updatedAt: row[META_INDEX.updatedAt] || '',
+        sheetName: sheetName || '',
+        rangeA1: pureRange,
+        fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
+        cols: row[META_INDEX.cols] || '',
+        rows: row[META_INDEX.rows] || ''
+      });
       continue;
     }
-    actions.push({
-      id: entryId,
-      type: type,
-      name: row[META_INDEX.name] || '',
-      description: row[META_INDEX.description] || '',
-      createdAt: row[META_INDEX.createdAt] || '',
-      updatedAt: row[META_INDEX.updatedAt] || ''
-    });
+    if (type === 'reportFavorite') {
+      var favorite = buildReportFavoriteResponse({ data: row });
+      if (favorite && !favorite.error) {
+        actions.push(favorite);
+      }
+      continue;
+    }
   }
   actions.sort(function(a, b) {
     var nameA = (a && a.name ? String(a.name) : '').toLowerCase();

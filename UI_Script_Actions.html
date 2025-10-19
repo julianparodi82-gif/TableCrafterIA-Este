@@ -383,21 +383,33 @@ async function refreshSavedActions(options) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function bindSavedActionsUI() {
   const savedActionsSelect = document.getElementById('aiSavedActions');
-  if (savedActionsSelect) {
+  if (savedActionsSelect && !savedActionsSelect.dataset.savedActionsBound) {
     savedActionsSelect.addEventListener('change', function() {
       loadSavedActionDetails(savedActionsSelect.value);
     });
+    savedActionsSelect.dataset.savedActionsBound = 'true';
   }
   const savedActionsRefreshBtn = document.getElementById('aiSavedActionsRefreshBtn');
-  if (savedActionsRefreshBtn) {
+  if (savedActionsRefreshBtn && !savedActionsRefreshBtn.dataset.savedActionsBound) {
     savedActionsRefreshBtn.addEventListener('click', function() {
       refreshSavedActions({ selectId: getCurrentSavedActionId(), force: true });
     });
+    savedActionsRefreshBtn.dataset.savedActionsBound = 'true';
   }
+}
+
+function initSavedActionsUI() {
+  bindSavedActionsUI();
   refreshSavedActions();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSavedActionsUI);
+} else {
+  initSavedActionsUI();
+}
 
 if (typeof window !== 'undefined') {
   window.getSavedActionsSnapshot = getSavedActionsSnapshot;
