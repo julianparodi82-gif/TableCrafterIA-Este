@@ -64,7 +64,7 @@ function relocateSharedAvailableSection(theme) {
   if (theme === 'word') {
     if (anchor && anchor.parentNode) {
       anchor.parentNode.insertBefore(section, anchor.nextSibling);
-      section.classList.add('ai-word-available-card');
+      section.classList.remove('ai-word-available-card');
     }
   } else if (sharedAvailablePlaceholder && sharedAvailablePlaceholder.parentNode) {
     sharedAvailablePlaceholder.parentNode.insertBefore(section, sharedAvailablePlaceholder);

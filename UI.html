@@ -200,9 +200,9 @@
       }
       .theme-wordcrafter .tab-nav-row--bottom {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        max-width: 520px;
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
+        gap: 18px;
+        max-width: 560px;
         margin-left: auto;
         margin-right: auto;
       }
@@ -1032,12 +1032,30 @@
       }
       .theme-wordcrafter #wordCreateForm,
       .theme-wordcrafter [data-shared-available] {
-        max-width: 720px;
+        max-width: 760px;
         width: 100%;
         margin: 0 auto;
       }
       .theme-wordcrafter [data-shared-available] .ai-multi-select {
         width: 100%;
+      }
+      .theme-wordcrafter [data-shared-available] {
+        border-bottom: none;
+        padding-bottom: 0;
+        gap: 18px;
+      }
+      .theme-wordcrafter [data-shared-available] .ai-available-subsection {
+        background: none;
+        padding: 0;
+      }
+      .theme-wordcrafter [data-shared-available] .ai-available-title {
+        color: var(--tc-text);
+      }
+      .theme-wordcrafter [data-shared-available] .ai-multi-list {
+        padding: 4px 4px;
+      }
+      .theme-wordcrafter [data-shared-available] .ai-multi-item {
+        margin: 0 4px;
       }
       .word-title-section,
       .word-body-section {
