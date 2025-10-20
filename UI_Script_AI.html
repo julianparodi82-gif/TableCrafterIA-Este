@@ -5850,6 +5850,41 @@ function collectAskCustomization() {
           select.addEventListener('change', updateVisibility);
           updateVisibility();
         });
+        var checkboxToggles = root.querySelectorAll('[data-word-check-target]');
+        Array.prototype.forEach.call(checkboxToggles, function(toggle) {
+          if (!toggle) {
+            return;
+          }
+          var targetId = toggle.getAttribute('data-word-check-target');
+          if (!targetId) {
+            return;
+          }
+          var target = document.getElementById(targetId);
+          if (!target) {
+            return;
+          }
+          var mode = (toggle.getAttribute('data-word-check-mode') || '').toLowerCase();
+          var inputs = target.querySelectorAll('textarea, input, select');
+          var update = function() {
+            var show = mode === 'invert' ? !toggle.checked : !!toggle.checked;
+            if (show) {
+              target.classList.remove('ai-hidden');
+            } else {
+              target.classList.add('ai-hidden');
+            }
+            Array.prototype.forEach.call(inputs, function(input) {
+              if (!input) {
+                return;
+              }
+              input.disabled = !show;
+            });
+            if (!show && target.contains(document.activeElement) && typeof toggle.focus === 'function') {
+              toggle.focus();
+            }
+          };
+          toggle.addEventListener('change', update);
+          update();
+        });
       }
 
       function setupWordActionPanels(root) {

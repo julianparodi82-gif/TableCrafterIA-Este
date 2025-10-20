@@ -199,15 +199,15 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .theme-wordcrafter .tab-nav-row--bottom {
-        display: flex;
-        justify-content: center;
-        align-items: stretch;
-        gap: 18px;
-        max-width: 420px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
       }
       .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap {
-        flex: 1 1 180px;
-        max-width: 220px;
+        max-width: none;
       }
       .tab-btn-wrap {
         display: flex;
@@ -1025,6 +1025,77 @@
         display: flex;
         flex-direction: column;
         gap: 22px;
+      }
+      .word-create-form {
+        display: grid;
+        gap: 22px;
+      }
+      .theme-wordcrafter #wordCreateForm,
+      .theme-wordcrafter [data-shared-available] {
+        max-width: 720px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .theme-wordcrafter [data-shared-available] .ai-multi-select {
+        width: 100%;
+      }
+      .word-title-section,
+      .word-body-section {
+        display: grid;
+        gap: 18px;
+      }
+      .word-title-toggle-group {
+        display: grid;
+        gap: 14px;
+      }
+      .word-toggle-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #063455;
+      }
+      .word-toggle-option input[type='checkbox'] {
+        margin: 0;
+      }
+      .word-toggle-option--inline {
+        font-weight: 500;
+      }
+      .word-toggle-panel {
+        display: grid;
+        gap: 12px;
+      }
+      .word-toggle-panel.ai-hidden {
+        display: none !important;
+      }
+      .word-toggle-note {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(5, 52, 85, 0.75);
+      }
+      .word-brief-field {
+        display: grid;
+        gap: 8px;
+      }
+      .word-body-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .word-body-header .word-create-subheading {
+        margin: 0;
+      }
+      .word-doc-location {
+        border-radius: 16px;
+        background: rgba(217, 242, 255, 0.35);
+        border: 1px solid rgba(42, 176, 255, 0.24);
+        padding: 16px;
+      }
+      .word-doc-location .word-range-note {
+        margin: 12px 0 0;
       }
       .ai-word-available-card {
         background: rgba(255, 255, 255, 0.96);
@@ -4022,7 +4093,7 @@
               <button
                 type="button"
                 class="word-range-info-trigger tc-tooltip-target"
-                data-tooltip="En hojas de cálculo puedes indicar la celda inicial donde insertar el resultado."
+                data-tooltip="Todas esas celdas se combinarán automáticamente al insertar el texto generado."
                 data-tooltip-position="bottom"
                 aria-label="Información sobre el rango a utilizar"
               >
@@ -4031,16 +4102,16 @@
             </div>
             <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
             <div class="small-text" style="margin-top:4px;">
-              Puedes escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+              WordCrafter combinará esas celdas y colocará el contenido comenzando en la primera celda del rango.
             </div>
           </div>
-          <div class="section is-hidden" data-word-range-doc>
+          <div class="section word-doc-location is-hidden" data-word-range-doc>
             <div class="word-range-label-row">
               <span class="word-create-subheading">Ubicación del resultado</span>
               <button
                 type="button"
                 class="word-range-info-trigger tc-tooltip-target"
-                data-tooltip="WordCrafter insertará el texto en la posición actual del cursor dentro del documento."
+                data-tooltip="El texto final se insertará exactamente donde esté el cursor de escritura activo."
                 data-tooltip-position="top"
                 aria-label="Información sobre la ubicación del resultado"
               >
@@ -4048,227 +4119,322 @@
               </button>
             </div>
             <p class="word-range-note">
-              Si trabajas sobre un documento de texto, simplemente ubica el cursor donde quieras que aparezca el nuevo contenido.
+              El texto se pegará donde se encuentre el cursor de escritura cuando ejecutes la acción.
             </p>
           </div>
-          <div class="section">
+          <div class="section word-title-section">
             <label for="tableName">Título del texto</label>
             <input type="text" id="tableName" placeholder="Ingresa el título principal..." />
-            <div class="js-comment-hint-field">
-              <label for="tableDesc">Descripción general</label>
-              <textarea id="tableDesc" placeholder="Describe el objetivo o contexto del texto..."></textarea>
-            </div>
-          </div>
-          <div class="section">
-            <h4 class="word-create-subheading">Configuración del título</h4>
-            <div class="word-config-grid">
-              <div class="ai-word-field">
-                <label for="wordTitleColor">Color de letra</label>
-                <input type="color" id="wordTitleColor" value="#0F172A" />
-              </div>
-              <div class="ai-word-field">
-                <label for="wordTitleSize">Tamaño</label>
-                <select id="wordTitleSize">
-                  <option value="xl">Muy grande (48 pt)</option>
-                  <option value="lg" selected>Grande (36 pt)</option>
-                  <option value="md">Medio (28 pt)</option>
-                  <option value="sm">Pequeño (22 pt)</option>
-                </select>
-              </div>
-              <div class="ai-word-field">
-                <label for="wordTitleAlign">Alineación</label>
-                <select id="wordTitleAlign">
-                  <option value="center" selected>Centro</option>
-                  <option value="left">Izquierda</option>
-                  <option value="right">Derecha</option>
-                  <option value="justify">Justificado</option>
-                </select>
-              </div>
-            </div>
-            <div class="word-config-checkboxes">
+            <div class="word-title-toggle-group">
               <label
-                class="tc-tooltip-target"
-                data-tooltip="Resalta el título para que destaque en la primera lectura."
+                class="word-toggle-option tc-tooltip-target"
+                data-tooltip="Activa esta opción para que la IA proponga automáticamente un título atractivo."
                 data-tooltip-position="top"
               >
-                <input type="checkbox" id="wordTitleBold" checked /> Negrita
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Añade un estilo editorial al título sin perder legibilidad."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordTitleItalic" /> Cursiva
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Convierte el título en mayúsculas para dar un aspecto institucional."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Subraya el título con una línea discreta acorde al estilo Word."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil
-              </label>
-            </div>
-            <div class="word-config-note">Estas preferencias sirven como guía para el formato final del encabezado principal.</div>
-          </div>
-          <div class="section">
-            <h4 class="word-create-subheading">Configuración del cuerpo</h4>
-            <div class="word-body-options">
-              <div class="ai-word-field">
-                <label for="wordBodyColor">Color de texto</label>
-                <input type="color" id="wordBodyColor" value="#1F2937" />
-              </div>
-              <div class="ai-word-field">
-                <label for="wordBodySize">Tamaño de letra</label>
-                <select id="wordBodySize">
-                  <option value="sm">Pequeño (11 pt)</option>
-                  <option value="md" selected>Intermedio (12 pt)</option>
-                  <option value="lg">Amplio (14 pt)</option>
-                  <option value="xl">Extenso (16 pt)</option>
-                </select>
-              </div>
-              <div class="ai-word-field">
-                <label for="wordBodyAlign">Alineación</label>
-                <select id="wordBodyAlign">
-                  <option value="justify" selected>Justificado</option>
-                  <option value="left">Izquierda</option>
-                  <option value="center">Centro</option>
-                  <option value="right">Derecha</option>
-                </select>
-              </div>
-              <div class="ai-word-field">
-                <label for="wordBodySpacing">Espaciado entre líneas</label>
-                <select id="wordBodySpacing">
-                  <option value="single">Sencillo</option>
-                  <option value="115" selected>1.15</option>
-                  <option value="15">1.5</option>
-                  <option value="double">Doble</option>
-                </select>
-              </div>
-            </div>
-            <div class="word-config-checkboxes" style="margin-top:12px;">
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Permite que la IA destaque términos relevantes para una lectura rápida."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Sugiere cuándo transformar párrafos en listas claras y ordenadas."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordBodyBullets" /> Sugerir listas numeradas o con viñetas
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Solicita una introducción breve que contextualice el contenido desde el inicio."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordBodyIntro" checked /> Incluir introducción clara
-              </label>
-              <label
-                class="tc-tooltip-target"
-                data-tooltip="Añade un cierre con llamado a la acción coherente con el objetivo."
-                data-tooltip-position="top"
-              >
-                <input type="checkbox" id="wordBodyCTA" /> Añadir llamado a la acción
-              </label>
-            </div>
-            <div class="word-config-note">Selecciona las pautas de estilo que la IA debe respetar al generar el texto.</div>
-            <div class="word-config-divider"></div>
-            <div class="word-body-brief">
-              <label for="wordBodyBrief">Indicaciones para la IA</label>
-              <textarea
-                id="wordBodyBrief"
-                placeholder="Describe el propósito del texto, el público objetivo y cualquier referencia que debamos seguir"
-              ></textarea>
-              <div class="ai-word-field-grid">
-                <div class="ai-word-field">
-                  <label for="wordBodyLength">Extensión deseada</label>
-                  <select id="wordBodyLength">
-                    <option value="short">Resumen (1-2 párrafos)</option>
-                    <option value="medium" selected>Estándar (3-5 párrafos)</option>
-                    <option value="long">Detalle completo (6+ párrafos)</option>
-                    <option value="bullet">Formato en viñetas</option>
-                  </select>
-                </div>
-                <div class="ai-word-field">
-                  <label for="wordBodyLanguage">Idioma de salida</label>
-                  <select
-                    id="wordBodyLanguage"
-                    data-word-toggle-target="wordBodyLanguageCustomField"
-                    data-word-toggle-value="other"
-                  >
-                    <option value="auto" selected>Mismo idioma del texto fuente</option>
-                    <option value="es">Español</option>
-                    <option value="en">Inglés</option>
-                    <option value="pt">Portugués</option>
-                    <option value="fr">Francés</option>
-                    <option value="other">Otro idioma</option>
-                  </select>
-                </div>
-                <div class="ai-word-field">
-                  <label for="wordBodyTone">Tono del reporte</label>
-                  <select
-                    id="wordBodyTone"
-                    data-word-toggle-target="wordBodyToneCustomField"
-                    data-word-toggle-value="custom"
-                  >
-                    <option value="formal" selected>Formal profesional</option>
-                    <option value="friendly">Cercano y empático</option>
-                    <option value="executive">Ejecutivo y directo</option>
-                    <option value="persuasive">Persuasivo comercial</option>
-                    <option value="custom">Personalizado</option>
-                  </select>
-                </div>
-                <div class="ai-word-field">
-                  <label for="wordBodyPersona">Perfil profesional</label>
-                  <select
-                    id="wordBodyPersona"
-                    data-word-toggle-target="wordBodyPersonaCustomField"
-                    data-word-toggle-value="custom"
-                  >
-                    <option value="auto" selected>Seleccionar automáticamente</option>
-                    <option value="executive">Alta dirección</option>
-                    <option value="operations">Operaciones</option>
-                    <option value="marketing">Marketing y comunicación</option>
-                    <option value="hr">Recursos humanos</option>
-                    <option value="custom">Personalizado</option>
-                  </select>
-                </div>
-              </div>
-              <div id="wordBodyLanguageCustomField" class="ai-word-field ai-hidden">
-                <label for="wordBodyLanguageCustom">Indica el idioma objetivo</label>
                 <input
-                  type="text"
-                  id="wordBodyLanguageCustom"
-                  placeholder="Ej. Italiano, Alemán, Japonés"
-                  disabled
+                  type="checkbox"
+                  id="wordAutoTitleToggle"
+                  data-word-check-target="wordAutoTitleOptions"
                 />
+                Crear título con IA
+              </label>
+              <div id="wordAutoTitleOptions" class="word-toggle-panel ai-hidden">
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordAutoTitleFocus">Enfoque del título</label>
+                    <select id="wordAutoTitleFocus">
+                      <option value="clarity" selected>Claridad informativa</option>
+                      <option value="impact">Impacto inmediato</option>
+                      <option value="seo">Optimización SEO</option>
+                      <option value="creative">Creativo y emocional</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordAutoTitleLength">Extensión sugerida</label>
+                    <select id="wordAutoTitleLength">
+                      <option value="short">Corto (40 caracteres)</option>
+                      <option value="medium" selected>Medio (60 caracteres)</option>
+                      <option value="long">Extendido (80 caracteres)</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordAutoTitleKeywords">Palabras clave</label>
+                    <input
+                      type="text"
+                      id="wordAutoTitleKeywords"
+                      placeholder="Ej. innovación, reporte trimestral"
+                    />
+                  </div>
+                </div>
+                <p class="word-toggle-note">La IA utilizará estos datos como guía y ajustará el título a partir del contenido generado.</p>
               </div>
-              <div id="wordBodyToneCustomField" class="ai-word-field ai-hidden">
-                <label for="wordBodyToneCustom">Describe el tono deseado</label>
-                <textarea
-                  id="wordBodyToneCustom"
-                  placeholder="Ej. Inspirador con enfoque en innovación tecnológica"
-                  disabled
-                ></textarea>
+              <label
+                class="word-toggle-option tc-tooltip-target"
+                data-tooltip="Activa esta opción si prefieres definir manualmente el estilo del encabezado."
+                data-tooltip-position="top"
+              >
+                <input
+                  type="checkbox"
+                  id="wordTitleFormatToggle"
+                  data-word-check-target="wordTitleFormatFields"
+                />
+                Configurar formato del título manualmente
+              </label>
+              <div id="wordTitleFormatFields" class="word-toggle-panel ai-hidden">
+                <div class="word-config-grid">
+                  <div class="ai-word-field">
+                    <label for="wordTitleFont">Fuente</label>
+                    <select id="wordTitleFont">
+                      <option value="inter" selected>Inter</option>
+                      <option value="georgia">Georgia</option>
+                      <option value="times">Times New Roman</option>
+                      <option value="arial">Arial</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTitleColor">Color de letra</label>
+                    <input type="color" id="wordTitleColor" value="#0F172A" />
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTitleSize">Tamaño</label>
+                    <select id="wordTitleSize">
+                      <option value="xl">Muy grande (48 pt)</option>
+                      <option value="lg" selected>Grande (36 pt)</option>
+                      <option value="md">Medio (28 pt)</option>
+                      <option value="sm">Pequeño (22 pt)</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTitleAlign">Alineación</label>
+                    <select id="wordTitleAlign">
+                      <option value="center" selected>Centro</option>
+                      <option value="left">Izquierda</option>
+                      <option value="right">Derecha</option>
+                      <option value="justify">Justificado</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="word-config-checkboxes">
+                  <label
+                    class="tc-tooltip-target"
+                    data-tooltip="Resalta el título para que destaque en la primera lectura."
+                    data-tooltip-position="top"
+                  >
+                    <input type="checkbox" id="wordTitleBold" checked /> Negrita
+                  </label>
+                  <label
+                    class="tc-tooltip-target"
+                    data-tooltip="Añade un estilo editorial al título sin perder legibilidad."
+                    data-tooltip-position="top"
+                  >
+                    <input type="checkbox" id="wordTitleItalic" /> Cursiva
+                  </label>
+                  <label
+                    class="tc-tooltip-target"
+                    data-tooltip="Convierte el título en mayúsculas para dar un aspecto institucional."
+                    data-tooltip-position="top"
+                  >
+                    <input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas
+                  </label>
+                  <label
+                    class="tc-tooltip-target"
+                    data-tooltip="Subraya el título con una línea discreta acorde al estilo Word."
+                    data-tooltip-position="top"
+                  >
+                    <input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil
+                  </label>
+                </div>
+                <div class="word-config-note">Estas preferencias sirven como guía para el formato final del encabezado principal.</div>
               </div>
-              <div id="wordBodyPersonaCustomField" class="ai-word-field ai-hidden">
-                <label for="wordBodyPersonaCustom">Define el perfil profesional</label>
+            </div>
+            <div class="word-brief-field">
+              <label
+                for="tableDesc"
+                class="tc-tooltip-target"
+                data-tooltip="Describe el tipo de texto, el público objetivo y cualquier detalle clave que deba considerar la IA."
+                data-tooltip-position="top"
+              >
+                Explica qué tipo de texto necesitas
+              </label>
+              <textarea id="tableDesc" placeholder="Ej. Informe ejecutivo sobre resultados del Q4 con foco en logros del equipo"></textarea>
+            </div>
+          </div>
+          <div class="section word-body-section">
+            <div class="word-body-header">
+              <h4 class="word-create-subheading">Configuración del cuerpo</h4>
+              <label
+                class="word-toggle-option word-toggle-option--inline tc-tooltip-target"
+                data-tooltip="Si marcas esta casilla la IA decidirá tono, formato y estilo según el contexto del documento."
+                data-tooltip-position="top"
+              >
+                <input
+                  type="checkbox"
+                  id="wordBodyAutoStyle"
+                  data-word-check-target="wordBodyConfigFields"
+                  data-word-check-mode="invert"
+                />
+                Dejar que la IA lo decida automáticamente
+              </label>
+            </div>
+            <div id="wordBodyConfigFields" class="word-toggle-panel">
+              <div class="word-body-options">
+                <div class="ai-word-field">
+                  <label for="wordBodyColor">Color de texto</label>
+                  <input type="color" id="wordBodyColor" value="#1F2937" />
+                </div>
+                <div class="ai-word-field">
+                  <label for="wordBodySize">Tamaño de letra</label>
+                  <select id="wordBodySize">
+                    <option value="sm">Pequeño (11 pt)</option>
+                    <option value="md" selected>Intermedio (12 pt)</option>
+                    <option value="lg">Amplio (14 pt)</option>
+                    <option value="xl">Extenso (16 pt)</option>
+                  </select>
+                </div>
+                <div class="ai-word-field">
+                  <label for="wordBodyAlign">Alineación</label>
+                  <select id="wordBodyAlign">
+                    <option value="justify" selected>Justificado</option>
+                    <option value="left">Izquierda</option>
+                    <option value="center">Centro</option>
+                    <option value="right">Derecha</option>
+                  </select>
+                </div>
+                <div class="ai-word-field">
+                  <label for="wordBodySpacing">Espaciado entre líneas</label>
+                  <select id="wordBodySpacing">
+                    <option value="single">Sencillo</option>
+                    <option value="115" selected>1.15</option>
+                    <option value="15">1.5</option>
+                    <option value="double">Doble</option>
+                  </select>
+                </div>
+              </div>
+              <div class="word-config-checkboxes" style="margin-top:12px;">
+                <label
+                  class="tc-tooltip-target"
+                  data-tooltip="Permite que la IA destaque términos relevantes para una lectura rápida."
+                  data-tooltip-position="top"
+                >
+                  <input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave
+                </label>
+                <label
+                  class="tc-tooltip-target"
+                  data-tooltip="Sugiere cuándo transformar párrafos en listas claras y ordenadas."
+                  data-tooltip-position="top"
+                >
+                  <input type="checkbox" id="wordBodyBullets" /> Sugerir listas numeradas o con viñetas
+                </label>
+                <label
+                  class="tc-tooltip-target"
+                  data-tooltip="Solicita una introducción breve que contextualice el contenido desde el inicio."
+                  data-tooltip-position="top"
+                >
+                  <input type="checkbox" id="wordBodyIntro" checked /> Incluir introducción clara
+                </label>
+                <label
+                  class="tc-tooltip-target"
+                  data-tooltip="Añade un cierre con llamado a la acción coherente con el objetivo."
+                  data-tooltip-position="top"
+                >
+                  <input type="checkbox" id="wordBodyCTA" /> Añadir llamado a la acción
+                </label>
+              </div>
+              <div class="word-config-note">Selecciona las pautas de estilo que la IA debe respetar al generar el texto.</div>
+              <div class="word-config-divider"></div>
+              <div class="word-body-brief">
+                <label
+                  for="wordBodyBrief"
+                  class="tc-tooltip-target"
+                  data-tooltip="Detalla el objetivo, público y referencias que debe respetar la IA."
+                  data-tooltip-position="top"
+                >
+                  Indicaciones para la IA
+                </label>
                 <textarea
-                  id="wordBodyPersonaCustom"
-                  placeholder="Ej. Equipo de liderazgo de experiencia del cliente"
-                  disabled
+                  id="wordBodyBrief"
+                  placeholder="Describe el propósito del texto, el público objetivo y cualquier referencia que debamos seguir"
                 ></textarea>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordBodyLength">Extensión deseada</label>
+                    <select id="wordBodyLength">
+                      <option value="short">Resumen (1-2 párrafos)</option>
+                      <option value="medium" selected>Estándar (3-5 párrafos)</option>
+                      <option value="long">Detalle completo (6+ párrafos)</option>
+                      <option value="bullet">Formato en viñetas</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordBodyLanguage">Idioma de salida</label>
+                    <select
+                      id="wordBodyLanguage"
+                      data-word-toggle-target="wordBodyLanguageCustomField"
+                      data-word-toggle-value="other"
+                    >
+                      <option value="auto" selected>Mismo idioma del texto fuente</option>
+                      <option value="es">Español</option>
+                      <option value="en">Inglés</option>
+                      <option value="pt">Portugués</option>
+                      <option value="fr">Francés</option>
+                      <option value="other">Otro idioma</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordBodyTone">Tono del reporte</label>
+                    <select
+                      id="wordBodyTone"
+                      data-word-toggle-target="wordBodyToneCustomField"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="formal" selected>Formal profesional</option>
+                      <option value="friendly">Cercano y empático</option>
+                      <option value="executive">Ejecutivo y directo</option>
+                      <option value="persuasive">Persuasivo comercial</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordBodyPersona">Perfil profesional</label>
+                    <select
+                      id="wordBodyPersona"
+                      data-word-toggle-target="wordBodyPersonaCustomField"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Seleccionar automáticamente</option>
+                      <option value="executive">Alta dirección</option>
+                      <option value="operations">Operaciones</option>
+                      <option value="marketing">Marketing y comunicación</option>
+                      <option value="hr">Recursos humanos</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="wordBodyLanguageCustomField" class="ai-word-field ai-hidden">
+                  <label for="wordBodyLanguageCustom">Indica el idioma objetivo</label>
+                  <input
+                    type="text"
+                    id="wordBodyLanguageCustom"
+                    placeholder="Ej. Italiano, Alemán, Japonés"
+                    disabled
+                  />
+                </div>
+                <div id="wordBodyToneCustomField" class="ai-word-field ai-hidden">
+                  <label for="wordBodyToneCustom">Describe el tono deseado</label>
+                  <textarea
+                    id="wordBodyToneCustom"
+                    placeholder="Ej. Inspirador con enfoque en innovación tecnológica"
+                    disabled
+                  ></textarea>
+                </div>
+                <div id="wordBodyPersonaCustomField" class="ai-word-field ai-hidden">
+                  <label for="wordBodyPersonaCustom">Define el perfil profesional</label>
+                  <textarea
+                    id="wordBodyPersonaCustom"
+                    placeholder="Ej. Equipo de liderazgo de experiencia del cliente"
+                    disabled
+                  ></textarea>
+                </div>
               </div>
             </div>
           </div>

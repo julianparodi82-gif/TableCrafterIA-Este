@@ -79,6 +79,7 @@ function resetWordCreateFields(root) {
           }
         });
         const selectDefaults = {
+          wordTitleFont: 'inter',
           wordTitleSize: 'lg',
           wordTitleAlign: 'center',
           wordBodySize: 'md',
@@ -87,7 +88,9 @@ function resetWordCreateFields(root) {
           wordBodyLength: 'medium',
           wordBodyLanguage: 'auto',
           wordBodyTone: 'formal',
-          wordBodyPersona: 'auto'
+          wordBodyPersona: 'auto',
+          wordAutoTitleFocus: 'clarity',
+          wordAutoTitleLength: 'medium'
         };
         Object.keys(selectDefaults).forEach(function(id) {
           const select = document.getElementById(id);
@@ -104,7 +107,10 @@ function resetWordCreateFields(root) {
           wordBodyBullets: false,
           wordBodyIntro: true,
           wordBodyCTA: false,
-          wordUseWebSources: false
+          wordUseWebSources: false,
+          wordAutoTitleToggle: false,
+          wordTitleFormatToggle: false,
+          wordBodyAutoStyle: false
         };
         Object.keys(checkboxDefaults).forEach(function(id) {
           const checkbox = document.getElementById(id);
@@ -116,7 +122,8 @@ function resetWordCreateFields(root) {
           'wordBodyBrief',
           'wordBodyLanguageCustom',
           'wordBodyToneCustom',
-          'wordBodyPersonaCustom'
+          'wordBodyPersonaCustom',
+          'wordAutoTitleKeywords'
         ];
         textDefaults.forEach(function(id) {
           const field = document.getElementById(id);
@@ -145,6 +152,35 @@ function resetWordCreateFields(root) {
             event.initEvent('change', true, true);
             select.dispatchEvent(event);
           }
+        });
+        ['wordAutoTitleToggle', 'wordTitleFormatToggle', 'wordBodyAutoStyle'].forEach(function(id) {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            const event = document.createEvent('Event');
+            event.initEvent('change', true, true);
+            checkbox.dispatchEvent(event);
+          }
+        });
+        const toggleTargets = [
+          { toggleId: 'wordAutoTitleToggle', targetId: 'wordAutoTitleOptions', invert: false },
+          { toggleId: 'wordTitleFormatToggle', targetId: 'wordTitleFormatFields', invert: false },
+          { toggleId: 'wordBodyAutoStyle', targetId: 'wordBodyConfigFields', invert: true }
+        ];
+        toggleTargets.forEach(function(config) {
+          const toggle = document.getElementById(config.toggleId);
+          const target = document.getElementById(config.targetId);
+          if (!toggle || !target) {
+            return;
+          }
+          const show = config.invert ? !toggle.checked : !!toggle.checked;
+          target.classList.toggle('ai-hidden', !show);
+          const inputs = target.querySelectorAll('textarea, input, select');
+          inputs.forEach(function(input) {
+            if (!input) {
+              return;
+            }
+            input.disabled = !show;
+          });
         });
       }
 
