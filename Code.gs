@@ -1126,79 +1126,23 @@ function listSavedTables() {
   return result;
 }
 
-function listSavedActions() {
+function listFavoriteActions() {
   SpreadsheetApp.flush();
   var meta = getMetaSheet();
   var data = meta.getDataRange().getValues();
-  var actions = [];
+  var favorites = [];
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    var entryId = normalizeMetaId(row[META_INDEX.id]);
-    if (!entryId) {
+    if (resolveMetaRecordType(row) !== 'reportFavorite') {
       continue;
     }
-    var type = resolveMetaRecordType(row);
-    if (type === 'table') {
-      var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
-      var sheetName = row[META_INDEX.sheet] || rangeParts.sheet || '';
-      var pureRange = rangeParts.range || '';
-      actions.push({
-        id: entryId,
-        type: 'table',
-        name: row[META_INDEX.name] || '',
-        description: row[META_INDEX.description] || '',
-        sheetName: sheetName,
-        rangeA1: pureRange,
-        fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
-        cols: row[META_INDEX.cols] || '',
-        rows: row[META_INDEX.rows] || '',
-        createdAt: row[META_INDEX.createdAt] || '',
-        updatedAt: row[META_INDEX.updatedAt] || ''
-      });
+    var favorite = buildReportFavoriteResponse({ data: row });
+    if (!favorite || favorite.error) {
       continue;
     }
-    if (type === 'reportFavorite') {
-      var favorite = buildReportFavoriteResponse({ data: row });
-      if (!favorite || favorite.error) {
-        continue;
-      }
-      var featureDetails = Array.isArray(favorite.featureDetails)
-        ? favorite.featureDetails.map(function(detail) {
-            return detail ? JSON.parse(JSON.stringify(detail)) : detail;
-          })
-        : [];
-      var featureOrder = Array.isArray(favorite.featureOrder)
-        ? favorite.featureOrder.slice()
-        : [];
-      actions.push({
-        id: favorite.id || entryId,
-        type: 'reportFavorite',
-        name: favorite.name || '',
-        description: favorite.description || '',
-        createdAt: favorite.createdAt || '',
-        updatedAt: favorite.updatedAt || '',
-        format: favorite.format || '',
-        fileName: favorite.fileName || '',
-        fileExtension: favorite.fileExtension || '',
-        appendDateToFile: !!favorite.appendDateToFile,
-        channels: Array.isArray(favorite.channels) ? favorite.channels.slice() : [],
-        tables: Array.isArray(favorite.tables) ? favorite.tables.slice() : [],
-        features: Array.isArray(favorite.features) ? favorite.features.slice() : [],
-        featureDetails: featureDetails,
-        featureOrder: featureOrder,
-        descriptionEnabled: !!favorite.descriptionEnabled,
-        descriptionText: favorite.descriptionText || '',
-        emails: Array.isArray(favorite.emails) ? favorite.emails.slice() : [],
-        phones: Array.isArray(favorite.phones) ? favorite.phones.slice() : [],
-        customization:
-          favorite.customization && typeof favorite.customization === 'object'
-            ? JSON.parse(JSON.stringify(favorite.customization))
-            : {}
-      });
-      continue;
-    }
+    favorites.push(favorite);
   }
-  actions.sort(function(a, b) {
+  favorites.sort(function(a, b) {
     var nameA = (a && a.name ? String(a.name) : '').toLowerCase();
     var nameB = (b && b.name ? String(b.name) : '').toLowerCase();
     if (nameA < nameB) {
@@ -1209,7 +1153,64 @@ function listSavedActions() {
     }
     return 0;
   });
-  return actions;
+  return favorites;
+}
+
+function listSavedActions(options) {
+  var opts = options || {};
+  if (opts && opts.scope === 'all') {
+    SpreadsheetApp.flush();
+    var meta = getMetaSheet();
+    var data = meta.getDataRange().getValues();
+    var actions = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var entryId = normalizeMetaId(row[META_INDEX.id]);
+      if (!entryId) {
+        continue;
+      }
+      var type = resolveMetaRecordType(row);
+      if (type === 'table') {
+        var rangeParts = splitRangeNotation(row[META_INDEX.rangeA1]);
+        var sheetName = row[META_INDEX.sheet] || rangeParts.sheet || '';
+        var pureRange = rangeParts.range || '';
+        actions.push({
+          id: entryId,
+          type: 'table',
+          name: row[META_INDEX.name] || '',
+          description: row[META_INDEX.description] || '',
+          sheetName: sheetName,
+          rangeA1: pureRange,
+          fullRangeA1: buildFullRangeNotation(sheetName, pureRange),
+          cols: row[META_INDEX.cols] || '',
+          rows: row[META_INDEX.rows] || '',
+          createdAt: row[META_INDEX.createdAt] || '',
+          updatedAt: row[META_INDEX.updatedAt] || ''
+        });
+        continue;
+      }
+      if (type === 'reportFavorite') {
+        var favorite = buildReportFavoriteResponse({ data: row });
+        if (!favorite || favorite.error) {
+          continue;
+        }
+        actions.push(favorite);
+      }
+    }
+    actions.sort(function(a, b) {
+      var nameA = (a && a.name ? String(a.name) : '').toLowerCase();
+      var nameB = (b && b.name ? String(b.name) : '').toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
+    return actions;
+  }
+  return listFavoriteActions();
 }
 
 function buildReportFavoriteResponse(entry) {
@@ -1331,6 +1332,21 @@ function buildReportFavoriteResponse(entry) {
   };
 }
 
+function getFavoriteActionDetails(favoriteId) {
+  var normalizedId = normalizeMetaId(favoriteId);
+  if (!normalizedId) {
+    return { error: 'Reporte favorito no encontrado.' };
+  }
+  var entry = findMetaById(normalizedId);
+  if (!entry || !entry.data) {
+    return { error: 'Reporte favorito no encontrado.' };
+  }
+  if (resolveMetaRecordType(entry.data) !== 'reportFavorite') {
+    return { error: 'Reporte favorito no encontrado.' };
+  }
+  return buildReportFavoriteResponse(entry);
+}
+
 function getSavedActionDetails(actionId) {
   var id = normalizeMetaId(actionId);
   if (!id) {
@@ -1361,7 +1377,7 @@ function getSavedActionDetails(actionId) {
     };
   }
   if (type === 'reportFavorite') {
-    return buildReportFavoriteResponse(entry);
+    return getFavoriteActionDetails(id);
   }
   return { error: 'Acción no soportada.' };
 }

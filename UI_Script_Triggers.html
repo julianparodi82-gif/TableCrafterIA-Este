@@ -57,7 +57,7 @@ function renderTriggerList() {
     }
     if (entry.actionLabel) {
       const action = document.createElement('span');
-      action.textContent = 'Acción: ' + entry.actionLabel;
+      action.textContent = 'Favorito: ' + entry.actionLabel;
       meta.appendChild(action);
     }
     if (entry.startsAtLabel) {
@@ -106,7 +106,7 @@ function populateTriggerActionSelect(actions) {
       }
       const option = document.createElement('option');
       option.value = action.id;
-      const label = action.name ? action.name : 'Acción sin nombre';
+      const label = action.name ? action.name : 'Favorito sin nombre';
       option.textContent = label + ' • ' + getActionTypeLabel(action.type);
       const tooltip = typeof buildSavedActionTooltip === 'function' ? buildSavedActionTooltip(action) : '';
       if (tooltip) {
@@ -186,7 +186,7 @@ function handleTriggerPreview() {
   const startDate = startDateInput && startDateInput.value ? startDateInput.value : '';
   const lines = [];
   if (actionLabel) {
-    lines.push('Acción: ' + actionLabel);
+    lines.push('Favorito: ' + actionLabel);
   }
   if (frequencyLabel) {
     lines.push('Frecuencia: ' + frequencyLabel);
@@ -208,7 +208,7 @@ function handleTriggerCreate() {
   const actionId = actionSelect.value;
   const frequency = frequencySelect.value;
   if (!actionId || !frequency) {
-    showMessageModal('Selecciona una acción y una frecuencia para guardar el trigger.', {
+    showMessageModal('Seleccioná un favorito y una frecuencia para guardar el trigger.', {
       title: 'Datos incompletos',
       variant: 'warning'
     });

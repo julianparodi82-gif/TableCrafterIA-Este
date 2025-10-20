@@ -96,7 +96,7 @@ function updateActionEditorHeader(action) {
   const title = document.getElementById('aiActionEditorTitle');
   const subtitle = document.getElementById('aiActionEditorSubtitle');
   const meta = document.getElementById('aiActionEditorMeta');
-  const name = action && action.name ? action.name : 'Acción sin nombre';
+  const name = action && action.name ? action.name : 'Favorito sin nombre';
   if (title) {
     title.textContent = name;
   }
@@ -252,7 +252,7 @@ function renderSavedActionsSelect(actions, selectedId, options) {
       }
       const option = document.createElement('option');
       option.value = action.id;
-      const label = action.name ? action.name : 'Acción sin nombre';
+      const label = action.name ? action.name : 'Favorito sin nombre';
       option.textContent = label + ' • ' + getActionTypeLabel(action.type);
       const tooltip = buildSavedActionTooltip(action);
       if (tooltip) {
@@ -400,7 +400,7 @@ function updateSavedActionControls(action, options) {
     saveBtn.removeAttribute('title');
   } else {
     saveBtn.disabled = true;
-    saveBtn.setAttribute('title', 'Esta acción no se puede guardar desde este panel.');
+    saveBtn.setAttribute('title', 'Este favorito no se puede guardar desde este panel.');
   }
 }
 
@@ -507,7 +507,7 @@ function buildActionDetailCard(action, options) {
   const card = document.createElement('div');
   card.className = 'ai-action-card';
   const title = document.createElement('h4');
-  title.textContent = action && action.name ? action.name : 'Acción sin nombre';
+  title.textContent = action && action.name ? action.name : 'Favorito sin nombre';
   card.appendChild(title);
   const meta = document.createElement('div');
   meta.className = 'ai-action-meta';
@@ -681,14 +681,14 @@ async function handleSavedActionSaveClick() {
   }
   const action = currentSavedActionDetails;
   if (!action || !action.id) {
-    await showMessageModal('Seleccioná una acción guardada antes de guardarla.', {
-      title: 'Acción no seleccionada',
+    await showMessageModal('Seleccioná un favorito guardado antes de guardarlo.', {
+      title: 'Favorito no seleccionado',
       variant: 'warning'
     });
     return;
   }
   if (!currentActionSupportsSave || action.type !== 'reportFavorite') {
-    await showMessageModal('Esta acción no se puede guardar desde este panel. Usá el botón de edición para abrirla en su sección correspondiente.', {
+    await showMessageModal('Este favorito no se puede guardar desde este panel. Usá el botón de edición para abrirlo en su sección correspondiente.', {
       title: 'Guardado no disponible',
       variant: 'info'
     });
@@ -721,8 +721,8 @@ async function handleSavedActionDeleteClick() {
   }
   const action = currentSavedActionDetails;
   if (!action || !action.id) {
-    await showMessageModal('Seleccioná una acción guardada antes de borrarla.', {
-      title: 'Acción no seleccionada',
+    await showMessageModal('Seleccioná un favorito guardado antes de borrarlo.', {
+      title: 'Favorito no seleccionado',
       variant: 'warning'
     });
     return;
@@ -731,16 +731,16 @@ async function handleSavedActionDeleteClick() {
   let confirmed = true;
   if (typeof showConfirmModal === 'function') {
     confirmed = await showConfirmModal(
-      '¿Querés borrar la acción ' + actionLabel + '? Esta acción no se puede deshacer.',
+      '¿Querés borrar el favorito ' + actionLabel + '? Esta acción no se puede deshacer.',
       {
-        title: 'Borrar acción guardada',
+        title: 'Borrar favorito guardado',
         confirmText: 'Borrar',
         cancelText: 'Cancelar',
         variant: 'danger'
       }
     );
   } else if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-    confirmed = window.confirm('¿Querés borrar la acción ' + actionLabel + '? Esta acción no se puede deshacer.');
+    confirmed = window.confirm('¿Querés borrar el favorito ' + actionLabel + '? Esta acción no se puede deshacer.');
   }
   if (!confirmed) {
     return;
@@ -754,13 +754,13 @@ async function handleSavedActionDeleteClick() {
     }
     const warning = result && result.warning ? String(result.warning) : '';
     if (warning) {
-      await showMessageModal('La acción se eliminó con advertencias: ' + warning, {
-        title: 'Acción eliminada con avisos',
+      await showMessageModal('El favorito se eliminó con advertencias: ' + warning, {
+        title: 'Favorito eliminado con avisos',
         variant: 'warning'
       });
     } else {
-      await showMessageModal('La acción seleccionada se eliminó correctamente.', {
-        title: 'Acción eliminada',
+      await showMessageModal('El favorito seleccionado se eliminó correctamente.', {
+        title: 'Favorito eliminado',
         variant: 'success'
       });
     }
@@ -792,7 +792,7 @@ async function handleSavedActionDeleteClick() {
     }
   } catch (err) {
     await showMessageModal(
-      'No se pudo borrar la acción seleccionada: ' + (err && err.message ? err.message : err),
+      'No se pudo borrar el favorito seleccionado: ' + (err && err.message ? err.message : err),
       {
         title: 'No se pudo borrar',
         variant: 'error'
@@ -812,10 +812,10 @@ async function loadSavedActionDetails(actionId) {
   }
   let response;
   try {
-    response = await callServerFunction('getSavedActionDetails', actionId);
+    response = await callServerFunction('getFavoriteActionDetails', actionId);
   } catch (err) {
     await showMessageModal(
-      'No se pudo cargar la acción seleccionada: ' + (err && err.message ? err.message : err),
+      'No se pudo cargar el favorito seleccionado: ' + (err && err.message ? err.message : err),
       {
         title: 'Error al cargar',
         variant: 'error'
@@ -824,8 +824,8 @@ async function loadSavedActionDetails(actionId) {
     return;
   }
   if (!response || response.error) {
-    await showMessageModal((response && response.error) || 'No se encontró la acción seleccionada.', {
-      title: 'Acción no disponible',
+    await showMessageModal((response && response.error) || 'No se encontró el favorito seleccionado.', {
+      title: 'Favorito no disponible',
       variant: 'warning'
     });
     clearSavedActionDetails();
@@ -843,7 +843,7 @@ async function ensureSavedActionsCache(options) {
   }
   let result;
   try {
-    result = await callServerFunction('listSavedActions');
+    result = await callServerFunction('listFavoriteActions');
   } catch (err) {
     savedActionsLoaded = false;
     throw err;
@@ -884,7 +884,7 @@ async function refreshSavedActions(options) {
   }
   loadingSavedActions = true;
   try {
-    const result = await callServerFunction('listSavedActions');
+    const result = await callServerFunction('listFavoriteActions');
     savedActionsCache = Array.isArray(result) ? result.slice() : [];
     savedActionsLoaded = true;
     const renderInfo = renderSavedActionsSelect(savedActionsCache, targetId, {
@@ -904,9 +904,9 @@ async function refreshSavedActions(options) {
     currentSavedActionId = '';
     dispatchSavedActionsUpdated();
     await showMessageModal(
-      'No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err),
+      'No se pudieron obtener los favoritos guardados: ' + (err && err.message ? err.message : err),
       {
-        title: 'Error al listar acciones',
+        title: 'Error al listar favoritos',
         variant: 'error'
       }
     );
