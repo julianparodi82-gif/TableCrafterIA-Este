@@ -3504,16 +3504,50 @@ function playSidebarAnimation() {
           }, 700);
         }
 
-        function syncAddonThemeMode(nextTheme) {
+        function syncAddonThemeMode(nextTheme, options) {
+          const settings = options || {};
+          const normalized = nextTheme === 'word' ? 'word' : 'table';
+          const shouldReload = Boolean(settings.reload);
+          const reloadDelay = typeof settings.reloadDelay === 'number' ? settings.reloadDelay : 0;
+
+          function triggerReload() {
+            if (!shouldReload) {
+              return;
+            }
+            const doReload = function() {
+              try {
+                window.location.reload();
+              } catch (reloadError) {
+                // En caso de que reload no esté disponible, no hacemos nada.
+              }
+            };
+            if (reloadDelay > 0) {
+              window.setTimeout(doReload, reloadDelay);
+            } else {
+              doReload();
+            }
+          }
+
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            triggerReload();
             return;
           }
           try {
-            google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(
-              nextTheme === 'word' ? 'word' : 'table'
-            );
+            let runner = google.script.run;
+            if (shouldReload) {
+              runner = runner
+                .withSuccessHandler(function() {
+                  triggerReload();
+                })
+                .withFailureHandler(function() {
+                  triggerReload();
+                });
+            } else {
+              runner = runner.withFailureHandler(function() {});
+            }
+            runner.setSidebarThemeMode(normalized);
           } catch (error) {
-            // Si no se puede comunicar con Apps Script, ignoramos el error.
+            triggerReload();
           }
         }
 
@@ -3538,12 +3572,14 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          body.dataset.initialTheme = nextTheme;
           relocateSharedAvailableSection(nextTheme);
           syncTabButtonLabels(nextTheme);
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
+          const shouldReload = themeChanged && previousTheme !== null;
           if (themeChanged || settings.forceSync) {
-            syncAddonThemeMode(nextTheme);
+            syncAddonThemeMode(nextTheme, { reload: shouldReload });
           }
         }
 
