@@ -3146,9 +3146,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const docSections = document.querySelectorAll('[data-word-range-doc]');
           const toggleContainer = document.querySelector('[data-word-range-toggle]');
           const manualToggle = document.getElementById('wordRangeManualToggle');
-          if (toggleContainer) {
-            toggleContainer.classList.toggle('is-hidden', showSpreadsheetRange);
-          }
           if (manualToggle) {
             if (showSpreadsheetRange) {
               manualToggle.checked = true;
@@ -3161,6 +3158,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 delete manualToggle.dataset.forced;
               }
             }
+          }
+          if (toggleContainer) {
+            toggleContainer.classList.remove('is-hidden');
+            toggleContainer.classList.toggle('word-range-toggle--forced', showSpreadsheetRange);
           }
           const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
           sheetSections.forEach(function(section) {
