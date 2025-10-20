@@ -34,10 +34,45 @@ let tabButtonsList = [];
 let tabContentsList = [];
 let hideWelcomePreference = { table: null, word: null };
 let welcomePreferenceResolved = false;
+let sharedAvailableSection = null;
+let sharedAvailablePlaceholder = null;
 const headerUiState = {
   headersList: {},
   editHeadersList: {}
 };
+
+function ensureSharedAvailableSection() {
+  if (!sharedAvailableSection) {
+    sharedAvailableSection = document.querySelector('.ai-available-section[data-shared-available]');
+    if (sharedAvailableSection && !sharedAvailablePlaceholder) {
+      sharedAvailablePlaceholder = document.createComment('shared-available-placeholder');
+      const parent = sharedAvailableSection.parentNode;
+      if (parent) {
+        parent.insertBefore(sharedAvailablePlaceholder, sharedAvailableSection.nextSibling);
+      }
+    }
+  }
+  return sharedAvailableSection;
+}
+
+function relocateSharedAvailableSection(theme) {
+  const section = ensureSharedAvailableSection();
+  if (!section) {
+    return;
+  }
+  const anchor = document.getElementById('aiWordAvailableAnchor');
+  if (theme === 'word') {
+    if (anchor && anchor.parentNode) {
+      anchor.parentNode.insertBefore(section, anchor.nextSibling);
+      section.classList.remove('ai-word-available-card');
+    }
+  } else if (sharedAvailablePlaceholder && sharedAvailablePlaceholder.parentNode) {
+    sharedAvailablePlaceholder.parentNode.insertBefore(section, sharedAvailablePlaceholder);
+    section.classList.remove('ai-word-available-card');
+  } else {
+    section.classList.remove('ai-word-available-card');
+  }
+}
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -3097,6 +3132,156 @@ document.addEventListener('DOMContentLoaded', function() {
           window.clearTimeout(sidebarEntryCleanupTimeout);
           sidebarEntryCleanupTimeout = null;
         }
+        const activeContextInfo =
+          (typeof window !== 'undefined' && window.__activeDocContext && window.__activeDocContext.type)
+            ? String(window.__activeDocContext.type)
+            : body && body.getAttribute('data-active-context');
+
+        function syncWordCreateRangeVisibility(contextType, options) {
+          options = options || {};
+          const normalized = (contextType || '').toLowerCase();
+          const showSpreadsheetRange =
+            normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
+          const sheetSections = document.querySelectorAll('[data-word-range-sheet]');
+          const toggleContainer = document.querySelector('[data-word-range-toggle]');
+          const manualToggle = document.getElementById('wordRangeManualToggle');
+          if (manualToggle) {
+            if (showSpreadsheetRange) {
+              manualToggle.checked = true;
+              manualToggle.disabled = true;
+              manualToggle.dataset.forced = 'true';
+            } else {
+              manualToggle.disabled = false;
+              if (manualToggle.dataset.forced === 'true') {
+                manualToggle.checked = false;
+                delete manualToggle.dataset.forced;
+              }
+            }
+          }
+          if (toggleContainer) {
+            toggleContainer.classList.remove('is-hidden');
+            toggleContainer.classList.toggle('word-range-toggle--forced', showSpreadsheetRange);
+          }
+          const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
+          sheetSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', !manualEnabled);
+          });
+          const rangeInput = document.getElementById('rangeInput');
+          if (rangeInput) {
+            rangeInput.disabled = !manualEnabled;
+            if (!manualEnabled) {
+              rangeInput.value = '';
+              rangeInput.dataset.manual = 'false';
+            }
+          }
+          const refreshBtn = document.getElementById('refreshRangeBtn');
+          if (refreshBtn) {
+            refreshBtn.disabled = !manualEnabled;
+          }
+          if (!manualEnabled && typeof clearRangeUI === 'function' && !options.preserveRange) {
+            try {
+              clearRangeUI();
+            } catch (error) {}
+          }
+        }
+
+        function syncWordEditRangeVisibility(contextType, options) {
+          options = options || {};
+          const normalized = (contextType || '').toLowerCase();
+          const showSpreadsheetRange =
+            normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
+          const toggleContainer = document.querySelector('[data-word-edit-range-toggle]');
+          const manualToggle = document.getElementById('wordEditManualRangeToggle');
+          if (toggleContainer) {
+            toggleContainer.classList.toggle('is-hidden', showSpreadsheetRange);
+          }
+          if (manualToggle) {
+            if (showSpreadsheetRange) {
+              manualToggle.checked = true;
+              manualToggle.disabled = true;
+              manualToggle.dataset.forced = 'true';
+            } else {
+              manualToggle.disabled = false;
+              if (manualToggle.dataset.forced === 'true') {
+                manualToggle.checked = false;
+                delete manualToggle.dataset.forced;
+              }
+            }
+          }
+          const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
+          const sheetSections = document.querySelectorAll('[data-word-edit-range-sheet]');
+          const docSections = document.querySelectorAll('[data-word-edit-range-doc]');
+          sheetSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', !manualEnabled);
+          });
+          docSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', manualEnabled);
+          });
+          const rangeInput = document.getElementById('wordEditRangeInput');
+          if (rangeInput) {
+            rangeInput.disabled = !manualEnabled;
+            if (!manualEnabled) {
+              rangeInput.value = '';
+              rangeInput.dataset.manual = 'false';
+            }
+          }
+          const refreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+          if (refreshBtn) {
+            refreshBtn.disabled = !manualEnabled;
+          }
+          if (!manualEnabled && typeof clearWordEditRangeUI === 'function' && !options.preserveRange) {
+            try {
+              clearWordEditRangeUI();
+            } catch (error) {}
+          }
+        }
+
+        if (typeof window !== 'undefined') {
+          window.syncWordCreateRangeVisibility = syncWordCreateRangeVisibility;
+          window.syncWordEditRangeVisibility = syncWordEditRangeVisibility;
+        }
+
+        const normalizedContext = activeContextInfo ? activeContextInfo.toLowerCase() : 'sheets';
+        if (body) {
+          body.dataset.activeContext = normalizedContext;
+        }
+        syncWordCreateRangeVisibility(normalizedContext);
+        syncWordEditRangeVisibility(normalizedContext);
+
+        const wordRangeToggle = document.getElementById('wordRangeManualToggle');
+        if (wordRangeToggle) {
+          wordRangeToggle.addEventListener('change', function() {
+            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
+            syncWordCreateRangeVisibility(contextForToggle, { preserveRange: false });
+          });
+        }
+
+        const wordEditRangeToggle = document.getElementById('wordEditManualRangeToggle');
+        if (wordEditRangeToggle) {
+          wordEditRangeToggle.addEventListener('change', function() {
+            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
+            syncWordEditRangeVisibility(contextForToggle, { preserveRange: false });
+          });
+        }
+
+        if (typeof setupWordToggleFields === 'function') {
+          const wordCreateForm = document.getElementById('wordCreateForm');
+          if (wordCreateForm) {
+            try {
+              setupWordToggleFields(wordCreateForm);
+            } catch (error) {}
+          }
+        }
+
         if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
         }
@@ -3133,6 +3318,47 @@ document.addEventListener('DOMContentLoaded', function() {
         tabButtonsList = Array.from(document.querySelectorAll('.tab-btn'));
         tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
         let themeAnimationTimeout = null;
+
+        const tabThemeLabels = {
+          table: {
+            editTab: {
+              label: 'Editar tabla',
+              tooltip: 'Modifica tablas guardadas y ajusta sus estilos.'
+            },
+            createTab: {
+              label: 'Crear tabla',
+              tooltip: 'Crea nuevas tablas con ayuda de IA y formatos personalizados.'
+            }
+          },
+          word: {
+            editTab: {
+              label: 'Editar texto',
+              tooltip: 'Revisa y ajusta textos guardados, sus estilos y versiones.'
+            },
+            createTab: {
+              label: 'Crear texto',
+              tooltip: 'Genera nuevos contenidos con ayuda de la IA y plantillas base.'
+            }
+          }
+        };
+
+        function syncTabButtonLabels(theme) {
+          const normalizedTheme = theme === 'word' ? 'word' : 'table';
+          const config = tabThemeLabels[normalizedTheme];
+          Object.keys(config).forEach(function(tabId) {
+            const button = document.querySelector(".tab-btn[data-tab='" + tabId + "']");
+            if (!button) {
+              return;
+            }
+            const settings = config[tabId];
+            if (settings.label) {
+              button.textContent = settings.label;
+            }
+            if (settings.tooltip) {
+              button.setAttribute('data-tooltip', settings.tooltip);
+            }
+          });
+        }
 
         const tableMessage =
           '<p><strong>¡Bienvenido a TableCrafterAI!</strong> Crea y organiza tablas listas para compartir en minutos.</p>' +
@@ -3294,6 +3520,8 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          relocateSharedAvailableSection(nextTheme);
+          syncTabButtonLabels(nextTheme);
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
           if (themeChanged || settings.forceSync) {

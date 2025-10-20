@@ -4,6 +4,348 @@ let editRangeInfo = null;
 let editingId = '';
 let editFormatDirty = false;
 let editSavedListCollapsed = false;
+let wordEditTextsCache = [];
+let wordEditSelectedId = '';
+let wordEditObserver = null;
+let wordEditRangeInfo = null;
+
+function clearWordEditRangeUI() {
+  const label = document.getElementById('wordEditRangeLabel');
+  if (label) {
+    label.textContent = '—';
+  }
+  const input = document.getElementById('wordEditRangeInput');
+  if (input) {
+    input.value = '';
+    input.dataset.manual = 'false';
+  }
+  wordEditRangeInfo = null;
+}
+
+function setWordEditRangeUI(info, options) {
+  options = options || {};
+  if (!info || !info.sheetName || !info.a1Notation) {
+    clearWordEditRangeUI();
+    return;
+  }
+  const rows = typeof info.rows === 'number' ? info.rows : info.rows || 0;
+  const cols = typeof info.cols === 'number' ? info.cols : info.cols || 0;
+  const label = document.getElementById('wordEditRangeLabel');
+  const input = document.getElementById('wordEditRangeInput');
+  const fullA1 = info.sheetName + '!' + info.a1Notation;
+  if (label) {
+    const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+    label.textContent = fullA1 + dims;
+  }
+  if (input && (options.force || input.dataset.manual !== 'true')) {
+    input.value = fullA1;
+    input.dataset.manual = 'false';
+  }
+  wordEditRangeInfo = {
+    sheetName: info.sheetName,
+    a1Notation: info.a1Notation,
+    rows: rows,
+    cols: cols
+  };
+}
+
+function refreshWordEditRange(options) {
+  options = options || {};
+  const refreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+  if (refreshBtn) {
+    if (refreshBtn.disabled && refreshBtn.dataset.loading !== 'true') {
+      return;
+    }
+    if (refreshBtn.dataset.loading === 'true') {
+      return;
+    }
+    refreshBtn.dataset.loading = 'true';
+  }
+  const showError = function(message, variant) {
+    if (typeof showMessageModal === 'function' && message) {
+      showMessageModal(message, {
+        title: 'Rango no disponible',
+        variant: variant || 'error'
+      });
+    }
+  };
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    if (refreshBtn) {
+      delete refreshBtn.dataset.loading;
+    }
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(info) {
+      if (refreshBtn) {
+        delete refreshBtn.dataset.loading;
+      }
+      if (!info || info.error) {
+        clearWordEditRangeUI();
+        showError(info && info.error ? info.error : 'No se pudo obtener el rango activo.');
+        return;
+      }
+      setWordEditRangeUI(info, { force: options.force !== false });
+    })
+    .withFailureHandler(function(err) {
+      if (refreshBtn) {
+        delete refreshBtn.dataset.loading;
+      }
+      clearWordEditRangeUI();
+      const message = err && err.message ? err.message : err;
+      showError('No se pudo obtener el rango activo: ' + message);
+    })
+    .getActiveRangeInfo();
+}
+
+if (typeof window !== 'undefined') {
+  window.clearWordEditRangeUI = clearWordEditRangeUI;
+  window.setWordEditRangeUI = setWordEditRangeUI;
+}
+
+function collectWordSavedTextsFromSelect() {
+  const select = document.getElementById('aiSavedTexts');
+  if (!select || !select.options) {
+    return [];
+  }
+  const entries = [];
+  Array.prototype.forEach.call(select.options, function(option) {
+    if (!option || !option.value) {
+      return;
+    }
+    const data = option.dataset || {};
+    const kind = (data.kind || data.type || data.entryType || '').toLowerCase();
+    const recordType = (data.recordType || data.metaType || '').toLowerCase();
+    const value = String(option.value);
+    if (
+      (kind && kind !== 'texto' && kind !== 'text' && kind !== 'word' && kind !== 'documento') ||
+      (recordType && recordType !== 'texto' && recordType !== 'text' && recordType !== 'word' && recordType !== 'documento')
+    ) {
+      return;
+    }
+    if (!kind && value && (value.indexOf('table:') === 0 || value.indexOf('tabla:') === 0)) {
+      return;
+    }
+    entries.push({
+      id: value,
+      name: option.textContent && option.textContent.trim() ? option.textContent.trim() : option.value,
+      language: data.language || data.lang || '',
+      tone: data.tone || '',
+      updated: data.updated || data.modified || '',
+      notes: data.notes || data.description || ''
+    });
+  });
+  return entries;
+}
+
+function updateWordEditDetails(entry) {
+  const titleEl = document.getElementById('wordEditDetailsTitle');
+  const languageEl = document.getElementById('wordEditDetailsLanguage');
+  const toneEl = document.getElementById('wordEditDetailsTone');
+  const updatedEl = document.getElementById('wordEditDetailsUpdated');
+  const notesEl = document.getElementById('wordEditDetailsNotes');
+  const statusEl = document.getElementById('wordEditDetailsStatus');
+  const hintEl = document.getElementById('wordEditDetailsHint');
+  const openBtn = document.getElementById('wordEditOpenBtn');
+  const deleteBtn = document.getElementById('wordEditDeleteBtn');
+  const hasEntry = !!(entry && entry.id);
+  const fallback = '—';
+  if (titleEl) {
+    titleEl.textContent = hasEntry && entry.name ? entry.name : fallback;
+  }
+  if (languageEl) {
+    languageEl.textContent = hasEntry && entry.language ? entry.language : fallback;
+  }
+  if (toneEl) {
+    toneEl.textContent = hasEntry && entry.tone ? entry.tone : fallback;
+  }
+  if (updatedEl) {
+    updatedEl.textContent = hasEntry && entry.updated ? entry.updated : fallback;
+  }
+  if (notesEl) {
+    notesEl.textContent = hasEntry && entry.notes ? entry.notes : 'Selecciona un texto para revisar las instrucciones guardadas.';
+  }
+  if (statusEl) {
+    statusEl.textContent = hasEntry ? 'Seleccionado' : 'Sin seleccionar';
+  }
+  if (hintEl) {
+    hintEl.textContent = hasEntry
+      ? 'Revisa los datos guardados y aplica los cambios desde el panel principal.'
+      : 'Elige un texto para ver su título, idioma, tono y notas clave.';
+  }
+  if (openBtn) {
+    openBtn.disabled = true;
+    openBtn.title = hasEntry ? 'Disponible próximamente' : '';
+  }
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.title = hasEntry ? 'Disponible próximamente' : '';
+  }
+}
+
+function renderWordEditSavedTexts(entries) {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  const selectEl = document.getElementById('wordEditSavedTexts');
+  const emptyEl = document.getElementById('wordEditEmptyState');
+  if (!listEl || !selectEl) {
+    return;
+  }
+  listEl.innerHTML = '';
+  while (selectEl.firstChild) {
+    selectEl.removeChild(selectEl.firstChild);
+  }
+  const data = Array.isArray(entries) ? entries : [];
+  if (!data.length) {
+    if (emptyEl) {
+      emptyEl.style.display = '';
+    }
+    updateWordEditDetails(null);
+    wordEditSelectedId = '';
+    return;
+  }
+  if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
+  data.forEach(function(entry) {
+    if (!entry || !entry.id) {
+      return;
+    }
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.name || entry.id;
+    if (entry.language) option.dataset.language = entry.language;
+    if (entry.tone) option.dataset.tone = entry.tone;
+    if (entry.updated) option.dataset.updated = entry.updated;
+    if (entry.notes) option.dataset.notes = entry.notes;
+    selectEl.appendChild(option);
+
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'word-edit-item';
+    item.dataset.value = entry.id;
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', 'false');
+    const title = document.createElement('span');
+    title.className = 'word-edit-item-title';
+    title.textContent = entry.name || entry.id;
+    item.appendChild(title);
+    const meta = document.createElement('span');
+    meta.className = 'word-edit-item-meta';
+    const language = entry.language ? entry.language : 'Idioma no definido';
+    const tone = entry.tone ? entry.tone : 'Tono automático';
+    meta.textContent = language + ' · ' + tone;
+    item.appendChild(meta);
+    listEl.appendChild(item);
+  });
+  if (wordEditSelectedId) {
+    selectWordEditText(wordEditSelectedId, { scroll: false });
+  } else if (data.length && data[0] && data[0].id) {
+    selectWordEditText(data[0].id, { scroll: false });
+  } else {
+    updateWordEditDetails(null);
+  }
+}
+
+function selectWordEditText(id, options) {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  const selectEl = document.getElementById('wordEditSavedTexts');
+  const data = Array.isArray(wordEditTextsCache) ? wordEditTextsCache : [];
+  const normalizedId = id ? String(id) : '';
+  const entry = data.find(function(item) {
+    return item && item.id === normalizedId;
+  }) || null;
+  if (!entry) {
+    wordEditSelectedId = '';
+    if (selectEl) {
+      selectEl.value = '';
+    }
+    if (listEl) {
+      const items = listEl.querySelectorAll('.word-edit-item');
+      Array.prototype.forEach.call(items, function(item) {
+        item.setAttribute('aria-selected', 'false');
+        item.classList.remove('word-edit-item--selected');
+      });
+    }
+    updateWordEditDetails(null);
+    return;
+  }
+  wordEditSelectedId = normalizedId;
+  if (selectEl) {
+    selectEl.value = normalizedId;
+  }
+  if (listEl) {
+    const items = listEl.querySelectorAll('.word-edit-item');
+    Array.prototype.forEach.call(items, function(item) {
+      const value = item && item.dataset ? item.dataset.value : '';
+      const selected = value === normalizedId;
+      item.setAttribute('aria-selected', selected ? 'true' : 'false');
+      item.classList.toggle('word-edit-item--selected', selected);
+      if (selected && options && options.scroll !== false) {
+        if (typeof item.scrollIntoView === 'function') {
+          item.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    });
+  }
+  updateWordEditDetails(entry);
+}
+
+function syncWordEditSavedTextsFromSelect() {
+  wordEditTextsCache = collectWordSavedTextsFromSelect();
+  renderWordEditSavedTexts(wordEditTextsCache);
+}
+
+function handleWordEditListClick(event) {
+  const target = event.target;
+  if (!target) {
+    return;
+  }
+  const item = typeof target.closest === 'function' ? target.closest('.word-edit-item') : null;
+  if (!item || !item.dataset || !item.dataset.value) {
+    return;
+  }
+  selectWordEditText(item.dataset.value);
+}
+
+function handleWordEditListKeydown(event) {
+  if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+    return;
+  }
+  const target = event.target;
+  if (!target) {
+    return;
+  }
+  const item = typeof target.closest === 'function' ? target.closest('.word-edit-item') : null;
+  if (!item || !item.dataset || !item.dataset.value) {
+    return;
+  }
+  event.preventDefault();
+  selectWordEditText(item.dataset.value);
+}
+
+function initializeWordEditPanel() {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  if (!listEl) {
+    return;
+  }
+  if (!listEl.hasAttribute('tabindex')) {
+    listEl.tabIndex = 0;
+  }
+  listEl.addEventListener('click', handleWordEditListClick);
+  listEl.addEventListener('keydown', handleWordEditListKeydown);
+  const sourceSelect = document.getElementById('aiSavedTexts');
+  if (sourceSelect) {
+    sourceSelect.addEventListener('change', syncWordEditSavedTextsFromSelect);
+    if (wordEditObserver && typeof wordEditObserver.disconnect === 'function') {
+      wordEditObserver.disconnect();
+    }
+    wordEditObserver = new MutationObserver(function() {
+      syncWordEditSavedTextsFromSelect();
+    });
+    wordEditObserver.observe(sourceSelect, { childList: true, attributes: true });
+  }
+  syncWordEditSavedTextsFromSelect();
+}
 
 
 
@@ -684,19 +1026,25 @@ async function openActionForEditing(action) {
         });
       });
 
-      document.getElementById('refreshRangeBtn').addEventListener('click', async function() {
-        if (isFormatLockActive()) {
-          const resolved = await resolvePendingFormatting();
-          if (resolved !== 'saved' && resolved !== 'cleared') {
+      const createRefreshBtn = document.getElementById('refreshRangeBtn');
+      if (createRefreshBtn) {
+        createRefreshBtn.addEventListener('click', async function() {
+          if (createRefreshBtn.disabled) {
             return;
           }
-        }
-        const input = document.getElementById('rangeInput');
-        if (input) {
-          input.dataset.manual = 'false';
-        }
-        loadActiveRange(editingId === '');
-      });
+          if (isFormatLockActive()) {
+            const resolved = await resolvePendingFormatting();
+            if (resolved !== 'saved' && resolved !== 'cleared') {
+              return;
+            }
+          }
+          const input = document.getElementById('rangeInput');
+          if (input) {
+            input.dataset.manual = 'false';
+          }
+          loadActiveRange(editingId === '');
+        });
+      }
 
       document.getElementById('editRefreshApplyBtn').addEventListener('click', async function() {
         if (!editingId) {
@@ -1051,4 +1399,58 @@ async function handleEditSaveAction(options) {
         });
         return true;
       }
+
+document.addEventListener('DOMContentLoaded', function() {
+  initializeWordEditPanel();
+  clearWordEditRangeUI();
+
+  const wordEditRangeInput = document.getElementById('wordEditRangeInput');
+  if (wordEditRangeInput) {
+    wordEditRangeInput.dataset.manual = 'false';
+    wordEditRangeInput.addEventListener('input', function() {
+      this.dataset.manual = this.value.trim() ? 'true' : 'false';
+      if (this.dataset.manual === 'true') {
+        wordEditRangeInfo = null;
+      }
+    });
+  }
+
+  const wordEditRefreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+  if (wordEditRefreshBtn) {
+    wordEditRefreshBtn.addEventListener('click', function() {
+      if (wordEditRefreshBtn.disabled) {
+        return;
+      }
+      refreshWordEditRange({ force: true });
+    });
+  }
+
+  const wordEditManualToggle = document.getElementById('wordEditManualRangeToggle');
+  if (wordEditManualToggle) {
+    wordEditManualToggle.addEventListener('change', function() {
+      if (this.checked) {
+        refreshWordEditRange({ force: true });
+      } else {
+        clearWordEditRangeUI();
+      }
+    });
+  }
+
+  if (typeof syncWordEditRangeVisibility === 'function') {
+    const body = document.body;
+    const context = body && body.dataset ? body.dataset.activeContext : '';
+    syncWordEditRangeVisibility(context, { preserveRange: true });
+    const normalizedContext = context ? context.toLowerCase() : '';
+    if (
+      wordEditManualToggle &&
+      wordEditManualToggle.checked &&
+      (normalizedContext === 'sheets' ||
+        normalizedContext === 'sheet' ||
+        normalizedContext === 'excel' ||
+        normalizedContext === 'spreadsheets')
+    ) {
+      refreshWordEditRange({ force: true });
+    }
+  }
+});
 </script>

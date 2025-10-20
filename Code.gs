@@ -42,6 +42,7 @@ function showSidebar() {
   var template = HtmlService.createTemplateFromFile('UI');
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
+  template.activeDocContext = getActiveDocumentContext();
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
   var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
   SpreadsheetApp.getUi().showSidebar(html);
@@ -131,7 +132,6 @@ function refreshAddonMenuForTheme(themeMode) {
   }
   ui.createMenu('TableCrafterAI')
     .addItem('Abrir TableCrafterAI', 'showTablecrafterSidebar')
-    .addItem('Abrir WordCrafterAI', 'showWordcrafterSidebar')
     .addItem('Configuración', 'showConfig')
     .addItem('Ayuda', 'showHelp')
     .addToUi();
@@ -142,6 +142,35 @@ function setSidebarThemeMode(mode) {
   PropertiesService.getUserProperties().setProperty(SIDEBAR_THEME_PROPERTY_KEY, normalized);
   refreshAddonMenuForTheme(normalized);
   return normalized;
+}
+
+function getActiveDocumentContext() {
+  var context = { type: 'sheets' };
+  try {
+    var spreadsheet = SpreadsheetApp.getActive();
+    if (spreadsheet) {
+      context = {
+        type: 'sheets',
+        id: spreadsheet.getId ? spreadsheet.getId() : '',
+        name: spreadsheet.getName ? spreadsheet.getName() : ''
+      };
+      return context;
+    }
+  } catch (error) {}
+
+  try {
+    var doc = DocumentApp.getActiveDocument();
+    if (doc) {
+      context = {
+        type: 'docs',
+        id: doc.getId ? doc.getId() : '',
+        name: doc.getName ? doc.getName() : ''
+      };
+      return context;
+    }
+  } catch (error) {}
+
+  return context;
 }
 
 function showTablecrafterSidebar() {
@@ -386,7 +415,15 @@ function normalizeMetaRecordType(value) {
     text === 'report' ||
     text === 'reporte' ||
     text === 'reporte_favorito' ||
-    text === 'reporte-favorito'
+    text === 'reporte-favorito' ||
+    text === 'favorite' ||
+    text === 'favorito' ||
+    text === 'favorita' ||
+    text === 'favoritos' ||
+    text === 'accion' ||
+    text === 'acciones' ||
+    text === 'action' ||
+    text === 'savedaction'
   ) {
     return 'reportFavorite';
   }
@@ -396,57 +433,72 @@ function normalizeMetaRecordType(value) {
   return 'table';
 }
 
-function resolveMetaRecordType(row) {
+function metaRowLooksLikeReportFavorite(row) {
   if (!row) {
-    return 'table';
+    return false;
   }
-  var normalized = normalizeMetaRecordType(row[META_INDEX.recordType]);
-  if (normalized !== 'table') {
-    return normalized;
+  var typeCell = row.length > META_INDEX.recordType ? row[META_INDEX.recordType] : '';
+  if (normalizeMetaRecordType(typeCell) === 'reportFavorite') {
+    return true;
+  }
+  var idValue = row.length > META_INDEX.id ? row[META_INDEX.id] : '';
+  var normalizedId = normalizeMetaId(idValue).toLowerCase();
+  if (normalizedId.indexOf('reportfavorite:') === 0) {
+    return true;
   }
   var configCell = row.length > META_INDEX.reportConfig ? row[META_INDEX.reportConfig] : '';
   var configText = configCell === null || configCell === undefined ? '' : String(configCell).trim();
   if (!configText) {
-    return normalized;
+    return false;
   }
   var parsedConfig = parseJsonValue(configText, null);
   if (!parsedConfig || typeof parsedConfig !== 'object') {
-    return normalized;
+    return false;
   }
-  var hasReportSignals = false;
-  if (!hasReportSignals && Array.isArray(parsedConfig.features) && parsedConfig.features.length > 0) {
-    hasReportSignals = true;
+  if (Array.isArray(parsedConfig.features) && parsedConfig.features.length > 0) {
+    return true;
   }
-  if (!hasReportSignals && Array.isArray(parsedConfig.featureDetails) && parsedConfig.featureDetails.length > 0) {
-    hasReportSignals = true;
+  if (Array.isArray(parsedConfig.featureDetails) && parsedConfig.featureDetails.length > 0) {
+    return true;
   }
-  if (!hasReportSignals && Array.isArray(parsedConfig.tables) && parsedConfig.tables.length > 0) {
-    hasReportSignals = true;
+  if (Array.isArray(parsedConfig.tables) && parsedConfig.tables.length > 0) {
+    return true;
   }
-  if (!hasReportSignals && Array.isArray(parsedConfig.channels) && parsedConfig.channels.length > 0) {
-    hasReportSignals = true;
+  if (Array.isArray(parsedConfig.channels) && parsedConfig.channels.length > 0) {
+    return true;
   }
-  if (!hasReportSignals && parsedConfig.format) {
-    hasReportSignals = true;
+  if (parsedConfig.format || parsedConfig.fileName || parsedConfig.fileExtension) {
+    return true;
   }
-  if (!hasReportSignals && parsedConfig.fileName) {
-    hasReportSignals = true;
-  }
-  if (
-    !hasReportSignals &&
-    parsedConfig.customization &&
-    typeof parsedConfig.customization === 'object'
-  ) {
-    hasReportSignals = true;
+  if (parsedConfig.appendDateToFile || parsedConfig.savedAt) {
+    return true;
   }
   if (
-    !hasReportSignals &&
-    (parsedConfig.descriptionEnabled ||
-      (parsedConfig.description && String(parsedConfig.description).trim() !== ''))
+    parsedConfig.descriptionEnabled ||
+    (parsedConfig.description && String(parsedConfig.description).trim() !== '')
   ) {
-    hasReportSignals = true;
+    return true;
   }
-  return hasReportSignals ? 'reportFavorite' : normalized;
+  if (Array.isArray(parsedConfig.emails) && parsedConfig.emails.length > 0) {
+    return true;
+  }
+  if (Array.isArray(parsedConfig.phones) && parsedConfig.phones.length > 0) {
+    return true;
+  }
+  if (parsedConfig.customization && typeof parsedConfig.customization === 'object') {
+    var customizationKeys = Object.keys(parsedConfig.customization);
+    if (customizationKeys.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function resolveMetaRecordType(row) {
+  if (!row) {
+    return 'table';
+  }
+  return metaRowLooksLikeReportFavorite(row) ? 'reportFavorite' : 'table';
 }
 
 function parseBooleanValue(value, defaultValue) {
