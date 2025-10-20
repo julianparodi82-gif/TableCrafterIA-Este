@@ -895,6 +895,179 @@
         margin-top: 16px;
         display: none;
       }
+      .ai-table-mode {
+        display: block;
+      }
+      .ai-word-mode {
+        display: none;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .theme-wordcrafter .ai-word-mode {
+        display: flex;
+      }
+      .theme-wordcrafter .ai-table-mode {
+        display: none;
+      }
+      .ai-word-hero {
+        background: var(--tc-surface);
+        border: 1px solid var(--tc-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--tc-shadow-base);
+      }
+      .ai-word-hero-title {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #000000;
+      }
+      .ai-word-hero-subtitle {
+        margin: 0;
+        color: var(--tc-muted);
+        font-size: 14px;
+      }
+      .ai-word-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ai-word-action-menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .ai-word-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: var(--tc-primary-soft);
+        color: #000000;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .ai-word-action-btn:hover,
+      .ai-word-action-btn:focus-visible {
+        border-color: var(--tc-primary);
+        box-shadow: 0 0 0 3px var(--tc-primary-ring);
+        outline: none;
+      }
+      .ai-word-action-btn.is-active {
+        background: var(--tc-primary);
+        color: #FFFFFF;
+        border-color: var(--tc-primary-dark);
+        box-shadow: 0 6px 12px rgba(33, 150, 243, 0.25);
+      }
+      .ai-word-panels {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .ai-word-panel {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        background: var(--tc-surface);
+        border: 1px solid var(--tc-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--tc-shadow-base);
+      }
+      .ai-word-panel.is-active {
+        display: flex;
+      }
+      .ai-word-panel-head h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .ai-word-panel-head p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--tc-muted);
+      }
+      .ai-word-field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ai-word-field-grid {
+        display: grid;
+        gap: 12px;
+      }
+      .ai-word-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-word-field label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #000000;
+      }
+      .ai-word-checkbox-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-word-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .ai-word-checkbox input {
+        margin: 0;
+      }
+      .ai-word-submit-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .ai-word-secondary-note {
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .ai-word-info-card {
+        border-radius: 12px;
+        border: 1px dashed var(--tc-border-strong);
+        padding: 12px 16px;
+        background: var(--tc-primary-soft);
+        font-size: 13px;
+        color: #000000;
+      }
+      @media (min-width: 900px) {
+        .ai-word-layout {
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 20px;
+        }
+        .ai-word-action-menu {
+          flex-direction: column;
+          width: 240px;
+          position: sticky;
+          top: 12px;
+        }
+        .ai-word-action-btn {
+          width: 100%;
+          justify-content: flex-start;
+        }
+        .ai-word-panels {
+          flex: 1 1 auto;
+        }
+        .ai-word-field-grid {
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+      }
       .ai-report-options {
         display: flex;
         flex-wrap: wrap;
@@ -3449,6 +3622,894 @@
       </div>
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
+        <div class="ai-word-mode" data-word-default-action="compose">
+          <div class="ai-word-hero">
+            <h3 class="ai-word-hero-title">Acciones de WordCrafterAI</h3>
+            <p class="ai-word-hero-subtitle">
+              Selecciona una acción para que la IA adapte tus textos a diferentes objetivos, tonos y audiencias.
+            </p>
+          </div>
+          <div class="ai-word-layout">
+            <nav
+              class="ai-word-action-menu"
+              role="tablist"
+              aria-label="Acciones de redacción asistida"
+            >
+              <button
+                type="button"
+                class="ai-word-action-btn is-active"
+                data-word-action="compose"
+                role="tab"
+                aria-selected="true"
+                aria-controls="wordActionComposePanel"
+                id="wordActionComposeTab"
+              >
+                Redactar texto
+              </button>
+              <button
+                type="button"
+                class="ai-word-action-btn"
+                data-word-action="summarize"
+                role="tab"
+                aria-selected="false"
+                aria-controls="wordActionSummarizePanel"
+                id="wordActionSummarizeTab"
+                tabindex="-1"
+              >
+                Resumir texto
+              </button>
+              <button
+                type="button"
+                class="ai-word-action-btn"
+                data-word-action="restructure"
+                role="tab"
+                aria-selected="false"
+                aria-controls="wordActionRestructurePanel"
+                id="wordActionRestructureTab"
+                tabindex="-1"
+              >
+                Reestructurar texto
+              </button>
+              <button
+                type="button"
+                class="ai-word-action-btn"
+                data-word-action="format"
+                role="tab"
+                aria-selected="false"
+                aria-controls="wordActionFormatPanel"
+                id="wordActionFormatTab"
+                tabindex="-1"
+              >
+                Dar formato
+              </button>
+              <button
+                type="button"
+                class="ai-word-action-btn"
+                data-word-action="tone"
+                role="tab"
+                aria-selected="false"
+                aria-controls="wordActionTonePanel"
+                id="wordActionToneTab"
+                tabindex="-1"
+              >
+                Ajustar tono
+              </button>
+              <button
+                type="button"
+                class="ai-word-action-btn"
+                data-word-action="translate"
+                role="tab"
+                aria-selected="false"
+                aria-controls="wordActionTranslatePanel"
+                id="wordActionTranslateTab"
+                tabindex="-1"
+              >
+                Traducir y adaptar
+              </button>
+            </nav>
+            <div class="ai-word-panels">
+              <section
+                class="ai-word-panel is-active"
+                id="wordActionComposePanel"
+                data-word-action-panel="compose"
+                role="tabpanel"
+                aria-labelledby="wordActionComposeTab"
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Redactar texto</h3>
+                  <p>Genera un borrador desde cero a partir de ideas clave e indicaciones.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordComposeBrief">Tema o instrucciones principales</label>
+                  <textarea
+                    id="wordComposeBrief"
+                    placeholder="Ej. Comunicado interno anunciando un nuevo programa de bienestar para empleados"
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordComposeLength">Extensión deseada</label>
+                    <select id="wordComposeLength">
+                      <option value="short">Breve (150-200 palabras)</option>
+                      <option value="medium" selected>Media (300-400 palabras)</option>
+                      <option value="long">Larga (600+ palabras)</option>
+                      <option value="outline">Esquema con secciones</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordComposeTone">Tono principal</label>
+                    <select
+                      id="wordComposeTone"
+                      data-word-toggle-target="wordComposeToneCustomField"
+                      data-word-toggle-field="wordComposeToneCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="neutral" selected>Neutral profesional</option>
+                      <option value="executive">Resumen ejecutivo</option>
+                      <option value="friendly">Cercano y motivador</option>
+                      <option value="analytical">Analítico y detallado</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordComposePersona">Perfil profesional objetivo</label>
+                    <select
+                      id="wordComposePersona"
+                      data-word-toggle-target="wordComposePersonaCustomField"
+                      data-word-toggle-field="wordComposePersonaCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Elegir automáticamente (IA)</option>
+                      <option value="executive">Dirección general</option>
+                      <option value="data-analyst">Analista de datos</option>
+                      <option value="finance">Dirección financiera</option>
+                      <option value="operations">Gerencia de operaciones</option>
+                      <option value="marketing">Marketing y comunicación</option>
+                      <option value="hr">Recursos humanos</option>
+                      <option value="it">Especialista en IT / Sistemas</option>
+                      <option value="sales">Liderazgo comercial</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordComposeToneCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordComposeToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordComposeToneCustom"
+                    placeholder="Ej. Inspirador, con foco en logros del equipo"
+                    disabled
+                  ></textarea>
+                </div>
+                <div
+                  id="wordComposePersonaCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordComposePersonaCustom">Describe el perfil profesional</label>
+                  <textarea
+                    id="wordComposePersonaCustom"
+                    placeholder="Ej. Director de operaciones para Latam"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordComposeLanguage">Idioma de salida</label>
+                    <select
+                      id="wordComposeLanguage"
+                      data-word-toggle-target="wordComposeLanguageCustomField"
+                      data-word-toggle-field="wordComposeLanguageCustom"
+                      data-word-toggle-value="other"
+                    >
+                      <option value="auto" selected>Detección automática (IA)</option>
+                      <option value="es">Español</option>
+                      <option value="en">Inglés</option>
+                      <option value="pt">Portugués</option>
+                      <option value="fr">Francés</option>
+                      <option value="it">Italiano</option>
+                      <option value="de">Alemán</option>
+                      <option value="other">Otro idioma</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordComposeFormat">Formato final</label>
+                    <select id="wordComposeFormat">
+                      <option value="narrative" selected>Narrativo en párrafos</option>
+                      <option value="email">Correo electrónico</option>
+                      <option value="bullet">Lista de puntos clave</option>
+                      <option value="presentation">Diapositivas / storytelling</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordComposeVoice">Tipo de voz</label>
+                    <select id="wordComposeVoice">
+                      <option value="first-person">Primera persona plural</option>
+                      <option value="third-person" selected>Tercera persona</option>
+                      <option value="second-person">Segunda persona (tú/usted)</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordComposeLanguageCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordComposeLanguageCustom">Define el idioma objetivo</label>
+                  <input
+                    type="text"
+                    id="wordComposeLanguageCustom"
+                    placeholder="Ej. Alemán suizo, Catalán, Japonés"
+                    disabled
+                  />
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Elementos opcionales</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordComposeIntro" checked />
+                      Incluir introducción con contexto del lector
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordComposeHighlights" />
+                      Añadir resumen de puntos clave al final
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordComposeCTA" />
+                      Incorporar llamado a la acción específico
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Generar borrador</button>
+                  <button type="button" class="btn-secondary">Guardar configuración</button>
+                </div>
+                <p class="ai-word-secondary-note">
+                  Ajusta estos parámetros para crear variaciones rápidas del mismo mensaje.
+                </p>
+              </section>
+              <section
+                class="ai-word-panel"
+                id="wordActionSummarizePanel"
+                data-word-action-panel="summarize"
+                role="tabpanel"
+                aria-labelledby="wordActionSummarizeTab"
+                hidden
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Resumir texto</h3>
+                  <p>Condensa documentos largos en resúmenes claros para compartir o presentar.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordSummarizeSource">Texto a resumir</label>
+                  <textarea
+                    id="wordSummarizeSource"
+                    placeholder="Pega aquí el texto original o transcribe los puntos principales del documento"
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordSummarizeLength">Extensión del resumen</label>
+                    <select id="wordSummarizeLength">
+                      <option value="bullet" selected>Viñetas rápidas (5 ítems)</option>
+                      <option value="short">Breve (1 párrafo)</option>
+                      <option value="medium">Ejecutivo (2-3 párrafos)</option>
+                      <option value="detailed">Detallado con insights</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordSummarizeFocus">Enfoque principal</label>
+                    <select id="wordSummarizeFocus">
+                      <option value="general" selected>Visión general</option>
+                      <option value="metrics">Métricas y resultados</option>
+                      <option value="actions">Acciones y próximos pasos</option>
+                      <option value="risks">Riesgos y alertas</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordSummarizeTone">Tono</label>
+                    <select
+                      id="wordSummarizeTone"
+                      data-word-toggle-target="wordSummarizeToneCustomField"
+                      data-word-toggle-field="wordSummarizeToneCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="neutral" selected>Objetivo</option>
+                      <option value="executive">Ejecutivo</option>
+                      <option value="friendly">Cercano</option>
+                      <option value="analytical">Analítico</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordSummarizeToneCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordSummarizeToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordSummarizeToneCustom"
+                    placeholder="Ej. Enfocado en impacto social y resultados de comunidad"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordSummarizePersona">Perfil profesional</label>
+                    <select
+                      id="wordSummarizePersona"
+                      data-word-toggle-target="wordSummarizePersonaCustomField"
+                      data-word-toggle-field="wordSummarizePersonaCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Elegir automáticamente (IA)</option>
+                      <option value="executive">Alta dirección</option>
+                      <option value="operations">Operaciones</option>
+                      <option value="finance">Finanzas</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="hr">Recursos humanos</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordSummarizeLanguage">Idioma de salida</label>
+                    <select
+                      id="wordSummarizeLanguage"
+                      data-word-toggle-target="wordSummarizeLanguageCustomField"
+                      data-word-toggle-field="wordSummarizeLanguageCustom"
+                      data-word-toggle-value="other"
+                    >
+                      <option value="auto" selected>Mismo idioma del texto</option>
+                      <option value="es">Español</option>
+                      <option value="en">Inglés</option>
+                      <option value="pt">Portugués</option>
+                      <option value="fr">Francés</option>
+                      <option value="other">Otro idioma</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordSummarizeFormat">Formato del resumen</label>
+                    <select id="wordSummarizeFormat">
+                      <option value="paragraph" selected>Párrafo corrido</option>
+                      <option value="bullets">Viñetas</option>
+                      <option value="table">Tabla comparativa</option>
+                      <option value="executive">Memo ejecutivo</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordSummarizePersonaCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordSummarizePersonaCustom">Describe el perfil objetivo</label>
+                  <textarea
+                    id="wordSummarizePersonaCustom"
+                    placeholder="Ej. Comité de innovación regional"
+                    disabled
+                  ></textarea>
+                </div>
+                <div
+                  id="wordSummarizeLanguageCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordSummarizeLanguageCustom">Especifica el idioma</label>
+                  <input
+                    type="text"
+                    id="wordSummarizeLanguageCustom"
+                    placeholder="Ej. Italiano, Alemán, Japonés"
+                    disabled
+                  />
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Complementos</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordSummarizeHighlights" checked />
+                      Resaltar cifras y porcentajes clave
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordSummarizeInsights" />
+                      Añadir conclusiones accionables
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordSummarizeQuotes" />
+                      Conservar citas textuales relevantes
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Crear resumen</button>
+                  <button type="button" class="btn-secondary">Guardar plantilla</button>
+                </div>
+              </section>
+              <section
+                class="ai-word-panel"
+                id="wordActionRestructurePanel"
+                data-word-action-panel="restructure"
+                role="tabpanel"
+                aria-labelledby="wordActionRestructureTab"
+                hidden
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Reestructurar texto</h3>
+                  <p>Reordena y optimiza un contenido existente para hacerlo más claro y persuasivo.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordRestructureSource">Texto a reorganizar</label>
+                  <textarea
+                    id="wordRestructureSource"
+                    placeholder="Pega el texto que deseas reorganizar y detalla qué se debe priorizar"
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordRestructureGoal">Objetivo principal</label>
+                    <select id="wordRestructureGoal">
+                      <option value="clarity" selected>Claridad y lectura rápida</option>
+                      <option value="persuasive">Persuadir y convencer</option>
+                      <option value="storytelling">Narrativa / storytelling</option>
+                      <option value="instructional">Guía paso a paso</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordRestructureStructure">Estructura deseada</label>
+                    <select id="wordRestructureStructure">
+                      <option value="sections" selected>Secciones con subtítulos</option>
+                      <option value="bullets">Viñetas jerarquizadas</option>
+                      <option value="timeline">Cronología</option>
+                      <option value="qa">Preguntas y respuestas</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordRestructureTone">Tono</label>
+                    <select
+                      id="wordRestructureTone"
+                      data-word-toggle-target="wordRestructureToneCustomField"
+                      data-word-toggle-field="wordRestructureToneCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="neutral" selected>Profesional</option>
+                      <option value="executive">Directivo</option>
+                      <option value="friendly">Cálido</option>
+                      <option value="analytical">Técnico</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordRestructureToneCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordRestructureToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordRestructureToneCustom"
+                    placeholder="Ej. Inspirador con enfoque en transformación digital"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordRestructurePersona">Perfil profesional</label>
+                    <select
+                      id="wordRestructurePersona"
+                      data-word-toggle-target="wordRestructurePersonaCustomField"
+                      data-word-toggle-field="wordRestructurePersonaCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Elegir automáticamente (IA)</option>
+                      <option value="executive">Directores</option>
+                      <option value="operations">Operaciones</option>
+                      <option value="finance">Finanzas</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordRestructureLanguage">Idioma de salida</label>
+                    <select
+                      id="wordRestructureLanguage"
+                      data-word-toggle-target="wordRestructureLanguageCustomField"
+                      data-word-toggle-field="wordRestructureLanguageCustom"
+                      data-word-toggle-value="other"
+                    >
+                      <option value="auto" selected>Detección automática (IA)</option>
+                      <option value="es">Español</option>
+                      <option value="en">Inglés</option>
+                      <option value="pt">Portugués</option>
+                      <option value="fr">Francés</option>
+                      <option value="other">Otro idioma</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordRestructureConsistency">Consistencia deseada</label>
+                    <select id="wordRestructureConsistency">
+                      <option value="keep-voice" selected>Mantener voz original</option>
+                      <option value="modernize">Modernizar lenguaje</option>
+                      <option value="formalize">Formalizar el contenido</option>
+                      <option value="simplify">Simplificar frases y párrafos</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordRestructurePersonaCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordRestructurePersonaCustom">Describe el perfil objetivo</label>
+                  <textarea
+                    id="wordRestructurePersonaCustom"
+                    placeholder="Ej. Liderazgo regional de ventas B2B"
+                    disabled
+                  ></textarea>
+                </div>
+                <div
+                  id="wordRestructureLanguageCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordRestructureLanguageCustom">Idioma específico</label>
+                  <input
+                    type="text"
+                    id="wordRestructureLanguageCustom"
+                    placeholder="Ej. Catalán, Euskera, Alemán suizo"
+                    disabled
+                  />
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Preferencias adicionales</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordRestructurePreserveQuotes" checked />
+                      Conservar citas textuales importantes
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordRestructureHighlight" />
+                      Resaltar recomendaciones clave
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordRestructureSimplify" />
+                      Simplificar tecnicismos y acrónimos
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Reestructurar texto</button>
+                  <button type="button" class="btn-secondary">Guardar ajustes</button>
+                </div>
+              </section>
+              <section
+                class="ai-word-panel"
+                id="wordActionFormatPanel"
+                data-word-action-panel="format"
+                role="tabpanel"
+                aria-labelledby="wordActionFormatTab"
+                hidden
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Dar formato</h3>
+                  <p>Aplica estilos, estructura y destacados para dejar el texto listo para compartir.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordFormatSource">Texto a formatear</label>
+                  <textarea
+                    id="wordFormatSource"
+                    placeholder="Pega el texto sin formato que quieras mejorar"
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordFormatStyle">Estilo principal</label>
+                    <select id="wordFormatStyle">
+                      <option value="report" selected>Reporte ejecutivo</option>
+                      <option value="newsletter">Newsletter / email informativo</option>
+                      <option value="blog">Artículo para blog</option>
+                      <option value="briefing">Briefing interno</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordFormatOutput">Formato de salida</label>
+                    <select id="wordFormatOutput">
+                      <option value="doc" selected>Documento con encabezados</option>
+                      <option value="markdown">Markdown</option>
+                      <option value="html">HTML básico</option>
+                      <option value="slides">Esquema para diapositivas</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordFormatTone">Tono</label>
+                    <select
+                      id="wordFormatTone"
+                      data-word-toggle-target="wordFormatToneCustomField"
+                      data-word-toggle-field="wordFormatToneCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="neutral" selected>Profesional</option>
+                      <option value="friendly">Cercano</option>
+                      <option value="analytical">Analítico</option>
+                      <option value="executive">Ejecutivo</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordFormatToneCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordFormatToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordFormatToneCustom"
+                    placeholder="Ej. Conversacional con humor ligero"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Aplicar automáticamente</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordFormatHeadings" checked />
+                      Titulares jerarquizados (H1, H2, H3)
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordFormatBullets" checked />
+                      Viñetas y listas numeradas donde corresponda
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordFormatHighlights" />
+                      Destacar métricas y KPIs en negrita
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordFormatQuotes" />
+                      Formatear citas con estilo destacado
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordFormatNotes">Indicaciones adicionales</label>
+                  <textarea
+                    id="wordFormatNotes"
+                    placeholder="Ej. Mantener longitud máxima de 2 páginas"
+                  ></textarea>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Aplicar formato inteligente</button>
+                  <button type="button" class="btn-secondary">Guardar como preset</button>
+                </div>
+              </section>
+              <section
+                class="ai-word-panel"
+                id="wordActionTonePanel"
+                data-word-action-panel="tone"
+                role="tabpanel"
+                aria-labelledby="wordActionToneTab"
+                hidden
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Ajustar tono</h3>
+                  <p>Transforma la voz del texto para alinearla con distintas audiencias y emociones.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordToneSource">Texto a ajustar</label>
+                  <textarea
+                    id="wordToneSource"
+                    placeholder="Pega el texto actual para ajustar su tono y estilo"
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordToneTarget">Nuevo tono</label>
+                    <select
+                      id="wordToneTarget"
+                      data-word-toggle-target="wordToneTargetCustomField"
+                      data-word-toggle-field="wordToneTargetCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="neutral" selected>Profesional equilibrado</option>
+                      <option value="enthusiastic">Entusiasta y motivador</option>
+                      <option value="formal">Formal y protocolar</option>
+                      <option value="empathetic">Empático y cercano</option>
+                      <option value="urgent">Urgente y directo</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordToneIntensity">Nivel de intensidad</label>
+                    <select id="wordToneIntensity">
+                      <option value="soft">Suave</option>
+                      <option value="balanced" selected>Equilibrado</option>
+                      <option value="strong">Enfático</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTonePersona">Perfil del receptor</label>
+                    <select
+                      id="wordTonePersona"
+                      data-word-toggle-target="wordTonePersonaCustomField"
+                      data-word-toggle-field="wordTonePersonaCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Elegir automáticamente (IA)</option>
+                      <option value="executive">Alta dirección</option>
+                      <option value="team">Equipo interno</option>
+                      <option value="client">Clientes</option>
+                      <option value="press">Prensa / medios</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordToneTargetCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordToneTargetCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordToneTargetCustom"
+                    placeholder="Ej. Optimista con foco en reconocimiento de logros"
+                    disabled
+                  ></textarea>
+                </div>
+                <div
+                  id="wordTonePersonaCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordTonePersonaCustom">Describe el perfil objetivo</label>
+                  <textarea
+                    id="wordTonePersonaCustom"
+                    placeholder="Ej. Directores de planta en Latinoamérica"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Opciones de adaptación</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordToneKeepStructure" checked />
+                      Mantener estructura y extensión original
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordToneAddCTA" />
+                      Sugerir llamado a la acción acorde al nuevo tono
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordToneHighlight" />
+                      Resaltar frases que cambian significativamente
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Ajustar tono y voz</button>
+                  <button type="button" class="btn-secondary">Guardar preferencia</button>
+                </div>
+              </section>
+              <section
+                class="ai-word-panel"
+                id="wordActionTranslatePanel"
+                data-word-action-panel="translate"
+                role="tabpanel"
+                aria-labelledby="wordActionTranslateTab"
+                hidden
+              >
+                <div class="ai-word-panel-head">
+                  <h3>Traducir y adaptar</h3>
+                  <p>Traduce contenidos asegurando que el mensaje conserve intención, tono y contexto.</p>
+                </div>
+                <div class="ai-word-field-group">
+                  <label for="wordTranslateSource">Texto original</label>
+                  <textarea
+                    id="wordTranslateSource"
+                    placeholder="Pega el texto a traducir. Puedes incluir notas sobre el público destino."
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-grid">
+                  <div class="ai-word-field">
+                    <label for="wordTranslateLanguage">Idioma de destino</label>
+                    <select
+                      id="wordTranslateLanguage"
+                      data-word-toggle-target="wordTranslateLanguageCustomField"
+                      data-word-toggle-field="wordTranslateLanguageCustom"
+                      data-word-toggle-value="other"
+                    >
+                      <option value="es">Español</option>
+                      <option value="en" selected>Inglés</option>
+                      <option value="pt">Portugués</option>
+                      <option value="fr">Francés</option>
+                      <option value="de">Alemán</option>
+                      <option value="it">Italiano</option>
+                      <option value="other">Otro idioma</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTranslateTone">Tono deseado</label>
+                    <select
+                      id="wordTranslateTone"
+                      data-word-toggle-target="wordTranslateToneCustomField"
+                      data-word-toggle-field="wordTranslateToneCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="match" selected>Mantener tono original</option>
+                      <option value="formal">Formal</option>
+                      <option value="friendly">Cercano</option>
+                      <option value="executive">Ejecutivo</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                  <div class="ai-word-field">
+                    <label for="wordTranslatePersona">Perfil del lector</label>
+                    <select
+                      id="wordTranslatePersona"
+                      data-word-toggle-target="wordTranslatePersonaCustomField"
+                      data-word-toggle-field="wordTranslatePersonaCustom"
+                      data-word-toggle-value="custom"
+                    >
+                      <option value="auto" selected>Elegir automáticamente (IA)</option>
+                      <option value="executive">Alta dirección</option>
+                      <option value="client">Clientes finales</option>
+                      <option value="partner">Socios / partners</option>
+                      <option value="team">Equipo interno</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+                </div>
+                <div
+                  id="wordTranslateLanguageCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordTranslateLanguageCustom">Especifica el idioma</label>
+                  <input
+                    type="text"
+                    id="wordTranslateLanguageCustom"
+                    placeholder="Ej. Inglés británico, Portugués de Brasil"
+                    disabled
+                  />
+                </div>
+                <div
+                  id="wordTranslateToneCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordTranslateToneCustom">Describe el tono personalizado</label>
+                  <textarea
+                    id="wordTranslateToneCustom"
+                    placeholder="Ej. Comercial persuasivo para captar leads"
+                    disabled
+                  ></textarea>
+                </div>
+                <div
+                  id="wordTranslatePersonaCustomField"
+                  class="ai-word-field ai-hidden"
+                >
+                  <label for="wordTranslatePersonaCustom">Describe el perfil objetivo</label>
+                  <textarea
+                    id="wordTranslatePersonaCustom"
+                    placeholder="Ej. Directores de RR.HH. en Norteamérica"
+                    disabled
+                  ></textarea>
+                </div>
+                <div class="ai-word-field-group">
+                  <label>Ajustes de adaptación</label>
+                  <div class="ai-word-checkbox-list">
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordTranslateLocalizedExamples" />
+                      Localizar ejemplos y referencias culturales
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordTranslateKeepMetrics" checked />
+                      Mantener unidades y métricas originales
+                    </label>
+                    <label class="ai-word-checkbox">
+                      <input type="checkbox" id="wordTranslateGlossary" />
+                      Crear glosario con términos clave
+                    </label>
+                  </div>
+                </div>
+                <div class="ai-word-submit-row">
+                  <button type="button" class="btn-primary">Traducir y adaptar</button>
+                  <button type="button" class="btn-secondary">Guardar preferencia</button>
+                </div>
+                <div class="ai-word-info-card">
+                  Consejo: agrega notas sobre matices culturales o vocabulario institucional para mantener la voz de tu marca.
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+        <div class="ai-table-mode" data-tablecrafter-panel>
         <div class="section">
           <label for="aiSavedTables">Tablas disponibles</label>
           <div class="ai-multi-select">
@@ -5908,6 +6969,7 @@
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
       <div id="triggersTab" class="tab-content" data-themes="table word">
