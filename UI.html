@@ -1468,6 +1468,33 @@
         gap: 18px;
         grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
       }
+      .word-edit-range-block {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(3, 34, 56, 0.04);
+      }
+      .word-edit-range-toggle .word-toggle-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #032238;
+      }
+      .word-edit-range-sheet,
+      .word-edit-range-doc {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-edit-range-sheet .range-row {
+        align-items: center;
+      }
+      .word-edit-range-doc .word-range-note {
+        margin: 0;
+      }
       .word-edit-list-container {
         position: relative;
         display: flex;
@@ -4534,6 +4561,59 @@
                 <div id="wordEditEmptyState" class="word-edit-empty">No hay textos guardados todavía.</div>
               </div>
               <div class="word-edit-details">
+                <div class="word-edit-range-block">
+                  <div class="word-edit-range-toggle" data-word-edit-range-toggle>
+                    <label
+                      class="word-toggle-option tc-tooltip-target"
+                      data-tooltip="Activa esta opción para elegir un rango de celdas; si la dejas desactivada, WordCrafter insertará el texto editado donde esté el cursor."
+                      data-tooltip-position="top"
+                    >
+                      <input type="checkbox" id="wordEditManualRangeToggle" />
+                      Seleccionar un rango manualmente
+                    </label>
+                  </div>
+                  <div class="word-edit-range-sheet is-hidden" data-word-edit-range-sheet>
+                    <div class="range-row">
+                      <div>
+                        <strong>Rango activo:</strong> <span id="wordEditRangeLabel">—</span>
+                      </div>
+                      <div class="range-actions">
+                        <button
+                          type="button"
+                          id="wordEditRefreshRangeBtn"
+                          class="btn-secondary"
+                          title="Actualizar rango activo"
+                        >
+                          Actualizar
+                        </button>
+                      </div>
+                    </div>
+                    <div class="word-range-label-row" style="margin-top:12px;">
+                      <label for="wordEditRangeInput">Rango a utilizar</label>
+                      <button
+                        type="button"
+                        class="word-range-info-trigger tc-tooltip-target"
+                        data-tooltip="Todas esas celdas se combinarán automáticamente y la edición comenzará en la primera celda del rango."
+                        data-tooltip-position="bottom"
+                        aria-label="Información sobre el rango a utilizar"
+                      >
+                        <span aria-hidden="true">i</span>
+                      </button>
+                    </div>
+                    <input type="text" id="wordEditRangeInput" placeholder="Ej: Hoja1!A1:D10" />
+                    <div class="small-text" style="margin-top:4px;">
+                      WordCrafter combinará esas celdas y aplicará los cambios desde la primera celda del rango.
+                    </div>
+                  </div>
+                  <div class="word-edit-range-doc" data-word-edit-range-doc>
+                    <div class="word-range-label-row">
+                      <span class="word-create-subheading">Ubicación del resultado</span>
+                    </div>
+                    <p class="word-range-note">
+                      El texto editado se insertará en la posición actual del cursor cuando ejecutes la acción.
+                    </p>
+                  </div>
+                </div>
                 <div class="word-edit-details-header">
                   <h4 class="word-edit-details-title">Resumen del texto</h4>
                   <span id="wordEditDetailsStatus" class="word-edit-status-badge">Sin seleccionar</span>

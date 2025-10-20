@@ -7,6 +7,101 @@ let editSavedListCollapsed = false;
 let wordEditTextsCache = [];
 let wordEditSelectedId = '';
 let wordEditObserver = null;
+let wordEditRangeInfo = null;
+
+function clearWordEditRangeUI() {
+  const label = document.getElementById('wordEditRangeLabel');
+  if (label) {
+    label.textContent = '—';
+  }
+  const input = document.getElementById('wordEditRangeInput');
+  if (input) {
+    input.value = '';
+    input.dataset.manual = 'false';
+  }
+  wordEditRangeInfo = null;
+}
+
+function setWordEditRangeUI(info, options) {
+  options = options || {};
+  if (!info || !info.sheetName || !info.a1Notation) {
+    clearWordEditRangeUI();
+    return;
+  }
+  const rows = typeof info.rows === 'number' ? info.rows : info.rows || 0;
+  const cols = typeof info.cols === 'number' ? info.cols : info.cols || 0;
+  const label = document.getElementById('wordEditRangeLabel');
+  const input = document.getElementById('wordEditRangeInput');
+  const fullA1 = info.sheetName + '!' + info.a1Notation;
+  if (label) {
+    const dims = rows && cols ? ' (' + cols + '×' + rows + ')' : '';
+    label.textContent = fullA1 + dims;
+  }
+  if (input && (options.force || input.dataset.manual !== 'true')) {
+    input.value = fullA1;
+    input.dataset.manual = 'false';
+  }
+  wordEditRangeInfo = {
+    sheetName: info.sheetName,
+    a1Notation: info.a1Notation,
+    rows: rows,
+    cols: cols
+  };
+}
+
+function refreshWordEditRange(options) {
+  options = options || {};
+  const refreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+  if (refreshBtn) {
+    if (refreshBtn.disabled && refreshBtn.dataset.loading !== 'true') {
+      return;
+    }
+    if (refreshBtn.dataset.loading === 'true') {
+      return;
+    }
+    refreshBtn.dataset.loading = 'true';
+  }
+  const showError = function(message, variant) {
+    if (typeof showMessageModal === 'function' && message) {
+      showMessageModal(message, {
+        title: 'Rango no disponible',
+        variant: variant || 'error'
+      });
+    }
+  };
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    if (refreshBtn) {
+      delete refreshBtn.dataset.loading;
+    }
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(info) {
+      if (refreshBtn) {
+        delete refreshBtn.dataset.loading;
+      }
+      if (!info || info.error) {
+        clearWordEditRangeUI();
+        showError(info && info.error ? info.error : 'No se pudo obtener el rango activo.');
+        return;
+      }
+      setWordEditRangeUI(info, { force: options.force !== false });
+    })
+    .withFailureHandler(function(err) {
+      if (refreshBtn) {
+        delete refreshBtn.dataset.loading;
+      }
+      clearWordEditRangeUI();
+      const message = err && err.message ? err.message : err;
+      showError('No se pudo obtener el rango activo: ' + message);
+    })
+    .getActiveRangeInfo();
+}
+
+if (typeof window !== 'undefined') {
+  window.clearWordEditRangeUI = clearWordEditRangeUI;
+  window.setWordEditRangeUI = setWordEditRangeUI;
+}
 
 function collectWordSavedTextsFromSelect() {
   const select = document.getElementById('aiSavedTexts');
@@ -1307,5 +1402,55 @@ async function handleEditSaveAction(options) {
 
 document.addEventListener('DOMContentLoaded', function() {
   initializeWordEditPanel();
+  clearWordEditRangeUI();
+
+  const wordEditRangeInput = document.getElementById('wordEditRangeInput');
+  if (wordEditRangeInput) {
+    wordEditRangeInput.dataset.manual = 'false';
+    wordEditRangeInput.addEventListener('input', function() {
+      this.dataset.manual = this.value.trim() ? 'true' : 'false';
+      if (this.dataset.manual === 'true') {
+        wordEditRangeInfo = null;
+      }
+    });
+  }
+
+  const wordEditRefreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+  if (wordEditRefreshBtn) {
+    wordEditRefreshBtn.addEventListener('click', function() {
+      if (wordEditRefreshBtn.disabled) {
+        return;
+      }
+      refreshWordEditRange({ force: true });
+    });
+  }
+
+  const wordEditManualToggle = document.getElementById('wordEditManualRangeToggle');
+  if (wordEditManualToggle) {
+    wordEditManualToggle.addEventListener('change', function() {
+      if (this.checked) {
+        refreshWordEditRange({ force: true });
+      } else {
+        clearWordEditRangeUI();
+      }
+    });
+  }
+
+  if (typeof syncWordEditRangeVisibility === 'function') {
+    const body = document.body;
+    const context = body && body.dataset ? body.dataset.activeContext : '';
+    syncWordEditRangeVisibility(context, { preserveRange: true });
+    const normalizedContext = context ? context.toLowerCase() : '';
+    if (
+      wordEditManualToggle &&
+      wordEditManualToggle.checked &&
+      (normalizedContext === 'sheets' ||
+        normalizedContext === 'sheet' ||
+        normalizedContext === 'excel' ||
+        normalizedContext === 'spreadsheets')
+    ) {
+      refreshWordEditRange({ force: true });
+    }
+  }
 });
 </script>

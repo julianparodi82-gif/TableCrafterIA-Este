@@ -3194,8 +3194,66 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        function syncWordEditRangeVisibility(contextType, options) {
+          options = options || {};
+          const normalized = (contextType || '').toLowerCase();
+          const showSpreadsheetRange =
+            normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
+          const toggleContainer = document.querySelector('[data-word-edit-range-toggle]');
+          const manualToggle = document.getElementById('wordEditManualRangeToggle');
+          if (toggleContainer) {
+            toggleContainer.classList.toggle('is-hidden', showSpreadsheetRange);
+          }
+          if (manualToggle) {
+            if (showSpreadsheetRange) {
+              manualToggle.checked = true;
+              manualToggle.disabled = true;
+              manualToggle.dataset.forced = 'true';
+            } else {
+              manualToggle.disabled = false;
+              if (manualToggle.dataset.forced === 'true') {
+                manualToggle.checked = false;
+                delete manualToggle.dataset.forced;
+              }
+            }
+          }
+          const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
+          const sheetSections = document.querySelectorAll('[data-word-edit-range-sheet]');
+          const docSections = document.querySelectorAll('[data-word-edit-range-doc]');
+          sheetSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', !manualEnabled);
+          });
+          docSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', manualEnabled);
+          });
+          const rangeInput = document.getElementById('wordEditRangeInput');
+          if (rangeInput) {
+            rangeInput.disabled = !manualEnabled;
+            if (!manualEnabled) {
+              rangeInput.value = '';
+              rangeInput.dataset.manual = 'false';
+            }
+          }
+          const refreshBtn = document.getElementById('wordEditRefreshRangeBtn');
+          if (refreshBtn) {
+            refreshBtn.disabled = !manualEnabled;
+          }
+          if (!manualEnabled && typeof clearWordEditRangeUI === 'function' && !options.preserveRange) {
+            try {
+              clearWordEditRangeUI();
+            } catch (error) {}
+          }
+        }
+
         if (typeof window !== 'undefined') {
           window.syncWordCreateRangeVisibility = syncWordCreateRangeVisibility;
+          window.syncWordEditRangeVisibility = syncWordEditRangeVisibility;
         }
 
         const normalizedContext = activeContextInfo ? activeContextInfo.toLowerCase() : 'sheets';
@@ -3203,12 +3261,21 @@ document.addEventListener('DOMContentLoaded', function() {
           body.dataset.activeContext = normalizedContext;
         }
         syncWordCreateRangeVisibility(normalizedContext);
+        syncWordEditRangeVisibility(normalizedContext);
 
         const wordRangeToggle = document.getElementById('wordRangeManualToggle');
         if (wordRangeToggle) {
           wordRangeToggle.addEventListener('change', function() {
             const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
             syncWordCreateRangeVisibility(contextForToggle, { preserveRange: false });
+          });
+        }
+
+        const wordEditRangeToggle = document.getElementById('wordEditManualRangeToggle');
+        if (wordEditRangeToggle) {
+          wordEditRangeToggle.addEventListener('change', function() {
+            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
+            syncWordEditRangeVisibility(contextForToggle, { preserveRange: false });
           });
         }
 
