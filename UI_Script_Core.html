@@ -3134,6 +3134,47 @@ document.addEventListener('DOMContentLoaded', function() {
         tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
         let themeAnimationTimeout = null;
 
+        const tabThemeLabels = {
+          table: {
+            editTab: {
+              label: 'Editar tabla',
+              tooltip: 'Modifica tablas guardadas y ajusta sus estilos.'
+            },
+            createTab: {
+              label: 'Crear tabla',
+              tooltip: 'Crea nuevas tablas con ayuda de IA y formatos personalizados.'
+            }
+          },
+          word: {
+            editTab: {
+              label: 'Editar texto',
+              tooltip: 'Revisa y ajusta textos guardados, sus estilos y versiones.'
+            },
+            createTab: {
+              label: 'Crear texto',
+              tooltip: 'Genera nuevos contenidos con ayuda de la IA y plantillas base.'
+            }
+          }
+        };
+
+        function syncTabButtonLabels(theme) {
+          const normalizedTheme = theme === 'word' ? 'word' : 'table';
+          const config = tabThemeLabels[normalizedTheme];
+          Object.keys(config).forEach(function(tabId) {
+            const button = document.querySelector(".tab-btn[data-tab='" + tabId + "']");
+            if (!button) {
+              return;
+            }
+            const settings = config[tabId];
+            if (settings.label) {
+              button.textContent = settings.label;
+            }
+            if (settings.tooltip) {
+              button.setAttribute('data-tooltip', settings.tooltip);
+            }
+          });
+        }
+
         const tableMessage =
           '<p><strong>¡Bienvenido a TableCrafterAI!</strong> Crea y organiza tablas listas para compartir en minutos.</p>' +
           '<p>Combina formatos guiados y textos generados con IA para trabajar sin complicaciones.</p>' +
@@ -3294,6 +3335,7 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          syncTabButtonLabels(nextTheme);
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
           if (themeChanged || settings.forceSync) {
