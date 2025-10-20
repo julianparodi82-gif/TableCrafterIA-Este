@@ -36,8 +36,9 @@ function onOpen() {
  * Muestra la barra lateral principal del complemento.
  */
 function showSidebar() {
-  var template = HtmlService.createTemplateFromFile('UI');
   var themeMode = getSidebarThemeMode();
+  var templateName = getSidebarTemplateName(themeMode);
+  var template = HtmlService.createTemplateFromFile(templateName);
   template.initialThemeMode = themeMode;
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
   var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
@@ -72,6 +73,10 @@ function showHelp() {
  */
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function getSidebarTemplateName(themeMode) {
+  return themeMode === SIDEBAR_THEME_WORD ? 'UI_Wordcrafter' : 'UI_Tablecrafter';
 }
 
 function getSidebarThemeMode() {
