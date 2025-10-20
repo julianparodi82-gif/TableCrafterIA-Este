@@ -18,6 +18,9 @@ let queuedSavedActionsRefresh = null;
 let savedActionsRefreshTimer = 0;
 let savedActionsPanelInitialized = false;
 let pendingSavedActionMutation = null;
+let currentActionSupportsSave = false;
+let savingSelectedAction = false;
+let deletingSelectedAction = false;
 
 function getCurrentSavedActionId() {
   return currentSavedActionId;
@@ -93,7 +96,7 @@ function updateActionEditorHeader(action) {
   const title = document.getElementById('aiActionEditorTitle');
   const subtitle = document.getElementById('aiActionEditorSubtitle');
   const meta = document.getElementById('aiActionEditorMeta');
-  const name = action && action.name ? action.name : 'Acción sin nombre';
+  const name = action && action.name ? action.name : 'Favorito sin nombre';
   if (title) {
     title.textContent = name;
   }
@@ -212,6 +215,229 @@ function updateSavedActionsEmptyState(hasEntries) {
   }
 }
 
+function cloneFavoriteCustomization(customization) {
+  if (!customization || typeof customization !== 'object') {
+    return {};
+  }
+  try {
+    return JSON.parse(JSON.stringify(customization));
+  } catch (err) {
+    const copy = Array.isArray(customization) ? [] : {};
+    Object.keys(customization).forEach(function(key) {
+      const value = customization[key];
+      if (Array.isArray(value)) {
+        copy[key] = value.slice();
+      } else if (value && typeof value === 'object') {
+        copy[key] = cloneFavoriteCustomization(value);
+      } else {
+        copy[key] = value;
+      }
+    });
+    return copy;
+  }
+}
+
+function cloneFavoriteFeatureDetail(detail) {
+  if (!detail || typeof detail !== 'object') {
+    return null;
+  }
+  try {
+    return JSON.parse(JSON.stringify(detail));
+  } catch (err) {
+    const descriptions = Array.isArray(detail.instanceDescriptions)
+      ? detail.instanceDescriptions.slice(0, 3)
+      : [];
+    while (descriptions.length < 3) {
+      descriptions.push('');
+    }
+    return {
+      feature: detail.feature || '',
+      quantity:
+        typeof detail.quantity === 'number'
+          ? detail.quantity
+          : parseInt(detail.quantity, 10) || 0,
+      instanceDescriptions: descriptions.map(function(text) {
+        return text === null || text === undefined ? '' : String(text);
+      }),
+      instanceTitles: Array.isArray(detail.instanceTitles) ? detail.instanceTitles.slice() : [],
+      instanceChartTypes: Array.isArray(detail.instanceChartTypes)
+        ? detail.instanceChartTypes.slice()
+        : [],
+      instanceListOrders: Array.isArray(detail.instanceListOrders)
+        ? detail.instanceListOrders.slice()
+        : [],
+      instanceListEnumerate: Array.isArray(detail.instanceListEnumerate)
+        ? detail.instanceListEnumerate.slice()
+        : [],
+      instanceListEnumStyles: Array.isArray(detail.instanceListEnumStyles)
+        ? detail.instanceListEnumStyles.slice()
+        : [],
+      summaryLength:
+        detail.summaryLength === null || detail.summaryLength === undefined
+          ? ''
+          : detail.summaryLength,
+      instanceTablesEnabled: Array.isArray(detail.instanceTablesEnabled)
+        ? detail.instanceTablesEnabled.slice()
+        : [],
+      instanceTables: Array.isArray(detail.instanceTables) ? detail.instanceTables.slice() : [],
+      instanceWebSourcesEnabled: Array.isArray(detail.instanceWebSourcesEnabled)
+        ? detail.instanceWebSourcesEnabled.slice()
+        : [],
+      instanceWebSources: Array.isArray(detail.instanceWebSources)
+        ? detail.instanceWebSources.slice()
+        : []
+    };
+  }
+}
+
+function normalizeFavoriteActionEntry(action) {
+  if (!action || typeof action !== 'object') {
+    return null;
+  }
+  const id = action.id === null || action.id === undefined ? '' : String(action.id).trim();
+  if (!id) {
+    return null;
+  }
+  const normalized = {
+    id: id,
+    type: 'reportFavorite',
+    name: action.name ? String(action.name) : '',
+    description: action.description ? String(action.description) : '',
+    createdAt: action.createdAt ? String(action.createdAt) : '',
+    updatedAt: action.updatedAt ? String(action.updatedAt) : '',
+    format: action.format ? String(action.format) : '',
+    fileName: action.fileName ? String(action.fileName) : '',
+    fileExtension: action.fileExtension ? String(action.fileExtension) : '',
+    appendDateToFile: !!action.appendDateToFile,
+    tables: Array.isArray(action.tables) ? action.tables.slice() : [],
+    channels: Array.isArray(action.channels) ? action.channels.slice() : [],
+    descriptionEnabled: !!action.descriptionEnabled,
+    descriptionText: action.descriptionText ? String(action.descriptionText) : '',
+    features: Array.isArray(action.features) ? action.features.slice() : [],
+    featureDetails: Array.isArray(action.featureDetails)
+      ? action.featureDetails
+          .map(function(detail) {
+            return cloneFavoriteFeatureDetail(detail);
+          })
+          .filter(Boolean)
+      : [],
+    featureOrder: Array.isArray(action.featureOrder) ? action.featureOrder.slice() : [],
+    emails: Array.isArray(action.emails) ? action.emails.slice() : [],
+    phones: Array.isArray(action.phones) ? action.phones.slice() : [],
+    customization: cloneFavoriteCustomization(action.customization)
+  };
+  if (!normalized.descriptionText && action.descriptionEnabled && action.description) {
+    normalized.descriptionText = String(action.description);
+  }
+  return normalized;
+}
+
+function normalizeFavoriteActionList(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  const seen = Object.create(null);
+  return list
+    .map(function(entry) {
+      return normalizeFavoriteActionEntry(entry);
+    })
+    .filter(function(entry) {
+      if (!entry || seen[entry.id]) {
+        return false;
+      }
+      seen[entry.id] = true;
+      return true;
+    });
+}
+
+function filterLegacyFavoriteEntries(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  return list.filter(function(entry) {
+    if (!entry) {
+      return false;
+    }
+    const rawType = entry.type === null || entry.type === undefined ? '' : String(entry.type);
+    const normalizedType = rawType.toLowerCase().replace(/[\s_-]+/g, '');
+    if (
+      normalizedType === 'reportfavorite' ||
+      normalizedType === 'reportefavorito' ||
+      normalizedType === 'favorite' ||
+      normalizedType === 'favorito'
+    ) {
+      return true;
+    }
+    const hasFeatures = Array.isArray(entry.features) && entry.features.length > 0;
+    const hasDetails = Array.isArray(entry.featureDetails) && entry.featureDetails.length > 0;
+    const hasChannels = Array.isArray(entry.channels) && entry.channels.length > 0;
+    const hasReportHints =
+      hasFeatures ||
+      hasDetails ||
+      hasChannels ||
+      !!(entry && (entry.format || entry.fileName || entry.fileExtension));
+    if (hasReportHints) {
+      return true;
+    }
+    if (entry && entry.customization && typeof entry.customization === 'object') {
+      return Object.keys(entry.customization).length > 0;
+    }
+    return false;
+  });
+}
+
+async function fetchFavoriteActionList(options) {
+  const opts = options || {};
+  let primaryResult;
+  let primaryError = null;
+  if (!opts.preferLegacy) {
+    try {
+      primaryResult = await callServerFunction('listFavoriteActions');
+      const normalizedPrimary = normalizeFavoriteActionList(primaryResult);
+      if (normalizedPrimary.length > 0 || opts.skipLegacyFallback) {
+        return normalizedPrimary;
+      }
+      if (opts.allowLegacyFallback === false) {
+        return normalizedPrimary;
+      }
+    } catch (err) {
+      primaryError = err;
+      if (opts.skipLegacyFallback || opts.allowLegacyFallback === false) {
+        throw err;
+      }
+    }
+  }
+  if (opts.allowLegacyFallback === false) {
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    if (primaryError) {
+      throw primaryError;
+    }
+    return [];
+  }
+  try {
+    const legacyResult = await callServerFunction('listSavedActions', { scope: 'all' });
+    const favoritesOnly = filterLegacyFavoriteEntries(legacyResult);
+    const normalizedLegacy = normalizeFavoriteActionList(favoritesOnly);
+    if (normalizedLegacy.length > 0) {
+      return normalizedLegacy;
+    }
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    return normalizedLegacy;
+  } catch (legacyError) {
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    if (primaryError) {
+      throw legacyError;
+    }
+    throw legacyError;
+  }
+}
+
 function renderSavedActionsSelect(actions, selectedId, options) {
   const select = document.getElementById('aiSavedActions');
   if (!select) {
@@ -249,7 +475,7 @@ function renderSavedActionsSelect(actions, selectedId, options) {
       }
       const option = document.createElement('option');
       option.value = action.id;
-      const label = action.name ? action.name : 'Acción sin nombre';
+      const label = action.name ? action.name : 'Favorito sin nombre';
       option.textContent = label + ' • ' + getActionTypeLabel(action.type);
       const tooltip = buildSavedActionTooltip(action);
       if (tooltip) {
@@ -364,6 +590,43 @@ async function syncSavedActionSelection(previousValue, options) {
   await loadSavedActionDetails(finalValue);
 }
 
+function updateSavedActionControls(action, options) {
+  const controls = document.getElementById('aiActionDetailControls');
+  const saveBtn = document.getElementById('aiActionSaveBtn');
+  const deleteBtn = document.getElementById('aiActionDeleteBtn');
+  const hasElements = controls && saveBtn && deleteBtn;
+  const opts = options || {};
+  const hasAction = !!(action && action.id);
+  let supportsSave = false;
+  if (hasAction) {
+    if (opts.supportsSave !== undefined) {
+      supportsSave = !!opts.supportsSave;
+    } else if (action && action.type === 'reportFavorite') {
+      supportsSave = true;
+    }
+  }
+  currentActionSupportsSave = hasAction && supportsSave;
+  if (!hasElements) {
+    return;
+  }
+  if (!hasAction) {
+    controls.classList.add('ai-hidden');
+    saveBtn.disabled = true;
+    deleteBtn.disabled = true;
+    saveBtn.removeAttribute('title');
+    return;
+  }
+  controls.classList.remove('ai-hidden');
+  deleteBtn.disabled = !!deletingSelectedAction;
+  if (currentActionSupportsSave) {
+    saveBtn.disabled = !!savingSelectedAction;
+    saveBtn.removeAttribute('title');
+  } else {
+    saveBtn.disabled = true;
+    saveBtn.setAttribute('title', 'Este favorito no se puede guardar desde este panel.');
+  }
+}
+
 function clearSavedActionDetails(options) {
   const opts = options || {};
   currentSavedActionDetails = null;
@@ -386,6 +649,7 @@ function clearSavedActionDetails(options) {
   if (container) {
     container.classList.add('ai-hidden');
   }
+  updateSavedActionControls(null, { supportsSave: false });
 }
 
 function formatActionChannel(value) {
@@ -466,7 +730,7 @@ function buildActionDetailCard(action, options) {
   const card = document.createElement('div');
   card.className = 'ai-action-card';
   const title = document.createElement('h4');
-  title.textContent = action && action.name ? action.name : 'Acción sin nombre';
+  title.textContent = action && action.name ? action.name : 'Favorito sin nombre';
   card.appendChild(title);
   const meta = document.createElement('div');
   meta.className = 'ai-action-meta';
@@ -615,6 +879,7 @@ async function renderSavedActionDetails(action) {
   }
   currentSavedActionDetails = action;
   container.classList.remove('ai-hidden');
+  let supportsSave = false;
   if (action.type === 'reportFavorite') {
     const cardWrapper = document.getElementById('aiActionDetailCard');
     if (cardWrapper) {
@@ -622,13 +887,144 @@ async function renderSavedActionDetails(action) {
       cardWrapper.classList.add('ai-hidden');
     }
     const loaded = await enterReportFavoriteEditor(action);
+    supportsSave = !!loaded;
     if (!loaded) {
       populateActionDetailCard(action, { mode: 'fallback' });
     }
+  } else {
+    exitReportFavoriteEditor({ clearFavorite: true });
+    populateActionDetailCard(action);
+  }
+  updateSavedActionControls(action, { supportsSave: supportsSave });
+}
+
+async function handleSavedActionSaveClick() {
+  if (savingSelectedAction) {
     return;
   }
-  exitReportFavoriteEditor({ clearFavorite: true });
-  populateActionDetailCard(action);
+  const action = currentSavedActionDetails;
+  if (!action || !action.id) {
+    await showMessageModal('Seleccioná un favorito guardado antes de guardarlo.', {
+      title: 'Favorito no seleccionado',
+      variant: 'warning'
+    });
+    return;
+  }
+  if (!currentActionSupportsSave || action.type !== 'reportFavorite') {
+    await showMessageModal('Este favorito no se puede guardar desde este panel. Usá el botón de edición para abrirlo en su sección correspondiente.', {
+      title: 'Guardado no disponible',
+      variant: 'info'
+    });
+    return;
+  }
+  if (typeof handleReportFavoriteSave !== 'function') {
+    await showMessageModal('El editor de reportes no está disponible en este momento. Volvé a intentarlo más tarde.', {
+      title: 'Guardado no disponible',
+      variant: 'error'
+    });
+    return;
+  }
+  const nameInput = document.getElementById('aiReportFavoriteName');
+  if (nameInput && !nameInput.value && action.name) {
+    nameInput.value = action.name;
+  }
+  savingSelectedAction = true;
+  updateSavedActionControls(action, { supportsSave: true });
+  try {
+    await handleReportFavoriteSave();
+  } finally {
+    savingSelectedAction = false;
+    updateSavedActionControls(currentSavedActionDetails, { supportsSave: currentActionSupportsSave });
+  }
+}
+
+async function handleSavedActionDeleteClick() {
+  if (deletingSelectedAction) {
+    return;
+  }
+  const action = currentSavedActionDetails;
+  if (!action || !action.id) {
+    await showMessageModal('Seleccioná un favorito guardado antes de borrarlo.', {
+      title: 'Favorito no seleccionado',
+      variant: 'warning'
+    });
+    return;
+  }
+  const actionLabel = action.name ? '"' + action.name + '"' : 'seleccionada';
+  let confirmed = true;
+  if (typeof showConfirmModal === 'function') {
+    confirmed = await showConfirmModal(
+      '¿Querés borrar el favorito ' + actionLabel + '? Esta acción no se puede deshacer.',
+      {
+        title: 'Borrar favorito guardado',
+        confirmText: 'Borrar',
+        cancelText: 'Cancelar',
+        variant: 'danger'
+      }
+    );
+  } else if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    confirmed = window.confirm('¿Querés borrar el favorito ' + actionLabel + '? Esta acción no se puede deshacer.');
+  }
+  if (!confirmed) {
+    return;
+  }
+  deletingSelectedAction = true;
+  updateSavedActionControls(action, { supportsSave: currentActionSupportsSave });
+  try {
+    const result = await callServerFunction('deleteSavedAction', action.id);
+    if (result && result.error) {
+      throw new Error(result.error);
+    }
+    const warning = result && result.warning ? String(result.warning) : '';
+    if (warning) {
+      await showMessageModal('El favorito se eliminó con advertencias: ' + warning, {
+        title: 'Favorito eliminado con avisos',
+        variant: 'warning'
+      });
+    } else {
+      await showMessageModal('El favorito seleccionado se eliminó correctamente.', {
+        title: 'Favorito eliminado',
+        variant: 'success'
+      });
+    }
+    currentSavedActionId = '';
+    clearSavedActionDetails({ keepFavorite: false });
+    if (typeof notifySavedActionMutation === 'function') {
+      notifySavedActionMutation({
+        id: '',
+        force: true,
+        delay: 0,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    } else if (typeof requestSavedActionsRefresh === 'function') {
+      requestSavedActionsRefresh({
+        selectId: '',
+        force: true,
+        delay: 0,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    } else if (typeof refreshSavedActions === 'function') {
+      await refreshSavedActions({
+        selectId: '',
+        force: true,
+        autoSelectFirst: true,
+        forceLoad: true
+      });
+    }
+  } catch (err) {
+    await showMessageModal(
+      'No se pudo borrar el favorito seleccionado: ' + (err && err.message ? err.message : err),
+      {
+        title: 'No se pudo borrar',
+        variant: 'error'
+      }
+    );
+  } finally {
+    deletingSelectedAction = false;
+    updateSavedActionControls(currentSavedActionDetails, { supportsSave: currentActionSupportsSave });
+  }
 }
 
 async function loadSavedActionDetails(actionId) {
@@ -639,10 +1035,10 @@ async function loadSavedActionDetails(actionId) {
   }
   let response;
   try {
-    response = await callServerFunction('getSavedActionDetails', actionId);
+    response = await callServerFunction('getFavoriteActionDetails', actionId);
   } catch (err) {
     await showMessageModal(
-      'No se pudo cargar la acción seleccionada: ' + (err && err.message ? err.message : err),
+      'No se pudo cargar el favorito seleccionado: ' + (err && err.message ? err.message : err),
       {
         title: 'Error al cargar',
         variant: 'error'
@@ -651,8 +1047,8 @@ async function loadSavedActionDetails(actionId) {
     return;
   }
   if (!response || response.error) {
-    await showMessageModal((response && response.error) || 'No se encontró la acción seleccionada.', {
-      title: 'Acción no disponible',
+    await showMessageModal((response && response.error) || 'No se encontró el favorito seleccionado.', {
+      title: 'Favorito no disponible',
       variant: 'warning'
     });
     clearSavedActionDetails();
@@ -670,7 +1066,7 @@ async function ensureSavedActionsCache(options) {
   }
   let result;
   try {
-    result = await callServerFunction('listSavedActions');
+    result = await fetchFavoriteActionList();
   } catch (err) {
     savedActionsLoaded = false;
     throw err;
@@ -711,7 +1107,7 @@ async function refreshSavedActions(options) {
   }
   loadingSavedActions = true;
   try {
-    const result = await callServerFunction('listSavedActions');
+    const result = await fetchFavoriteActionList();
     savedActionsCache = Array.isArray(result) ? result.slice() : [];
     savedActionsLoaded = true;
     const renderInfo = renderSavedActionsSelect(savedActionsCache, targetId, {
@@ -731,9 +1127,9 @@ async function refreshSavedActions(options) {
     currentSavedActionId = '';
     dispatchSavedActionsUpdated();
     await showMessageModal(
-      'No se pudieron obtener las acciones guardadas: ' + (err && err.message ? err.message : err),
+      'No se pudieron obtener los favoritos guardados: ' + (err && err.message ? err.message : err),
       {
-        title: 'Error al listar acciones',
+        title: 'Error al listar favoritos',
         variant: 'error'
       }
     );
@@ -803,6 +1199,7 @@ function initSavedActionsPanel() {
   if (editor) {
     editor.classList.add('ai-hidden');
   }
+  updateSavedActionControls(null, { supportsSave: false });
   const savedActionsSelect = document.getElementById('aiSavedActions');
   if (savedActionsSelect) {
     savedActionsSelect.addEventListener('change', function() {
@@ -818,6 +1215,18 @@ function initSavedActionsPanel() {
         delay: 0,
         forceLoad: true
       });
+    });
+  }
+  const saveBtn = document.getElementById('aiActionSaveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      handleSavedActionSaveClick();
+    });
+  }
+  const deleteBtn = document.getElementById('aiActionDeleteBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      handleSavedActionDeleteClick();
     });
   }
   document.addEventListener('tc:savedActionMutated', handleSavedActionMutationEvent);

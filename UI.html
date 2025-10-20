@@ -1812,6 +1812,14 @@
         flex-direction: column;
         gap: 16px;
       }
+      .ai-action-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ai-action-controls button {
+        width: 100%;
+      }
       .ai-action-card {
         border: 1px solid #E5E7EB;
         border-radius: 10px;
@@ -5899,27 +5907,27 @@
               <div class="tc-card-title">
                 <span class="tc-card-icon tc-card-icon--favorite" aria-hidden="true">★</span>
                 <div>
-                  <h3 class="tc-card-heading">Acciones guardadas</h3>
+                  <h3 class="tc-card-heading">Favoritos guardados</h3>
                   <p class="tc-card-subtitle">
-                    Selecciona y gestiona los reportes, tablas y consultas que guardaste como favoritas.
+                    Seleccioná y gestioná los reportes que guardaste como favoritos desde este panel.
                   </p>
                 </div>
               </div>
             </div>
             <div class="tc-form-field">
-              <label for="aiSavedActions">Lista de acciones</label>
+              <label for="aiSavedActions">Lista de favoritos</label>
               <select id="aiSavedActions" class="ai-actions-dropdown">
                 <option value="">Seleccionar...</option>
               </select>
             </div>
-            <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay acciones guardadas todavía.</div>
+            <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay favoritos guardados todavía.</div>
             <div class="tc-card-footer tc-card-footer--right">
               <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
           </div>
             <div class="tc-card">
-              <h3 class="tc-card-heading">Detalle seleccionado</h3>
-              <p class="tc-card-subtitle">Revisa la información asociada y vuelve a editarla cuando quieras.</p>
+              <h3 class="tc-card-heading">Detalle del favorito</h3>
+              <p class="tc-card-subtitle">Revisá cada característica y editá el contenido sin salir de esta pestaña.</p>
               <div id="aiActionDetails" class="ai-action-details ai-hidden" aria-live="polite">
                 <div id="aiActionDetailCard"></div>
                 <div id="aiActionEditor" class="ai-action-editor ai-hidden">
@@ -5932,6 +5940,10 @@
                   </div>
                   <div id="aiActionEditorBody" class="ai-action-editor-body"></div>
                 </div>
+              </div>
+              <div id="aiActionDetailControls" class="ai-action-controls ai-hidden">
+                <button type="button" id="aiActionSaveBtn" class="btn-primary">Guardar favorito</button>
+                <button type="button" id="aiActionDeleteBtn" class="btn-danger">Borrar favorito</button>
               </div>
             </div>
           </div>
