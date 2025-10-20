@@ -465,6 +465,64 @@ function toggleAiListValue(value) {
         updateAiListSelectionUI(selectEl);
       }
 
+function updateAiTextListSelectionUI(select) {
+        const listEl = document.getElementById('aiSavedTextsList');
+        if (!listEl || !select) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        if (select.options) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value && option.selected && !option.disabled) {
+              selectedSet[option.value] = true;
+            }
+          });
+        }
+        const items = listEl.querySelectorAll('.ai-multi-item');
+        Array.prototype.forEach.call(items, function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedSet[value]) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+      }
+
+function toggleAiTextListValue(value) {
+        const selectEl = document.getElementById('aiSavedTexts');
+        const listEl = document.getElementById('aiSavedTextsList');
+        if (!selectEl || !listEl || selectEl.disabled) {
+          return;
+        }
+        const options = selectEl.options ? Array.prototype.slice.call(selectEl.options) : [];
+        if (!options.length) {
+          return;
+        }
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        let targetOption = null;
+        options.forEach(function(option) {
+          if (option && option.value === targetValue) {
+            targetOption = option;
+          }
+        });
+        if (!targetOption) {
+          return;
+        }
+        targetOption.selected = !targetOption.selected;
+        updateAiTextListSelectionUI(selectEl);
+      }
+
 function normalizeReportEmailEntry(entry) {
         if (!entry) {
           return null;
@@ -5798,11 +5856,12 @@ function collectAskCustomization() {
         if (!root) {
           return;
         }
-        var triggers = Array.prototype.slice.call(root.querySelectorAll('.ai-word-action-btn'));
         var panels = Array.prototype.slice.call(root.querySelectorAll('[data-word-action-panel]'));
-        if (!triggers.length || !panels.length) {
+        if (!panels.length) {
           return;
         }
+        var select = root.querySelector('#wordActionSelect');
+        var infoElement = root.querySelector('[data-word-action-info]');
         var panelMap = panels.reduce(function(map, panel) {
           var key = panel.getAttribute('data-word-action-panel');
           if (key) {
@@ -5816,16 +5875,41 @@ function collectAskCustomization() {
           }
           return map;
         }, {});
+        var getFirstAction = function() {
+          var keys = Object.keys(panelMap);
+          return keys.length ? keys[0] : '';
+        };
+        var updateInfo = function(action) {
+          if (!infoElement) {
+            return;
+          }
+          var title = '';
+          var description = '';
+          if (select && select.options) {
+            Array.prototype.forEach.call(select.options, function(option) {
+              if (!option || !option.value) {
+                return;
+              }
+              if (option.value === action) {
+                title = option.getAttribute('data-info-title') || option.textContent || '';
+                description = option.getAttribute('data-info') || '';
+              }
+            });
+          }
+          infoElement.innerHTML = '';
+          if (title) {
+            var strong = document.createElement('strong');
+            strong.textContent = title;
+            infoElement.appendChild(strong);
+          }
+          if (description) {
+            infoElement.appendChild(document.createTextNode(description));
+          }
+        };
         var activate = function(action) {
           if (!action || !panelMap[action]) {
             return;
           }
-          triggers.forEach(function(button) {
-            var isActive = button.getAttribute('data-word-action') === action;
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            button.setAttribute('tabindex', isActive ? '0' : '-1');
-          });
           Object.keys(panelMap).forEach(function(key) {
             var panel = panelMap[key];
             var isActive = key === action;
@@ -5840,57 +5924,29 @@ function collectAskCustomization() {
               }
             }
           });
+          if (select && select.value !== action) {
+            select.value = action;
+          }
+          updateInfo(action);
         };
-        var focusByIndex = function(index) {
-          if (!triggers.length) {
-            return;
+        var ensureInitialAction = function(candidate) {
+          if (candidate && panelMap[candidate]) {
+            return candidate;
           }
-          var nextIndex = index;
-          if (index < 0) {
-            nextIndex = triggers.length - 1;
-          } else if (index >= triggers.length) {
-            nextIndex = 0;
+          if (select && select.value && panelMap[select.value]) {
+            return select.value;
           }
-          var next = triggers[nextIndex];
-          if (!next) {
-            return;
-          }
-          var action = next.getAttribute('data-word-action');
-          activate(action);
-          next.focus();
+          return getFirstAction();
         };
-        triggers.forEach(function(button, index) {
-          if (!button.hasAttribute('role')) {
-            button.setAttribute('role', 'tab');
-          }
-          button.addEventListener('click', function() {
-            activate(button.getAttribute('data-word-action'));
+        var initialAction = ensureInitialAction(root.getAttribute('data-word-default-action'));
+        if (select) {
+          select.addEventListener('change', function() {
+            activate(select.value);
           });
-          button.addEventListener('keydown', function(event) {
-            var key = event.key;
-            if (key === 'ArrowRight' || key === 'ArrowDown') {
-              event.preventDefault();
-              focusByIndex(index + 1);
-            } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
-              event.preventDefault();
-              focusByIndex(index - 1);
-            } else if (key === 'Home') {
-              event.preventDefault();
-              focusByIndex(0);
-            } else if (key === 'End') {
-              event.preventDefault();
-              focusByIndex(triggers.length - 1);
-            } else if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
-              event.preventDefault();
-              activate(button.getAttribute('data-word-action'));
-            }
-          });
-        });
-        var defaultAction = root.getAttribute('data-word-default-action');
-        if (!defaultAction || !panelMap[defaultAction]) {
-          defaultAction = triggers[0] ? triggers[0].getAttribute('data-word-action') : '';
         }
-        activate(defaultAction);
+        if (initialAction) {
+          activate(initialAction);
+        }
       }
 
       document.addEventListener('DOMContentLoaded', function() {
@@ -5939,6 +5995,42 @@ function collectAskCustomization() {
             }
             event.preventDefault();
             toggleAiListValue(item.dataset.value);
+          });
+        }
+        const aiTextSelect = document.getElementById('aiSavedTexts');
+        const aiTextList = document.getElementById('aiSavedTextsList');
+        if (aiTextSelect) {
+          aiTextSelect.addEventListener('change', function() {
+            updateAiTextListSelectionUI(aiTextSelect);
+          });
+          updateAiTextListSelectionUI(aiTextSelect);
+        }
+        if (aiTextList) {
+          aiTextList.addEventListener('click', function(event) {
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiTextList.classList.contains('disabled')) {
+              return;
+            }
+            toggleAiTextListValue(item.dataset.value);
+          });
+          aiTextList.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiTextList.classList.contains('disabled')) {
+              return;
+            }
+            event.preventDefault();
+            toggleAiTextListValue(item.dataset.value);
           });
         }
         const aiActionSelect = document.getElementById('aiActionSelect');

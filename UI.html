@@ -161,39 +161,51 @@
         }
       }
       .tab-nav {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
         margin-bottom: 18px;
-        justify-items: stretch;
       }
       .tab-nav-primary {
         margin-bottom: 20px;
       }
-      @media (min-width: 641px) {
-        .tab-nav-primary {
-          grid-template-areas:
-            'tab-ai tab-edit tab-create'
-            'tab-triggers tab-templates tab-actions';
-        }
-        .tab-nav-primary .tab-btn[data-tab='aiTab'] {
-          grid-area: tab-ai;
-        }
-        .tab-nav-primary .tab-btn[data-tab='editTab'] {
-          grid-area: tab-edit;
-        }
-        .tab-nav-primary .tab-btn[data-tab='createTab'] {
-          grid-area: tab-create;
-        }
-        .tab-nav-primary .tab-btn[data-tab='triggersTab'] {
-          grid-area: tab-triggers;
-        }
-        .tab-nav-primary .tab-btn[data-tab='templatesTab'] {
-          grid-area: tab-templates;
-        }
-        .tab-nav-primary .tab-btn[data-tab='actionsTab'] {
-          grid-area: tab-actions;
-        }
+      .tab-nav-row {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+      }
+      .tab-nav-row--top {
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      }
+      .tab-nav-row--bottom {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .tab-btn-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .tab-btn-info {
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--tc-muted);
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid var(--tc-border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        box-shadow: 0 8px 18px rgba(15, 76, 129, 0.08);
+      }
+      .tab-btn-info strong {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 2px;
+        color: var(--tc-text);
       }
       .tab-btn {
         border: 1px solid var(--tc-border);
@@ -932,40 +944,49 @@
         flex-direction: column;
         gap: 16px;
       }
-      .ai-word-action-menu {
+      .ai-word-action-selector {
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
+        flex-direction: column;
+        gap: 12px;
       }
-      .ai-word-action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        background: var(--tc-primary-soft);
-        color: #000000;
+      .ai-word-action-selector label {
         font-size: 14px;
         font-weight: 600;
-        padding: 10px 16px;
-        cursor: pointer;
-        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        color: #000000;
       }
-      .ai-word-action-btn:hover,
-      .ai-word-action-btn:focus-visible {
+      .ai-word-action-select-wrapper {
+        position: relative;
+      }
+      .ai-word-action-select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--tc-border);
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        background: var(--tc-surface);
+        color: var(--tc-text);
+        box-shadow: 0 8px 18px rgba(33, 150, 243, 0.12);
+      }
+      .ai-word-action-select:focus {
+        outline: none;
         border-color: var(--tc-primary);
         box-shadow: 0 0 0 3px var(--tc-primary-ring);
-        outline: none;
       }
-      .ai-word-action-btn.is-active {
-        background: var(--tc-primary);
-        color: #FFFFFF;
-        border-color: var(--tc-primary-dark);
-        box-shadow: 0 6px 12px rgba(33, 150, 243, 0.25);
+      .ai-word-action-info-card {
+        background: var(--tc-surface);
+        border: 1px solid var(--tc-border);
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: var(--tc-muted);
+        box-shadow: 0 8px 18px rgba(33, 150, 243, 0.12);
+      }
+      .ai-word-action-info-card strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--tc-text);
       }
       .ai-word-panels {
         display: flex;
@@ -1045,21 +1066,27 @@
         font-size: 13px;
         color: #000000;
       }
+      .ai-word-placeholder-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 6px;
+        color: #000000;
+      }
+      .ai-word-placeholder-text {
+        margin: 0;
+        font-size: 14px;
+        color: var(--tc-muted);
+      }
       @media (min-width: 900px) {
         .ai-word-layout {
           flex-direction: row;
           align-items: flex-start;
           gap: 20px;
         }
-        .ai-word-action-menu {
-          flex-direction: column;
-          width: 240px;
+        .ai-word-action-selector {
+          width: 260px;
           position: sticky;
           top: 12px;
-        }
-        .ai-word-action-btn {
-          width: 100%;
-          justify-content: flex-start;
         }
         .ai-word-panels {
           flex: 1 1 auto;
@@ -3104,6 +3131,26 @@
         color: var(--tc-muted);
         font-size: 14px;
       }
+      .ai-available-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .ai-available-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #000000;
+      }
+      .ai-available-subsection {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ai-available-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #000000;
+      }
       .ai-multi-group {
         display: flex;
         flex-direction: column;
@@ -3452,57 +3499,107 @@
         </div>
       </div>
       <div class="tab-nav tab-nav-primary">
-        <button
-          class="tab-btn tab-btn--tooltip-below active"
-          data-tab="aiTab"
-          data-themes="table word"
-          data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
-        >
-          Panel IA
-        </button>
-        <button
-          class="tab-btn tab-btn--tooltip-below"
-          data-tab="editTab"
-          data-themes="table"
-          data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
-        >
-          Editar tabla
-        </button>
-        <button
-          class="tab-btn tab-btn--tooltip-below"
-          data-tab="createTab"
-          data-themes="table"
-          data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
-        >
-          Crear tabla
-        </button>
-        <button
-          class="tab-btn"
-          data-tab="triggersTab"
-          data-themes="table word"
-          data-tooltip="Configura automatizaciones que mantengan tus datos al día."
-        >
-          Triggers
-        </button>
-        <button
-          class="tab-btn"
-          data-tab="templatesTab"
-          data-themes="table"
-          data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
-        >
-          Plantillas
-        </button>
-        <button
-          class="tab-btn"
-          data-tab="actionsTab"
-          data-themes="table word"
-          data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
-        >
-          Acciones
-        </button>
+        <div class="tab-nav-row tab-nav-row--top">
+          <div class="tab-btn-wrap">
+            <button
+              class="tab-btn active"
+              data-tab="aiTab"
+              data-themes="table word"
+            >
+              Panel IA
+            </button>
+            <div class="tab-btn-info">
+              <strong>Panel IA</strong>
+              Gestiona consultas, reportes y contactos asistidos por IA.
+            </div>
+          </div>
+          <div class="tab-btn-wrap">
+            <button
+              class="tab-btn"
+              data-tab="editTab"
+              data-themes="table word"
+            >
+              <?!= __isWordcrafter ? 'Editar texto' : 'Editar tabla' ?>
+            </button>
+            <div class="tab-btn-info">
+              <strong><?!= __isWordcrafter ? 'Editar texto' : 'Editar tabla' ?></strong>
+              <?!= __isWordcrafter
+                ? 'Revisa y ajusta textos guardados, sus estilos y versiones.'
+                : 'Modifica tablas guardadas y ajusta sus estilos.'
+              ?>
+            </div>
+          </div>
+          <div class="tab-btn-wrap">
+            <button
+              class="tab-btn"
+              data-tab="createTab"
+              data-themes="table word"
+            >
+              <?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?>
+            </button>
+            <div class="tab-btn-info">
+              <strong><?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?></strong>
+              <?!= __isWordcrafter
+                ? 'Genera nuevos contenidos con ayuda de la IA y plantillas base.'
+                : 'Crea nuevas tablas con ayuda de IA y formatos personalizados.'
+              ?>
+            </div>
+          </div>
+          <? if (!__isWordcrafter) { ?>
+            <div class="tab-btn-wrap">
+              <button
+                class="tab-btn"
+                data-tab="templatesTab"
+                data-themes="table"
+              >
+                Plantillas
+              </button>
+              <div class="tab-btn-info">
+                <strong>Plantillas</strong>
+                Organiza y reutiliza tus plantillas y recursos destacados.
+              </div>
+            </div>
+          <? } ?>
+        </div>
+        <div class="tab-nav-row tab-nav-row--bottom">
+          <div class="tab-btn-wrap">
+            <div class="tab-btn-info">
+              <strong>Triggers</strong>
+              Configura automatizaciones que mantengan tus datos al día.
+            </div>
+            <button
+              class="tab-btn"
+              data-tab="triggersTab"
+              data-themes="table word"
+            >
+              Triggers
+            </button>
+          </div>
+          <div class="tab-btn-wrap">
+            <div class="tab-btn-info">
+              <strong>Acciones</strong>
+              Accede y edita reportes, tablas y preguntas guardadas.
+            </div>
+            <button
+              class="tab-btn"
+              data-tab="actionsTab"
+              data-themes="table word"
+            >
+              Acciones
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div id="createTab" class="tab-content" data-themes="table">
+      <div id="createTab" class="tab-content" data-themes="table word">
+        <? if (__isWordcrafter) { ?>
+        <div class="section">
+          <h3 class="ai-word-placeholder-title">Crear texto</h3>
+          <p class="ai-word-placeholder-text">
+            Próximamente encontrarás asistentes de contenido para construir documentos desde cero.
+          </p>
+        </div>
+        <? } else { ?>
         <div class="section">
           <div class="range-row">
             <div>
@@ -3548,9 +3645,18 @@
             <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
           </div>
         </div>
+        <? } ?>
       </div>
 
-      <div id="editTab" class="tab-content" data-themes="table">
+      <div id="editTab" class="tab-content" data-themes="table word">
+        <? if (__isWordcrafter) { ?>
+        <div class="section">
+          <h3 class="ai-word-placeholder-title">Editar texto</h3>
+          <p class="ai-word-placeholder-text">
+            Aquí podrás actualizar versiones, estilos y tonalidades de tus textos guardados.
+          </p>
+        </div>
+        <? } else { ?>
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
           <div class="edit-saved-container">
@@ -3619,6 +3725,7 @@
             <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
           </div>
         </div>
+        <? } ?>
       </div>
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
@@ -3630,93 +3737,73 @@
             </p>
           </div>
           <div class="ai-word-layout">
-            <nav
-              class="ai-word-action-menu"
-              role="tablist"
-              aria-label="Acciones de redacción asistida"
-            >
-              <button
-                type="button"
-                class="ai-word-action-btn is-active"
-                data-word-action="compose"
-                role="tab"
-                aria-selected="true"
-                aria-controls="wordActionComposePanel"
-                id="wordActionComposeTab"
-              >
-                Redactar texto
-              </button>
-              <button
-                type="button"
-                class="ai-word-action-btn"
-                data-word-action="summarize"
-                role="tab"
-                aria-selected="false"
-                aria-controls="wordActionSummarizePanel"
-                id="wordActionSummarizeTab"
-                tabindex="-1"
-              >
-                Resumir texto
-              </button>
-              <button
-                type="button"
-                class="ai-word-action-btn"
-                data-word-action="restructure"
-                role="tab"
-                aria-selected="false"
-                aria-controls="wordActionRestructurePanel"
-                id="wordActionRestructureTab"
-                tabindex="-1"
-              >
-                Reestructurar texto
-              </button>
-              <button
-                type="button"
-                class="ai-word-action-btn"
-                data-word-action="format"
-                role="tab"
-                aria-selected="false"
-                aria-controls="wordActionFormatPanel"
-                id="wordActionFormatTab"
-                tabindex="-1"
-              >
-                Dar formato
-              </button>
-              <button
-                type="button"
-                class="ai-word-action-btn"
-                data-word-action="tone"
-                role="tab"
-                aria-selected="false"
-                aria-controls="wordActionTonePanel"
-                id="wordActionToneTab"
-                tabindex="-1"
-              >
-                Ajustar tono
-              </button>
-              <button
-                type="button"
-                class="ai-word-action-btn"
-                data-word-action="translate"
-                role="tab"
-                aria-selected="false"
-                aria-controls="wordActionTranslatePanel"
-                id="wordActionTranslateTab"
-                tabindex="-1"
-              >
-                Traducir y adaptar
-              </button>
-            </nav>
+            <div class="ai-word-action-selector">
+              <label for="wordActionSelect">Acción a realizar</label>
+              <div class="ai-word-action-select-wrapper">
+                <select
+                  id="wordActionSelect"
+                  class="ai-word-action-select"
+                  aria-label="Selecciona la acción que la IA debe realizar"
+                >
+                  <option
+                    value="compose"
+                    data-info-title="Redactar texto"
+                    data-info="Genera un borrador desde cero a partir de ideas clave e indicaciones."
+                  >
+                    Redactar texto
+                  </option>
+                  <option
+                    value="summarize"
+                    data-info-title="Resumir texto"
+                    data-info="Condensa un documento o conversación para compartir puntos clave con rapidez."
+                  >
+                    Resumir texto
+                  </option>
+                  <option
+                    value="restructure"
+                    data-info-title="Reestructurar texto"
+                    data-info="Reordena y mejora textos existentes manteniendo su esencia y contexto."
+                  >
+                    Reestructurar texto
+                  </option>
+                  <option
+                    value="format"
+                    data-info-title="Dar formato"
+                    data-info="Aplica estilos y estructura para dejar el texto listo para compartir."
+                  >
+                    Dar formato
+                  </option>
+                  <option
+                    value="tone"
+                    data-info-title="Ajustar tono"
+                    data-info="Adapta el estilo comunicacional al público y objetivo que definas."
+                  >
+                    Ajustar tono
+                  </option>
+                  <option
+                    value="translate"
+                    data-info-title="Traducir y adaptar"
+                    data-info="Traduce y localiza el mensaje manteniendo matices y terminología clave."
+                  >
+                    Traducir y adaptar
+                  </option>
+                </select>
+              </div>
+              <div class="ai-word-action-info-card" id="wordActionInfo" data-word-action-info>
+                <strong>Redactar texto</strong>
+                Genera un borrador desde cero a partir de ideas clave e indicaciones.
+              </div>
+            </div>
             <div class="ai-word-panels">
               <section
                 class="ai-word-panel is-active"
                 id="wordActionComposePanel"
                 data-word-action-panel="compose"
                 role="tabpanel"
-                aria-labelledby="wordActionComposeTab"
+                aria-labelledby="wordActionComposeHeading"
               >
                 <div class="ai-word-panel-head">
-                  <h3>Redactar texto</h3>
+                  <h3 id="wordActionComposeHeading">Redactar texto</h3>
                   <p>Genera un borrador desde cero a partir de ideas clave e indicaciones.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -3873,11 +3960,11 @@
                 id="wordActionSummarizePanel"
                 data-word-action-panel="summarize"
                 role="tabpanel"
-                aria-labelledby="wordActionSummarizeTab"
+                aria-labelledby="wordActionSummarizeHeading"
                 hidden
               >
                 <div class="ai-word-panel-head">
-                  <h3>Resumir texto</h3>
+                  <h3 id="wordActionSummarizeHeading">Resumir texto</h3>
                   <p>Condensa documentos largos en resúmenes claros para compartir o presentar.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -4027,11 +4114,11 @@
                 id="wordActionRestructurePanel"
                 data-word-action-panel="restructure"
                 role="tabpanel"
-                aria-labelledby="wordActionRestructureTab"
+                aria-labelledby="wordActionRestructureHeading"
                 hidden
               >
                 <div class="ai-word-panel-head">
-                  <h3>Reestructurar texto</h3>
+                  <h3 id="wordActionRestructureHeading">Reestructurar texto</h3>
                   <p>Reordena y optimiza un contenido existente para hacerlo más claro y persuasivo.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -4180,11 +4267,11 @@
                 id="wordActionFormatPanel"
                 data-word-action-panel="format"
                 role="tabpanel"
-                aria-labelledby="wordActionFormatTab"
+                aria-labelledby="wordActionFormatHeading"
                 hidden
               >
                 <div class="ai-word-panel-head">
-                  <h3>Dar formato</h3>
+                  <h3 id="wordActionFormatHeading">Dar formato</h3>
                   <p>Aplica estilos, estructura y destacados para dejar el texto listo para compartir.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -4278,11 +4365,11 @@
                 id="wordActionTonePanel"
                 data-word-action-panel="tone"
                 role="tabpanel"
-                aria-labelledby="wordActionToneTab"
+                aria-labelledby="wordActionToneHeading"
                 hidden
               >
                 <div class="ai-word-panel-head">
-                  <h3>Ajustar tono</h3>
+                  <h3 id="wordActionToneHeading">Ajustar tono</h3>
                   <p>Transforma la voz del texto para alinearla con distintas audiencias y emociones.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -4383,11 +4470,11 @@
                 id="wordActionTranslatePanel"
                 data-word-action-panel="translate"
                 role="tabpanel"
-                aria-labelledby="wordActionTranslateTab"
+                aria-labelledby="wordActionTranslateHeading"
                 hidden
               >
                 <div class="ai-word-panel-head">
-                  <h3>Traducir y adaptar</h3>
+                  <h3 id="wordActionTranslateHeading">Traducir y adaptar</h3>
                   <p>Traduce contenidos asegurando que el mensaje conserve intención, tono y contexto.</p>
                 </div>
                 <div class="ai-word-field-group">
@@ -4509,13 +4596,39 @@
             </div>
           </div>
         </div>
-        <div class="ai-table-mode" data-tablecrafter-panel>
-        <div class="section">
-          <label for="aiSavedTables">Tablas disponibles</label>
-          <div class="ai-multi-select">
-            <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
-            <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
+        <div class="section ai-available-section" data-shared-available>
+          <label for="aiSavedTables" class="ai-available-label">Tablas y Textos disponibles</label>
+          <div class="ai-available-subsection">
+            <span class="ai-available-title">Tablas disponibles</span>
+            <div class="ai-multi-select">
+              <div
+                id="aiSavedTablesList"
+                class="ai-multi-list"
+                aria-label="Tablas disponibles"
+                role="listbox"
+                aria-multiselectable="true"
+              ></div>
+              <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
+            </div>
           </div>
+          <div class="ai-available-subsection">
+            <span class="ai-available-title">Textos disponibles</span>
+            <div class="ai-multi-select">
+              <div
+                id="aiSavedTextsList"
+                class="ai-multi-list"
+                aria-label="Textos disponibles"
+                role="listbox"
+                aria-multiselectable="true"
+              >
+                <div class="ai-multi-empty">No hay textos disponibles todavía.</div>
+              </div>
+              <select id="aiSavedTexts" multiple class="ai-hidden-select"></select>
+            </div>
+          </div>
+        </div>
+        <div class="ai-table-mode" data-tablecrafter-panel>
+          <div class="section">
           <label
             for="aiActionSelect"
             style="margin-top:12px;"
