@@ -404,6 +404,11 @@ function resolveMetaRecordType(row) {
   if (normalized !== 'table') {
     return normalized;
   }
+  var idValue = row.length > META_INDEX.id ? row[META_INDEX.id] : '';
+  var normalizedId = normalizeMetaId(idValue).toLowerCase();
+  if (normalizedId.indexOf('reportfavorite:') === 0) {
+    return 'reportFavorite';
+  }
   var configCell = row.length > META_INDEX.reportConfig ? row[META_INDEX.reportConfig] : '';
   var configText = configCell === null || configCell === undefined ? '' : String(configCell).trim();
   if (!configText) {
