@@ -215,6 +215,229 @@ function updateSavedActionsEmptyState(hasEntries) {
   }
 }
 
+function cloneFavoriteCustomization(customization) {
+  if (!customization || typeof customization !== 'object') {
+    return {};
+  }
+  try {
+    return JSON.parse(JSON.stringify(customization));
+  } catch (err) {
+    const copy = Array.isArray(customization) ? [] : {};
+    Object.keys(customization).forEach(function(key) {
+      const value = customization[key];
+      if (Array.isArray(value)) {
+        copy[key] = value.slice();
+      } else if (value && typeof value === 'object') {
+        copy[key] = cloneFavoriteCustomization(value);
+      } else {
+        copy[key] = value;
+      }
+    });
+    return copy;
+  }
+}
+
+function cloneFavoriteFeatureDetail(detail) {
+  if (!detail || typeof detail !== 'object') {
+    return null;
+  }
+  try {
+    return JSON.parse(JSON.stringify(detail));
+  } catch (err) {
+    const descriptions = Array.isArray(detail.instanceDescriptions)
+      ? detail.instanceDescriptions.slice(0, 3)
+      : [];
+    while (descriptions.length < 3) {
+      descriptions.push('');
+    }
+    return {
+      feature: detail.feature || '',
+      quantity:
+        typeof detail.quantity === 'number'
+          ? detail.quantity
+          : parseInt(detail.quantity, 10) || 0,
+      instanceDescriptions: descriptions.map(function(text) {
+        return text === null || text === undefined ? '' : String(text);
+      }),
+      instanceTitles: Array.isArray(detail.instanceTitles) ? detail.instanceTitles.slice() : [],
+      instanceChartTypes: Array.isArray(detail.instanceChartTypes)
+        ? detail.instanceChartTypes.slice()
+        : [],
+      instanceListOrders: Array.isArray(detail.instanceListOrders)
+        ? detail.instanceListOrders.slice()
+        : [],
+      instanceListEnumerate: Array.isArray(detail.instanceListEnumerate)
+        ? detail.instanceListEnumerate.slice()
+        : [],
+      instanceListEnumStyles: Array.isArray(detail.instanceListEnumStyles)
+        ? detail.instanceListEnumStyles.slice()
+        : [],
+      summaryLength:
+        detail.summaryLength === null || detail.summaryLength === undefined
+          ? ''
+          : detail.summaryLength,
+      instanceTablesEnabled: Array.isArray(detail.instanceTablesEnabled)
+        ? detail.instanceTablesEnabled.slice()
+        : [],
+      instanceTables: Array.isArray(detail.instanceTables) ? detail.instanceTables.slice() : [],
+      instanceWebSourcesEnabled: Array.isArray(detail.instanceWebSourcesEnabled)
+        ? detail.instanceWebSourcesEnabled.slice()
+        : [],
+      instanceWebSources: Array.isArray(detail.instanceWebSources)
+        ? detail.instanceWebSources.slice()
+        : []
+    };
+  }
+}
+
+function normalizeFavoriteActionEntry(action) {
+  if (!action || typeof action !== 'object') {
+    return null;
+  }
+  const id = action.id === null || action.id === undefined ? '' : String(action.id).trim();
+  if (!id) {
+    return null;
+  }
+  const normalized = {
+    id: id,
+    type: 'reportFavorite',
+    name: action.name ? String(action.name) : '',
+    description: action.description ? String(action.description) : '',
+    createdAt: action.createdAt ? String(action.createdAt) : '',
+    updatedAt: action.updatedAt ? String(action.updatedAt) : '',
+    format: action.format ? String(action.format) : '',
+    fileName: action.fileName ? String(action.fileName) : '',
+    fileExtension: action.fileExtension ? String(action.fileExtension) : '',
+    appendDateToFile: !!action.appendDateToFile,
+    tables: Array.isArray(action.tables) ? action.tables.slice() : [],
+    channels: Array.isArray(action.channels) ? action.channels.slice() : [],
+    descriptionEnabled: !!action.descriptionEnabled,
+    descriptionText: action.descriptionText ? String(action.descriptionText) : '',
+    features: Array.isArray(action.features) ? action.features.slice() : [],
+    featureDetails: Array.isArray(action.featureDetails)
+      ? action.featureDetails
+          .map(function(detail) {
+            return cloneFavoriteFeatureDetail(detail);
+          })
+          .filter(Boolean)
+      : [],
+    featureOrder: Array.isArray(action.featureOrder) ? action.featureOrder.slice() : [],
+    emails: Array.isArray(action.emails) ? action.emails.slice() : [],
+    phones: Array.isArray(action.phones) ? action.phones.slice() : [],
+    customization: cloneFavoriteCustomization(action.customization)
+  };
+  if (!normalized.descriptionText && action.descriptionEnabled && action.description) {
+    normalized.descriptionText = String(action.description);
+  }
+  return normalized;
+}
+
+function normalizeFavoriteActionList(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  const seen = Object.create(null);
+  return list
+    .map(function(entry) {
+      return normalizeFavoriteActionEntry(entry);
+    })
+    .filter(function(entry) {
+      if (!entry || seen[entry.id]) {
+        return false;
+      }
+      seen[entry.id] = true;
+      return true;
+    });
+}
+
+function filterLegacyFavoriteEntries(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  return list.filter(function(entry) {
+    if (!entry) {
+      return false;
+    }
+    const rawType = entry.type === null || entry.type === undefined ? '' : String(entry.type);
+    const normalizedType = rawType.toLowerCase().replace(/[\s_-]+/g, '');
+    if (
+      normalizedType === 'reportfavorite' ||
+      normalizedType === 'reportefavorito' ||
+      normalizedType === 'favorite' ||
+      normalizedType === 'favorito'
+    ) {
+      return true;
+    }
+    const hasFeatures = Array.isArray(entry.features) && entry.features.length > 0;
+    const hasDetails = Array.isArray(entry.featureDetails) && entry.featureDetails.length > 0;
+    const hasChannels = Array.isArray(entry.channels) && entry.channels.length > 0;
+    const hasReportHints =
+      hasFeatures ||
+      hasDetails ||
+      hasChannels ||
+      !!(entry && (entry.format || entry.fileName || entry.fileExtension));
+    if (hasReportHints) {
+      return true;
+    }
+    if (entry && entry.customization && typeof entry.customization === 'object') {
+      return Object.keys(entry.customization).length > 0;
+    }
+    return false;
+  });
+}
+
+async function fetchFavoriteActionList(options) {
+  const opts = options || {};
+  let primaryResult;
+  let primaryError = null;
+  if (!opts.preferLegacy) {
+    try {
+      primaryResult = await callServerFunction('listFavoriteActions');
+      const normalizedPrimary = normalizeFavoriteActionList(primaryResult);
+      if (normalizedPrimary.length > 0 || opts.skipLegacyFallback) {
+        return normalizedPrimary;
+      }
+      if (opts.allowLegacyFallback === false) {
+        return normalizedPrimary;
+      }
+    } catch (err) {
+      primaryError = err;
+      if (opts.skipLegacyFallback || opts.allowLegacyFallback === false) {
+        throw err;
+      }
+    }
+  }
+  if (opts.allowLegacyFallback === false) {
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    if (primaryError) {
+      throw primaryError;
+    }
+    return [];
+  }
+  try {
+    const legacyResult = await callServerFunction('listSavedActions', { scope: 'all' });
+    const favoritesOnly = filterLegacyFavoriteEntries(legacyResult);
+    const normalizedLegacy = normalizeFavoriteActionList(favoritesOnly);
+    if (normalizedLegacy.length > 0) {
+      return normalizedLegacy;
+    }
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    return normalizedLegacy;
+  } catch (legacyError) {
+    if (Array.isArray(primaryResult)) {
+      return normalizeFavoriteActionList(primaryResult);
+    }
+    if (primaryError) {
+      throw legacyError;
+    }
+    throw legacyError;
+  }
+}
+
 function renderSavedActionsSelect(actions, selectedId, options) {
   const select = document.getElementById('aiSavedActions');
   if (!select) {
@@ -843,7 +1066,7 @@ async function ensureSavedActionsCache(options) {
   }
   let result;
   try {
-    result = await callServerFunction('listFavoriteActions');
+    result = await fetchFavoriteActionList();
   } catch (err) {
     savedActionsLoaded = false;
     throw err;
@@ -884,7 +1107,7 @@ async function refreshSavedActions(options) {
   }
   loadingSavedActions = true;
   try {
-    const result = await callServerFunction('listFavoriteActions');
+    const result = await fetchFavoriteActionList();
     savedActionsCache = Array.isArray(result) ? result.slice() : [];
     savedActionsLoaded = true;
     const renderInfo = renderSavedActionsSelect(savedActionsCache, targetId, {

@@ -1131,16 +1131,103 @@ function listFavoriteActions() {
   var meta = getMetaSheet();
   var data = meta.getDataRange().getValues();
   var favorites = [];
+  var seenIds = {};
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    if (resolveMetaRecordType(row) !== 'reportFavorite') {
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId || resolveMetaRecordType(row) !== 'reportFavorite') {
+      continue;
+    }
+    if (seenIds[entryId]) {
       continue;
     }
     var favorite = buildReportFavoriteResponse({ data: row });
     if (!favorite || favorite.error) {
       continue;
     }
-    favorites.push(favorite);
+    var featureDetails = [];
+    if (Array.isArray(favorite.featureDetails)) {
+      featureDetails = favorite.featureDetails
+        .map(function(detail) {
+          if (!detail) {
+            return null;
+          }
+          try {
+            return JSON.parse(JSON.stringify(detail));
+          } catch (err) {
+            return {
+              feature: detail.feature || '',
+              quantity: detail.quantity,
+              instanceDescriptions: Array.isArray(detail.instanceDescriptions)
+                ? detail.instanceDescriptions.slice()
+                : ['', '', ''],
+              instanceTitles: Array.isArray(detail.instanceTitles)
+                ? detail.instanceTitles.slice()
+                : createEmptyFeatureTitleArray(),
+              instanceChartTypes: Array.isArray(detail.instanceChartTypes)
+                ? detail.instanceChartTypes.slice()
+                : normalizeFeatureChartTypeArray([]),
+              instanceListOrders: Array.isArray(detail.instanceListOrders)
+                ? detail.instanceListOrders.slice()
+                : normalizeFeatureListOrderArray([]),
+              instanceListEnumerate: Array.isArray(detail.instanceListEnumerate)
+                ? detail.instanceListEnumerate.slice()
+                : normalizeFeatureListEnumerateArray([]),
+              instanceListEnumStyles: Array.isArray(detail.instanceListEnumStyles)
+                ? detail.instanceListEnumStyles.slice()
+                : normalizeFeatureListEnumStyleArray([]),
+              summaryLength: detail.summaryLength || '',
+              instanceTablesEnabled: Array.isArray(detail.instanceTablesEnabled)
+                ? detail.instanceTablesEnabled.slice()
+                : createEmptyFeatureTableToggleArray(),
+              instanceTables: Array.isArray(detail.instanceTables)
+                ? detail.instanceTables.slice()
+                : createEmptyFeatureTableSelectionArray(),
+              instanceWebSourcesEnabled: Array.isArray(detail.instanceWebSourcesEnabled)
+                ? detail.instanceWebSourcesEnabled.slice()
+                : createEmptyFeatureWebToggleArray(),
+              instanceWebSources: Array.isArray(detail.instanceWebSources)
+                ? detail.instanceWebSources.slice()
+                : createEmptyFeatureWebSourceArray()
+            };
+          }
+        })
+        .filter(function(detail) {
+          return !!detail;
+        });
+    }
+    var featureOrder = Array.isArray(favorite.featureOrder) ? favorite.featureOrder.slice() : [];
+    var customization = {};
+    if (favorite.customization && typeof favorite.customization === 'object') {
+      try {
+        customization = JSON.parse(JSON.stringify(favorite.customization));
+      } catch (err) {
+        customization = {};
+      }
+    }
+    favorites.push({
+      id: favorite.id || entryId,
+      type: 'reportFavorite',
+      name: favorite.name || '',
+      description: favorite.description || '',
+      createdAt: favorite.createdAt || '',
+      updatedAt: favorite.updatedAt || '',
+      format: favorite.format || '',
+      fileName: favorite.fileName || '',
+      fileExtension: favorite.fileExtension || '',
+      appendDateToFile: !!favorite.appendDateToFile,
+      tables: Array.isArray(favorite.tables) ? favorite.tables.slice() : [],
+      channels: Array.isArray(favorite.channels) ? favorite.channels.slice() : [],
+      descriptionEnabled: !!favorite.descriptionEnabled,
+      descriptionText: favorite.descriptionText || '',
+      features: Array.isArray(favorite.features) ? favorite.features.slice() : [],
+      featureDetails: featureDetails,
+      featureOrder: featureOrder,
+      emails: Array.isArray(favorite.emails) ? favorite.emails.slice() : [],
+      phones: Array.isArray(favorite.phones) ? favorite.phones.slice() : [],
+      customization: customization
+    });
+    seenIds[entryId] = true;
   }
   favorites.sort(function(a, b) {
     var nameA = (a && a.name ? String(a.name) : '').toLowerCase();
