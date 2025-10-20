@@ -199,15 +199,16 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .theme-wordcrafter .tab-nav-row--bottom {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(200px, 1fr));
-        gap: 18px;
-        max-width: 560px;
-        margin-left: auto;
-        margin-right: auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        max-width: 720px;
       }
-      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap {
-        max-width: none;
+      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap[data-word-nav='triggers'] {
+        grid-column: 1 / span 2;
+        justify-self: center;
+      }
+      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap[data-word-nav='actions'] {
+        grid-column: 2 / span 2;
+        justify-self: center;
       }
       .tab-btn-wrap {
         display: flex;
@@ -4056,7 +4057,7 @@
             </div>
           </div>
           <div class="tab-nav-row tab-nav-row--bottom">
-            <div class="tab-btn-wrap">
+            <div class="tab-btn-wrap"<? if (__isWordcrafter) { ?> data-word-nav="triggers"<? } ?>>
               <button
                 class="tab-btn"
                 data-tab="triggersTab"
@@ -4080,7 +4081,7 @@
                 </button>
               </div>
             <? } ?>
-            <div class="tab-btn-wrap">
+            <div class="tab-btn-wrap"<? if (__isWordcrafter) { ?> data-word-nav="actions"<? } ?>>
               <button
                 class="tab-btn"
                 data-tab="actionsTab"
@@ -4636,14 +4637,6 @@
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
         <div class="ai-word-mode" data-word-default-action="summarize">
-          <div class="ai-word-hero">
-            <div class="ai-word-hero-content">
-              <h3 class="ai-word-hero-title">Acciones de WordCrafterAI</h3>
-              <p class="ai-word-hero-subtitle">
-                Selecciona una acción para que la IA adapte tus textos a diferentes objetivos, tonos y audiencias.
-              </p>
-            </div>
-          </div>
           <div class="ai-word-layout">
             <div id="aiWordAvailableAnchor"></div>
             <div class="ai-word-action-selector">
