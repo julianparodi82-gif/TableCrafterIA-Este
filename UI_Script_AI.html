@@ -5896,15 +5896,29 @@ function collectAskCustomization() {
               }
             });
           }
-          infoElement.innerHTML = '';
+          var tooltipText = '';
+          if (title && description) {
+            tooltipText = title + '\n' + description;
+          } else if (title) {
+            tooltipText = title;
+          } else if (description) {
+            tooltipText = description;
+          }
+          if (tooltipText) {
+            infoElement.setAttribute('data-tooltip', tooltipText);
+            infoElement.removeAttribute('data-tooltip-disabled');
+          } else {
+            infoElement.removeAttribute('data-tooltip');
+            infoElement.setAttribute('data-tooltip-disabled', 'true');
+          }
+          var ariaLabel = 'Información de la acción seleccionada';
           if (title) {
-            var strong = document.createElement('strong');
-            strong.textContent = title;
-            infoElement.appendChild(strong);
+            ariaLabel = 'Información sobre "' + title + '"';
           }
           if (description) {
-            infoElement.appendChild(document.createTextNode(description));
+            ariaLabel += '. ' + description;
           }
+          infoElement.setAttribute('aria-label', ariaLabel);
         };
         var activate = function(action) {
           if (!action || !panelMap[action]) {

@@ -191,22 +191,6 @@
         gap: 8px;
         min-width: 0;
       }
-      .tab-btn-info {
-        font-size: 12px;
-        line-height: 1.4;
-        color: var(--tc-muted);
-        background: rgba(255, 255, 255, 0.74);
-        border: 1px solid var(--tc-border);
-        border-radius: 10px;
-        padding: 8px 12px;
-        box-shadow: 0 8px 18px rgba(15, 76, 129, 0.08);
-      }
-      .tab-btn-info strong {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 2px;
-        color: var(--tc-text);
-      }
       .tab-btn {
         border: 1px solid var(--tc-border);
         background: rgba(255, 255, 255, 0.92);
@@ -254,7 +238,7 @@
         position: absolute;
         left: 50%;
         bottom: calc(100% + 8px);
-        transform: translateX(-50%);
+        transform: translate(-50%, 4px);
         background: var(--tc-tooltip-bg);
         color: #F9FAFB;
         padding: 8px 10px;
@@ -287,8 +271,27 @@
         z-index: 12;
       }
       .tab-btn[data-tooltip]:hover::after,
-      .tab-btn[data-tooltip]:hover::before {
+      .tab-btn[data-tooltip]:hover::before,
+      .tab-btn[data-tooltip]:focus-visible::after,
+      .tab-btn[data-tooltip]:focus-visible::before {
         opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']::after {
+        top: calc(100% + 8px);
+        bottom: auto;
+        transform: translate(-50%, -4px);
+      }
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']::before {
+        top: calc(100% + 4px);
+        bottom: auto;
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
+      }
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']:hover::after,
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']:hover::before,
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']:focus-visible::after,
+      .tab-btn[data-tooltip][data-tooltip-position='bottom']:focus-visible::before {
+        transform: translate(-50%, 0);
       }
       .tc-tooltip-target[data-tooltip],
       .ai-feature-chip-label[data-tooltip] {
@@ -299,8 +302,9 @@
       .ai-feature-chip-label[data-tooltip]::after {
         content: attr(data-tooltip);
         position: absolute;
-        left: 0;
+        left: 50%;
         bottom: calc(100% + 8px);
+        transform: translate(-50%, 4px);
         background: var(--tc-tooltip-bg);
         color: #F9FAFB;
         padding: 8px 10px;
@@ -311,7 +315,6 @@
         max-width: 240px;
         box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
         opacity: 0;
-        transform: translateY(4px);
         transition: opacity 0.15s ease, transform 0.15s ease;
         pointer-events: none;
         z-index: 14;
@@ -325,8 +328,9 @@
       .ai-feature-chip-label[data-tooltip]::before {
         content: '';
         position: absolute;
-        left: 14px;
+        left: 50%;
         bottom: calc(100% + 4px);
+        transform: translateX(-50%);
         border-width: 6px;
         border-style: solid;
         border-color: var(--tc-tooltip-bg) transparent transparent transparent;
@@ -338,18 +342,49 @@
       .tc-tooltip-target[data-tooltip]:hover::after,
       .tc-tooltip-target[data-tooltip]:hover::before,
       .ai-feature-chip-label[data-tooltip]:hover::after,
-      .ai-feature-chip-label[data-tooltip]:hover::before {
+      .ai-feature-chip-label[data-tooltip]:hover::before,
+      .tc-tooltip-target[data-tooltip]:focus-visible::after,
+      .tc-tooltip-target[data-tooltip]:focus-visible::before,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::after,
+      .ai-feature-chip-label[data-tooltip]:focus-visible::before {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, 0);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']::after {
+        top: calc(100% + 8px);
+        bottom: auto;
+        transform: translate(-50%, -4px);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']::before {
+        top: calc(100% + 4px);
+        bottom: auto;
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']:hover::after,
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']:hover::before,
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']:focus-visible::after,
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='bottom']:focus-visible::before {
+        transform: translate(-50%, 0);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']::after,
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']::before {
+        left: 0;
+        transform: translate(0, 4px);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']:hover::after,
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']:hover::before,
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']:focus-visible::after,
+      .tc-tooltip-target[data-tooltip][data-tooltip-align='start']:focus-visible::before {
+        transform: translate(0, 0);
       }
       .ai-report-order-label.tc-tooltip-target[data-tooltip]::after {
-        bottom: auto;
         top: calc(100% + 8px);
-        transform: translateY(-4px);
+        bottom: auto;
+        transform: translate(-50%, -4px);
       }
       .ai-report-order-label.tc-tooltip-target[data-tooltip]::before {
-        bottom: auto;
         top: calc(100% + 4px);
+        bottom: auto;
         border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
       .hidden {
@@ -954,6 +989,13 @@
         font-weight: 600;
         color: #000000;
       }
+      .ai-word-action-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
       .ai-word-action-select-wrapper {
         position: relative;
       }
@@ -973,20 +1015,37 @@
         border-color: var(--tc-primary);
         box-shadow: 0 0 0 3px var(--tc-primary-ring);
       }
-      .ai-word-action-info-card {
-        background: var(--tc-surface);
-        border: 1px solid var(--tc-border);
-        border-radius: 14px;
-        padding: 14px 16px;
-        color: var(--tc-muted);
-        box-shadow: 0 8px 18px rgba(33, 150, 243, 0.12);
+      .ai-word-action-info-trigger {
+        position: relative;
+        border: none;
+        background: rgba(42, 176, 255, 0.18);
+        color: #043351;
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
       }
-      .ai-word-action-info-card strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--tc-text);
+      .ai-word-action-info-trigger:hover,
+      .ai-word-action-info-trigger:focus-visible {
+        background: rgba(42, 176, 255, 0.3);
+        color: #021b2d;
+        box-shadow: 0 0 0 3px rgba(42, 176, 255, 0.25);
+      }
+      .ai-word-action-info-trigger span {
+        font-size: 14px;
+        font-weight: 700;
+        pointer-events: none;
+      }
+      .ai-word-action-info-trigger[data-tooltip-disabled='true'] {
+        background: rgba(42, 176, 255, 0.12);
+        color: rgba(4, 51, 81, 0.5);
+        cursor: not-allowed;
+        box-shadow: none;
+        pointer-events: none;
       }
       .ai-word-panels {
         display: flex;
@@ -3499,96 +3558,82 @@
         </div>
       </div>
       <div class="tab-nav tab-nav-primary">
-        <div class="tab-nav-row tab-nav-row--top">
-          <div class="tab-btn-wrap">
-            <button
-              class="tab-btn active"
-              data-tab="aiTab"
-              data-themes="table word"
-            >
-              Panel IA
-            </button>
-            <div class="tab-btn-info">
-              <strong>Panel IA</strong>
-              Gestiona consultas, reportes y contactos asistidos por IA.
+          <div class="tab-nav-row tab-nav-row--top">
+            <div class="tab-btn-wrap">
+              <button
+                class="tab-btn active"
+                data-tab="aiTab"
+                data-themes="table word"
+                data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
+                data-tooltip-position="bottom"
+              >
+                Panel IA
+              </button>
             </div>
-          </div>
-          <div class="tab-btn-wrap">
-            <button
-              class="tab-btn"
-              data-tab="editTab"
-              data-themes="table word"
-            >
-              <?!= __isWordcrafter ? 'Editar texto' : 'Editar tabla' ?>
-            </button>
-            <div class="tab-btn-info">
-              <strong><?!= __isWordcrafter ? 'Editar texto' : 'Editar tabla' ?></strong>
-              <?!= __isWordcrafter
-                ? 'Revisa y ajusta textos guardados, sus estilos y versiones.'
-                : 'Modifica tablas guardadas y ajusta sus estilos.'
-              ?>
-            </div>
-          </div>
-          <div class="tab-btn-wrap">
-            <button
-              class="tab-btn"
-              data-tab="createTab"
-              data-themes="table word"
-            >
-              <?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?>
-            </button>
-            <div class="tab-btn-info">
-              <strong><?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?></strong>
-              <?!= __isWordcrafter
-                ? 'Genera nuevos contenidos con ayuda de la IA y plantillas base.'
-                : 'Crea nuevas tablas con ayuda de IA y formatos personalizados.'
-              ?>
-            </div>
-          </div>
-          <? if (!__isWordcrafter) { ?>
             <div class="tab-btn-wrap">
               <button
                 class="tab-btn"
-                data-tab="templatesTab"
-                data-themes="table"
+                data-tab="editTab"
+                data-themes="table word"
+                data-tooltip="<?!= __isWordcrafter
+                  ? 'Revisa y ajusta textos guardados, sus estilos y versiones.'
+                  : 'Modifica tablas guardadas y ajusta sus estilos.'
+                ?>"
+                data-tooltip-position="bottom"
               >
-                Plantillas
+                <?!= __isWordcrafter ? 'Editar texto' : 'Editar tabla' ?>
               </button>
-              <div class="tab-btn-info">
-                <strong>Plantillas</strong>
-                Organiza y reutiliza tus plantillas y recursos destacados.
+            </div>
+            <div class="tab-btn-wrap">
+              <button
+                class="tab-btn"
+                data-tab="createTab"
+                data-themes="table word"
+                data-tooltip="<?!= __isWordcrafter
+                  ? 'Genera nuevos contenidos con ayuda de la IA y plantillas base.'
+                  : 'Crea nuevas tablas con ayuda de IA y formatos personalizados.'
+                ?>"
+                data-tooltip-position="bottom"
+              >
+                <?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?>
+              </button>
+            </div>
+            <? if (!__isWordcrafter) { ?>
+              <div class="tab-btn-wrap">
+                <button
+                  class="tab-btn"
+                  data-tab="templatesTab"
+                  data-themes="table"
+                  data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
+                  data-tooltip-position="bottom"
+                >
+                  Plantillas
+                </button>
               </div>
-            </div>
-          <? } ?>
-        </div>
-        <div class="tab-nav-row tab-nav-row--bottom">
-          <div class="tab-btn-wrap">
-            <div class="tab-btn-info">
-              <strong>Triggers</strong>
-              Configura automatizaciones que mantengan tus datos al día.
-            </div>
-            <button
-              class="tab-btn"
-              data-tab="triggersTab"
-              data-themes="table word"
-            >
-              Triggers
-            </button>
+            <? } ?>
           </div>
-          <div class="tab-btn-wrap">
-            <div class="tab-btn-info">
-              <strong>Acciones</strong>
-              Accede y edita reportes, tablas y preguntas guardadas.
+          <div class="tab-nav-row tab-nav-row--bottom">
+            <div class="tab-btn-wrap">
+              <button
+                class="tab-btn"
+                data-tab="triggersTab"
+                data-themes="table word"
+                data-tooltip="Configura automatizaciones que mantengan tus datos al día."
+              >
+                Triggers
+              </button>
             </div>
-            <button
-              class="tab-btn"
-              data-tab="actionsTab"
-              data-themes="table word"
-            >
-              Acciones
-            </button>
+            <div class="tab-btn-wrap">
+              <button
+                class="tab-btn"
+                data-tab="actionsTab"
+                data-themes="table word"
+                data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
+              >
+                Acciones
+              </button>
+            </div>
           </div>
-        </div>
       </div>
 
       <div id="createTab" class="tab-content" data-themes="table word">
@@ -3738,7 +3783,20 @@
           </div>
           <div class="ai-word-layout">
             <div class="ai-word-action-selector">
-              <label for="wordActionSelect">Acción a realizar</label>
+              <div class="ai-word-action-label-row">
+                <label for="wordActionSelect">Acción a realizar</label>
+                <button
+                  type="button"
+                  class="ai-word-action-info-trigger tc-tooltip-target"
+                  id="wordActionInfo"
+                  data-word-action-info
+                  data-tooltip="Redactar texto\nGenera un borrador desde cero a partir de ideas clave e indicaciones."
+                  data-tooltip-position="bottom"
+                  aria-label="Información sobre &quot;Redactar texto&quot;. Genera un borrador desde cero a partir de ideas clave e indicaciones."
+                >
+                  <span aria-hidden="true">i</span>
+                </button>
+              </div>
               <div class="ai-word-action-select-wrapper">
                 <select
                   id="wordActionSelect"
@@ -3788,10 +3846,6 @@
                     Traducir y adaptar
                   </option>
                 </select>
-              </div>
-              <div class="ai-word-action-info-card" id="wordActionInfo" data-word-action-info>
-                <strong>Redactar texto</strong>
-                Genera un borrador desde cero a partir de ideas clave e indicaciones.
               </div>
             </div>
             <div class="ai-word-panels">
