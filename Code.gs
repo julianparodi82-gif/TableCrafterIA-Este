@@ -144,6 +144,12 @@ function setSidebarThemeMode(mode) {
   return normalized;
 }
 
+function switchSidebarTheme(mode) {
+  var normalized = setSidebarThemeMode(mode);
+  showSidebar();
+  return { mode: normalized };
+}
+
 function getActiveDocumentContext() {
   var context = { type: 'sheets' };
   try {

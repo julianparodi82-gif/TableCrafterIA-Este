@@ -3507,47 +3507,51 @@ function playSidebarAnimation() {
         function syncAddonThemeMode(nextTheme, options) {
           const settings = options || {};
           const normalized = nextTheme === 'word' ? 'word' : 'table';
-          const shouldReload = Boolean(settings.reload);
-          const reloadDelay = typeof settings.reloadDelay === 'number' ? settings.reloadDelay : 0;
+          const shouldSwitch = Boolean(settings.reload);
 
-          function triggerReload() {
-            if (!shouldReload) {
-              return;
-            }
-            const doReload = function() {
-              try {
-                window.location.reload();
-              } catch (reloadError) {
-                // En caso de que reload no esté disponible, no hacemos nada.
+          function closeSidebar() {
+            try {
+              if (
+                typeof google !== 'undefined' &&
+                google.script &&
+                google.script.host &&
+                typeof google.script.host.close === 'function'
+              ) {
+                google.script.host.close();
+                return;
               }
-            };
-            if (reloadDelay > 0) {
-              window.setTimeout(doReload, reloadDelay);
-            } else {
-              doReload();
-            }
+            } catch (closeError) {}
+            try {
+              window.location.reload();
+            } catch (reloadError) {}
           }
 
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
-            triggerReload();
+            if (shouldSwitch) {
+              try {
+                window.location.reload();
+              } catch (reloadError) {}
+            }
             return;
           }
+
           try {
-            let runner = google.script.run;
-            if (shouldReload) {
-              runner = runner
+            if (shouldSwitch) {
+              google.script.run
                 .withSuccessHandler(function() {
-                  triggerReload();
+                  closeSidebar();
                 })
                 .withFailureHandler(function() {
-                  triggerReload();
-                });
+                  closeSidebar();
+                })
+                .switchSidebarTheme(normalized);
             } else {
-              runner = runner.withFailureHandler(function() {});
+              google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(normalized);
             }
-            runner.setSidebarThemeMode(normalized);
           } catch (error) {
-            triggerReload();
+            if (shouldSwitch) {
+              closeSidebar();
+            }
           }
         }
 
