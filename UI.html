@@ -4126,7 +4126,11 @@
         <? if (__isWordcrafter) { ?>
         <div id="wordCreateForm" class="word-create-form">
           <div class="section word-range-toggle" data-word-range-toggle>
-            <label class="word-toggle-option">
+            <label
+              class="word-toggle-option tc-tooltip-target"
+              data-tooltip="Activa esta opción para elegir un rango específico; si la dejas desactivada, WordCrafter insertará el texto en la posición actual del cursor."
+              data-tooltip-position="top"
+            >
               <input type="checkbox" id="wordRangeManualToggle" />
               Seleccionar un rango manualmente
             </label>
