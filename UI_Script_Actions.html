@@ -4,6 +4,23 @@ const ACTION_CHANNEL_LABELS = Object.freeze({
   email: 'Correo electrónico',
   whatsapp: 'WhatsApp'
 });
+const REPORT_FORMAT_LABELS_IN_ACTIONS =
+  typeof REPORT_FORMAT_LABELS !== 'undefined'
+    ? REPORT_FORMAT_LABELS
+    : {
+        pdf: 'PDF',
+        excel: 'Excel',
+        sheets: 'Google Sheets'
+      };
+const REPORT_FEATURE_LABELS_IN_ACTIONS =
+  typeof REPORT_FEATURE_LABELS !== 'undefined'
+    ? REPORT_FEATURE_LABELS
+    : {
+        chart: 'Gráfico',
+        table: 'Tabla',
+        list: 'Lista',
+        summary: 'Resumen'
+      };
 const ACTION_EDITOR_DEFAULT_SUBTITLE =
   'Ajustá las características guardadas y actualizá el favorito directamente desde este panel.';
 
@@ -406,7 +423,7 @@ function buildReportFavoriteSummary(action) {
   }
   const parts = [];
   if (action.format) {
-    const formatLabel = REPORT_FORMAT_LABELS[action.format] || action.format;
+    const formatLabel = REPORT_FORMAT_LABELS_IN_ACTIONS[action.format] || action.format;
     parts.push('Formato: ' + formatLabel);
   }
   if (Array.isArray(action.featureDetails) && action.featureDetails.length > 0) {
@@ -416,7 +433,7 @@ function buildReportFavoriteSummary(action) {
           return '';
         }
         const featureId = detail.feature;
-        const baseLabel = REPORT_FEATURE_LABELS[featureId] || featureId;
+        const baseLabel = REPORT_FEATURE_LABELS_IN_ACTIONS[featureId] || featureId;
         const quantity = detail.quantity;
         if (typeof quantity === 'number' && quantity > 1) {
           return baseLabel + ' × ' + quantity;
@@ -432,7 +449,7 @@ function buildReportFavoriteSummary(action) {
   } else if (Array.isArray(action.features) && action.features.length > 0) {
     const labels = action.features
       .map(function(feature) {
-        return REPORT_FEATURE_LABELS[feature] || feature;
+        return REPORT_FEATURE_LABELS_IN_ACTIONS[feature] || feature;
       })
       .filter(function(label) {
         return !!label;
