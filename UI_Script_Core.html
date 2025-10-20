@@ -3137,41 +3137,65 @@ document.addEventListener('DOMContentLoaded', function() {
             ? String(window.__activeDocContext.type)
             : body && body.getAttribute('data-active-context');
 
-        function syncWordCreateRangeVisibility(contextType) {
+        function syncWordCreateRangeVisibility(contextType, options) {
+          options = options || {};
           const normalized = (contextType || '').toLowerCase();
           const showSpreadsheetRange =
             normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
           const sheetSections = document.querySelectorAll('[data-word-range-sheet]');
           const docSections = document.querySelectorAll('[data-word-range-doc]');
+          const toggleContainer = document.querySelector('[data-word-range-toggle]');
+          const manualToggle = document.getElementById('wordRangeManualToggle');
+          if (toggleContainer) {
+            toggleContainer.classList.toggle('is-hidden', showSpreadsheetRange);
+          }
+          if (manualToggle) {
+            if (showSpreadsheetRange) {
+              manualToggle.checked = true;
+              manualToggle.disabled = true;
+              manualToggle.dataset.forced = 'true';
+            } else {
+              manualToggle.disabled = false;
+              if (manualToggle.dataset.forced === 'true') {
+                manualToggle.checked = false;
+                delete manualToggle.dataset.forced;
+              }
+            }
+          }
+          const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
           sheetSections.forEach(function(section) {
             if (!section) {
               return;
             }
-            section.classList.toggle('is-hidden', !showSpreadsheetRange);
+            section.classList.toggle('is-hidden', !manualEnabled);
           });
           docSections.forEach(function(section) {
             if (!section) {
               return;
             }
-            section.classList.toggle('is-hidden', showSpreadsheetRange);
+            section.classList.toggle('is-hidden', manualEnabled);
           });
           const rangeInput = document.getElementById('rangeInput');
           if (rangeInput) {
-            rangeInput.disabled = !showSpreadsheetRange;
-            if (!showSpreadsheetRange) {
+            rangeInput.disabled = !manualEnabled;
+            if (!manualEnabled) {
               rangeInput.value = '';
               rangeInput.dataset.manual = 'false';
             }
           }
           const refreshBtn = document.getElementById('refreshRangeBtn');
           if (refreshBtn) {
-            refreshBtn.disabled = !showSpreadsheetRange;
+            refreshBtn.disabled = !manualEnabled;
           }
-          if (!showSpreadsheetRange && typeof clearRangeUI === 'function') {
+          if (!manualEnabled && typeof clearRangeUI === 'function' && !options.preserveRange) {
             try {
               clearRangeUI();
             } catch (error) {}
           }
+        }
+
+        if (typeof window !== 'undefined') {
+          window.syncWordCreateRangeVisibility = syncWordCreateRangeVisibility;
         }
 
         const normalizedContext = activeContextInfo ? activeContextInfo.toLowerCase() : 'sheets';
@@ -3179,6 +3203,14 @@ document.addEventListener('DOMContentLoaded', function() {
           body.dataset.activeContext = normalizedContext;
         }
         syncWordCreateRangeVisibility(normalizedContext);
+
+        const wordRangeToggle = document.getElementById('wordRangeManualToggle');
+        if (wordRangeToggle) {
+          wordRangeToggle.addEventListener('change', function() {
+            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
+            syncWordCreateRangeVisibility(contextForToggle, { preserveRange: false });
+          });
+        }
 
         if (typeof setupWordToggleFields === 'function') {
           const wordCreateForm = document.getElementById('wordCreateForm');

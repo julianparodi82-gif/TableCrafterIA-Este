@@ -4098,6 +4098,12 @@
       <div id="createTab" class="tab-content" data-themes="table word">
         <? if (__isWordcrafter) { ?>
         <div id="wordCreateForm" class="word-create-form">
+          <div class="section word-range-toggle" data-word-range-toggle>
+            <label class="word-toggle-option">
+              <input type="checkbox" id="wordRangeManualToggle" />
+              Seleccionar un rango manualmente
+            </label>
+          </div>
           <div class="section" data-word-range-sheet>
             <div class="range-row">
               <div>
@@ -4124,7 +4130,7 @@
               WordCrafter combinará esas celdas y colocará el contenido comenzando en la primera celda del rango.
             </div>
           </div>
-          <div class="section word-doc-location is-hidden" data-word-range-doc>
+          <div class="section word-doc-location" data-word-range-doc>
             <div class="word-range-label-row">
               <span class="word-create-subheading">Ubicación del resultado</span>
               <button

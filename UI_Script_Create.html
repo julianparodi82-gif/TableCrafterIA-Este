@@ -108,6 +108,7 @@ function resetWordCreateFields(root) {
           wordBodyIntro: true,
           wordBodyCTA: false,
           wordUseWebSources: false,
+          wordRangeManualToggle: false,
           wordAutoTitleToggle: false,
           wordTitleFormatToggle: false,
           wordBodyAutoStyle: false
@@ -153,7 +154,7 @@ function resetWordCreateFields(root) {
             select.dispatchEvent(event);
           }
         });
-        ['wordAutoTitleToggle', 'wordTitleFormatToggle', 'wordBodyAutoStyle'].forEach(function(id) {
+        ['wordAutoTitleToggle', 'wordTitleFormatToggle', 'wordBodyAutoStyle', 'wordRangeManualToggle'].forEach(function(id) {
           const checkbox = document.getElementById(id);
           if (checkbox) {
             const event = document.createEvent('Event');
