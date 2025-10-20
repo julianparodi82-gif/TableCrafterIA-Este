@@ -206,6 +206,12 @@
         max-width: none;
         width: 100%;
       }
+      .theme-wordcrafter .tab-nav-row--bottom [data-word-nav='triggers'] {
+        justify-self: start;
+      }
+      .theme-wordcrafter .tab-nav-row--bottom [data-word-nav='actions'] {
+        justify-self: end;
+      }
       .tab-btn-wrap {
         display: flex;
         flex-direction: column;
@@ -1089,6 +1095,51 @@
         font-size: 12px;
         color: rgba(5, 52, 85, 0.75);
       }
+      .word-collapsible {
+        border: 1px solid rgba(5, 52, 85, 0.18);
+        border-radius: 14px;
+        background: rgba(236, 249, 255, 0.45);
+        padding: 0;
+        overflow: hidden;
+      }
+      .word-collapsible summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        list-style: none;
+        padding: 14px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #05314d;
+        cursor: pointer;
+      }
+      .word-collapsible summary::-webkit-details-marker {
+        display: none;
+      }
+      .word-collapsible-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+      }
+      .word-collapsible-icon::before {
+        content: '\25BE';
+        font-size: 16px;
+        line-height: 1;
+        color: #0b3a5c;
+        transition: transform 0.18s ease;
+      }
+      .word-collapsible[open] .word-collapsible-icon::before {
+        transform: rotate(180deg);
+      }
+      .word-collapsible-body {
+        display: grid;
+        gap: 16px;
+        padding: 16px 18px 18px;
+        border-top: 1px solid rgba(5, 52, 85, 0.12);
+      }
       .word-brief-field {
         display: grid;
         gap: 8px;
@@ -1121,9 +1172,9 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 500;
-        color: rgba(5, 49, 77, 0.76);
+        color: rgba(5, 49, 77, 0.6);
         line-height: 1.35;
       }
       .word-range-toggle-option input[type='checkbox'] {
@@ -1134,6 +1185,16 @@
       .word-range-toggle--forced .word-range-toggle-option {
         opacity: 0.65;
         cursor: not-allowed;
+      }
+      .word-range-cursor-note {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(5, 49, 77, 0.65);
+      }
+      .word-range-merge-note {
+        margin-top: 4px;
+        font-size: 12px;
+        color: rgba(5, 49, 77, 0.72);
       }
       .ai-word-available-card {
         background: rgba(255, 255, 255, 0.96);
@@ -4147,14 +4208,17 @@
           <div class="section word-range-section">
             <div class="word-range-toggle" data-word-range-toggle>
               <label
-                class="word-range-toggle-option tc-tooltip-target"
-                data-tooltip="Activa esta opción para trabajar con un rango específico; si la dejas desactivada, WordCrafter insertará el texto exactamente donde tengas el cursor al ejecutar la acción."
+                class="word-range-toggle-option checkbox-subtle tc-tooltip-target"
+                data-tooltip="Activa esta opción para trabajar con un rango específico; si la dejas desactivada, WordCrafter insertará el texto justo donde tengas el cursor cuando ejecutes la acción."
                 data-tooltip-position="top"
               >
                 <input type="checkbox" id="wordRangeManualToggle" />
                 Seleccionar un rango manualmente
               </label>
             </div>
+            <p class="word-range-cursor-note" data-word-range-cursor-note>
+              El texto generado se insertará en la posición actual del cursor cuando ejecutes la acción.
+            </p>
             <div class="word-range-sheet is-hidden" data-word-range-sheet>
               <div class="range-row">
                 <div>
@@ -4177,7 +4241,7 @@
                 </button>
               </div>
               <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
-              <div class="small-text" style="margin-top:4px;">
+              <div class="small-text word-range-merge-note">
                 WordCrafter combinará esas celdas y colocará el contenido comenzando en la primera celda del rango.
               </div>
             </div>
@@ -4196,7 +4260,7 @@
                   id="wordAutoTitleToggle"
                   data-word-check-target="wordAutoTitleOptions"
                 />
-                Crear título con IA
+                Generar título automáticamente con IA
               </label>
               <div id="wordAutoTitleOptions" class="word-toggle-panel ai-hidden">
                 <div class="ai-word-field-grid">
@@ -4238,73 +4302,81 @@
                   id="wordTitleFormatToggle"
                   data-word-check-target="wordTitleFormatFields"
                 />
-                Configurar formato del título manualmente
+                Personalizar formato del título
               </label>
               <div id="wordTitleFormatFields" class="word-toggle-panel ai-hidden">
-                <div class="word-config-grid">
-                  <div class="ai-word-field">
-                    <label for="wordTitleFont">Fuente</label>
-                    <select id="wordTitleFont">
-                      <option value="inter" selected>Inter</option>
-                      <option value="georgia">Georgia</option>
-                      <option value="times">Times New Roman</option>
-                      <option value="arial">Arial</option>
-                    </select>
+                <details class="word-collapsible" data-word-title-collapse open>
+                  <summary>
+                    Opciones de formato
+                    <span class="word-collapsible-icon" aria-hidden="true"></span>
+                  </summary>
+                  <div class="word-collapsible-body">
+                    <div class="word-config-grid">
+                      <div class="ai-word-field">
+                        <label for="wordTitleFont">Fuente</label>
+                        <select id="wordTitleFont">
+                          <option value="inter" selected>Inter</option>
+                          <option value="georgia">Georgia</option>
+                          <option value="times">Times New Roman</option>
+                          <option value="arial">Arial</option>
+                        </select>
+                      </div>
+                      <div class="ai-word-field">
+                        <label for="wordTitleColor">Color de letra</label>
+                        <input type="color" id="wordTitleColor" value="#0F172A" />
+                      </div>
+                      <div class="ai-word-field">
+                        <label for="wordTitleSize">Tamaño</label>
+                        <select id="wordTitleSize">
+                          <option value="xl">Muy grande (48 pt)</option>
+                          <option value="lg" selected>Grande (36 pt)</option>
+                          <option value="md">Medio (28 pt)</option>
+                          <option value="sm">Pequeño (22 pt)</option>
+                        </select>
+                      </div>
+                      <div class="ai-word-field">
+                        <label for="wordTitleAlign">Alineación</label>
+                        <select id="wordTitleAlign">
+                          <option value="center" selected>Centro</option>
+                          <option value="left">Izquierda</option>
+                          <option value="right">Derecha</option>
+                          <option value="justify">Justificado</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="word-config-checkboxes">
+                      <label
+                        class="tc-tooltip-target"
+                        data-tooltip="Resalta el título para que destaque en la primera lectura."
+                        data-tooltip-position="top"
+                      >
+                        <input type="checkbox" id="wordTitleBold" checked /> Negrita
+                      </label>
+                      <label
+                        class="tc-tooltip-target"
+                        data-tooltip="Añade un estilo editorial al título sin perder legibilidad."
+                        data-tooltip-position="top"
+                      >
+                        <input type="checkbox" id="wordTitleItalic" /> Cursiva
+                      </label>
+                      <label
+                        class="tc-tooltip-target"
+                        data-tooltip="Convierte el título en mayúsculas para dar un aspecto institucional."
+                        data-tooltip-position="top"
+                      >
+                        <input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas
+                      </label>
+                      <label
+                        class="tc-tooltip-target"
+                        data-tooltip="Subraya el título con una línea discreta acorde al estilo Word."
+                        data-tooltip-position="top"
+                      >
+                        <input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil
+                      </label>
+                    </div>
+                    <div class="word-config-note">Estas preferencias sirven como guía para el formato final del encabezado principal.</div>
                   </div>
-                  <div class="ai-word-field">
-                    <label for="wordTitleColor">Color de letra</label>
-                    <input type="color" id="wordTitleColor" value="#0F172A" />
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordTitleSize">Tamaño</label>
-                    <select id="wordTitleSize">
-                      <option value="xl">Muy grande (48 pt)</option>
-                      <option value="lg" selected>Grande (36 pt)</option>
-                      <option value="md">Medio (28 pt)</option>
-                      <option value="sm">Pequeño (22 pt)</option>
-                    </select>
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordTitleAlign">Alineación</label>
-                    <select id="wordTitleAlign">
-                      <option value="center" selected>Centro</option>
-                      <option value="left">Izquierda</option>
-                      <option value="right">Derecha</option>
-                      <option value="justify">Justificado</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="word-config-checkboxes">
-                  <label
-                    class="tc-tooltip-target"
-                    data-tooltip="Resalta el título para que destaque en la primera lectura."
-                    data-tooltip-position="top"
-                  >
-                    <input type="checkbox" id="wordTitleBold" checked /> Negrita
-                  </label>
-                  <label
-                    class="tc-tooltip-target"
-                    data-tooltip="Añade un estilo editorial al título sin perder legibilidad."
-                    data-tooltip-position="top"
-                  >
-                    <input type="checkbox" id="wordTitleItalic" /> Cursiva
-                  </label>
-                  <label
-                    class="tc-tooltip-target"
-                    data-tooltip="Convierte el título en mayúsculas para dar un aspecto institucional."
-                    data-tooltip-position="top"
-                  >
-                    <input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas
-                  </label>
-                  <label
-                    class="tc-tooltip-target"
-                    data-tooltip="Subraya el título con una línea discreta acorde al estilo Word."
-                    data-tooltip-position="top"
-                  >
-                    <input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil
-                  </label>
-                </div>
-                <div class="word-config-note">Estas preferencias sirven como guía para el formato final del encabezado principal.</div>
+                </details>
               </div>
             </div>
             <div class="word-brief-field">
@@ -4314,9 +4386,9 @@
                 data-tooltip="Describe el tipo de texto, el público objetivo y cualquier detalle clave que deba considerar la IA."
                 data-tooltip-position="top"
               >
-                Explica qué tipo de texto necesitas
+                Descripción del texto
               </label>
-              <textarea id="tableDesc" placeholder="Ej. Informe ejecutivo sobre resultados del Q4 con foco en logros del equipo"></textarea>
+              <textarea id="tableDesc" placeholder="Describe el propósito del texto, público objetivo, tono esperado y referencias clave"></textarea>
             </div>
           </div>
           <div class="section word-body-section">
@@ -4612,14 +4684,6 @@
                     <div class="small-text" style="margin-top:4px;">
                       WordCrafter combinará esas celdas y aplicará los cambios desde la primera celda del rango.
                     </div>
-                  </div>
-                  <div class="word-edit-range-doc" data-word-edit-range-doc>
-                    <div class="word-range-label-row">
-                      <span class="word-create-subheading">Ubicación del resultado</span>
-                    </div>
-                    <p class="word-range-note">
-                      El texto editado se insertará en la posición actual del cursor cuando ejecutes la acción.
-                    </p>
                   </div>
                 </div>
                 <div class="word-edit-details-header">
