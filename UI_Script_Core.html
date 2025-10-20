@@ -3143,7 +3143,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const showSpreadsheetRange =
             normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
           const sheetSections = document.querySelectorAll('[data-word-range-sheet]');
-          const docSections = document.querySelectorAll('[data-word-range-doc]');
           const toggleContainer = document.querySelector('[data-word-range-toggle]');
           const manualToggle = document.getElementById('wordRangeManualToggle');
           if (manualToggle) {
@@ -3169,12 +3168,6 @@ document.addEventListener('DOMContentLoaded', function() {
               return;
             }
             section.classList.toggle('is-hidden', !manualEnabled);
-          });
-          docSections.forEach(function(section) {
-            if (!section) {
-              return;
-            }
-            section.classList.toggle('is-hidden', manualEnabled);
           });
           const rangeInput = document.getElementById('rangeInput');
           if (rangeInput) {

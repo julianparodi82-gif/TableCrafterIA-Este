@@ -199,16 +199,12 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .theme-wordcrafter .tab-nav-row--bottom {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        max-width: 720px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 520px;
       }
-      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap[data-word-nav='triggers'] {
-        grid-column: 1 / span 2;
-        justify-self: center;
-      }
-      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap[data-word-nav='actions'] {
-        grid-column: 2 / span 2;
-        justify-self: center;
+      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap {
+        max-width: none;
+        width: 100%;
       }
       .tab-btn-wrap {
         display: flex;
@@ -1107,14 +1103,37 @@
       .word-body-header .word-create-subheading {
         margin: 0;
       }
-      .word-doc-location {
-        border-radius: 16px;
-        background: rgba(217, 242, 255, 0.35);
-        border: 1px solid rgba(42, 176, 255, 0.24);
-        padding: 16px;
+      .word-range-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
-      .word-doc-location .word-range-note {
-        margin: 12px 0 0;
+      .word-range-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .word-range-sheet {
+        display: grid;
+        gap: 12px;
+      }
+      .word-range-toggle-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: rgba(5, 49, 77, 0.76);
+        line-height: 1.35;
+      }
+      .word-range-toggle-option input[type='checkbox'] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+      .word-range-toggle--forced .word-range-toggle-option {
+        opacity: 0.65;
+        cursor: not-allowed;
       }
       .ai-word-available-card {
         background: rgba(255, 255, 255, 0.96);
@@ -4125,58 +4144,43 @@
       <div id="createTab" class="tab-content" data-themes="table word">
         <? if (__isWordcrafter) { ?>
         <div id="wordCreateForm" class="word-create-form">
-          <div class="section word-range-toggle" data-word-range-toggle>
-            <label
-              class="word-toggle-option tc-tooltip-target"
-              data-tooltip="Activa esta opción para elegir un rango específico; si la dejas desactivada, WordCrafter insertará el texto en la posición actual del cursor."
-              data-tooltip-position="top"
-            >
-              <input type="checkbox" id="wordRangeManualToggle" />
-              Seleccionar un rango manualmente
-            </label>
-          </div>
-          <div class="section" data-word-range-sheet>
-            <div class="range-row">
-              <div>
-                <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
-              </div>
-              <div class="range-actions">
-                <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
-              </div>
-            </div>
-            <div class="word-range-label-row" style="margin-top:12px;">
-              <label for="rangeInput">Rango a utilizar</label>
-              <button
-                type="button"
-                class="word-range-info-trigger tc-tooltip-target"
-                data-tooltip="Todas esas celdas se combinarán automáticamente al insertar el texto generado."
-                data-tooltip-position="bottom"
-                aria-label="Información sobre el rango a utilizar"
-              >
-                <span aria-hidden="true">i</span>
-              </button>
-            </div>
-            <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
-            <div class="small-text" style="margin-top:4px;">
-              WordCrafter combinará esas celdas y colocará el contenido comenzando en la primera celda del rango.
-            </div>
-          </div>
-          <div class="section word-doc-location" data-word-range-doc>
-            <div class="word-range-label-row">
-              <span class="word-create-subheading">Ubicación del resultado</span>
-              <button
-                type="button"
-                class="word-range-info-trigger tc-tooltip-target"
-                data-tooltip="El texto final se insertará exactamente donde esté el cursor de escritura activo."
+          <div class="section word-range-section">
+            <div class="word-range-toggle" data-word-range-toggle>
+              <label
+                class="word-range-toggle-option tc-tooltip-target"
+                data-tooltip="Activa esta opción para trabajar con un rango específico; si la dejas desactivada, WordCrafter insertará el texto exactamente donde tengas el cursor al ejecutar la acción."
                 data-tooltip-position="top"
-                aria-label="Información sobre la ubicación del resultado"
               >
-                <span aria-hidden="true">i</span>
-              </button>
+                <input type="checkbox" id="wordRangeManualToggle" />
+                Seleccionar un rango manualmente
+              </label>
             </div>
-            <p class="word-range-note">
-              El texto se pegará donde se encuentre el cursor de escritura cuando ejecutes la acción.
-            </p>
+            <div class="word-range-sheet is-hidden" data-word-range-sheet>
+              <div class="range-row">
+                <div>
+                  <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+                </div>
+                <div class="range-actions">
+                  <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+                </div>
+              </div>
+              <div class="word-range-label-row" style="margin-top:12px;">
+                <label for="rangeInput">Rango a utilizar</label>
+                <button
+                  type="button"
+                  class="word-range-info-trigger tc-tooltip-target"
+                  data-tooltip="Todas esas celdas se combinarán automáticamente al insertar el texto generado."
+                  data-tooltip-position="bottom"
+                  aria-label="Información sobre el rango a utilizar"
+                >
+                  <span aria-hidden="true">i</span>
+                </button>
+              </div>
+              <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
+              <div class="small-text" style="margin-top:4px;">
+                WordCrafter combinará esas celdas y colocará el contenido comenzando en la primera celda del rango.
+              </div>
+            </div>
           </div>
           <div class="section word-title-section">
             <label for="tableName">Título del texto</label>
