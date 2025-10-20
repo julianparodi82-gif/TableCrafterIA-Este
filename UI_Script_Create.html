@@ -117,6 +117,8 @@ function resetWordCreateFields(root) {
           const checkbox = document.getElementById(id);
           if (checkbox) {
             checkbox.checked = checkboxDefaults[id];
+            delete checkbox.dataset.userOverride;
+            delete checkbox.dataset.wordRangeContext;
           }
         });
         const textDefaults = [

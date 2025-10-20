@@ -3146,24 +3146,30 @@ document.addEventListener('DOMContentLoaded', function() {
           const cursorNotes = document.querySelectorAll('[data-word-range-cursor-note]');
           const toggleContainer = document.querySelector('[data-word-range-toggle]');
           const manualToggle = document.getElementById('wordRangeManualToggle');
+          let manualOverride = false;
           if (manualToggle) {
+            manualOverride = manualToggle.dataset.userOverride === 'true';
+            manualToggle.disabled = false;
             if (showSpreadsheetRange) {
-              manualToggle.checked = true;
-              manualToggle.disabled = true;
-              manualToggle.dataset.forced = 'true';
+              if (!manualOverride && !manualToggle.checked) {
+                manualToggle.checked = true;
+              }
+              manualToggle.dataset.wordRangeContext = 'sheet';
             } else {
-              manualToggle.disabled = false;
-              if (manualToggle.dataset.forced === 'true') {
+              if (!manualOverride && manualToggle.checked) {
                 manualToggle.checked = false;
-                delete manualToggle.dataset.forced;
+              }
+              manualToggle.dataset.wordRangeContext = 'doc';
+              if (!manualToggle.checked) {
+                delete manualToggle.dataset.userOverride;
               }
             }
           }
+          const manualEnabled = !!(manualToggle && manualToggle.checked);
           if (toggleContainer) {
-            toggleContainer.classList.remove('is-hidden');
-            toggleContainer.classList.toggle('word-range-toggle--forced', showSpreadsheetRange);
+            toggleContainer.classList.toggle('is-hidden', !showSpreadsheetRange && !manualEnabled);
+            toggleContainer.classList.toggle('word-range-toggle--forced', showSpreadsheetRange && !manualOverride);
           }
-          const manualEnabled = showSpreadsheetRange || (manualToggle && manualToggle.checked);
           cursorNotes.forEach(function(note) {
             if (!note) {
               return;
@@ -3266,7 +3272,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const wordRangeToggle = document.getElementById('wordRangeManualToggle');
         if (wordRangeToggle) {
-          wordRangeToggle.addEventListener('change', function() {
+          wordRangeToggle.addEventListener('change', function(event) {
+            if (event && event.isTrusted) {
+              wordRangeToggle.dataset.userOverride = 'true';
+            } else if (!wordRangeToggle.checked) {
+              delete wordRangeToggle.dataset.userOverride;
+            }
             const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
             syncWordCreateRangeVisibility(contextForToggle, { preserveRange: false });
           });
