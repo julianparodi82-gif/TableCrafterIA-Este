@@ -3127,6 +3127,114 @@ document.addEventListener('DOMContentLoaded', function() {
         const themeMessageDismiss = document.getElementById('themeMessageDismiss');
         const body = document.body;
         const container = document.querySelector('.container');
+        const wordTemplateConfigs = [
+          {
+            key: 'create',
+            mountSelector: '[data-word-mount="create"]',
+            templateId: 'word-create-template',
+            onMount: function() {
+              if (typeof resetWordCreateFields === 'function') {
+                try {
+                  resetWordCreateFields();
+                } catch (error) {}
+              }
+            }
+          },
+          {
+            key: 'edit',
+            mountSelector: '[data-word-mount="edit"]',
+            templateId: 'word-edit-template'
+          }
+        ];
+        let wordToggleFieldsInitialized = false;
+
+        const tableCreateIdList = [
+          'rangeLabel',
+          'refreshRangeBtn',
+          'rangeInput',
+          'tableName',
+          'tableDesc',
+          'headersList',
+          'colorHeader',
+          'colorAlt1',
+          'colorAlt2',
+          'toggleBorder',
+          'toggleBold',
+          'applyFormatBtn',
+          'saveTableBtn'
+        ];
+
+        tableCreateIdList.forEach(function(id) {
+          const element = document.getElementById(id);
+          if (element && !element.dataset.tableId) {
+            element.dataset.tableId = id;
+          }
+        });
+
+        function toggleTableCreateIds(disable) {
+          const elements = document.querySelectorAll('[data-table-id]');
+          elements.forEach(function(element) {
+            const storedId = element.dataset.tableId;
+            if (!storedId) {
+              return;
+            }
+            if (disable) {
+              if (element.id === storedId) {
+                element.removeAttribute('id');
+              }
+            } else if (!element.id) {
+              element.id = storedId;
+            }
+          });
+        }
+
+        function mountWordTemplate(config) {
+          if (!config) {
+            return;
+          }
+          const mount = document.querySelector(config.mountSelector);
+          if (!mount || mount.dataset.wordMounted === 'true') {
+            return;
+          }
+          const template = document.getElementById(config.templateId);
+          if (!template || !template.content) {
+            return;
+          }
+          const fragment = template.content.cloneNode(true);
+          mount.appendChild(fragment);
+          mount.dataset.wordMounted = 'true';
+          mountedWordViews[config.key] = true;
+          if (typeof config.onMount === 'function') {
+            try {
+              config.onMount();
+            } catch (error) {}
+          }
+        }
+
+        function ensureWordTemplatesMountedForTheme(theme) {
+          if (theme !== 'word') {
+            const mounts = document.querySelectorAll('[data-word-mount]');
+            mounts.forEach(function(mount) {
+              if (!mount) {
+                return;
+              }
+              if (mount.dataset.wordMounted === 'true') {
+                mount.innerHTML = '';
+                delete mount.dataset.wordMounted;
+              }
+            });
+            wordToggleFieldsInitialized = false;
+            toggleTableCreateIds(false);
+            return;
+          }
+          toggleTableCreateIds(true);
+          wordTemplateConfigs.forEach(function(config) {
+            try {
+              mountWordTemplate(config);
+            } catch (error) {}
+          });
+          initializeWordUi();
+        }
         sidebarContainer = container;
         if (sidebarEntryCleanupTimeout) {
           window.clearTimeout(sidebarEntryCleanupTimeout);
@@ -3258,6 +3366,39 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        function initializeWordUi() {
+          const wordCreateForm = document.getElementById('wordCreateForm');
+          if (wordCreateForm && !wordToggleFieldsInitialized && typeof setupWordToggleFields === 'function') {
+            try {
+              setupWordToggleFields(wordCreateForm);
+            } catch (error) {}
+            wordToggleFieldsInitialized = true;
+          }
+
+          const wordRangeToggle = document.getElementById('wordRangeManualToggle');
+          if (wordRangeToggle && !wordRangeToggle.dataset.bound) {
+            wordRangeToggle.addEventListener('change', function(event) {
+              if (event && event.isTrusted) {
+                wordRangeToggle.dataset.userOverride = 'true';
+              } else if (!wordRangeToggle.checked) {
+                delete wordRangeToggle.dataset.userOverride;
+              }
+              refreshWordRangeUi({ preserveRange: false });
+            });
+            wordRangeToggle.dataset.bound = 'true';
+          }
+
+          const wordEditRangeToggle = document.getElementById('wordEditManualRangeToggle');
+          if (wordEditRangeToggle && !wordEditRangeToggle.dataset.bound) {
+            wordEditRangeToggle.addEventListener('change', function() {
+              refreshWordRangeUi({ preserveRange: false });
+            });
+            wordEditRangeToggle.dataset.bound = 'true';
+          }
+
+          refreshWordRangeUi({ preserveRange: true });
+        }
+
         if (typeof window !== 'undefined') {
           window.syncWordCreateRangeVisibility = syncWordCreateRangeVisibility;
           window.syncWordEditRangeVisibility = syncWordEditRangeVisibility;
@@ -3267,38 +3408,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (body) {
           body.dataset.activeContext = normalizedContext;
         }
-        syncWordCreateRangeVisibility(normalizedContext);
-        syncWordEditRangeVisibility(normalizedContext);
-
-        const wordRangeToggle = document.getElementById('wordRangeManualToggle');
-        if (wordRangeToggle) {
-          wordRangeToggle.addEventListener('change', function(event) {
-            if (event && event.isTrusted) {
-              wordRangeToggle.dataset.userOverride = 'true';
-            } else if (!wordRangeToggle.checked) {
-              delete wordRangeToggle.dataset.userOverride;
-            }
-            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
-            syncWordCreateRangeVisibility(contextForToggle, { preserveRange: false });
-          });
+        function refreshWordRangeUi(options) {
+          const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
+          syncWordCreateRangeVisibility(contextForToggle, options);
+          syncWordEditRangeVisibility(contextForToggle, options);
         }
 
-        const wordEditRangeToggle = document.getElementById('wordEditManualRangeToggle');
-        if (wordEditRangeToggle) {
-          wordEditRangeToggle.addEventListener('change', function() {
-            const contextForToggle = body && body.dataset.activeContext ? body.dataset.activeContext : normalizedContext;
-            syncWordEditRangeVisibility(contextForToggle, { preserveRange: false });
-          });
-        }
-
-        if (typeof setupWordToggleFields === 'function') {
-          const wordCreateForm = document.getElementById('wordCreateForm');
-          if (wordCreateForm) {
-            try {
-              setupWordToggleFields(wordCreateForm);
-            } catch (error) {}
-          }
-        }
+        refreshWordRangeUi({ preserveRange: true });
 
         if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
@@ -3504,42 +3620,14 @@ function playSidebarAnimation() {
           }, 700);
         }
 
-        function syncAddonThemeMode(nextTheme, options) {
-          const settings = options || {};
+        function syncAddonThemeMode(nextTheme) {
           const normalized = nextTheme === 'word' ? 'word' : 'table';
-          const shouldSwitch = Boolean(settings.reload);
-
-          function reloadFallback() {
-            try {
-              window.location.reload();
-            } catch (reloadError) {}
-          }
-
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
-            if (shouldSwitch) {
-              reloadFallback();
-            }
             return;
           }
-
           try {
-            if (shouldSwitch) {
-              google.script.run
-                .withSuccessHandler(function() {
-                  // La nueva vista se muestra desde Apps Script con showSidebar().
-                })
-                .withFailureHandler(function() {
-                  reloadFallback();
-                })
-                .switchSidebarTheme(normalized);
-            } else {
-              google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(normalized);
-            }
-          } catch (error) {
-            if (shouldSwitch) {
-              reloadFallback();
-            }
-          }
+            google.script.run.withFailureHandler(function() {}).setSidebarThemeMode(normalized);
+          } catch (error) {}
         }
 
         function applyTheme(isWordcrafter, options) {
@@ -3548,6 +3636,7 @@ function playSidebarAnimation() {
           const nextTheme = isWordcrafter ? 'word' : 'table';
           const previousTheme = currentTheme;
           const themeChanged = nextTheme !== previousTheme;
+          ensureWordTemplatesMountedForTheme(nextTheme);
           if (animate && themeChanged) {
             playSidebarAnimation();
           }
@@ -3568,9 +3657,9 @@ function playSidebarAnimation() {
           syncTabButtonLabels(nextTheme);
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
-          const shouldReload = themeChanged && previousTheme !== null;
+          refreshWordRangeUi({ preserveRange: true });
           if (themeChanged || settings.forceSync) {
-            syncAddonThemeMode(nextTheme, { reload: shouldReload });
+            syncAddonThemeMode(nextTheme);
           }
         }
 
