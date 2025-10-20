@@ -54,12 +54,137 @@ function resetCreateTabView(options) {
             descInput.value = '';
           }
           setDefaultStyles();
+          resetWordCreateFields();
         }
         if (!options.preserveHeaders) {
           currentHeaders = [];
           renderCreateHeaders();
         }
         clearCreateFormatDirty();
+      }
+
+function resetWordCreateFields(root) {
+        root = root || document.getElementById('wordCreateForm');
+        if (!root) {
+          return;
+        }
+        const colorDefaults = {
+          wordTitleColor: '#0F172A',
+          wordBodyColor: '#1F2937'
+        };
+        Object.keys(colorDefaults).forEach(function(id) {
+          const field = document.getElementById(id);
+          if (field && typeof field.value !== 'undefined') {
+            field.value = colorDefaults[id];
+          }
+        });
+        const selectDefaults = {
+          wordTitleFont: 'inter',
+          wordTitleSize: 'lg',
+          wordTitleAlign: 'center',
+          wordBodySize: 'md',
+          wordBodyAlign: 'justify',
+          wordBodySpacing: '115',
+          wordBodyLength: 'medium',
+          wordBodyLanguage: 'auto',
+          wordBodyTone: 'formal',
+          wordBodyPersona: 'auto',
+          wordAutoTitleFocus: 'clarity',
+          wordAutoTitleLength: 'medium'
+        };
+        Object.keys(selectDefaults).forEach(function(id) {
+          const select = document.getElementById(id);
+          if (select) {
+            select.value = selectDefaults[id];
+          }
+        });
+        const checkboxDefaults = {
+          wordTitleBold: true,
+          wordTitleItalic: false,
+          wordTitleUppercase: false,
+          wordTitleUnderline: false,
+          wordBodyHighlight: false,
+          wordBodyBullets: false,
+          wordBodyIntro: true,
+          wordBodyCTA: false,
+          wordUseWebSources: false,
+          wordRangeManualToggle: false,
+          wordAutoTitleToggle: false,
+          wordTitleFormatToggle: false,
+          wordBodyAutoStyle: false
+        };
+        Object.keys(checkboxDefaults).forEach(function(id) {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            checkbox.checked = checkboxDefaults[id];
+            delete checkbox.dataset.userOverride;
+            delete checkbox.dataset.wordRangeContext;
+          }
+        });
+        const textDefaults = [
+          'wordBodyBrief',
+          'wordBodyLanguageCustom',
+          'wordBodyToneCustom',
+          'wordBodyPersonaCustom',
+          'wordAutoTitleKeywords'
+        ];
+        textDefaults.forEach(function(id) {
+          const field = document.getElementById(id);
+          if (field && typeof field.value !== 'undefined') {
+            field.value = '';
+          }
+        });
+        const customFieldContainers = [
+          document.getElementById('wordBodyLanguageCustomField'),
+          document.getElementById('wordBodyToneCustomField'),
+          document.getElementById('wordBodyPersonaCustomField')
+        ];
+        customFieldContainers.forEach(function(container) {
+          if (container) {
+            container.classList.add('ai-hidden');
+            const inputs = container.querySelectorAll('textarea, input, select');
+            inputs.forEach(function(input) {
+              input.disabled = true;
+            });
+          }
+        });
+        ['wordBodyLanguage', 'wordBodyTone', 'wordBodyPersona'].forEach(function(id) {
+          const select = document.getElementById(id);
+          if (select) {
+            const event = document.createEvent('Event');
+            event.initEvent('change', true, true);
+            select.dispatchEvent(event);
+          }
+        });
+        ['wordAutoTitleToggle', 'wordTitleFormatToggle', 'wordBodyAutoStyle', 'wordRangeManualToggle'].forEach(function(id) {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            const event = document.createEvent('Event');
+            event.initEvent('change', true, true);
+            checkbox.dispatchEvent(event);
+          }
+        });
+        const toggleTargets = [
+          { toggleId: 'wordAutoTitleToggle', targetId: 'wordAutoTitleOptions', invert: false },
+          { toggleId: 'wordTitleFormatToggle', targetId: 'wordTitleFormatFields', invert: false },
+          { toggleId: 'wordBodyAutoStyle', targetId: 'wordBodyConfigFields', invert: true }
+        ];
+        toggleTargets.forEach(function(config) {
+          const toggle = document.getElementById(config.toggleId);
+          const target = document.getElementById(config.targetId);
+          if (!toggle || !target) {
+            return;
+          }
+          const show = config.invert ? !toggle.checked : !!toggle.checked;
+          target.classList.toggle('ai-hidden', !show);
+          const inputs = target.querySelectorAll('textarea, input, select');
+          inputs.forEach(function(input) {
+            if (!input) {
+              return;
+            }
+            input.disabled = !show;
+          });
+        });
       }
 
 function clearRangeUI() {
