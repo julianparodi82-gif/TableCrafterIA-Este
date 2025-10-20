@@ -1769,6 +1769,106 @@
         flex: 1 1 auto;
         min-height: 38px;
       }
+      .ai-saved-actions-field {
+        position: relative;
+      }
+      .ai-saved-actions-picker {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-saved-actions-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        border: 1px solid var(--tc-border);
+        border-radius: 10px;
+        background-color: var(--tc-surface);
+        padding: 10px 12px;
+        font-size: 13px;
+        color: var(--tc-text);
+        cursor: pointer;
+        gap: 12px;
+        transition: box-shadow var(--tc-transition-duration) ease,
+          border-color var(--tc-transition-duration) ease,
+          background-color var(--tc-transition-duration) ease;
+      }
+      .ai-saved-actions-trigger:focus {
+        outline: none;
+        border-color: var(--tc-primary);
+        box-shadow: 0 0 0 3px var(--tc-primary-ring);
+      }
+      .ai-saved-actions-trigger[disabled] {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .ai-saved-actions-trigger-label-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        text-align: left;
+      }
+      .ai-saved-actions-trigger-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--tc-text);
+      }
+      .ai-saved-actions-trigger-hint {
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .ai-saved-actions-trigger-icon {
+        font-size: 12px;
+        color: var(--tc-muted);
+        display: inline-flex;
+      }
+      .ai-saved-actions-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border: 1px solid var(--tc-border);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15);
+        z-index: 20;
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ai-saved-actions-item {
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 13px;
+        color: var(--tc-text);
+        cursor: pointer;
+        transition: background-color var(--tc-transition-duration) ease,
+          color var(--tc-transition-duration) ease;
+      }
+      .ai-saved-actions-item:hover,
+      .ai-saved-actions-item:focus {
+        background-color: var(--tc-primary-soft);
+        color: var(--tc-text);
+        outline: none;
+      }
+      .ai-saved-actions-item--selected {
+        background-color: var(--tc-primary-soft);
+        border: 1px solid var(--tc-primary);
+      }
+      .ai-saved-actions-empty {
+        padding: 10px;
+        font-size: 12px;
+        color: var(--tc-muted);
+        text-align: center;
+      }
       .ai-action-details {
         margin-top: 12px;
         display: flex;
@@ -5906,13 +6006,39 @@
                 </div>
               </div>
             </div>
-            <div class="tc-form-field">
-              <label for="aiSavedActions">Lista de acciones</label>
-              <select id="aiSavedActions" class="ai-actions-dropdown">
-                <option value="">Seleccionar...</option>
-              </select>
+            <div class="tc-form-field ai-saved-actions-field">
+              <label for="aiSavedActionsTrigger">Reportes favoritos</label>
+              <div class="ai-saved-actions-picker">
+                <button
+                  type="button"
+                  id="aiSavedActionsTrigger"
+                  class="ai-saved-actions-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                >
+                  <span class="ai-saved-actions-trigger-label-wrapper">
+                    <span class="ai-saved-actions-trigger-label">Elegí un reporte favorito</span>
+                    <span class="ai-saved-actions-trigger-hint">Mostrar favoritos guardados</span>
+                  </span>
+                  <span class="ai-saved-actions-trigger-icon" aria-hidden="true">▾</span>
+                </button>
+                <div
+                  id="aiSavedActionsMenu"
+                  class="ai-saved-actions-menu ai-hidden"
+                  role="listbox"
+                  aria-labelledby="aiSavedActionsTrigger"
+                ></div>
+                <select
+                  id="aiSavedActions"
+                  class="ai-actions-dropdown ai-hidden"
+                  tabindex="-1"
+                  aria-hidden="true"
+                >
+                  <option value="">Seleccionar...</option>
+                </select>
+              </div>
             </div>
-            <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay acciones guardadas todavía.</div>
+            <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay reportes favoritos guardados todavía.</div>
             <div class="tc-card-footer tc-card-footer--right">
               <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
