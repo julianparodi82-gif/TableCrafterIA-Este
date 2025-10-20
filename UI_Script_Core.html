@@ -34,10 +34,45 @@ let tabButtonsList = [];
 let tabContentsList = [];
 let hideWelcomePreference = { table: null, word: null };
 let welcomePreferenceResolved = false;
+let sharedAvailableSection = null;
+let sharedAvailablePlaceholder = null;
 const headerUiState = {
   headersList: {},
   editHeadersList: {}
 };
+
+function ensureSharedAvailableSection() {
+  if (!sharedAvailableSection) {
+    sharedAvailableSection = document.querySelector('.ai-available-section[data-shared-available]');
+    if (sharedAvailableSection && !sharedAvailablePlaceholder) {
+      sharedAvailablePlaceholder = document.createComment('shared-available-placeholder');
+      const parent = sharedAvailableSection.parentNode;
+      if (parent) {
+        parent.insertBefore(sharedAvailablePlaceholder, sharedAvailableSection.nextSibling);
+      }
+    }
+  }
+  return sharedAvailableSection;
+}
+
+function relocateSharedAvailableSection(theme) {
+  const section = ensureSharedAvailableSection();
+  if (!section) {
+    return;
+  }
+  const anchor = document.getElementById('aiWordAvailableAnchor');
+  if (theme === 'word') {
+    if (anchor && anchor.parentNode) {
+      anchor.parentNode.insertBefore(section, anchor.nextSibling);
+      section.classList.add('ai-word-available-card');
+    }
+  } else if (sharedAvailablePlaceholder && sharedAvailablePlaceholder.parentNode) {
+    sharedAvailablePlaceholder.parentNode.insertBefore(section, sharedAvailablePlaceholder);
+    section.classList.remove('ai-word-available-card');
+  } else {
+    section.classList.remove('ai-word-available-card');
+  }
+}
 
 function generateHeaderKey() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -3392,6 +3427,7 @@ function playSidebarAnimation() {
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
           }
+          relocateSharedAvailableSection(nextTheme);
           syncTabButtonLabels(nextTheme);
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();

@@ -4,6 +4,253 @@ let editRangeInfo = null;
 let editingId = '';
 let editFormatDirty = false;
 let editSavedListCollapsed = false;
+let wordEditTextsCache = [];
+let wordEditSelectedId = '';
+let wordEditObserver = null;
+
+function collectWordSavedTextsFromSelect() {
+  const select = document.getElementById('aiSavedTexts');
+  if (!select || !select.options) {
+    return [];
+  }
+  const entries = [];
+  Array.prototype.forEach.call(select.options, function(option) {
+    if (!option || !option.value) {
+      return;
+    }
+    const data = option.dataset || {};
+    const kind = (data.kind || data.type || data.entryType || '').toLowerCase();
+    const recordType = (data.recordType || data.metaType || '').toLowerCase();
+    const value = String(option.value);
+    if (
+      (kind && kind !== 'texto' && kind !== 'text' && kind !== 'word' && kind !== 'documento') ||
+      (recordType && recordType !== 'texto' && recordType !== 'text' && recordType !== 'word' && recordType !== 'documento')
+    ) {
+      return;
+    }
+    if (!kind && value && (value.indexOf('table:') === 0 || value.indexOf('tabla:') === 0)) {
+      return;
+    }
+    entries.push({
+      id: value,
+      name: option.textContent && option.textContent.trim() ? option.textContent.trim() : option.value,
+      language: data.language || data.lang || '',
+      tone: data.tone || '',
+      updated: data.updated || data.modified || '',
+      notes: data.notes || data.description || ''
+    });
+  });
+  return entries;
+}
+
+function updateWordEditDetails(entry) {
+  const titleEl = document.getElementById('wordEditDetailsTitle');
+  const languageEl = document.getElementById('wordEditDetailsLanguage');
+  const toneEl = document.getElementById('wordEditDetailsTone');
+  const updatedEl = document.getElementById('wordEditDetailsUpdated');
+  const notesEl = document.getElementById('wordEditDetailsNotes');
+  const statusEl = document.getElementById('wordEditDetailsStatus');
+  const hintEl = document.getElementById('wordEditDetailsHint');
+  const openBtn = document.getElementById('wordEditOpenBtn');
+  const deleteBtn = document.getElementById('wordEditDeleteBtn');
+  const hasEntry = !!(entry && entry.id);
+  const fallback = '—';
+  if (titleEl) {
+    titleEl.textContent = hasEntry && entry.name ? entry.name : fallback;
+  }
+  if (languageEl) {
+    languageEl.textContent = hasEntry && entry.language ? entry.language : fallback;
+  }
+  if (toneEl) {
+    toneEl.textContent = hasEntry && entry.tone ? entry.tone : fallback;
+  }
+  if (updatedEl) {
+    updatedEl.textContent = hasEntry && entry.updated ? entry.updated : fallback;
+  }
+  if (notesEl) {
+    notesEl.textContent = hasEntry && entry.notes ? entry.notes : 'Selecciona un texto para revisar las instrucciones guardadas.';
+  }
+  if (statusEl) {
+    statusEl.textContent = hasEntry ? 'Seleccionado' : 'Sin seleccionar';
+  }
+  if (hintEl) {
+    hintEl.textContent = hasEntry
+      ? 'Revisa los datos guardados y aplica los cambios desde el panel principal.'
+      : 'Elige un texto para ver su título, idioma, tono y notas clave.';
+  }
+  if (openBtn) {
+    openBtn.disabled = true;
+    openBtn.title = hasEntry ? 'Disponible próximamente' : '';
+  }
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.title = hasEntry ? 'Disponible próximamente' : '';
+  }
+}
+
+function renderWordEditSavedTexts(entries) {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  const selectEl = document.getElementById('wordEditSavedTexts');
+  const emptyEl = document.getElementById('wordEditEmptyState');
+  if (!listEl || !selectEl) {
+    return;
+  }
+  listEl.innerHTML = '';
+  while (selectEl.firstChild) {
+    selectEl.removeChild(selectEl.firstChild);
+  }
+  const data = Array.isArray(entries) ? entries : [];
+  if (!data.length) {
+    if (emptyEl) {
+      emptyEl.style.display = '';
+    }
+    updateWordEditDetails(null);
+    wordEditSelectedId = '';
+    return;
+  }
+  if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
+  data.forEach(function(entry) {
+    if (!entry || !entry.id) {
+      return;
+    }
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.name || entry.id;
+    if (entry.language) option.dataset.language = entry.language;
+    if (entry.tone) option.dataset.tone = entry.tone;
+    if (entry.updated) option.dataset.updated = entry.updated;
+    if (entry.notes) option.dataset.notes = entry.notes;
+    selectEl.appendChild(option);
+
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'word-edit-item';
+    item.dataset.value = entry.id;
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', 'false');
+    const title = document.createElement('span');
+    title.className = 'word-edit-item-title';
+    title.textContent = entry.name || entry.id;
+    item.appendChild(title);
+    const meta = document.createElement('span');
+    meta.className = 'word-edit-item-meta';
+    const language = entry.language ? entry.language : 'Idioma no definido';
+    const tone = entry.tone ? entry.tone : 'Tono automático';
+    meta.textContent = language + ' · ' + tone;
+    item.appendChild(meta);
+    listEl.appendChild(item);
+  });
+  if (wordEditSelectedId) {
+    selectWordEditText(wordEditSelectedId, { scroll: false });
+  } else if (data.length && data[0] && data[0].id) {
+    selectWordEditText(data[0].id, { scroll: false });
+  } else {
+    updateWordEditDetails(null);
+  }
+}
+
+function selectWordEditText(id, options) {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  const selectEl = document.getElementById('wordEditSavedTexts');
+  const data = Array.isArray(wordEditTextsCache) ? wordEditTextsCache : [];
+  const normalizedId = id ? String(id) : '';
+  const entry = data.find(function(item) {
+    return item && item.id === normalizedId;
+  }) || null;
+  if (!entry) {
+    wordEditSelectedId = '';
+    if (selectEl) {
+      selectEl.value = '';
+    }
+    if (listEl) {
+      const items = listEl.querySelectorAll('.word-edit-item');
+      Array.prototype.forEach.call(items, function(item) {
+        item.setAttribute('aria-selected', 'false');
+        item.classList.remove('word-edit-item--selected');
+      });
+    }
+    updateWordEditDetails(null);
+    return;
+  }
+  wordEditSelectedId = normalizedId;
+  if (selectEl) {
+    selectEl.value = normalizedId;
+  }
+  if (listEl) {
+    const items = listEl.querySelectorAll('.word-edit-item');
+    Array.prototype.forEach.call(items, function(item) {
+      const value = item && item.dataset ? item.dataset.value : '';
+      const selected = value === normalizedId;
+      item.setAttribute('aria-selected', selected ? 'true' : 'false');
+      item.classList.toggle('word-edit-item--selected', selected);
+      if (selected && options && options.scroll !== false) {
+        if (typeof item.scrollIntoView === 'function') {
+          item.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    });
+  }
+  updateWordEditDetails(entry);
+}
+
+function syncWordEditSavedTextsFromSelect() {
+  wordEditTextsCache = collectWordSavedTextsFromSelect();
+  renderWordEditSavedTexts(wordEditTextsCache);
+}
+
+function handleWordEditListClick(event) {
+  const target = event.target;
+  if (!target) {
+    return;
+  }
+  const item = typeof target.closest === 'function' ? target.closest('.word-edit-item') : null;
+  if (!item || !item.dataset || !item.dataset.value) {
+    return;
+  }
+  selectWordEditText(item.dataset.value);
+}
+
+function handleWordEditListKeydown(event) {
+  if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+    return;
+  }
+  const target = event.target;
+  if (!target) {
+    return;
+  }
+  const item = typeof target.closest === 'function' ? target.closest('.word-edit-item') : null;
+  if (!item || !item.dataset || !item.dataset.value) {
+    return;
+  }
+  event.preventDefault();
+  selectWordEditText(item.dataset.value);
+}
+
+function initializeWordEditPanel() {
+  const listEl = document.getElementById('wordEditSavedTextsList');
+  if (!listEl) {
+    return;
+  }
+  if (!listEl.hasAttribute('tabindex')) {
+    listEl.tabIndex = 0;
+  }
+  listEl.addEventListener('click', handleWordEditListClick);
+  listEl.addEventListener('keydown', handleWordEditListKeydown);
+  const sourceSelect = document.getElementById('aiSavedTexts');
+  if (sourceSelect) {
+    sourceSelect.addEventListener('change', syncWordEditSavedTextsFromSelect);
+    if (wordEditObserver && typeof wordEditObserver.disconnect === 'function') {
+      wordEditObserver.disconnect();
+    }
+    wordEditObserver = new MutationObserver(function() {
+      syncWordEditSavedTextsFromSelect();
+    });
+    wordEditObserver.observe(sourceSelect, { childList: true, attributes: true });
+  }
+  syncWordEditSavedTextsFromSelect();
+}
 
 
 
@@ -1057,4 +1304,8 @@ async function handleEditSaveAction(options) {
         });
         return true;
       }
+
+document.addEventListener('DOMContentLoaded', function() {
+  initializeWordEditPanel();
+});
 </script>

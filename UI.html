@@ -199,8 +199,15 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .theme-wordcrafter .tab-nav-row--bottom {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-auto-flow: column;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: 18px;
+        max-width: 420px;
+      }
+      .theme-wordcrafter .tab-nav-row--bottom .tab-btn-wrap {
+        flex: 1 1 180px;
+        max-width: 220px;
       }
       .tab-btn-wrap {
         display: flex;
@@ -969,7 +976,7 @@
       .ai-word-mode {
         display: none;
         flex-direction: column;
-        gap: 20px;
+        gap: 24px;
       }
       .theme-wordcrafter .ai-word-mode {
         display: flex;
@@ -978,147 +985,206 @@
         display: none;
       }
       .ai-word-hero {
-        background: var(--tc-surface);
-        border: 1px solid var(--tc-border);
+        position: relative;
+        background: linear-gradient(135deg, rgba(89, 206, 255, 0.18), rgba(42, 176, 255, 0.08));
+        border: 1px solid rgba(42, 176, 255, 0.32);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 20px 45px rgba(42, 176, 255, 0.18);
+        overflow: hidden;
+      }
+      .ai-word-hero::after {
+        content: '';
+        position: absolute;
+        inset: 8px 12px 12px;
         border-radius: 16px;
-        padding: 20px;
-        box-shadow: var(--tc-shadow-base);
+        pointer-events: none;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(217, 242, 255, 0.72));
+        opacity: 0.55;
+      }
+      .ai-word-hero-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1;
       }
       .ai-word-hero-title {
-        margin: 0 0 8px;
-        font-size: 20px;
-        font-weight: 600;
-        color: #000000;
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        color: #05314d;
       }
       .ai-word-hero-subtitle {
         margin: 0;
-        color: var(--tc-muted);
-        font-size: 14px;
+        color: rgba(5, 49, 77, 0.7);
+        font-size: 15px;
       }
       .ai-word-layout {
         display: flex;
         flex-direction: column;
+        gap: 22px;
+      }
+      .ai-word-available-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(42, 176, 255, 0.26);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 12px 30px rgba(26, 104, 149, 0.12);
+        display: flex;
+        flex-direction: column;
         gap: 16px;
+      }
+      .ai-word-available-card .ai-available-label {
+        font-size: 15px;
+        font-weight: 700;
+        color: #05314d;
+      }
+      .ai-word-available-card .ai-available-subsection {
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: rgba(236, 249, 255, 0.72);
+      }
+      .ai-word-available-card .ai-available-title {
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        color: rgba(5, 49, 77, 0.85);
+      }
+      .ai-word-available-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .ai-word-available-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0b2940;
       }
       .ai-word-action-selector {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
+        padding: 20px;
+        border-radius: 18px;
+        border: 1px solid rgba(42, 176, 255, 0.2);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 16px 32px rgba(5, 49, 77, 0.12);
       }
       .ai-word-action-selector label {
-        font-size: 14px;
-        font-weight: 600;
-        color: #000000;
+        font-size: 15px;
+        font-weight: 700;
+        color: #063455;
       }
       .ai-word-action-label-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 4px;
       }
       .ai-word-action-select-wrapper {
         position: relative;
       }
       .ai-word-action-select {
         width: 100%;
-        border-radius: 12px;
-        border: 1px solid var(--tc-border);
-        padding: 12px 16px;
-        font-size: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(42, 176, 255, 0.32);
+        padding: 14px 18px;
+        font-size: 15px;
         font-weight: 500;
-        background: var(--tc-surface);
-        color: var(--tc-text);
-        box-shadow: 0 8px 18px rgba(33, 150, 243, 0.12);
+        background: #ffffff;
+        color: #053471;
+        box-shadow: inset 0 1px 2px rgba(5, 52, 113, 0.06);
       }
       .ai-word-action-select:focus {
         outline: none;
         border-color: var(--tc-primary);
         box-shadow: 0 0 0 3px var(--tc-primary-ring);
       }
-      .ai-word-action-info-trigger {
-        position: relative;
-        border: none;
-        background: rgba(42, 176, 255, 0.18);
-        color: #043351;
-        border-radius: 999px;
-        width: 28px;
-        height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: help;
-        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-      }
-      .ai-word-action-info-trigger:hover,
-      .ai-word-action-info-trigger:focus-visible {
-        background: rgba(42, 176, 255, 0.3);
-        color: #021b2d;
-        box-shadow: 0 0 0 3px rgba(42, 176, 255, 0.25);
-      }
-      .ai-word-action-info-trigger span {
-        font-size: 14px;
-        font-weight: 700;
-        pointer-events: none;
-      }
-      .ai-word-action-info-trigger[data-tooltip-disabled='true'] {
-        background: rgba(42, 176, 255, 0.12);
-        color: rgba(4, 51, 81, 0.5);
-        cursor: not-allowed;
-        box-shadow: none;
-        pointer-events: none;
-      }
       .ai-word-panels {
+        display: grid;
+        gap: 20px;
+      }
+      .ai-word-web-sources {
+        border-radius: 18px;
+        border: 1px solid rgba(42, 176, 255, 0.18);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 12px 28px rgba(5, 49, 77, 0.1);
+        padding: 20px 22px;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 12px;
+      }
+      .ai-word-web-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: #05314d;
+      }
+      .ai-word-web-toggle input[type='checkbox'] {
+        width: 18px;
+        height: 18px;
+      }
+      .ai-word-web-hint {
+        margin: 0;
+        font-size: 13px;
+        color: rgba(5, 49, 77, 0.72);
       }
       .ai-word-panel {
         display: none;
         flex-direction: column;
-        gap: 16px;
-        background: var(--tc-surface);
-        border: 1px solid var(--tc-border);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: var(--tc-shadow-base);
+        gap: 18px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(42, 176, 255, 0.24);
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 18px 44px rgba(5, 51, 94, 0.1);
       }
       .ai-word-panel.is-active {
         display: flex;
       }
+      .ai-word-panel-head {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
       .ai-word-panel-head h3 {
-        margin: 0 0 6px;
-        font-size: 18px;
-        font-weight: 600;
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: #032238;
       }
       .ai-word-panel-head p {
         margin: 0;
         font-size: 14px;
-        color: var(--tc-muted);
+        color: rgba(3, 34, 56, 0.72);
       }
       .ai-word-field-group {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
       .ai-word-field-grid {
         display: grid;
-        gap: 12px;
+        gap: 18px;
       }
       .ai-word-field {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 10px;
       }
       .ai-word-field label {
-        font-size: 14px;
-        font-weight: 500;
-        color: #000000;
+        font-size: 13px;
+        font-weight: 600;
+        color: #063455;
       }
       .ai-word-checkbox-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        display: grid;
+        gap: 12px;
       }
       .word-range-label-row {
         display: flex;
@@ -1203,54 +1269,250 @@
       .ai-word-checkbox {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 13px;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid rgba(42, 176, 255, 0.28);
+        border-radius: 14px;
+        background: rgba(245, 251, 255, 0.9);
+        font-size: 14px;
+        transition: border-color var(--tc-transition-duration) ease,
+          box-shadow var(--tc-transition-duration) ease,
+          transform var(--tc-transition-duration) ease;
       }
       .ai-word-checkbox input {
         margin: 0;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--tc-primary);
+      }
+      .ai-word-checkbox:hover {
+        border-color: var(--tc-primary);
+        box-shadow: 0 0 0 3px var(--tc-primary-ring);
+        transform: translateY(-1px);
       }
       .ai-word-submit-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .ai-word-submit-row .btn-primary,
+      .ai-word-submit-row .btn-secondary {
+        flex: 1 1 220px;
       }
       .ai-word-secondary-note {
         font-size: 12px;
-        color: var(--tc-muted);
+        color: rgba(5, 49, 77, 0.6);
       }
       .ai-word-info-card {
-        border-radius: 12px;
-        border: 1px dashed var(--tc-border-strong);
-        padding: 12px 16px;
-        background: var(--tc-primary-soft);
+        border-radius: 16px;
+        padding: 16px 18px;
+        background: linear-gradient(120deg, rgba(42, 176, 255, 0.18), rgba(42, 176, 255, 0.08));
         font-size: 13px;
-        color: #000000;
+        color: #05314d;
       }
-      .ai-word-placeholder-title {
-        font-size: 18px;
+      .ai-word-optional-hint {
+        color: rgba(5, 49, 77, 0.65);
+        font-size: 13px;
+      }
+      .ai-word-web-source {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(42, 176, 255, 0.24);
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 12px 30px rgba(5, 51, 94, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .ai-word-web-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         font-weight: 600;
-        margin: 0 0 6px;
-        color: #000000;
+        color: #05314d;
+        cursor: pointer;
       }
-      .ai-word-placeholder-text {
+      .ai-word-web-toggle input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--tc-primary);
+      }
+      .ai-word-web-description {
+        font-size: 13px;
+        color: rgba(5, 49, 77, 0.7);
+      }
+      .word-edit-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .word-edit-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(42, 176, 255, 0.26);
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 18px 42px rgba(5, 51, 94, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .word-edit-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-edit-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: #032238;
+      }
+      .word-edit-subtitle {
         margin: 0;
         font-size: 14px;
-        color: var(--tc-muted);
+        color: rgba(3, 34, 56, 0.7);
+      }
+      .word-edit-body {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+      }
+      .word-edit-list-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: rgba(245, 251, 255, 0.9);
+        border: 1px solid rgba(42, 176, 255, 0.24);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .word-edit-list {
+        min-height: 240px;
+        max-height: 320px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-edit-hidden-select {
+        display: none;
+      }
+      .word-edit-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: #ffffff;
+        cursor: pointer;
+        transition: border-color var(--tc-transition-duration) ease,
+          box-shadow var(--tc-transition-duration) ease,
+          transform var(--tc-transition-duration) ease;
+      }
+      .word-edit-item:hover {
+        border-color: rgba(42, 176, 255, 0.4);
+        box-shadow: 0 0 0 3px var(--tc-primary-ring);
+        transform: translateY(-1px);
+      }
+      .word-edit-item[aria-selected='true'] {
+        border-color: rgba(42, 176, 255, 0.6);
+        box-shadow: 0 0 0 3px var(--tc-primary-ring);
+      }
+      .word-edit-item-title {
+        font-weight: 600;
+        color: #032238;
+      }
+      .word-edit-item-meta {
+        font-size: 12px;
+        color: rgba(3, 34, 56, 0.6);
+      }
+      .word-edit-empty {
+        font-size: 13px;
+        color: rgba(3, 34, 56, 0.6);
+        text-align: center;
+      }
+      .word-edit-details {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(42, 176, 255, 0.2);
+        border-radius: 16px;
+        padding: 18px 20px;
+      }
+      .word-edit-details-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .word-edit-details-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #032238;
+      }
+      .word-edit-status-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(42, 176, 255, 0.18);
+        color: #05314d;
+      }
+      .word-edit-details-hint {
+        margin: 0;
+        font-size: 13px;
+        color: rgba(3, 34, 56, 0.65);
+      }
+      .word-edit-details-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        margin: 0;
+      }
+      .word-edit-details-grid div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .word-edit-details-grid dt {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: rgba(3, 34, 56, 0.5);
+      }
+      .word-edit-details-grid dd {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #032238;
+      }
+      .word-edit-notes h5 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #05314d;
+      }
+      .word-edit-notes p {
+        margin: 0;
+        font-size: 13px;
+        color: rgba(3, 34, 56, 0.7);
+      }
+      .word-edit-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .word-edit-actions .btn-primary,
+      .word-edit-actions .btn-secondary {
+        flex: 1 1 200px;
       }
       @media (min-width: 900px) {
-        .ai-word-layout {
-          flex-direction: row;
-          align-items: flex-start;
-          gap: 20px;
-        }
-        .ai-word-action-selector {
-          width: 260px;
-          position: sticky;
-          top: 12px;
-        }
-        .ai-word-panels {
-          flex: 1 1 auto;
-        }
         .ai-word-field-grid {
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
@@ -3824,10 +4086,34 @@
               </div>
             </div>
             <div class="word-config-checkboxes">
-              <label><input type="checkbox" id="wordTitleBold" checked /> Negrita</label>
-              <label><input type="checkbox" id="wordTitleItalic" /> Cursiva</label>
-              <label><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas</label>
-              <label><input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil</label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Resalta el título para que destaque en la primera lectura."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordTitleBold" checked /> Negrita
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Añade un estilo editorial al título sin perder legibilidad."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordTitleItalic" /> Cursiva
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Convierte el título en mayúsculas para dar un aspecto institucional."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordTitleUppercase" /> Mayúsculas sostenidas
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Subraya el título con una línea discreta acorde al estilo Word."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordTitleUnderline" /> Subrayado sutil
+              </label>
             </div>
             <div class="word-config-note">Estas preferencias sirven como guía para el formato final del encabezado principal.</div>
           </div>
@@ -3867,10 +4153,34 @@
               </div>
             </div>
             <div class="word-config-checkboxes" style="margin-top:12px;">
-              <label><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label>
-              <label><input type="checkbox" id="wordBodyBullets" /> Sugerir listas numeradas o con viñetas</label>
-              <label><input type="checkbox" id="wordBodyIntro" checked /> Incluir introducción clara</label>
-              <label><input type="checkbox" id="wordBodyCTA" /> Añadir llamado a la acción</label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Permite que la IA destaque términos relevantes para una lectura rápida."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Sugiere cuándo transformar párrafos en listas claras y ordenadas."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordBodyBullets" /> Sugerir listas numeradas o con viñetas
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Solicita una introducción breve que contextualice el contenido desde el inicio."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordBodyIntro" checked /> Incluir introducción clara
+              </label>
+              <label
+                class="tc-tooltip-target"
+                data-tooltip="Añade un cierre con llamado a la acción coherente con el objetivo."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordBodyCTA" /> Añadir llamado a la acción
+              </label>
             </div>
             <div class="word-config-note">Selecciona las pautas de estilo que la IA debe respetar al generar el texto.</div>
             <div class="word-config-divider"></div>
@@ -4014,11 +4324,59 @@
 
       <div id="editTab" class="tab-content" data-themes="table word">
         <? if (__isWordcrafter) { ?>
-        <div class="section">
-          <h3 class="ai-word-placeholder-title">Editar texto</h3>
-          <p class="ai-word-placeholder-text">
-            Aquí podrás actualizar versiones, estilos y tonalidades de tus textos guardados.
-          </p>
+        <div class="word-edit-panel">
+          <div class="word-edit-card">
+            <div class="word-edit-header">
+              <h3 class="word-edit-title">Textos guardados</h3>
+              <p class="word-edit-subtitle">Selecciona un texto para editar su formato, tono o versión más reciente.</p>
+            </div>
+            <div class="word-edit-body">
+              <div class="word-edit-list-container">
+                <div
+                  id="wordEditSavedTextsList"
+                  class="word-edit-list"
+                  role="listbox"
+                  aria-label="Textos guardados"
+                  aria-multiselectable="false"
+                ></div>
+                <select id="wordEditSavedTexts" class="word-edit-hidden-select" size="8"></select>
+                <div id="wordEditEmptyState" class="word-edit-empty">No hay textos guardados todavía.</div>
+              </div>
+              <div class="word-edit-details">
+                <div class="word-edit-details-header">
+                  <h4 class="word-edit-details-title">Resumen del texto</h4>
+                  <span id="wordEditDetailsStatus" class="word-edit-status-badge">Sin seleccionar</span>
+                </div>
+                <p id="wordEditDetailsHint" class="word-edit-details-hint">Elige un texto para ver su título, idioma, tono y notas clave.</p>
+                <dl class="word-edit-details-grid">
+                  <div>
+                    <dt>Título</dt>
+                    <dd id="wordEditDetailsTitle">—</dd>
+                  </div>
+                  <div>
+                    <dt>Idioma</dt>
+                    <dd id="wordEditDetailsLanguage">—</dd>
+                  </div>
+                  <div>
+                    <dt>Tono</dt>
+                    <dd id="wordEditDetailsTone">—</dd>
+                  </div>
+                  <div>
+                    <dt>Última actualización</dt>
+                    <dd id="wordEditDetailsUpdated">—</dd>
+                  </div>
+                </dl>
+                <div class="word-edit-notes">
+                  <h5>Notas del texto</h5>
+                  <p id="wordEditDetailsNotes">Selecciona un texto para revisar las instrucciones guardadas.</p>
+                </div>
+                <div class="word-edit-actions">
+                  <button type="button" id="wordEditOpenBtn" class="btn-primary" disabled title="Disponible próximamente">Abrir en editor</button>
+                  <button type="button" id="wordEditDeleteBtn" class="btn-secondary" disabled title="Disponible próximamente">Eliminar texto</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <? } else { ?>
         <div class="section">
@@ -4093,28 +4451,27 @@
       </div>
 
       <div id="aiTab" class="tab-content active" data-themes="table word">
-        <div class="ai-word-mode" data-word-default-action="compose">
+        <div class="ai-word-mode" data-word-default-action="summarize">
           <div class="ai-word-hero">
-            <h3 class="ai-word-hero-title">Acciones de WordCrafterAI</h3>
-            <p class="ai-word-hero-subtitle">
-              Selecciona una acción para que la IA adapte tus textos a diferentes objetivos, tonos y audiencias.
-            </p>
+            <div class="ai-word-hero-content">
+              <h3 class="ai-word-hero-title">Acciones de WordCrafterAI</h3>
+              <p class="ai-word-hero-subtitle">
+                Selecciona una acción para que la IA adapte tus textos a diferentes objetivos, tonos y audiencias.
+              </p>
+            </div>
           </div>
           <div class="ai-word-layout">
+            <div id="aiWordAvailableAnchor"></div>
             <div class="ai-word-action-selector">
               <div class="ai-word-action-label-row">
-                <label for="wordActionSelect">Acción a realizar</label>
-                <button
-                  type="button"
-                  class="ai-word-action-info-trigger tc-tooltip-target"
-                  id="wordActionInfo"
+                <label
+                  for="wordActionSelect"
+                  class="tc-tooltip-target"
                   data-word-action-info
-                  data-tooltip="Redactar texto\nGenera un borrador desde cero a partir de ideas clave e indicaciones."
                   data-tooltip-position="bottom"
-                  aria-label="Información sobre &quot;Redactar texto&quot;. Genera un borrador desde cero a partir de ideas clave e indicaciones."
                 >
-                  <span aria-hidden="true">i</span>
-                </button>
+                  Acción a realizar
+                </label>
               </div>
               <div class="ai-word-action-select-wrapper">
                 <select
@@ -4123,16 +4480,10 @@
                   aria-label="Selecciona la acción que la IA debe realizar"
                 >
                   <option
-                    value="compose"
-                    data-info-title="Redactar texto"
-                    data-info="Genera un borrador desde cero a partir de ideas clave e indicaciones."
-                  >
-                    Redactar texto
-                  </option>
-                  <option
                     value="summarize"
                     data-info-title="Resumir texto"
                     data-info="Condensa un documento o conversación para compartir puntos clave con rapidez."
+                    selected
                   >
                     Resumir texto
                   </option>
@@ -4170,171 +4521,10 @@
             <div class="ai-word-panels">
               <section
                 class="ai-word-panel is-active"
-                id="wordActionComposePanel"
-                data-word-action-panel="compose"
-                role="tabpanel"
-                aria-labelledby="wordActionComposeHeading"
-              >
-                <div class="ai-word-panel-head">
-                  <h3 id="wordActionComposeHeading">Redactar texto</h3>
-                  <p>Genera un borrador desde cero a partir de ideas clave e indicaciones.</p>
-                </div>
-                <div class="ai-word-field-group">
-                  <label for="wordComposeBrief">Tema o instrucciones principales</label>
-                  <textarea
-                    id="wordComposeBrief"
-                    placeholder="Ej. Comunicado interno anunciando un nuevo programa de bienestar para empleados"
-                  ></textarea>
-                </div>
-                <div class="ai-word-field-grid">
-                  <div class="ai-word-field">
-                    <label for="wordComposeLength">Extensión deseada</label>
-                    <select id="wordComposeLength">
-                      <option value="short">Breve (150-200 palabras)</option>
-                      <option value="medium" selected>Media (300-400 palabras)</option>
-                      <option value="long">Larga (600+ palabras)</option>
-                      <option value="outline">Esquema con secciones</option>
-                    </select>
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordComposeTone">Tono principal</label>
-                    <select
-                      id="wordComposeTone"
-                      data-word-toggle-target="wordComposeToneCustomField"
-                      data-word-toggle-field="wordComposeToneCustom"
-                      data-word-toggle-value="custom"
-                    >
-                      <option value="neutral" selected>Neutral profesional</option>
-                      <option value="executive">Resumen ejecutivo</option>
-                      <option value="friendly">Cercano y motivador</option>
-                      <option value="analytical">Analítico y detallado</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordComposePersona">Perfil profesional objetivo</label>
-                    <select
-                      id="wordComposePersona"
-                      data-word-toggle-target="wordComposePersonaCustomField"
-                      data-word-toggle-field="wordComposePersonaCustom"
-                      data-word-toggle-value="custom"
-                    >
-                      <option value="auto" selected>Elegir automáticamente (IA)</option>
-                      <option value="executive">Dirección general</option>
-                      <option value="data-analyst">Analista de datos</option>
-                      <option value="finance">Dirección financiera</option>
-                      <option value="operations">Gerencia de operaciones</option>
-                      <option value="marketing">Marketing y comunicación</option>
-                      <option value="hr">Recursos humanos</option>
-                      <option value="it">Especialista en IT / Sistemas</option>
-                      <option value="sales">Liderazgo comercial</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                  </div>
-                </div>
-                <div
-                  id="wordComposeToneCustomField"
-                  class="ai-word-field ai-hidden"
-                >
-                  <label for="wordComposeToneCustom">Describe el tono personalizado</label>
-                  <textarea
-                    id="wordComposeToneCustom"
-                    placeholder="Ej. Inspirador, con foco en logros del equipo"
-                    disabled
-                  ></textarea>
-                </div>
-                <div
-                  id="wordComposePersonaCustomField"
-                  class="ai-word-field ai-hidden"
-                >
-                  <label for="wordComposePersonaCustom">Describe el perfil profesional</label>
-                  <textarea
-                    id="wordComposePersonaCustom"
-                    placeholder="Ej. Director de operaciones para Latam"
-                    disabled
-                  ></textarea>
-                </div>
-                <div class="ai-word-field-grid">
-                  <div class="ai-word-field">
-                    <label for="wordComposeLanguage">Idioma de salida</label>
-                    <select
-                      id="wordComposeLanguage"
-                      data-word-toggle-target="wordComposeLanguageCustomField"
-                      data-word-toggle-field="wordComposeLanguageCustom"
-                      data-word-toggle-value="other"
-                    >
-                      <option value="auto" selected>Detección automática (IA)</option>
-                      <option value="es">Español</option>
-                      <option value="en">Inglés</option>
-                      <option value="pt">Portugués</option>
-                      <option value="fr">Francés</option>
-                      <option value="it">Italiano</option>
-                      <option value="de">Alemán</option>
-                      <option value="other">Otro idioma</option>
-                    </select>
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordComposeFormat">Formato final</label>
-                    <select id="wordComposeFormat">
-                      <option value="narrative" selected>Narrativo en párrafos</option>
-                      <option value="email">Correo electrónico</option>
-                      <option value="bullet">Lista de puntos clave</option>
-                      <option value="presentation">Diapositivas / storytelling</option>
-                    </select>
-                  </div>
-                  <div class="ai-word-field">
-                    <label for="wordComposeVoice">Tipo de voz</label>
-                    <select id="wordComposeVoice">
-                      <option value="first-person">Primera persona plural</option>
-                      <option value="third-person" selected>Tercera persona</option>
-                      <option value="second-person">Segunda persona (tú/usted)</option>
-                    </select>
-                  </div>
-                </div>
-                <div
-                  id="wordComposeLanguageCustomField"
-                  class="ai-word-field ai-hidden"
-                >
-                  <label for="wordComposeLanguageCustom">Define el idioma objetivo</label>
-                  <input
-                    type="text"
-                    id="wordComposeLanguageCustom"
-                    placeholder="Ej. Alemán suizo, Catalán, Japonés"
-                    disabled
-                  />
-                </div>
-                <div class="ai-word-field-group">
-                  <label>Elementos opcionales</label>
-                  <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
-                      <input type="checkbox" id="wordComposeIntro" checked />
-                      Incluir introducción con contexto del lector
-                    </label>
-                    <label class="ai-word-checkbox">
-                      <input type="checkbox" id="wordComposeHighlights" />
-                      Añadir resumen de puntos clave al final
-                    </label>
-                    <label class="ai-word-checkbox">
-                      <input type="checkbox" id="wordComposeCTA" />
-                      Incorporar llamado a la acción específico
-                    </label>
-                  </div>
-                </div>
-                <div class="ai-word-submit-row">
-                  <button type="button" class="btn-primary">Generar borrador</button>
-                  <button type="button" class="btn-secondary">Guardar configuración</button>
-                </div>
-                <p class="ai-word-secondary-note">
-                  Ajusta estos parámetros para crear variaciones rápidas del mismo mensaje.
-                </p>
-              </section>
-              <section
-                class="ai-word-panel"
                 id="wordActionSummarizePanel"
                 data-word-action-panel="summarize"
                 role="tabpanel"
                 aria-labelledby="wordActionSummarizeHeading"
-                hidden
               >
                 <div class="ai-word-panel-head">
                   <h3 id="wordActionSummarizeHeading">Resumir texto</h3>
@@ -4462,16 +4652,17 @@
                 </div>
                 <div class="ai-word-field-group">
                   <label>Complementos</label>
+                  <p class="ai-word-optional-hint">Activa extras para enriquecer el resumen generado.</p>
                   <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Destaca los números clave del resumen para que sean fáciles de detectar.">
                       <input type="checkbox" id="wordSummarizeHighlights" checked />
                       Resaltar cifras y porcentajes clave
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Incluye recomendaciones concretas basadas en los hallazgos del texto original.">
                       <input type="checkbox" id="wordSummarizeInsights" />
                       Añadir conclusiones accionables
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Mantiene frases destacadas tal como aparecen en el material original.">
                       <input type="checkbox" id="wordSummarizeQuotes" />
                       Conservar citas textuales relevantes
                     </label>
@@ -4615,16 +4806,17 @@
                 </div>
                 <div class="ai-word-field-group">
                   <label>Preferencias adicionales</label>
+                  <p class="ai-word-optional-hint">Define cómo debe ajustarse el texto reorganizado.</p>
                   <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Garantiza que las citas se mantengan fieles al documento original.">
                       <input type="checkbox" id="wordRestructurePreserveQuotes" checked />
                       Conservar citas textuales importantes
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Destaca las propuestas o sugerencias que deban implementarse.">
                       <input type="checkbox" id="wordRestructureHighlight" />
                       Resaltar recomendaciones clave
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Traduce tecnicismos a un lenguaje más claro para audiencias generales.">
                       <input type="checkbox" id="wordRestructureSimplify" />
                       Simplificar tecnicismos y acrónimos
                     </label>
@@ -4702,20 +4894,21 @@
                 </div>
                 <div class="ai-word-field-group">
                   <label>Aplicar automáticamente</label>
+                  <p class="ai-word-optional-hint">Selecciona los elementos que la IA debe aplicar al dar formato.</p>
                   <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Organiza el documento con encabezados jerárquicos claros.">
                       <input type="checkbox" id="wordFormatHeadings" checked />
                       Titulares jerarquizados (H1, H2, H3)
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Convierte la información clave en listas fáciles de leer.">
                       <input type="checkbox" id="wordFormatBullets" checked />
                       Viñetas y listas numeradas donde corresponda
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Resalta los indicadores más relevantes dentro del cuerpo del texto.">
                       <input type="checkbox" id="wordFormatHighlights" />
                       Destacar métricas y KPIs en negrita
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Aplica un formato especial para que las citas sobresalgan visualmente.">
                       <input type="checkbox" id="wordFormatQuotes" />
                       Formatear citas con estilo destacado
                     </label>
@@ -4818,16 +5011,17 @@
                 </div>
                 <div class="ai-word-field-group">
                   <label>Opciones de adaptación</label>
+                  <p class="ai-word-optional-hint">Controla qué partes del texto deben ajustarse con el nuevo tono.</p>
                   <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Respeta la longitud y el orden original del contenido.">
                       <input type="checkbox" id="wordToneKeepStructure" checked />
                       Mantener estructura y extensión original
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Agrega una invitación clara para que el lector actúe.">
                       <input type="checkbox" id="wordToneAddCTA" />
                       Sugerir llamado a la acción acorde al nuevo tono
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Identifica las secciones con mayor reescritura para revisión rápida.">
                       <input type="checkbox" id="wordToneHighlight" />
                       Resaltar frases que cambian significativamente
                     </label>
@@ -4943,16 +5137,17 @@
                 </div>
                 <div class="ai-word-field-group">
                   <label>Ajustes de adaptación</label>
+                  <p class="ai-word-optional-hint">Indica qué ajustes debe considerar la IA al traducir.</p>
                   <div class="ai-word-checkbox-list">
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Adapta ejemplos para que sean pertinentes en el mercado objetivo.">
                       <input type="checkbox" id="wordTranslateLocalizedExamples" />
                       Localizar ejemplos y referencias culturales
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Conserva unidades de medida para evitar confusiones en la conversión.">
                       <input type="checkbox" id="wordTranslateKeepMetrics" checked />
                       Mantener unidades y métricas originales
                     </label>
-                    <label class="ai-word-checkbox">
+                    <label class="ai-word-checkbox tc-tooltip-target" data-tooltip="Genera un glosario de términos traducidos para futuras referencias.">
                       <input type="checkbox" id="wordTranslateGlossary" />
                       Crear glosario con términos clave
                     </label>
@@ -4966,6 +5161,20 @@
                   Consejo: agrega notas sobre matices culturales o vocabulario institucional para mantener la voz de tu marca.
                 </div>
               </section>
+            </div>
+            <div class="ai-word-web-sources">
+              <label
+                class="ai-word-web-toggle tc-tooltip-target"
+                for="wordUseWebSources"
+                data-tooltip="Comparte enlaces confiables para enriquecer el contexto del texto generado."
+                data-tooltip-position="top"
+              >
+                <input type="checkbox" id="wordUseWebSources" />
+                Usar información de páginas web
+              </label>
+              <p class="ai-word-web-hint">
+                Selecciona esta opción si quieres que la IA consulte artículos, notas o referencias públicas relevantes.
+              </p>
             </div>
           </div>
         </div>
