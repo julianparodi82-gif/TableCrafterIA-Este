@@ -66,6 +66,10 @@ function getReportEditorPortal() {
   return reportEditorPortal;
 }
 
+function initReportEditorPortal() {
+  getReportEditorPortal();
+}
+
 function mountReportEditorInActions() {
   const portal = getReportEditorPortal();
   if (!portal || !portal.section || !portal.host) {
