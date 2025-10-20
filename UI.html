@@ -175,7 +175,10 @@
         width: 100%;
       }
       .tab-nav-row--top {
-        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
       }
       .tab-nav-row--bottom {
         display: flex;
@@ -190,6 +193,7 @@
         text-align: center;
         gap: 8px;
         min-width: 0;
+        flex: 0 1 220px;
       }
       .tab-btn {
         border: 1px solid var(--tc-border);
@@ -3598,19 +3602,6 @@
                 <?!= __isWordcrafter ? 'Crear texto' : 'Crear tabla' ?>
               </button>
             </div>
-            <? if (!__isWordcrafter) { ?>
-              <div class="tab-btn-wrap">
-                <button
-                  class="tab-btn"
-                  data-tab="templatesTab"
-                  data-themes="table"
-                  data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
-                  data-tooltip-position="bottom"
-                >
-                  Plantillas
-                </button>
-              </div>
-            <? } ?>
           </div>
           <div class="tab-nav-row tab-nav-row--bottom">
             <div class="tab-btn-wrap">
@@ -3619,16 +3610,31 @@
                 data-tab="triggersTab"
                 data-themes="table word"
                 data-tooltip="Configura automatizaciones que mantengan tus datos al día."
+                data-tooltip-position="top"
               >
                 Triggers
               </button>
             </div>
+            <? if (!__isWordcrafter) { ?>
+              <div class="tab-btn-wrap">
+                <button
+                  class="tab-btn"
+                  data-tab="templatesTab"
+                  data-themes="table"
+                  data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
+                  data-tooltip-position="top"
+                >
+                  Plantillas
+                </button>
+              </div>
+            <? } ?>
             <div class="tab-btn-wrap">
               <button
                 class="tab-btn"
                 data-tab="actionsTab"
                 data-themes="table word"
                 data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
+                data-tooltip-position="top"
               >
                 Acciones
               </button>
