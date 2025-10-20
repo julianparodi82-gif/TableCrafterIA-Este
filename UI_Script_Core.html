@@ -3509,18 +3509,7 @@ function playSidebarAnimation() {
           const normalized = nextTheme === 'word' ? 'word' : 'table';
           const shouldSwitch = Boolean(settings.reload);
 
-          function closeSidebar() {
-            try {
-              if (
-                typeof google !== 'undefined' &&
-                google.script &&
-                google.script.host &&
-                typeof google.script.host.close === 'function'
-              ) {
-                google.script.host.close();
-                return;
-              }
-            } catch (closeError) {}
+          function reloadFallback() {
             try {
               window.location.reload();
             } catch (reloadError) {}
@@ -3528,9 +3517,7 @@ function playSidebarAnimation() {
 
           if (typeof google === 'undefined' || !google.script || !google.script.run) {
             if (shouldSwitch) {
-              try {
-                window.location.reload();
-              } catch (reloadError) {}
+              reloadFallback();
             }
             return;
           }
@@ -3539,10 +3526,10 @@ function playSidebarAnimation() {
             if (shouldSwitch) {
               google.script.run
                 .withSuccessHandler(function() {
-                  closeSidebar();
+                  // La nueva vista se muestra desde Apps Script con showSidebar().
                 })
                 .withFailureHandler(function() {
-                  closeSidebar();
+                  reloadFallback();
                 })
                 .switchSidebarTheme(normalized);
             } else {
@@ -3550,7 +3537,7 @@ function playSidebarAnimation() {
             }
           } catch (error) {
             if (shouldSwitch) {
-              closeSidebar();
+              reloadFallback();
             }
           }
         }
