@@ -684,19 +684,25 @@ async function openActionForEditing(action) {
         });
       });
 
-      document.getElementById('refreshRangeBtn').addEventListener('click', async function() {
-        if (isFormatLockActive()) {
-          const resolved = await resolvePendingFormatting();
-          if (resolved !== 'saved' && resolved !== 'cleared') {
+      const createRefreshBtn = document.getElementById('refreshRangeBtn');
+      if (createRefreshBtn) {
+        createRefreshBtn.addEventListener('click', async function() {
+          if (createRefreshBtn.disabled) {
             return;
           }
-        }
-        const input = document.getElementById('rangeInput');
-        if (input) {
-          input.dataset.manual = 'false';
-        }
-        loadActiveRange(editingId === '');
-      });
+          if (isFormatLockActive()) {
+            const resolved = await resolvePendingFormatting();
+            if (resolved !== 'saved' && resolved !== 'cleared') {
+              return;
+            }
+          }
+          const input = document.getElementById('rangeInput');
+          if (input) {
+            input.dataset.manual = 'false';
+          }
+          loadActiveRange(editingId === '');
+        });
+      }
 
       document.getElementById('editRefreshApplyBtn').addEventListener('click', async function() {
         if (!editingId) {

@@ -3097,6 +3097,63 @@ document.addEventListener('DOMContentLoaded', function() {
           window.clearTimeout(sidebarEntryCleanupTimeout);
           sidebarEntryCleanupTimeout = null;
         }
+        const activeContextInfo =
+          (typeof window !== 'undefined' && window.__activeDocContext && window.__activeDocContext.type)
+            ? String(window.__activeDocContext.type)
+            : body && body.getAttribute('data-active-context');
+
+        function syncWordCreateRangeVisibility(contextType) {
+          const normalized = (contextType || '').toLowerCase();
+          const showSpreadsheetRange =
+            normalized === 'sheets' || normalized === 'sheet' || normalized === 'excel' || normalized === 'spreadsheets';
+          const sheetSections = document.querySelectorAll('[data-word-range-sheet]');
+          const docSections = document.querySelectorAll('[data-word-range-doc]');
+          sheetSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', !showSpreadsheetRange);
+          });
+          docSections.forEach(function(section) {
+            if (!section) {
+              return;
+            }
+            section.classList.toggle('is-hidden', showSpreadsheetRange);
+          });
+          const rangeInput = document.getElementById('rangeInput');
+          if (rangeInput) {
+            rangeInput.disabled = !showSpreadsheetRange;
+            if (!showSpreadsheetRange) {
+              rangeInput.value = '';
+              rangeInput.dataset.manual = 'false';
+            }
+          }
+          const refreshBtn = document.getElementById('refreshRangeBtn');
+          if (refreshBtn) {
+            refreshBtn.disabled = !showSpreadsheetRange;
+          }
+          if (!showSpreadsheetRange && typeof clearRangeUI === 'function') {
+            try {
+              clearRangeUI();
+            } catch (error) {}
+          }
+        }
+
+        const normalizedContext = activeContextInfo ? activeContextInfo.toLowerCase() : 'sheets';
+        if (body) {
+          body.dataset.activeContext = normalizedContext;
+        }
+        syncWordCreateRangeVisibility(normalizedContext);
+
+        if (typeof setupWordToggleFields === 'function') {
+          const wordCreateForm = document.getElementById('wordCreateForm');
+          if (wordCreateForm) {
+            try {
+              setupWordToggleFields(wordCreateForm);
+            } catch (error) {}
+          }
+        }
+
         if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
           return;
         }

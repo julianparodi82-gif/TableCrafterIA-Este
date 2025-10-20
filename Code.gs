@@ -42,6 +42,7 @@ function showSidebar() {
   var template = HtmlService.createTemplateFromFile('UI');
   var themeMode = getSidebarThemeMode();
   template.initialThemeMode = themeMode;
+  template.activeDocContext = getActiveDocumentContext();
   var sidebarTitle = themeMode === SIDEBAR_THEME_WORD ? 'WordCrafterAI' : 'TableCrafterAI';
   var html = template.evaluate().setTitle(sidebarTitle).setWidth(600);
   SpreadsheetApp.getUi().showSidebar(html);
@@ -142,6 +143,35 @@ function setSidebarThemeMode(mode) {
   PropertiesService.getUserProperties().setProperty(SIDEBAR_THEME_PROPERTY_KEY, normalized);
   refreshAddonMenuForTheme(normalized);
   return normalized;
+}
+
+function getActiveDocumentContext() {
+  var context = { type: 'sheets' };
+  try {
+    var spreadsheet = SpreadsheetApp.getActive();
+    if (spreadsheet) {
+      context = {
+        type: 'sheets',
+        id: spreadsheet.getId ? spreadsheet.getId() : '',
+        name: spreadsheet.getName ? spreadsheet.getName() : ''
+      };
+      return context;
+    }
+  } catch (error) {}
+
+  try {
+    var doc = DocumentApp.getActiveDocument();
+    if (doc) {
+      context = {
+        type: 'docs',
+        id: doc.getId ? doc.getId() : '',
+        name: doc.getName ? doc.getName() : ''
+      };
+      return context;
+    }
+  } catch (error) {}
+
+  return context;
 }
 
 function showTablecrafterSidebar() {

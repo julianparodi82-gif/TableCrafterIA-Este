@@ -54,12 +54,97 @@ function resetCreateTabView(options) {
             descInput.value = '';
           }
           setDefaultStyles();
+          resetWordCreateFields();
         }
         if (!options.preserveHeaders) {
           currentHeaders = [];
           renderCreateHeaders();
         }
         clearCreateFormatDirty();
+      }
+
+function resetWordCreateFields(root) {
+        root = root || document.getElementById('wordCreateForm');
+        if (!root) {
+          return;
+        }
+        const colorDefaults = {
+          wordTitleColor: '#0F172A',
+          wordBodyColor: '#1F2937'
+        };
+        Object.keys(colorDefaults).forEach(function(id) {
+          const field = document.getElementById(id);
+          if (field && typeof field.value !== 'undefined') {
+            field.value = colorDefaults[id];
+          }
+        });
+        const selectDefaults = {
+          wordTitleSize: 'lg',
+          wordTitleAlign: 'center',
+          wordBodySize: 'md',
+          wordBodyAlign: 'justify',
+          wordBodySpacing: '115',
+          wordBodyLength: 'medium',
+          wordBodyLanguage: 'auto',
+          wordBodyTone: 'formal',
+          wordBodyPersona: 'auto'
+        };
+        Object.keys(selectDefaults).forEach(function(id) {
+          const select = document.getElementById(id);
+          if (select) {
+            select.value = selectDefaults[id];
+          }
+        });
+        const checkboxDefaults = {
+          wordTitleBold: true,
+          wordTitleItalic: false,
+          wordTitleUppercase: false,
+          wordTitleUnderline: false,
+          wordBodyHighlight: false,
+          wordBodyBullets: false,
+          wordBodyIntro: true,
+          wordBodyCTA: false
+        };
+        Object.keys(checkboxDefaults).forEach(function(id) {
+          const checkbox = document.getElementById(id);
+          if (checkbox) {
+            checkbox.checked = checkboxDefaults[id];
+          }
+        });
+        const textDefaults = [
+          'wordBodyBrief',
+          'wordBodyLanguageCustom',
+          'wordBodyToneCustom',
+          'wordBodyPersonaCustom'
+        ];
+        textDefaults.forEach(function(id) {
+          const field = document.getElementById(id);
+          if (field && typeof field.value !== 'undefined') {
+            field.value = '';
+          }
+        });
+        const customFieldContainers = [
+          document.getElementById('wordBodyLanguageCustomField'),
+          document.getElementById('wordBodyToneCustomField'),
+          document.getElementById('wordBodyPersonaCustomField')
+        ];
+        customFieldContainers.forEach(function(container) {
+          if (container) {
+            container.classList.add('ai-hidden');
+            const inputs = container.querySelectorAll('textarea, input, select');
+            inputs.forEach(function(input) {
+              input.disabled = true;
+            });
+          }
+        });
+        ['wordBodyLanguage', 'wordBodyTone', 'wordBodyPersona'].forEach(function(id) {
+          const select = document.getElementById(id);
+          if (select) {
+            const event = document.createEvent('Event');
+            event.initEvent('change', true, true);
+            select.dispatchEvent(event);
+          }
+        });
       }
 
 function clearRangeUI() {
