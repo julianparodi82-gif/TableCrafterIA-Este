@@ -178,11 +178,6 @@ function showTablecrafterSidebar() {
   showSidebar();
 }
 
-function showWordcrafterSidebar() {
-  setSidebarThemeMode(SIDEBAR_THEME_WORD);
-  showSidebar();
-}
-
 function getWelcomeMessagePreference() {
   var userProperties = PropertiesService.getUserProperties();
   var tableValue = userProperties.getProperty(WELCOME_MESSAGE_PROPERTY_KEY_TABLE);
