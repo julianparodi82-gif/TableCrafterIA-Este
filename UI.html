@@ -351,6 +351,19 @@
         opacity: 1;
         transform: translateY(0);
       }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']::after {
+        bottom: auto;
+        top: calc(100% + 8px);
+        transform: translateY(-4px);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']::before {
+        bottom: auto;
+        top: calc(100% + 2px);
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']:hover::after {
+        transform: translateY(0);
+      }
       .ai-report-order-label.tc-tooltip-target[data-tooltip]::after {
         bottom: auto;
         top: calc(100% + 8px);
@@ -3021,8 +3034,20 @@
         flex-wrap: wrap;
         margin-top: 12px;
       }
+      .action-favorite-row {
+        width: 100%;
+        display: flex;
+      }
+      .action-favorite-btn {
+        width: 100%;
+        justify-content: center;
+        display: flex;
+      }
       .action-buttons button {
         flex: 1 1 160px;
+      }
+      body.theme-wordcrafter #saveTableBtn {
+        display: none;
       }
       .word-range-toggle {
         display: flex;
@@ -3136,24 +3161,24 @@
         color: var(--tc-muted);
       }
       .word-format-preview {
-        min-width: 150px;
+        min-width: 140px;
         flex: 0 0 auto;
         border-radius: 12px;
-        padding: 12px 16px;
+        padding: 10px 14px;
         background: rgba(42, 176, 255, 0.15);
         color: var(--tc-primary-dark);
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
         transition: all 0.2s ease;
-        width: min(100%, 200px);
+        width: min(100%, 168px);
       }
       .word-format-preview.word-format-preview-body {
         text-align: center;
         font-weight: 500;
         min-width: 0;
-        width: min(100%, 200px);
-        line-height: 1.6;
+        width: min(100%, 168px);
+        line-height: 1.55;
       }
       .word-format-preview.word-preview-highlighted {
         background: rgba(255, 216, 102, 0.25);
@@ -3183,24 +3208,24 @@
         max-width: 160px;
       }
       .word-format-group--size {
-        flex: 0 0 200px;
+        flex: 0 0 180px;
       }
       .word-inline-field {
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 4px;
+        gap: 2px;
       }
       .word-inline-field label {
         margin: 0;
         white-space: nowrap;
       }
       .word-inline-field input[type='number'] {
-        flex: 0 0 48px;
+        flex: 0 0 40px;
         text-align: center;
       }
       .word-font-size-input {
-        max-width: 48px;
+        max-width: 40px;
       }
       .word-format-flags {
         display: flex;
@@ -3291,26 +3316,29 @@
       .word-context-structure {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
       .word-context-structure-toggle {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         font-weight: 600;
+        font-size: 13px;
         color: var(--tc-primary-dark);
-        background: rgba(255, 255, 255, 0.85);
-        border-radius: 12px;
-        padding: 10px 14px;
-        border: 1px solid rgba(28, 141, 212, 0.22);
+        background: rgba(255, 255, 255, 0.78);
+        border-radius: 10px;
+        padding: 8px 12px;
+        border: 1px solid rgba(28, 141, 212, 0.18);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
       }
       .word-context-structure-toggle:hover {
-        border-color: rgba(28, 141, 212, 0.38);
-        box-shadow: 0 6px 12px rgba(28, 141, 212, 0.16);
+        border-color: rgba(28, 141, 212, 0.32);
+        box-shadow: 0 4px 10px rgba(28, 141, 212, 0.14);
       }
       .word-context-structure-toggle input {
         margin: 0;
+        width: 14px;
+        height: 14px;
       }
       .word-context-structure-details {
         display: none;
@@ -3325,13 +3353,15 @@
       .word-context-subtoggle {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         font-size: 12px;
         font-weight: 600;
         color: var(--tc-primary-dark);
       }
       .word-context-subtoggle input {
         margin: 0;
+        width: 13px;
+        height: 13px;
       }
       .word-context-description-wrapper {
         display: none;
@@ -3512,81 +3542,73 @@
         font-weight: 600;
         cursor: pointer;
       }
-      .word-highlighted-section {
+      .word-automation-section {
         margin-top: 18px;
         border-top: 1px solid rgba(28, 141, 212, 0.18);
         padding-top: 16px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
-      .word-highlighted-toggle {
+      .word-automation-toggle {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         font-weight: 600;
         color: var(--tc-primary-dark);
       }
-      .word-highlighted-helper {
+      .word-automation-toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+      .word-automation-helper {
         margin: 0;
         font-size: 12px;
         color: var(--tc-muted);
       }
-      .word-highlighted-list {
+      .word-automation-options {
         display: none;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .word-highlighted-list.is-visible {
-        display: flex;
-      }
-      .word-highlighted-item {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 12px;
-        border: 1px solid rgba(28, 141, 212, 0.18);
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 8px;
       }
-      .word-highlighted-row {
+      .word-automation-options.is-visible {
         display: flex;
-        gap: 8px;
-        align-items: center;
       }
-      .word-highlighted-input {
-        flex: 1 1 auto;
-      }
-      .word-highlighted-remove {
-        border: none;
-        background: rgba(239, 68, 68, 0.1);
-        color: #b91c1c;
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      .word-highlighted-remove:hover {
-        background: rgba(239, 68, 68, 0.18);
-      }
-      .word-highlighted-emphasis {
+      .word-automation-option {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        background: rgba(255, 255, 255, 0.85);
         font-size: 12px;
         font-weight: 600;
         color: var(--tc-primary-dark);
       }
-      .word-highlighted-add {
-        align-self: flex-start;
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px dashed rgba(28, 141, 212, 0.4);
-        background: rgba(42, 176, 255, 0.08);
-        color: var(--tc-primary-dark);
+      .word-automation-option input {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+      }
+      .word-automation-custom {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-automation-custom.is-visible {
+        display: flex;
+      }
+      .word-automation-custom label {
         font-weight: 600;
-        cursor: pointer;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--tc-muted);
+      }
+      .word-automation-custom textarea {
+        min-height: 72px;
+        resize: vertical;
       }
       .word-context-helper {
         margin-top: 10px;
@@ -3791,7 +3813,7 @@
           data-themes="table word"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
         >
-          Editar tabla
+          Editar Tabla
         </button>
         <button
           class="tab-btn tab-btn--tooltip-below"
@@ -3799,7 +3821,7 @@
           data-themes="table word"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
         >
-          Crear tabla
+          Crear Tabla
         </button>
         <button
           class="tab-btn"
@@ -4007,16 +4029,16 @@
                 >
                 <select id="wordBodyLength" data-default-value="auto">
                   <option value="auto" selected>Automático (IA decide)</option>
-                  <option value="1">1 párrafo</option>
-                  <option value="2">2 párrafos</option>
-                  <option value="3">3 párrafos</option>
-                  <option value="4">4 párrafos</option>
-                  <option value="5">5 párrafos</option>
-                  <option value="6">6 párrafos</option>
-                  <option value="7">7 párrafos</option>
-                  <option value="8">8 párrafos</option>
-                  <option value="9">9 párrafos</option>
-                  <option value="10">10 párrafos</option>
+                  <option value="1">Muy breve (1 párrafo)</option>
+                  <option value="2">Resumen corto (2 párrafos)</option>
+                  <option value="3">Compacto (3 párrafos)</option>
+                  <option value="4">Equilibrado (4 párrafos)</option>
+                  <option value="5">Detallado (5 párrafos)</option>
+                  <option value="6">Profundo (6 párrafos)</option>
+                  <option value="7">Ampliado (7 párrafos)</option>
+                  <option value="8">Extenso (8 párrafos)</option>
+                  <option value="9">Muy extenso (9 párrafos)</option>
+                  <option value="10">Máxima profundidad (10 párrafos)</option>
                 </select>
               </div>
               <div class="word-context-structure">
@@ -4089,6 +4111,7 @@
                     for="wordBodyLanguage"
                     class="tc-tooltip-target"
                     data-tooltip="Selecciona el idioma final del texto. Las cifras se mantienen sin cambios."
+                    data-tooltip-position="below"
                     >Idioma de salida</label
                   >
                   <select id="wordBodyLanguage" data-default-value="auto">
@@ -4122,6 +4145,7 @@
                     for="wordBodyTone"
                     class="tc-tooltip-target"
                     data-tooltip="Define la voz narrativa deseada. Ej: Analítico para reportes técnicos."
+                    data-tooltip-position="below"
                     >Tono del texto</label
                   >
                   <select id="wordBodyTone" data-default-value="neutral">
@@ -4154,6 +4178,7 @@
                     for="wordBodyProfile"
                     class="tc-tooltip-target"
                     data-tooltip="Orienta el nivel técnico y ejemplos según el rol lector."
+                    data-tooltip-position="below"
                     >Perfil profesional del texto</label
                   >
                   <select id="wordBodyProfile" data-default-value="auto">
@@ -4186,18 +4211,39 @@
                   </p>
                 </div>
               </div>
-              <div class="word-highlighted-section">
-                <label for="wordCommentsToggle" class="word-highlighted-toggle">
-                  <input type="checkbox" id="wordCommentsToggle" />
-                  Comentarios destacados
+              <div class="word-automation-section">
+                <label class="word-automation-toggle">
+                  <input type="checkbox" id="wordAutoCommentsToggle" />
+                  Automatizar comentarios en puntos clave
                 </label>
-                <p class="word-highlighted-helper">
-                  Agrega notas puntuales que deban resaltarse en la redacción final.
+                <p class="word-automation-helper">
+                  Deja que la IA marque hallazgos relevantes en el texto final.
                 </p>
-                <div class="word-highlighted-list" id="wordCommentsList"></div>
-                <button type="button" class="word-highlighted-add" id="wordCommentsAdd">
-                  Agregar comentario
-                </button>
+                <div class="word-automation-options" id="wordAutoCommentsOptions">
+                  <label class="word-automation-option">
+                    <input type="checkbox" id="wordAutoCommentInsights" />
+                    Señalar insights destacados
+                  </label>
+                  <label class="word-automation-option">
+                    <input type="checkbox" id="wordAutoCommentRisks" />
+                    Alertar riesgos o alertas tempranas
+                  </label>
+                  <label class="word-automation-option">
+                    <input type="checkbox" id="wordAutoCommentFollowUp" />
+                    Recomendar próximos pasos
+                  </label>
+                  <label class="word-automation-option">
+                    <input type="checkbox" id="wordAutoCommentCustom" />
+                    Comentarios personalizados
+                  </label>
+                </div>
+                <div class="word-automation-custom" id="wordAutoCommentsCustomWrapper">
+                  <label for="wordAutoCommentsCustom">Describe los puntos clave personalizados</label>
+                  <textarea
+                    id="wordAutoCommentsCustom"
+                    placeholder="Ej: Destacar métricas fuera de objetivo y responsables involucrados"
+                  ></textarea>
+                </div>
               </div>
             </div>
             <p class="word-context-helper">
@@ -4343,7 +4389,25 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
+            <div class="action-favorite-row">
+              <button
+                type="button"
+                id="createFavoriteBtn"
+                class="ai-report-favorite-btn action-favorite-btn"
+                aria-expanded="false"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                <span class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
+            </div>
+            <button
+              id="applyFormatBtn"
+              class="btn-primary"
+              data-table-label="Aplicar formato"
+              data-word-label="Generar texto"
+            >
+              Aplicar formato
+            </button>
             <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
           </div>
         </div>
@@ -4351,10 +4415,28 @@
 
       <div id="editTab" class="tab-content" data-themes="table word">
         <div class="section">
-          <label for="editSavedTables">Tablas guardadas</label>
+          <label
+            for="editSavedTables"
+            id="editSavedLabel"
+            data-table-label="Tablas guardadas"
+            data-word-label="Textos guardados"
+          >
+            Tablas guardadas
+          </label>
           <div class="edit-saved-container">
-            <div id="editSavedTablesList" aria-label="Tablas guardadas"></div>
-            <select id="editSavedTables" size="8"></select>
+            <div
+              id="editSavedTablesList"
+              aria-label="Tablas guardadas"
+              data-table-label="Tablas guardadas"
+              data-word-label="Textos guardados"
+            ></div>
+            <select
+              id="editSavedTables"
+              size="8"
+              aria-label="Tablas guardadas"
+              data-table-label="Tablas guardadas"
+              data-word-label="Textos guardados"
+            ></select>
           </div>
         </div>
         <div id="editRangeSection" class="section" style="display:none;">
@@ -4363,6 +4445,15 @@
               <strong>Rango actual:</strong> <span id="editRangeLabel">—</span>
             </div>
             <div class="range-actions range-actions--stacked">
+              <button
+                type="button"
+                id="editFavoriteBtn"
+                class="ai-report-favorite-btn action-favorite-btn"
+                aria-expanded="false"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                <span class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
               <button
                 id="editRefreshApplyBtn"
                 class="btn-secondary"
@@ -4426,6 +4517,13 @@
           <div class="ai-multi-select">
             <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
             <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
+          </div>
+          <label for="aiSavedTexts" style="margin-top:12px;">Textos disponibles</label>
+          <div class="ai-multi-select">
+            <div id="aiSavedTextsList" class="ai-multi-list" aria-label="Textos disponibles">
+              <div class="ai-multi-empty">No hay textos guardados</div>
+            </div>
+            <select id="aiSavedTexts" multiple class="ai-hidden-select"></select>
           </div>
           <label
             for="aiActionSelect"

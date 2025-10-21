@@ -223,7 +223,8 @@
       let selectedReportFeatures = [];
       let reportFeatureState = {};
       let reportCustomizationState = createDefaultCustomizationState();
-      let reportFavoriteModalVisible = false;
+let reportFavoriteModalVisible = false;
+let activeReportFavoriteTrigger = null;
       let activeReportFavoriteId = '';
       let activeReportFavoriteName = '';
       let reportFeatureOrder = [];
@@ -4445,13 +4446,14 @@ function getSelectedAiTableIds() {
         return values;
       }
 
-function openReportFavoriteModal() {
+function openReportFavoriteModal(triggerButton) {
         if (savingReportFavorite) {
           return;
         }
         const editing = !!activeReportFavoriteId;
         const overlay = document.getElementById('aiFavoriteModalOverlay');
-        const trigger = document.getElementById('aiReportFavoriteBtn');
+        const trigger = triggerButton || document.getElementById('aiReportFavoriteBtn');
+        activeReportFavoriteTrigger = trigger || null;
         reportFavoriteModalVisible = true;
         if (overlay) {
           overlay.classList.add('show');
@@ -4487,7 +4489,7 @@ function openReportFavoriteModal() {
 function closeReportFavoriteModal(options) {
         options = options || {};
         const overlay = document.getElementById('aiFavoriteModalOverlay');
-        const trigger = document.getElementById('aiReportFavoriteBtn');
+        const trigger = activeReportFavoriteTrigger || document.getElementById('aiReportFavoriteBtn');
         reportFavoriteModalVisible = false;
         if (overlay) {
           overlay.classList.remove('show');
@@ -4509,6 +4511,9 @@ function closeReportFavoriteModal(options) {
         const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
         if (saveBtn) {
           saveBtn.disabled = false;
+        }
+        if (!reportFavoriteModalVisible) {
+          activeReportFavoriteTrigger = null;
         }
       }
 
