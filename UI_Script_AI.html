@@ -4689,6 +4689,47 @@ async function handleReportFavoriteSave() {
         }
         const nameInput = document.getElementById('aiReportFavoriteName');
         const favoriteName = nameInput ? nameInput.value.trim() : '';
+        const context = activeFavoriteContext
+          ? activeFavoriteContext
+          : resolveFavoriteContextFromTrigger(activeReportFavoriteTrigger);
+        if (context && context.type !== 'reportFavorite') {
+          const generalResult = buildGeneralFavoritePayload(favoriteName, context);
+          if (generalResult && generalResult.error) {
+            await showMessageModal(generalResult.error, {
+              title: 'Información requerida',
+              variant: 'warning'
+            });
+            return;
+          }
+          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+          try {
+            savingReportFavorite = true;
+            if (saveBtn) {
+              saveBtn.disabled = true;
+            }
+            const result = await callServerFunction('saveGeneralFavorite', generalResult.payload);
+            if (result && result.error) {
+              throw new Error(result.error);
+            }
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+            await showMessageModal('Configuración guardada en favoritos.', {
+              title: 'Favorito guardado',
+              variant: 'success'
+            });
+          } catch (error) {
+            await showMessageModal(error && error.message ? error.message : 'No se pudo guardar el favorito.', {
+              title: 'Error al guardar',
+              variant: 'error'
+            });
+          } finally {
+            savingReportFavorite = false;
+            const saveControl = document.getElementById('aiReportFavoriteSaveBtn');
+            if (saveControl) {
+              saveControl.disabled = false;
+            }
+          }
+          return;
+        }
         const fileNameInput = document.getElementById('aiReportFileName');
         const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
         const sanitizedFileName = sanitizeReportFileName(fileNameValue);

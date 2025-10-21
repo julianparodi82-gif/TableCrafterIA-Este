@@ -4409,16 +4409,6 @@
             </div>
             <div class="range-actions range-actions--stacked">
               <button
-                type="button"
-                id="editFavoriteBtn"
-                class="ai-report-favorite-btn action-favorite-btn"
-                aria-expanded="false"
-                data-favorite-context="edit"
-              >
-                <span class="ai-favorite-icon" aria-hidden="true">★</span>
-                <span class="ai-favorite-label">Agregar a favoritos</span>
-              </button>
-              <button
                 id="editRefreshApplyBtn"
                 class="btn-secondary"
                 title="Actualizar rango y aplicar formato"
@@ -4467,6 +4457,20 @@
           <div class="toggle-group">
             <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
             <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
+          </div>
+          <div class="action-buttons">
+            <div class="action-favorite-row">
+              <button
+                type="button"
+                id="editFavoriteBtn"
+                class="ai-report-favorite-btn action-favorite-btn"
+                aria-expanded="false"
+                data-favorite-context="edit"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                <span class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
+            </div>
           </div>
           <div id="editActionsRow" class="action-buttons action-buttons--balanced" style="display:none;">
             <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar tabla</button>
