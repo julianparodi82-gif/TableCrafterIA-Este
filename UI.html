@@ -3153,16 +3153,9 @@
         min-width: 260px;
         line-height: 1.6;
       }
-      .word-format-preview .word-preview-keywords {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 6px;
-        background: rgba(42, 176, 255, 0.22);
-        margin-left: 4px;
-        font-weight: 600;
-      }
-      .word-format-preview.word-preview-highlighted .word-preview-keywords {
-        background: rgba(255, 216, 102, 0.85);
+      .word-format-preview.word-preview-highlighted {
+        background: rgba(255, 216, 102, 0.25);
+        box-shadow: inset 0 0 0 1px rgba(255, 216, 102, 0.6);
         color: #7c5a00;
       }
       .word-format-grid {
@@ -3186,6 +3179,24 @@
       }
       .word-format-group input[type='number'] {
         max-width: 160px;
+      }
+      .word-format-group--size {
+        flex: 0 0 200px;
+      }
+      .word-inline-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .word-inline-field label {
+        margin: 0;
+      }
+      .word-inline-field input[type='number'] {
+        flex: 0 0 72px;
+        text-align: center;
+      }
+      .word-font-size-input {
+        max-width: 80px;
       }
       .word-format-flags {
         display: flex;
@@ -3279,6 +3290,207 @@
       .word-context-columns .word-format-group {
         min-width: 180px;
         flex: 1 1 210px;
+      }
+      .word-context-columns .word-context-select {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 10px 24px rgba(42, 176, 255, 0.12);
+        border: 1px solid rgba(28, 141, 212, 0.18);
+        gap: 10px;
+      }
+      .word-context-select label {
+        font-size: 13px;
+        text-transform: none;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-helper-text {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+        line-height: 1.5;
+      }
+      .word-context-extra {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-context-extra.is-visible {
+        display: flex;
+      }
+      .word-context-extra label {
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.01em;
+        color: var(--tc-muted);
+        text-transform: uppercase;
+      }
+      .word-context-extra input,
+      .word-context-extra textarea {
+        font-size: 13px;
+      }
+      .word-context-web {
+        margin-top: 14px;
+        border-top: 1px solid rgba(28, 141, 212, 0.18);
+        padding-top: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-web-list {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-list.is-visible {
+        display: flex;
+      }
+      .word-context-web-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-item {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(28, 141, 212, 0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-context-web-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .word-context-web-input {
+        flex: 1 1 auto;
+      }
+      .word-context-web-remove {
+        border: none;
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .word-context-web-remove:hover {
+        background: rgba(239, 68, 68, 0.18);
+      }
+      .word-context-web-desc-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-web-desc-toggle.is-active {
+        color: var(--tc-primary);
+      }
+      .word-context-web-desc {
+        display: none;
+        min-height: 60px;
+      }
+      .word-context-web-desc.is-visible {
+        display: block;
+      }
+      .word-context-web-add {
+        align-self: flex-start;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px dashed rgba(28, 141, 212, 0.4);
+        background: rgba(42, 176, 255, 0.08);
+        color: var(--tc-primary-dark);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .word-highlighted-section {
+        margin-top: 18px;
+        border-top: 1px solid rgba(28, 141, 212, 0.18);
+        padding-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-highlighted-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-highlighted-helper {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .word-highlighted-list {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-highlighted-list.is-visible {
+        display: flex;
+      }
+      .word-highlighted-item {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        border: 1px solid rgba(28, 141, 212, 0.18);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-highlighted-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .word-highlighted-input {
+        flex: 1 1 auto;
+      }
+      .word-highlighted-remove {
+        border: none;
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .word-highlighted-remove:hover {
+        background: rgba(239, 68, 68, 0.18);
+      }
+      .word-highlighted-emphasis {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-highlighted-add {
+        align-self: flex-start;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px dashed rgba(28, 141, 212, 0.4);
+        background: rgba(42, 176, 255, 0.08);
+        color: var(--tc-primary-dark);
+        font-weight: 600;
+        cursor: pointer;
       }
       .word-context-helper {
         margin-top: 10px;
@@ -3575,7 +3787,7 @@
                   aria-live="polite"
                   aria-label="Vista previa del título"
                 >
-                  Ejemplo de título
+                  Ejemplo
                 </div>
               </div>
               <div class="word-format-grid">
@@ -3598,17 +3810,20 @@
                     data-default-value="#1F2937"
                   />
                 </div>
-                <div class="word-format-group">
-                  <label for="wordTitleFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordTitleFontSize"
-                    min="14"
-                    max="72"
-                    step="1"
-                    value="32"
-                    data-default-value="32"
-                  />
+                <div class="word-format-group word-format-group--size">
+                  <div class="word-inline-field">
+                    <label for="wordTitleFontSize">Tamaño de letra</label>
+                    <input
+                      type="number"
+                      id="wordTitleFontSize"
+                      class="word-font-size-input"
+                      min="14"
+                      max="72"
+                      step="1"
+                      value="32"
+                      data-default-value="32"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group">
                   <label for="wordTitleAlignment">Alineación</label>
@@ -3628,7 +3843,7 @@
                   ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
                 >
                 <label for="wordTitleItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleItalics" /> Cursiva</label
+                  ><input type="checkbox" id="wordTitleItalics" /> Italik</label
                 >
                 <label for="wordTitleUppercase" class="word-format-flag"
                   ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
@@ -3657,35 +3872,103 @@
                   placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
                 ></textarea>
               </div>
+              <div class="word-context-web">
+                <label for="wordContextWebToggle" class="word-context-web-toggle">
+                  <input type="checkbox" id="wordContextWebToggle" />
+                  Utilizar páginas web
+                </label>
+                <div class="word-context-web-list" id="wordContextWebList">
+                  <div class="word-context-web-items" id="wordContextWebItems"></div>
+                  <button type="button" class="word-context-web-add" id="wordContextWebAdd">
+                    Agregar página
+                  </button>
+                </div>
+              </div>
               <div class="word-context-columns">
-                <div class="word-format-group">
+                <div class="word-format-group word-context-select">
                   <label for="wordBodyLanguage">Idioma de salida</label>
-                  <input
-                    type="text"
-                    id="wordBodyLanguage"
-                    placeholder="Ej: Español neutro"
-                    data-default-value=""
-                  />
-                </div>
-                <div class="word-format-group">
-                  <label for="wordBodyTone">Tono del reporte</label>
-                  <select id="wordBodyTone" data-default-value="profesional">
-                    <option value="profesional" selected>Profesional</option>
-                    <option value="formal">Formal</option>
-                    <option value="informal">Informal</option>
-                    <option value="persuasivo">Persuasivo</option>
-                    <option value="didactico">Didáctico</option>
+                  <select id="wordBodyLanguage" data-default-value="auto">
+                    <option value="auto" selected>Detección automática (IA)</option>
+                    <option value="es">Español</option>
+                    <option value="en">Inglés</option>
+                    <option value="pt">Portugués</option>
+                    <option value="fr">Francés</option>
+                    <option value="other">Otro</option>
                   </select>
+                  <div id="wordBodyLanguageCustomWrapper" class="word-context-extra">
+                    <label for="wordBodyLanguageCustom">Idioma personalizado</label>
+                    <input
+                      type="text"
+                      id="wordBodyLanguageCustom"
+                      data-default-value=""
+                      placeholder="Ej: Alemán (Alemania)"
+                    />
+                  </div>
+                  <p class="word-context-helper-text">
+                    La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
+                  </p>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyProfile">Perfil profesional</label>
-                  <input
-                    type="text"
-                    id="wordBodyProfile"
-                    placeholder="Ej: Analista financiero senior"
-                    data-default-value=""
-                  />
+                <div class="word-format-group word-context-select">
+                  <label for="wordBodyTone">Tono del texto</label>
+                  <select id="wordBodyTone" data-default-value="neutral">
+                    <option value="neutral" selected>Neutral profesional</option>
+                    <option value="executive">Resumen ejecutivo</option>
+                    <option value="friendly">Cercano y motivador</option>
+                    <option value="analytical">Analítico y detallado</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                  <div id="wordBodyToneCustomWrapper" class="word-context-extra">
+                    <label for="wordBodyToneCustom">Detalle del tono personalizado</label>
+                    <input
+                      type="text"
+                      id="wordBodyToneCustom"
+                      data-default-value=""
+                      placeholder="Ej: Inspirador con foco en logros del equipo"
+                    />
+                  </div>
+                  <p class="word-context-helper-text">
+                    Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el texto.
+                  </p>
                 </div>
+                <div class="word-format-group word-context-select">
+                  <label for="wordBodyProfile">Perfil profesional del texto</label>
+                  <select id="wordBodyProfile" data-default-value="auto">
+                    <option value="auto" selected>Elegir automáticamente (IA)</option>
+                    <option value="executive">Dirección general</option>
+                    <option value="data-analyst">Analista de datos</option>
+                    <option value="finance">Dirección financiera</option>
+                    <option value="operations">Gerencia de operaciones</option>
+                    <option value="marketing">Marketing y comunicación</option>
+                    <option value="hr">Recursos humanos</option>
+                    <option value="it">Especialista en IT / Sistemas</option>
+                    <option value="sales">Liderazgo comercial</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                  <div id="wordBodyProfileNoteWrapper" class="word-context-extra">
+                    <label for="wordBodyProfileNote">Describe el perfil (opcional)</label>
+                    <textarea
+                      id="wordBodyProfileNote"
+                      data-default-value=""
+                      placeholder="Detalla el rol, prioridades o expectativas del perfil que leerá el texto"
+                    ></textarea>
+                  </div>
+                  <p class="word-context-helper-text">
+                    Ajusta ejemplos y recomendaciones para que la IA hable desde la mirada del rol más relevante.
+                  </p>
+                </div>
+              </div>
+              <div class="word-highlighted-section">
+                <label for="wordCommentsToggle" class="word-highlighted-toggle">
+                  <input type="checkbox" id="wordCommentsToggle" />
+                  Comentarios destacados
+                </label>
+                <p class="word-highlighted-helper">
+                  Agrega notas puntuales que deban resaltarse en la redacción final.
+                </p>
+                <div class="word-highlighted-list" id="wordCommentsList"></div>
+                <button type="button" class="word-highlighted-add" id="wordCommentsAdd">
+                  Agregar comentario
+                </button>
               </div>
             </div>
             <p class="word-context-helper">
@@ -3711,8 +3994,7 @@
                   aria-live="polite"
                   aria-label="Vista previa del cuerpo"
                 >
-                  <span class="word-preview-text">Ejemplo de párrafo adaptable a tu reporte, resaltando</span>
-                  <span class="word-preview-keywords">palabras clave</span>
+                  <span class="word-preview-text">Ejemplo</span>
                 </div>
               </div>
               <div class="word-format-grid">
@@ -3735,17 +4017,20 @@
                     data-default-value="#1F2937"
                   />
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordBodyFontSize"
-                    min="10"
-                    max="48"
-                    step="1"
-                    value="15"
-                    data-default-value="15"
-                  />
+                <div class="word-format-group word-format-group--size">
+                  <div class="word-inline-field">
+                    <label for="wordBodyFontSize">Tamaño de letra</label>
+                    <input
+                      type="number"
+                      id="wordBodyFontSize"
+                      class="word-font-size-input"
+                      min="10"
+                      max="48"
+                      step="1"
+                      value="15"
+                      data-default-value="15"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group">
                   <label for="wordBodyAlignment">Alineación</label>
@@ -3775,7 +4060,7 @@
                   ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
                 >
                 <label for="wordBodyItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyItalics" /> Cursiva</label
+                  ><input type="checkbox" id="wordBodyItalics" /> Italik</label
                 >
                 <label for="wordBodyHighlight" class="word-format-flag"
                   ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label

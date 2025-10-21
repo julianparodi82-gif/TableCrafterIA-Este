@@ -4,6 +4,13 @@ let rangeInfo = null;
 let createFormatDirty = false;
 let pendingFormatState = { applied: false, range: null };
 const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
+const WORD_WEB_SOURCE_LIMIT = 10;
+const WORD_HIGHLIGHTED_COMMENT_LIMIT = 5;
+let wordContextWebSources = [];
+let wordHighlightedComments = [];
+const WORD_LANGUAGE_DEFAULT = 'auto';
+const WORD_TONE_DEFAULT = 'neutral';
+const WORD_PROFILE_DEFAULT = 'auto';
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -127,9 +134,7 @@ function resetWordTextOptions() {
         resetWordFormatInputs('wordTitleFormatOptions');
         resetWordFormatInputs('wordBodyFormatOptions');
         const extraFields = [
-          'wordBodyContext',
-          'wordBodyLanguage',
-          'wordBodyProfile'
+          'wordBodyContext'
         ];
         extraFields.forEach(function(fieldId) {
           const el = document.getElementById(fieldId);
@@ -144,9 +149,45 @@ function resetWordTextOptions() {
         });
         const toneSelect = document.getElementById('wordBodyTone');
         if (toneSelect) {
-          const fallback = toneSelect.dataset && toneSelect.dataset.defaultValue !== undefined ? toneSelect.dataset.defaultValue : toneSelect.defaultValue;
-          toneSelect.value = fallback !== undefined ? fallback : 'profesional';
+          toneSelect.value = WORD_TONE_DEFAULT;
         }
+        const toneCustom = document.getElementById('wordBodyToneCustom');
+        if (toneCustom) {
+          toneCustom.value = '';
+        }
+        const languageSelect = document.getElementById('wordBodyLanguage');
+        if (languageSelect) {
+          languageSelect.value = WORD_LANGUAGE_DEFAULT;
+        }
+        const languageCustom = document.getElementById('wordBodyLanguageCustom');
+        if (languageCustom) {
+          languageCustom.value = '';
+        }
+        const profileSelect = document.getElementById('wordBodyProfile');
+        if (profileSelect) {
+          profileSelect.value = WORD_PROFILE_DEFAULT;
+        }
+        const profileNote = document.getElementById('wordBodyProfileNote');
+        if (profileNote) {
+          profileNote.value = '';
+        }
+        wordContextWebSources = [];
+        renderWordContextWebSources();
+        const webToggle = document.getElementById('wordContextWebToggle');
+        if (webToggle) {
+          webToggle.checked = false;
+        }
+        updateWordContextWebVisibility();
+        wordHighlightedComments = [];
+        renderWordHighlightedComments();
+        const commentsToggle = document.getElementById('wordCommentsToggle');
+        if (commentsToggle) {
+          commentsToggle.checked = false;
+        }
+        updateWordHighlightedVisibility();
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
         refreshWordPreviews();
       }
 
@@ -181,22 +222,25 @@ function updateWordPreview(kind) {
         const formatContainer = document.getElementById(prefix + 'FormatOptions');
 
         if (!preview.dataset.baseText) {
-          preview.dataset.baseText = kind === 'body'
-            ? 'Ejemplo de párrafo adaptable a tu reporte, resaltando'
-            : 'Ejemplo de título';
-        }
-        if (kind === 'body' && !preview.dataset.baseKeywords) {
-          preview.dataset.baseKeywords = 'palabras clave';
+          preview.dataset.baseText = 'Ejemplo';
         }
 
         if (colorInput) {
           preview.style.color = colorInput.value || '';
         }
-        if (sizeInput && sizeInput.value) {
-          const parsed = parseFloat(sizeInput.value);
-          if (!isNaN(parsed)) {
-            preview.style.fontSize = parsed + 'px';
+        preview.style.removeProperty('font-size');
+        if (!preview.dataset.lockedFontSize) {
+          try {
+            const computed = window.getComputedStyle(preview).fontSize;
+            if (computed) {
+              preview.dataset.lockedFontSize = computed;
+            }
+          } catch (err) {
+            preview.dataset.lockedFontSize = '';
           }
+        }
+        if (preview.dataset.lockedFontSize) {
+          preview.style.fontSize = preview.dataset.lockedFontSize;
         }
         if (alignSelect) {
           preview.style.textAlign = alignSelect.value || '';
@@ -219,19 +263,16 @@ function updateWordPreview(kind) {
         }
         if (kind === 'body') {
           const textSpan = preview.querySelector('.word-preview-text');
-          const keywordsSpan = preview.querySelector('.word-preview-keywords');
           if (textSpan) {
             textSpan.textContent = preview.dataset.baseText;
           } else {
-            preview.textContent = preview.dataset.baseText + ' ' + (preview.dataset.baseKeywords || '');
-          }
-          if (keywordsSpan) {
-            keywordsSpan.textContent = preview.dataset.baseKeywords || '';
+            preview.textContent = preview.dataset.baseText;
           }
         } else {
-          preview.textContent = uppercaseToggle && uppercaseToggle.checked
+          const baseText = uppercaseToggle && uppercaseToggle.checked
             ? preview.dataset.baseText.toUpperCase()
             : preview.dataset.baseText;
+          preview.textContent = baseText;
         }
         if (kind === 'body' && highlightToggle) {
           preview.classList.toggle('word-preview-highlighted', highlightToggle.checked);
@@ -246,6 +287,340 @@ function updateWordPreview(kind) {
 function refreshWordPreviews() {
         updateWordPreview('title');
         updateWordPreview('body');
+      }
+
+function createEmptyWordWebSourceEntry() {
+        return { url: '', hasDescription: false, description: '' };
+      }
+
+function ensureWordContextWebSources() {
+        if (!Array.isArray(wordContextWebSources)) {
+          wordContextWebSources = [];
+        }
+        if (wordContextWebSources.length > WORD_WEB_SOURCE_LIMIT) {
+          wordContextWebSources = wordContextWebSources.slice(0, WORD_WEB_SOURCE_LIMIT);
+        }
+        return wordContextWebSources;
+      }
+
+function renderWordContextWebSources(options) {
+        const itemsContainer = document.getElementById('wordContextWebItems');
+        if (!itemsContainer) {
+          return;
+        }
+        const focusNew = !!(options && options.focusNew);
+        const sources = ensureWordContextWebSources();
+        itemsContainer.innerHTML = '';
+        sources.forEach(function(entry, index) {
+          const item = document.createElement('div');
+          item.className = 'word-context-web-item';
+
+          const row = document.createElement('div');
+          row.className = 'word-context-web-row';
+          const input = document.createElement('input');
+          input.type = 'url';
+          input.className = 'word-context-web-input';
+          input.placeholder = 'https://ejemplo.com';
+          input.value = entry && entry.url ? entry.url : '';
+          input.addEventListener('input', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.url = this.value;
+            }
+          });
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'word-context-web-remove';
+          removeBtn.textContent = '×';
+          removeBtn.setAttribute('aria-label', 'Eliminar página web');
+          removeBtn.addEventListener('click', function() {
+            const list = ensureWordContextWebSources();
+            list.splice(index, 1);
+            renderWordContextWebSources();
+            updateWordContextWebVisibility();
+          });
+          row.appendChild(input);
+          row.appendChild(removeBtn);
+          item.appendChild(row);
+
+          const descToggleLabel = document.createElement('label');
+          descToggleLabel.className = 'word-context-web-desc-toggle';
+          const descToggle = document.createElement('input');
+          descToggle.type = 'checkbox';
+          const descText = document.createElement('span');
+          descText.textContent = 'Agregar descripción';
+          const hasContent = entry && entry.description && entry.description.trim();
+          descToggle.checked = !!(entry && (entry.hasDescription || hasContent));
+          if (descToggle.checked) {
+            descToggleLabel.classList.add('is-active');
+          }
+          descToggleLabel.appendChild(descToggle);
+          descToggleLabel.appendChild(descText);
+          item.appendChild(descToggleLabel);
+
+          const descArea = document.createElement('textarea');
+          descArea.className = 'word-context-web-desc';
+          descArea.placeholder = 'Describe qué información se debe buscar';
+          descArea.value = entry && entry.description ? entry.description : '';
+          descArea.classList.toggle('is-visible', descToggle.checked);
+          descArea.addEventListener('input', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.description = this.value;
+            }
+          });
+          descToggle.addEventListener('change', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.hasDescription = this.checked;
+              if (!this.checked) {
+                target.description = '';
+                descArea.value = '';
+              }
+            }
+            descArea.classList.toggle('is-visible', this.checked);
+            descToggleLabel.classList.toggle('is-active', this.checked);
+          });
+          item.appendChild(descArea);
+
+          itemsContainer.appendChild(item);
+          if (focusNew && index === sources.length - 1) {
+            setTimeout(function() {
+              input.focus();
+            }, 0);
+          }
+        });
+      }
+
+function updateWordContextWebVisibility() {
+        const toggle = document.getElementById('wordContextWebToggle');
+        const list = document.getElementById('wordContextWebList');
+        const addBtn = document.getElementById('wordContextWebAdd');
+        const enabled = !!(toggle && toggle.checked);
+        if (list) {
+          list.classList.toggle('is-visible', enabled);
+        }
+        if (addBtn) {
+          const sources = ensureWordContextWebSources();
+          addBtn.disabled = !enabled || sources.length >= WORD_WEB_SOURCE_LIMIT;
+        }
+      }
+
+function bindWordContextWebSources() {
+        const toggle = document.getElementById('wordContextWebToggle');
+        if (toggle && toggle.dataset.webBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            if (this.checked && ensureWordContextWebSources().length === 0) {
+              wordContextWebSources.push(createEmptyWordWebSourceEntry());
+              renderWordContextWebSources({ focusNew: true });
+            }
+            updateWordContextWebVisibility();
+          });
+          toggle.dataset.webBound = 'true';
+        }
+        const addBtn = document.getElementById('wordContextWebAdd');
+        if (addBtn && addBtn.dataset.webBound !== 'true') {
+          addBtn.addEventListener('click', function() {
+            if (ensureWordContextWebSources().length >= WORD_WEB_SOURCE_LIMIT) {
+              return;
+            }
+            wordContextWebSources.push(createEmptyWordWebSourceEntry());
+            renderWordContextWebSources({ focusNew: true });
+            updateWordContextWebVisibility();
+          });
+          addBtn.dataset.webBound = 'true';
+        }
+        renderWordContextWebSources();
+        updateWordContextWebVisibility();
+      }
+
+function createEmptyWordHighlightedComment() {
+        return { text: '', emphasize: false };
+      }
+
+function ensureWordHighlightedComments() {
+        if (!Array.isArray(wordHighlightedComments)) {
+          wordHighlightedComments = [];
+        }
+        if (wordHighlightedComments.length > WORD_HIGHLIGHTED_COMMENT_LIMIT) {
+          wordHighlightedComments = wordHighlightedComments.slice(0, WORD_HIGHLIGHTED_COMMENT_LIMIT);
+        }
+        return wordHighlightedComments;
+      }
+
+function renderWordHighlightedComments(options) {
+        const listContainer = document.getElementById('wordCommentsList');
+        if (!listContainer) {
+          return;
+        }
+        const focusNew = !!(options && options.focusNew);
+        const comments = ensureWordHighlightedComments();
+        listContainer.innerHTML = '';
+        comments.forEach(function(entry, index) {
+          const item = document.createElement('div');
+          item.className = 'word-highlighted-item';
+          const row = document.createElement('div');
+          row.className = 'word-highlighted-row';
+          const textarea = document.createElement('textarea');
+          textarea.className = 'word-highlighted-input';
+          textarea.placeholder = 'Comentario destacado';
+          textarea.value = entry && entry.text ? entry.text : '';
+          textarea.addEventListener('input', function() {
+            const target = ensureWordHighlightedComments()[index];
+            if (target) {
+              target.text = this.value;
+            }
+          });
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'word-highlighted-remove';
+          removeBtn.textContent = '×';
+          removeBtn.setAttribute('aria-label', 'Eliminar comentario destacado');
+          removeBtn.addEventListener('click', function() {
+            const target = ensureWordHighlightedComments();
+            target.splice(index, 1);
+            renderWordHighlightedComments();
+            updateWordHighlightedVisibility();
+          });
+          row.appendChild(textarea);
+          row.appendChild(removeBtn);
+          item.appendChild(row);
+
+          const emphasisLabel = document.createElement('label');
+          emphasisLabel.className = 'word-highlighted-emphasis';
+          const emphasisToggle = document.createElement('input');
+          emphasisToggle.type = 'checkbox';
+          emphasisToggle.checked = !!(entry && entry.emphasize);
+          const emphasisText = document.createElement('span');
+          emphasisText.textContent = 'Resaltar con énfasis';
+          emphasisToggle.addEventListener('change', function() {
+            const target = ensureWordHighlightedComments()[index];
+            if (target) {
+              target.emphasize = this.checked;
+            }
+          });
+          emphasisLabel.appendChild(emphasisToggle);
+          emphasisLabel.appendChild(emphasisText);
+          item.appendChild(emphasisLabel);
+
+          listContainer.appendChild(item);
+          if (focusNew && index === comments.length - 1) {
+            setTimeout(function() {
+              textarea.focus();
+            }, 0);
+          }
+        });
+      }
+
+function updateWordHighlightedVisibility() {
+        const toggle = document.getElementById('wordCommentsToggle');
+        const list = document.getElementById('wordCommentsList');
+        const addBtn = document.getElementById('wordCommentsAdd');
+        const enabled = !!(toggle && toggle.checked);
+        if (list) {
+          list.classList.toggle('is-visible', enabled);
+        }
+        if (addBtn) {
+          const comments = ensureWordHighlightedComments();
+          addBtn.disabled = !enabled || comments.length >= WORD_HIGHLIGHTED_COMMENT_LIMIT;
+        }
+      }
+
+function bindWordHighlightedComments() {
+        const toggle = document.getElementById('wordCommentsToggle');
+        if (toggle && toggle.dataset.commentsBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            if (this.checked && ensureWordHighlightedComments().length === 0) {
+              wordHighlightedComments.push(createEmptyWordHighlightedComment());
+              renderWordHighlightedComments({ focusNew: true });
+            }
+            updateWordHighlightedVisibility();
+          });
+          toggle.dataset.commentsBound = 'true';
+        }
+        const addBtn = document.getElementById('wordCommentsAdd');
+        if (addBtn && addBtn.dataset.commentsBound !== 'true') {
+          addBtn.addEventListener('click', function() {
+            if (ensureWordHighlightedComments().length >= WORD_HIGHLIGHTED_COMMENT_LIMIT) {
+              return;
+            }
+            wordHighlightedComments.push(createEmptyWordHighlightedComment());
+            renderWordHighlightedComments({ focusNew: true });
+            updateWordHighlightedVisibility();
+          });
+          addBtn.dataset.commentsBound = 'true';
+        }
+        renderWordHighlightedComments();
+        updateWordHighlightedVisibility();
+      }
+
+function syncWordLanguageControls() {
+        const select = document.getElementById('wordBodyLanguage');
+        const wrapper = document.getElementById('wordBodyLanguageCustomWrapper');
+        const input = document.getElementById('wordBodyLanguageCustom');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'other';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && input) {
+          input.value = '';
+        }
+      }
+
+function syncWordToneControls() {
+        const select = document.getElementById('wordBodyTone');
+        const wrapper = document.getElementById('wordBodyToneCustomWrapper');
+        const input = document.getElementById('wordBodyToneCustom');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'custom';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && input) {
+          input.value = '';
+        }
+      }
+
+function syncWordProfileControls() {
+        const select = document.getElementById('wordBodyProfile');
+        const wrapper = document.getElementById('wordBodyProfileNoteWrapper');
+        const note = document.getElementById('wordBodyProfileNote');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'custom';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && note) {
+          note.value = '';
+        }
+      }
+
+function bindWordContextSelects() {
+        const languageSelect = document.getElementById('wordBodyLanguage');
+        if (languageSelect && languageSelect.dataset.wordSelectBound !== 'true') {
+          languageSelect.addEventListener('change', function() {
+            syncWordLanguageControls();
+          });
+          languageSelect.dataset.wordSelectBound = 'true';
+        }
+        const toneSelect = document.getElementById('wordBodyTone');
+        if (toneSelect && toneSelect.dataset.wordSelectBound !== 'true') {
+          toneSelect.addEventListener('change', function() {
+            syncWordToneControls();
+          });
+          toneSelect.dataset.wordSelectBound = 'true';
+        }
+        const profileSelect = document.getElementById('wordBodyProfile');
+        if (profileSelect && profileSelect.dataset.wordSelectBound !== 'true') {
+          profileSelect.addEventListener('change', function() {
+            syncWordProfileControls();
+          });
+          profileSelect.dataset.wordSelectBound = 'true';
+        }
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
       }
 
 function syncWordTitleControls() {
@@ -289,17 +664,12 @@ function syncWordTitleControls() {
           }
         }
         if (manualToggle) {
-          if (autoActive) {
+          manualToggle.disabled = !isWordTheme;
+          if (manualToggle.disabled) {
             manualToggle.checked = false;
-            manualToggle.disabled = true;
             manualToggle.setAttribute('aria-disabled', 'true');
           } else {
-            manualToggle.disabled = !isWordTheme;
-            if (!manualToggle.disabled) {
-              manualToggle.removeAttribute('aria-disabled');
-            } else {
-              manualToggle.setAttribute('aria-disabled', 'true');
-            }
+            manualToggle.removeAttribute('aria-disabled');
           }
         }
         const manualActive = Boolean(isWordTheme && manualToggle && manualToggle.checked);
@@ -342,6 +712,11 @@ function syncWordContextCard() {
         }
         const isWordTheme = isWordThemeActiveForCreate();
         card.style.display = isWordTheme ? 'block' : 'none';
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
+        updateWordContextWebVisibility();
+        updateWordHighlightedVisibility();
       }
 
 function syncWordCreateOptions() {
@@ -911,10 +1286,13 @@ async function resolvePendingFormatting() {
         }
       }
 
-      function initializeWordRangeMode() {
+function initializeWordRangeMode() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordContextWebSources();
+        bindWordContextSelects();
+        bindWordHighlightedComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
@@ -926,10 +1304,13 @@ async function resolvePendingFormatting() {
         initializeWordRangeMode();
       }
 
-      function notifyCreateThemeChanged() {
+function notifyCreateThemeChanged() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordContextWebSources();
+        bindWordContextSelects();
+        bindWordHighlightedComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
