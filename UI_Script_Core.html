@@ -3106,9 +3106,20 @@ async function attemptTabChange(tabId, options) {
 
 
 
-      document.getElementById('applyFormatBtn').addEventListener('click', function() {
-        handleApplyFormat();
-      });
+      const applyFormatBtn = document.getElementById('applyFormatBtn');
+      if (applyFormatBtn && applyFormatBtn.dataset.applyBound !== 'true') {
+        applyFormatBtn.addEventListener('click', function() {
+          handleApplyFormat();
+        });
+        applyFormatBtn.dataset.applyBound = 'true';
+      }
+      const saveTableBtn = document.getElementById('saveTableBtn');
+      if (saveTableBtn && saveTableBtn.dataset.saveBound !== 'true') {
+        saveTableBtn.addEventListener('click', function() {
+          handleSaveAction();
+        });
+        saveTableBtn.dataset.saveBound = 'true';
+      }
 
       
 

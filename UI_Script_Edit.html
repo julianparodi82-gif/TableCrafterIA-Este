@@ -872,10 +872,11 @@ async function handleEditApplyFormat() {
         return true;
       }
       const createSaveButton = document.getElementById('saveTableBtn');
-      if (createSaveButton) {
+      if (createSaveButton && createSaveButton.dataset.saveBound !== 'true') {
         createSaveButton.addEventListener('click', function() {
           handleSaveAction();
         });
+        createSaveButton.dataset.saveBound = 'true';
       }
 
       document.getElementById('editSaveTableBtn').addEventListener('click', function() {

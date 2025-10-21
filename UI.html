@@ -4037,11 +4037,21 @@
         <div class="section">
           <label
             for="tableName"
+            id="createNameLabel"
             class="tc-tooltip-target"
+            data-table-text="Nombre de la tabla"
+            data-word-text="Título del texto (Opcional)"
             data-tooltip="Puedes dejarlo vacío o escribir un título manual."
-            >Título del texto (Opcional)</label
           >
-          <input type="text" id="tableName" placeholder="Ingrese un título..." />
+            Nombre de la tabla
+          </label>
+          <input
+            type="text"
+            id="tableName"
+            placeholder="Ingrese un nombre..."
+            data-table-placeholder="Ingrese un nombre..."
+            data-word-placeholder="Ingrese un título..."
+          />
           <div id="wordTitleOptions" class="word-text-options" style="display:none;">
             <div class="word-text-toggle-group">
               <label for="wordAutoTitleToggle" class="checkbox-subtle">
@@ -4162,6 +4172,22 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div class="js-comment-hint-field" id="createDescriptionGroup">
+            <label
+              for="tableDesc"
+              id="createDescriptionLabel"
+              data-table-text="Descripción"
+              data-word-text=""
+            >
+              Descripción
+            </label>
+            <textarea
+              id="tableDesc"
+              placeholder="Descripción de la tabla..."
+              data-table-placeholder="Descripción de la tabla..."
+              data-word-placeholder=""
+            ></textarea>
           </div>
           <div id="wordContextCard" class="word-body-context-card" style="display:none;">
             <div class="word-context-header">
@@ -4575,6 +4601,7 @@
             >
               Aplicar formato
             </button>
+            <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
           </div>
         </div>
       </div>

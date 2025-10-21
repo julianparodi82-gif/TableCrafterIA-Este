@@ -26,6 +26,47 @@ function isWordRangeSelectionEnabled() {
         return !toggle || toggle.checked;
       }
 
+function syncCreateMetadataForTheme() {
+        const isWordTheme = isWordThemeActiveForCreate();
+        const nameLabel = document.getElementById('createNameLabel');
+        if (nameLabel) {
+          const targetText = isWordTheme
+            ? nameLabel.dataset && nameLabel.dataset.wordText
+            : nameLabel.dataset && nameLabel.dataset.tableText;
+          if (typeof targetText === 'string') {
+            nameLabel.textContent = targetText;
+          }
+        }
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          const placeholder = isWordTheme
+            ? nameInput.dataset && nameInput.dataset.wordPlaceholder
+            : nameInput.dataset && nameInput.dataset.tablePlaceholder;
+          if (typeof placeholder === 'string') {
+            nameInput.placeholder = placeholder;
+          }
+        }
+        const descGroup = document.getElementById('createDescriptionGroup');
+        const descLabel = document.getElementById('createDescriptionLabel');
+        const descField = document.getElementById('tableDesc');
+        const shouldShowDescription = !isWordTheme;
+        if (descGroup) {
+          descGroup.style.display = shouldShowDescription ? '' : 'none';
+        }
+        if (descLabel) {
+          const labelText = shouldShowDescription
+            ? (descLabel.dataset && descLabel.dataset.tableText) || descLabel.textContent
+            : (descLabel.dataset && descLabel.dataset.wordText) || '';
+          descLabel.textContent = labelText;
+        }
+        if (descField) {
+          const descPlaceholder = shouldShowDescription
+            ? (descField.dataset && descField.dataset.tablePlaceholder) || ''
+            : (descField.dataset && descField.dataset.wordPlaceholder) || '';
+          descField.placeholder = descPlaceholder;
+        }
+      }
+
 function syncCreateRangeModeUI() {
         const isWordTheme = isWordThemeActiveForCreate();
         const useRange = isWordRangeSelectionEnabled();
@@ -37,6 +78,7 @@ function syncCreateRangeModeUI() {
         const rangeInput = document.getElementById('rangeInput');
         const applyBtn = document.getElementById('applyFormatBtn');
         const headerOptions = document.getElementById('tableHeaderOptions');
+        const saveBtn = document.getElementById('saveTableBtn');
         if (toggleRow) {
           toggleRow.style.display = isWordTheme ? 'flex' : 'none';
         }
@@ -84,6 +126,18 @@ function syncCreateRangeModeUI() {
         if (headerOptions) {
           headerOptions.style.display = isWordTheme ? 'none' : '';
         }
+        if (saveBtn) {
+          if (isWordTheme) {
+            saveBtn.style.display = 'none';
+            saveBtn.disabled = true;
+            saveBtn.setAttribute('aria-disabled', 'true');
+          } else {
+            saveBtn.style.display = '';
+            saveBtn.disabled = false;
+            saveBtn.removeAttribute('aria-disabled');
+          }
+        }
+        syncCreateMetadataForTheme();
       }
 
 function resetWordFormatInputs(containerId) {
