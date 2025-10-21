@@ -147,6 +147,105 @@ function resetWordTextOptions() {
           const fallback = toneSelect.dataset && toneSelect.dataset.defaultValue !== undefined ? toneSelect.dataset.defaultValue : toneSelect.defaultValue;
           toneSelect.value = fallback !== undefined ? fallback : 'profesional';
         }
+        refreshWordPreviews();
+      }
+
+function updateWordFormatFlagClasses(container) {
+        if (!container) {
+          return;
+        }
+        const flagLabels = container.querySelectorAll('.word-format-flag');
+        flagLabels.forEach(function(label) {
+          const control = label.querySelector('input');
+          label.classList.toggle('is-active', Boolean(control && control.checked));
+        });
+      }
+
+function updateWordPreview(kind) {
+        const previewId = kind === 'body' ? 'wordBodyPreview' : 'wordTitlePreview';
+        const preview = document.getElementById(previewId);
+        if (!preview) {
+          return;
+        }
+        const prefix = kind === 'body' ? 'wordBody' : 'wordTitle';
+        const colorInput = document.getElementById(prefix + 'Color');
+        const sizeInput = document.getElementById(prefix + 'FontSize');
+        const alignSelect = document.getElementById(prefix + 'Alignment');
+        const fontFamilySelect = document.getElementById(prefix + 'FontFamily');
+        const boldToggle = document.getElementById(prefix + 'Bold');
+        const underlineToggle = document.getElementById(prefix + 'Underline');
+        const italicsToggle = document.getElementById(prefix + 'Italics');
+        const uppercaseToggle = kind === 'title' ? document.getElementById('wordTitleUppercase') : null;
+        const highlightToggle = kind === 'body' ? document.getElementById('wordBodyHighlight') : null;
+        const lineSpacingSelect = kind === 'body' ? document.getElementById('wordBodyLineSpacing') : null;
+        const formatContainer = document.getElementById(prefix + 'FormatOptions');
+
+        if (!preview.dataset.baseText) {
+          preview.dataset.baseText = kind === 'body'
+            ? 'Ejemplo de párrafo adaptable a tu reporte, resaltando'
+            : 'Ejemplo de título';
+        }
+        if (kind === 'body' && !preview.dataset.baseKeywords) {
+          preview.dataset.baseKeywords = 'palabras clave';
+        }
+
+        if (colorInput) {
+          preview.style.color = colorInput.value || '';
+        }
+        if (sizeInput && sizeInput.value) {
+          const parsed = parseFloat(sizeInput.value);
+          if (!isNaN(parsed)) {
+            preview.style.fontSize = parsed + 'px';
+          }
+        }
+        if (alignSelect) {
+          preview.style.textAlign = alignSelect.value || '';
+        }
+        if (fontFamilySelect && fontFamilySelect.value) {
+          preview.style.fontFamily = fontFamilySelect.value;
+        }
+        if (boldToggle) {
+          preview.style.fontWeight = boldToggle.checked ? '700' : (kind === 'title' ? '600' : '500');
+        }
+        const decorations = [];
+        if (underlineToggle && underlineToggle.checked) {
+          decorations.push('underline');
+        }
+        if (italicsToggle) {
+          preview.style.fontStyle = italicsToggle.checked ? 'italic' : 'normal';
+        }
+        if (uppercaseToggle) {
+          preview.style.textTransform = uppercaseToggle.checked ? 'uppercase' : 'none';
+        }
+        if (kind === 'body') {
+          const textSpan = preview.querySelector('.word-preview-text');
+          const keywordsSpan = preview.querySelector('.word-preview-keywords');
+          if (textSpan) {
+            textSpan.textContent = preview.dataset.baseText;
+          } else {
+            preview.textContent = preview.dataset.baseText + ' ' + (preview.dataset.baseKeywords || '');
+          }
+          if (keywordsSpan) {
+            keywordsSpan.textContent = preview.dataset.baseKeywords || '';
+          }
+        } else {
+          preview.textContent = uppercaseToggle && uppercaseToggle.checked
+            ? preview.dataset.baseText.toUpperCase()
+            : preview.dataset.baseText;
+        }
+        if (kind === 'body' && highlightToggle) {
+          preview.classList.toggle('word-preview-highlighted', highlightToggle.checked);
+        }
+        if (lineSpacingSelect && lineSpacingSelect.value) {
+          preview.style.lineHeight = lineSpacingSelect.value;
+        }
+        preview.style.textDecoration = decorations.join(' ');
+        updateWordFormatFlagClasses(formatContainer);
+      }
+
+function refreshWordPreviews() {
+        updateWordPreview('title');
+        updateWordPreview('body');
       }
 
 function syncWordTitleControls() {
@@ -207,6 +306,7 @@ function syncWordTitleControls() {
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
         }
+        updateWordPreview('title');
       }
 
 function syncWordBodyControls() {
@@ -232,11 +332,22 @@ function syncWordBodyControls() {
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
         }
+        updateWordPreview('body');
+      }
+
+function syncWordContextCard() {
+        const card = document.getElementById('wordContextCard');
+        if (!card) {
+          return;
+        }
+        const isWordTheme = isWordThemeActiveForCreate();
+        card.style.display = isWordTheme ? 'block' : 'none';
       }
 
 function syncWordCreateOptions() {
         syncWordTitleControls();
         syncWordBodyControls();
+        syncWordContextCard();
       }
 
 function bindWordTextToggles() {
@@ -244,6 +355,7 @@ function bindWordTextToggles() {
         if (autoToggle && autoToggle.dataset.toggleBound !== 'true') {
           autoToggle.addEventListener('change', function() {
             syncWordTitleControls();
+            updateWordPreview('title');
           });
           autoToggle.dataset.toggleBound = 'true';
         }
@@ -251,6 +363,7 @@ function bindWordTextToggles() {
         if (manualTitleToggle && manualTitleToggle.dataset.toggleBound !== 'true') {
           manualTitleToggle.addEventListener('change', function() {
             syncWordTitleControls();
+            updateWordPreview('title');
           });
           manualTitleToggle.dataset.toggleBound = 'true';
         }
@@ -258,8 +371,42 @@ function bindWordTextToggles() {
         if (manualBodyToggle && manualBodyToggle.dataset.toggleBound !== 'true') {
           manualBodyToggle.addEventListener('change', function() {
             syncWordBodyControls();
+            updateWordPreview('body');
           });
           manualBodyToggle.dataset.toggleBound = 'true';
+        }
+      }
+
+function bindWordFormatInputs() {
+        function attach(control, kind) {
+          if (!control || control.dataset.wordFormatBound === 'true') {
+            return;
+          }
+          const handler = function() {
+            updateWordPreview(kind);
+          };
+          const tag = control.tagName ? control.tagName.toLowerCase() : '';
+          const type = control.type ? control.type.toLowerCase() : '';
+          const primaryEvent = type === 'color' || type === 'number' ? 'input' : (tag === 'select' ? 'change' : 'change');
+          control.addEventListener(primaryEvent, handler);
+          if (primaryEvent !== 'change') {
+            control.addEventListener('change', handler);
+          }
+          control.dataset.wordFormatBound = 'true';
+        }
+        const titleContainer = document.getElementById('wordTitleFormatOptions');
+        if (titleContainer) {
+          const titleControls = titleContainer.querySelectorAll('input, select');
+          titleControls.forEach(function(control) {
+            attach(control, 'title');
+          });
+        }
+        const bodyContainer = document.getElementById('wordBodyFormatOptions');
+        if (bodyContainer) {
+          const bodyControls = bodyContainer.querySelectorAll('input, select');
+          bodyControls.forEach(function(control) {
+            attach(control, 'body');
+          });
         }
       }
 
@@ -767,8 +914,10 @@ async function resolvePendingFormatting() {
       function initializeWordRangeMode() {
         bindWordRangeToggle();
         bindWordTextToggles();
+        bindWordFormatInputs();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
+        refreshWordPreviews();
       }
 
       if (document.readyState === 'loading') {
@@ -780,8 +929,10 @@ async function resolvePendingFormatting() {
       function notifyCreateThemeChanged() {
         bindWordRangeToggle();
         bindWordTextToggles();
+        bindWordFormatInputs();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
+        refreshWordPreviews();
       }
 
       window.notifyCreateThemeChanged = notifyCreateThemeChanged;
