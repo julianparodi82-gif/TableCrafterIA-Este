@@ -1164,15 +1164,16 @@ function validateTableDetails(config) {
         const descInput = document.getElementById(options.descInputId || 'tableDesc');
         const name = nameInput ? nameInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
+        const isWordTheme = document.body && document.body.classList.contains('theme-wordcrafter');
         const headerSource = Array.isArray(options.headers) ? options.headers : currentHeaders;
         const headers = cloneHeaderModels(headerSource);
         const missingMessages = [];
         const missingHeaderIndexes = [];
 
-        if (!name) {
+        if (!isWordTheme && nameInput && !name) {
           missingMessages.push('Nombre de la tabla');
         }
-        if (!description) {
+        if (!isWordTheme && descInput && !description) {
           missingMessages.push('Descripción');
         }
 
@@ -1184,6 +1185,33 @@ function validateTableDetails(config) {
               missingHeaderIndexes.push(index + 1);
             }
           });
+        }
+
+        if (isWordTheme) {
+          const languageSelect = document.getElementById('wordBodyLanguage');
+          const languageCustom = document.getElementById('wordBodyLanguageCustom');
+          if (languageSelect && languageSelect.value === 'other') {
+            const customValue = languageCustom ? languageCustom.value.trim() : '';
+            if (!customValue) {
+              missingMessages.push('Idioma personalizado en Contexto y personalización');
+            }
+          }
+          const toneSelect = document.getElementById('wordBodyTone');
+          const toneCustom = document.getElementById('wordBodyToneCustom');
+          if (toneSelect && toneSelect.value === 'custom') {
+            const toneDetail = toneCustom ? toneCustom.value.trim() : '';
+            if (!toneDetail) {
+              missingMessages.push('Detalle del tono personalizado en Contexto y personalización');
+            }
+          }
+          const profileSelect = document.getElementById('wordBodyProfile');
+          const profileNote = document.getElementById('wordBodyProfileNote');
+          if (profileSelect && profileSelect.value === 'custom') {
+            const profileDetail = profileNote ? profileNote.value.trim() : '';
+            if (!profileDetail) {
+              missingMessages.push('Descripción del perfil profesional en Contexto y personalización');
+            }
+          }
         }
 
         if (missingHeaderIndexes.length > 0) {

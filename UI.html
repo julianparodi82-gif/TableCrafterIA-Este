@@ -3136,21 +3136,23 @@
         color: var(--tc-muted);
       }
       .word-format-preview {
-        min-width: 220px;
+        min-width: 160px;
         flex: 0 0 auto;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 12px 16px;
         background: rgba(42, 176, 255, 0.15);
         color: var(--tc-primary-dark);
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
         transition: all 0.2s ease;
+        width: min(100%, 240px);
       }
       .word-format-preview.word-format-preview-body {
         text-align: left;
         font-weight: 500;
-        min-width: 260px;
+        min-width: 0;
+        width: min(100%, 240px);
         line-height: 1.6;
       }
       .word-format-preview.word-preview-highlighted {
@@ -3186,17 +3188,19 @@
       .word-inline-field {
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: flex-start;
+        gap: 6px;
       }
       .word-inline-field label {
         margin: 0;
+        white-space: nowrap;
       }
       .word-inline-field input[type='number'] {
-        flex: 0 0 72px;
+        flex: 0 0 56px;
         text-align: center;
       }
       .word-font-size-input {
-        max-width: 80px;
+        max-width: 56px;
       }
       .word-format-flags {
         display: flex;
@@ -3260,7 +3264,9 @@
       .word-context-heading {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 6px;
+        text-align: center;
       }
       .word-context-heading h3 {
         margin: 0;
@@ -3292,17 +3298,40 @@
         flex: 1 1 210px;
       }
       .word-context-columns .word-context-select {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 14px;
-        padding: 12px 14px;
-        box-shadow: 0 10px 24px rgba(42, 176, 255, 0.12);
-        border: 1px solid rgba(28, 141, 212, 0.18);
-        gap: 10px;
+        position: relative;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(226, 242, 255, 0.85));
+        border-radius: 16px;
+        padding: 16px 18px;
+        box-shadow: 0 18px 36px rgba(42, 176, 255, 0.16);
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        gap: 12px;
+        overflow: hidden;
+      }
+      .word-context-columns .word-context-select::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(2, 132, 199, 0.9), rgba(59, 130, 246, 0.6));
+      }
+      .word-context-columns .word-context-select > * {
+        position: relative;
+        z-index: 1;
       }
       .word-context-select label {
         font-size: 13px;
         text-transform: none;
         color: var(--tc-primary-dark);
+      }
+      .word-context-select select,
+      .word-context-select textarea,
+      .word-context-select input[type='text'] {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+        width: 100%;
       }
       .word-context-helper-text {
         margin: 0;
@@ -3328,6 +3357,24 @@
       .word-context-extra input,
       .word-context-extra textarea {
         font-size: 13px;
+      }
+      .word-context-length {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-context-length label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-length select {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.92);
+        font-weight: 500;
+        width: 100%;
       }
       .word-context-web {
         margin-top: 14px;
@@ -3369,24 +3416,16 @@
       .word-context-web-row {
         display: flex;
         gap: 8px;
-        align-items: center;
+        align-items: flex-start;
       }
       .word-context-web-input {
         flex: 1 1 auto;
       }
       .word-context-web-remove {
-        border: none;
-        background: rgba(239, 68, 68, 0.1);
-        color: #b91c1c;
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
+        margin-top: 2px;
       }
-      .word-context-web-remove:hover {
-        background: rgba(239, 68, 68, 0.18);
+      body.theme-wordcrafter .js-comment-hint-field[data-themes='table'] {
+        display: none !important;
       }
       .word-context-web-desc-toggle {
         display: inline-flex;
@@ -3851,7 +3890,7 @@
               </div>
             </div>
           </div>
-          <div class="js-comment-hint-field">
+          <div class="js-comment-hint-field" data-themes="table">
             <label for="tableDesc">Descripción del texto</label>
             <textarea id="tableDesc" placeholder="Descripción del texto..."></textarea>
           </div>
@@ -3872,10 +3911,26 @@
                   placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
                 ></textarea>
               </div>
+              <div class="word-context-length">
+                <label for="wordBodyLength">Longitud del texto</label>
+                <select id="wordBodyLength" data-default-value="auto">
+                  <option value="auto" selected>Automático (IA decide)</option>
+                  <option value="1">1 párrafo</option>
+                  <option value="2">2 párrafos</option>
+                  <option value="3">3 párrafos</option>
+                  <option value="4">4 párrafos</option>
+                  <option value="5">5 párrafos</option>
+                  <option value="6">6 párrafos</option>
+                  <option value="7">7 párrafos</option>
+                  <option value="8">8 párrafos</option>
+                  <option value="9">9 párrafos</option>
+                  <option value="10">10 párrafos</option>
+                </select>
+              </div>
               <div class="word-context-web">
                 <label for="wordContextWebToggle" class="word-context-web-toggle">
                   <input type="checkbox" id="wordContextWebToggle" />
-                  Utilizar páginas web
+                  Utilizar informacion de pagunas web
                 </label>
                 <div class="word-context-web-list" id="wordContextWebList">
                   <div class="word-context-web-items" id="wordContextWebItems"></div>
@@ -3945,7 +4000,7 @@
                     <option value="custom">Personalizado</option>
                   </select>
                   <div id="wordBodyProfileNoteWrapper" class="word-context-extra">
-                    <label for="wordBodyProfileNote">Describe el perfil (opcional)</label>
+                    <label for="wordBodyProfileNote">Describe el perfil profesional</label>
                     <textarea
                       id="wordBodyProfileNote"
                       data-default-value=""

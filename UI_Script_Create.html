@@ -11,6 +11,7 @@ let wordHighlightedComments = [];
 const WORD_LANGUAGE_DEFAULT = 'auto';
 const WORD_TONE_DEFAULT = 'neutral';
 const WORD_PROFILE_DEFAULT = 'auto';
+const WORD_LENGTH_DEFAULT = 'auto';
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -171,6 +172,10 @@ function resetWordTextOptions() {
         if (profileNote) {
           profileNote.value = '';
         }
+        const lengthSelect = document.getElementById('wordBodyLength');
+        if (lengthSelect) {
+          lengthSelect.value = WORD_LENGTH_DEFAULT;
+        }
         wordContextWebSources = [];
         renderWordContextWebSources();
         const webToggle = document.getElementById('wordContextWebToggle');
@@ -317,20 +322,10 @@ function renderWordContextWebSources(options) {
 
           const row = document.createElement('div');
           row.className = 'word-context-web-row';
-          const input = document.createElement('input');
-          input.type = 'url';
-          input.className = 'word-context-web-input';
-          input.placeholder = 'https://ejemplo.com';
-          input.value = entry && entry.url ? entry.url : '';
-          input.addEventListener('input', function() {
-            const target = ensureWordContextWebSources()[index];
-            if (target) {
-              target.url = this.value;
-            }
-          });
+
           const removeBtn = document.createElement('button');
           removeBtn.type = 'button';
-          removeBtn.className = 'word-context-web-remove';
+          removeBtn.className = 'header-ai-web-remove word-context-web-remove';
           removeBtn.textContent = '×';
           removeBtn.setAttribute('aria-label', 'Eliminar página web');
           removeBtn.addEventListener('click', function() {
@@ -339,8 +334,24 @@ function renderWordContextWebSources(options) {
             renderWordContextWebSources();
             updateWordContextWebVisibility();
           });
-          row.appendChild(input);
+
+          const inputWrapper = document.createElement('div');
+          inputWrapper.className = 'header-ai-web-input-wrapper';
+          const input = document.createElement('input');
+          input.type = 'url';
+          input.className = 'word-context-web-input header-ai-web-input';
+          input.placeholder = 'https://ejemplo.com';
+          input.value = entry && entry.url ? entry.url : '';
+          input.addEventListener('input', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.url = this.value;
+            }
+          });
+          inputWrapper.appendChild(input);
+
           row.appendChild(removeBtn);
+          row.appendChild(inputWrapper);
           item.appendChild(row);
 
           const descToggleLabel = document.createElement('label');
