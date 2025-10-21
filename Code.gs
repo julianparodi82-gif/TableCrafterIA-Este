@@ -380,6 +380,34 @@ function normalizeMetaRecordType(value) {
     return 'table';
   }
   if (
+    text === 'createtextfavorite' ||
+    text === 'create_text_favorite' ||
+    text === 'create-text-favorite'
+  ) {
+    return 'createTextFavorite';
+  }
+  if (
+    text === 'createtablefavorite' ||
+    text === 'create_table_favorite' ||
+    text === 'create-table-favorite'
+  ) {
+    return 'createTableFavorite';
+  }
+  if (
+    text === 'edittextfavorite' ||
+    text === 'edit_text_favorite' ||
+    text === 'edit-text-favorite'
+  ) {
+    return 'editTextFavorite';
+  }
+  if (
+    text === 'edittablefavorite' ||
+    text === 'edit_table_favorite' ||
+    text === 'edit-table-favorite'
+  ) {
+    return 'editTableFavorite';
+  }
+  if (
     text === 'reportfavorite' ||
     text === 'report_favorite' ||
     text === 'report-favorite' ||
@@ -1701,6 +1729,33 @@ function applyTableFormatting(tableId, rangeA1, name, description, headers, styl
     isNew = true;
   }
 
+  var overlap = findStoredRangeConflict(range, { ignoreId: id });
+  if (overlap) {
+    var conflictLabel = 'tabla';
+    var overlapType = overlap.type ? String(overlap.type).toLowerCase() : '';
+    var overlapId = overlap.id ? String(overlap.id).toLowerCase() : '';
+    if (overlapType.indexOf('text') !== -1 || overlapId.indexOf('text:') === 0 || overlapId.indexOf('word:') === 0 || overlapId.indexOf('texto:') === 0) {
+      conflictLabel = 'texto';
+    }
+    var location = '';
+    if (overlap.sheetName && overlap.rangeA1) {
+      location = overlap.sheetName + '!' + overlap.rangeA1;
+    } else if (overlap.rangeA1) {
+      location = overlap.rangeA1;
+    }
+    var conflictName = overlap.name ? ' "' + overlap.name + '"' : '';
+    var locationSuffix = location ? ' (' + location + ')' : '';
+    return {
+      error:
+        'El rango seleccionado se superpone con otra ' +
+        conflictLabel +
+        ' guardada' +
+        conflictName +
+        locationSuffix +
+        '. Ajustá el rango o ubicá la tabla en una fila de encabezados distinta.'
+    };
+  }
+
   if (doSave) {
     var normalizedName = normalizeMetaName(name);
     if (normalizedName) {
@@ -2428,6 +2483,81 @@ function findMetaByName(name, options) {
     if (entryName && entryName === normalizedName) {
       return { row: i + 1, data: row };
     }
+  }
+  return null;
+}
+
+function findStoredRangeConflict(range, options) {
+  if (!range || typeof range.getSheet !== 'function') {
+    return null;
+  }
+  var sheet = range.getSheet();
+  if (!sheet) {
+    return null;
+  }
+  var opts = options || {};
+  var ignoreId = normalizeMetaId(opts.ignoreId);
+  var sheetId = sheet.getSheetId();
+  var startRow = range.getRow();
+  var ss = SpreadsheetApp.getActive();
+  var metaSheet = getMetaSheet();
+  var data = metaSheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var entryId = normalizeMetaId(row[META_INDEX.id]);
+    if (!entryId || (ignoreId && entryId === ignoreId)) {
+      continue;
+    }
+    var recordType = resolveMetaRecordType(row);
+    if (
+      recordType === 'createTableFavorite' ||
+      recordType === 'editTableFavorite' ||
+      recordType === 'createTextFavorite' ||
+      recordType === 'editTextFavorite' ||
+      recordType === 'reportFavorite'
+    ) {
+      continue;
+    }
+    var storedRangeNotation = row[META_INDEX.rangeA1];
+    var storedSheetName = row[META_INDEX.sheet];
+    if (!storedRangeNotation && !storedSheetName) {
+      continue;
+    }
+    var parts = splitRangeNotation(storedRangeNotation);
+    var sheetName = storedSheetName || parts.sheet;
+    var pureRange = parts.range;
+    if (!sheetName || !pureRange) {
+      continue;
+    }
+    var targetSheet = ss.getSheetByName(sheetName);
+    if (!targetSheet) {
+      continue;
+    }
+    if (targetSheet.getSheetId() !== sheetId) {
+      continue;
+    }
+    var otherRange;
+    try {
+      otherRange = getRangeWithinSheet(targetSheet, pureRange);
+    } catch (err) {
+      otherRange = null;
+    }
+    if (!otherRange) {
+      continue;
+    }
+    if (!rangesIntersect(otherRange, range)) {
+      continue;
+    }
+    if (otherRange.getRow() === startRow) {
+      continue;
+    }
+    return {
+      id: entryId,
+      type: recordType,
+      name: row[META_INDEX.name] || '',
+      sheetName: sheetName,
+      rangeA1: pureRange
+    };
   }
   return null;
 }
@@ -3266,6 +3396,118 @@ function saveReportFavorite(payload) {
     '',
     'reportFavorite',
     stringifyJsonValue(prepared.config)
+  ]);
+  SpreadsheetApp.flush();
+  return { ok: true, id: favoriteId };
+}
+
+function normalizeGeneralFavoriteType(type) {
+  var text = type === null || type === undefined ? '' : String(type).trim().toLowerCase();
+  if (!text) {
+    return 'generalFavorite';
+  }
+  if (text === 'createtextfavorite' || text === 'create_text_favorite' || text === 'create-text-favorite') {
+    return 'createTextFavorite';
+  }
+  if (text === 'createtablefavorite' || text === 'create_table_favorite' || text === 'create-table-favorite') {
+    return 'createTableFavorite';
+  }
+  if (text === 'edittextfavorite' || text === 'edit_text_favorite' || text === 'edit-text-favorite') {
+    return 'editTextFavorite';
+  }
+  if (text === 'edittablefavorite' || text === 'edit_table_favorite' || text === 'edit-table-favorite') {
+    return 'editTableFavorite';
+  }
+  return 'generalFavorite';
+}
+
+function resolveGeneralFavoriteIdPrefix(type) {
+  if (type === 'createTextFavorite') {
+    return 'createTextFavorite';
+  }
+  if (type === 'createTableFavorite') {
+    return 'createTableFavorite';
+  }
+  if (type === 'editTextFavorite') {
+    return 'editTextFavorite';
+  }
+  if (type === 'editTableFavorite') {
+    return 'editTableFavorite';
+  }
+  return 'generalFavorite';
+}
+
+function normalizeGeneralFavoriteField(field) {
+  if (!field || typeof field !== 'object') {
+    return null;
+  }
+  var id = field.id === null || field.id === undefined ? '' : String(field.id).trim();
+  if (!id) {
+    return null;
+  }
+  var kind = field.kind === null || field.kind === undefined ? '' : String(field.kind).trim();
+  var value = field.value;
+  if (value && typeof value === 'object') {
+    try {
+      value = JSON.parse(JSON.stringify(value));
+    } catch (err) {
+      value = '';
+    }
+  }
+  return {
+    id: id,
+    kind: kind,
+    value: value
+  };
+}
+
+function saveGeneralFavorite(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('No se recibió información para guardar.');
+  }
+  var name = payload.name === null || payload.name === undefined ? '' : String(payload.name).trim();
+  if (!name) {
+    throw new Error('Ingresá un nombre para el favorito.');
+  }
+  var context = payload.context && typeof payload.context === 'object' ? payload.context : {};
+  var normalizedType = normalizeGeneralFavoriteType(context.type);
+  var scope = context.scope === null || context.scope === undefined ? '' : String(context.scope).trim();
+  var theme = context.theme === null || context.theme === undefined ? '' : String(context.theme).trim();
+  var rawFields = Array.isArray(payload.fields) ? payload.fields : [];
+  var fields = rawFields
+    .map(function(entry) {
+      return normalizeGeneralFavoriteField(entry);
+    })
+    .filter(function(entry) {
+      return !!entry;
+    });
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var config = {
+    context: {
+      type: normalizedType,
+      scope: scope,
+      theme: theme
+    },
+    fields: fields,
+    savedAt: now
+  };
+  var sheet = getMetaSheet();
+  var favoriteId = resolveGeneralFavoriteIdPrefix(normalizedType) + ':' + Utilities.getUuid();
+  sheet.appendRow([
+    favoriteId,
+    name,
+    '',
+    '',
+    '',
+    '',
+    '',
+    now,
+    now,
+    '',
+    '',
+    '',
+    normalizedType,
+    stringifyJsonValue(config)
   ]);
   SpreadsheetApp.flush();
   return { ok: true, id: favoriteId };

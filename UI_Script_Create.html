@@ -1,9 +1,19 @@
 <script>
 let currentHeaders = [];
 let rangeInfo = null;
+let createFormulaPreference = true;
 let createFormatDirty = false;
 let pendingFormatState = { applied: false, range: null };
 const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
+const WORD_WEB_SOURCE_LIMIT = 10;
+const WORD_AUTO_COMMENT_KEYS = ['insights', 'risks', 'followUp', 'custom'];
+let wordContextWebSources = [];
+let wordContextWebCollapsed = false;
+const WORD_LANGUAGE_DEFAULT = 'auto';
+const WORD_TONE_DEFAULT = 'neutral';
+const WORD_PROFILE_DEFAULT = 'auto';
+const WORD_LENGTH_DEFAULT = 'auto';
+const WORD_STRUCTURE_KEYS = ['wordIntro', 'wordConclusion'];
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -17,6 +27,122 @@ function isWordRangeSelectionEnabled() {
         return !toggle || toggle.checked;
       }
 
+function setElementDisplay(element, show) {
+        if (!element) {
+          return;
+        }
+        const defaultDisplay =
+          (element.dataset && element.dataset.defaultDisplay) !== undefined
+            ? element.dataset.defaultDisplay
+            : '';
+        if (show) {
+          if (defaultDisplay) {
+            element.style.display = defaultDisplay;
+          } else {
+            element.style.display = '';
+          }
+        } else {
+          element.style.display = 'none';
+        }
+      }
+
+function hasCreateRangeSelection() {
+        const input = document.getElementById('rangeInput');
+        if (rangeInfo && rangeInfo.sheetName && rangeInfo.a1Notation) {
+          if (input && input.dataset && input.dataset.manual === 'true') {
+            const manualValue = input.value ? input.value.trim() : '';
+            if (!manualValue) {
+              return false;
+            }
+          }
+          return true;
+        }
+        return false;
+      }
+
+function updateCreateRangeDependentSections() {
+        const headerOptions = document.getElementById('tableHeaderOptions');
+        const actionsContainer = document.getElementById('createActionsContainer');
+        const isWordTheme = isWordThemeActiveForCreate();
+        const hasSelection = hasCreateRangeSelection();
+        setElementDisplay(headerOptions, !isWordTheme && hasSelection);
+        setElementDisplay(actionsContainer, isWordTheme || hasSelection);
+        const applyBtn = document.getElementById('applyFormatBtn');
+        const saveBtn = document.getElementById('saveTableBtn');
+        if (!isWordTheme) {
+          if (applyBtn) {
+            applyBtn.disabled = !hasSelection;
+            if (applyBtn.disabled) {
+              applyBtn.setAttribute('aria-disabled', 'true');
+            } else {
+              applyBtn.removeAttribute('aria-disabled');
+            }
+          }
+          if (saveBtn) {
+            saveBtn.disabled = !hasSelection;
+            if (saveBtn.disabled) {
+              saveBtn.setAttribute('aria-disabled', 'true');
+            } else {
+              saveBtn.removeAttribute('aria-disabled');
+            }
+          }
+        }
+      }
+
+function bindCreateRangeInput() {
+        const input = document.getElementById('rangeInput');
+        if (input && input.dataset.rangeBound !== 'true') {
+          const updateState = function() {
+            this.dataset.manual = 'true';
+            updateCreateRangeDependentSections();
+          };
+          input.addEventListener('input', updateState);
+          input.addEventListener('change', updateState);
+          input.dataset.rangeBound = 'true';
+        }
+      }
+
+function syncCreateMetadataForTheme() {
+        const isWordTheme = isWordThemeActiveForCreate();
+        const nameLabel = document.getElementById('createNameLabel');
+        if (nameLabel) {
+          const targetText = isWordTheme
+            ? nameLabel.dataset && nameLabel.dataset.wordText
+            : nameLabel.dataset && nameLabel.dataset.tableText;
+          if (typeof targetText === 'string') {
+            nameLabel.textContent = targetText;
+          }
+        }
+        const nameInput = document.getElementById('tableName');
+        if (nameInput) {
+          const placeholder = isWordTheme
+            ? nameInput.dataset && nameInput.dataset.wordPlaceholder
+            : nameInput.dataset && nameInput.dataset.tablePlaceholder;
+          if (typeof placeholder === 'string') {
+            nameInput.placeholder = placeholder;
+          }
+        }
+        const descGroup = document.getElementById('createDescriptionGroup');
+        const descLabel = document.getElementById('createDescriptionLabel');
+        const descField = document.getElementById('tableDesc');
+        const shouldShowDescription = !isWordTheme;
+        if (descGroup) {
+          descGroup.style.display = shouldShowDescription ? '' : 'none';
+        }
+        if (descLabel) {
+          const labelText = shouldShowDescription
+            ? (descLabel.dataset && descLabel.dataset.tableText) || descLabel.textContent
+            : (descLabel.dataset && descLabel.dataset.wordText) || '';
+          descLabel.textContent = labelText;
+        }
+        if (descField) {
+          const descPlaceholder = shouldShowDescription
+            ? (descField.dataset && descField.dataset.tablePlaceholder) || ''
+            : (descField.dataset && descField.dataset.wordPlaceholder) || '';
+          descField.placeholder = descPlaceholder;
+        }
+      }
+
 function syncCreateRangeModeUI() {
         const isWordTheme = isWordThemeActiveForCreate();
         const useRange = isWordRangeSelectionEnabled();
@@ -28,6 +154,9 @@ function syncCreateRangeModeUI() {
         const rangeInput = document.getElementById('rangeInput');
         const applyBtn = document.getElementById('applyFormatBtn');
         const headerOptions = document.getElementById('tableHeaderOptions');
+        const saveBtn = document.getElementById('saveTableBtn');
+        const formulaToggleRow = document.getElementById('createFormulaToggleRow');
+        const formulaToggle = document.getElementById('createUpdateFormulaRefs');
         if (toggleRow) {
           toggleRow.style.display = isWordTheme ? 'flex' : 'none';
         }
@@ -60,6 +189,12 @@ function syncCreateRangeModeUI() {
         if (applyBtn) {
           const shouldDisableApply = Boolean(isWordTheme && !useRange);
           applyBtn.disabled = shouldDisableApply;
+          const targetLabel = isWordTheme
+            ? applyBtn.dataset && applyBtn.dataset.wordLabel ? applyBtn.dataset.wordLabel : 'Generar texto'
+            : applyBtn.dataset && applyBtn.dataset.tableLabel ? applyBtn.dataset.tableLabel : 'Aplicar formato';
+          if (typeof targetLabel === 'string') {
+            applyBtn.textContent = targetLabel;
+          }
           if (shouldDisableApply) {
             applyBtn.setAttribute('aria-disabled', 'true');
           } else {
@@ -69,15 +204,67 @@ function syncCreateRangeModeUI() {
         if (headerOptions) {
           headerOptions.style.display = isWordTheme ? 'none' : '';
         }
-        const saveBtn = document.getElementById('saveTableBtn');
         if (saveBtn) {
-          const shouldDisableSave = Boolean(isWordTheme && !useRange);
-          saveBtn.disabled = shouldDisableSave;
-          if (shouldDisableSave) {
+          if (isWordTheme) {
+            saveBtn.style.display = 'none';
+            saveBtn.disabled = true;
             saveBtn.setAttribute('aria-disabled', 'true');
           } else {
+            saveBtn.style.display = '';
+            saveBtn.disabled = false;
             saveBtn.removeAttribute('aria-disabled');
           }
+        }
+        if (formulaToggleRow) {
+          formulaToggleRow.style.display = isWordTheme ? 'none' : '';
+        }
+        if (formulaToggle) {
+          const shouldDisableFormula = Boolean(isWordTheme);
+          formulaToggle.disabled = shouldDisableFormula;
+          if (shouldDisableFormula) {
+            formulaToggle.setAttribute('aria-disabled', 'true');
+          } else {
+            formulaToggle.removeAttribute('aria-disabled');
+          }
+        }
+        syncCreateMetadataForTheme();
+        updateCreateRangeDependentSections();
+      }
+
+function applyCreateFormulaPreference(value) {
+        const normalized = normalizeFormulaPreference(value);
+        createFormulaPreference = normalized;
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle) {
+          toggle.checked = normalized;
+        }
+        if (rangeInfo && typeof rangeInfo === 'object') {
+          rangeInfo.updateFormulaReferences = normalized;
+        }
+        return normalized;
+      }
+
+function getCreateFormulaPreference() {
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle) {
+          return !!toggle.checked;
+        }
+        if (typeof createFormulaPreference === 'boolean') {
+          return createFormulaPreference;
+        }
+        if (rangeInfo && typeof rangeInfo.updateFormulaReferences === 'boolean') {
+          return rangeInfo.updateFormulaReferences;
+        }
+        return true;
+      }
+
+function bindCreateFormulaToggle() {
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle && toggle.dataset.toggleBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            applyCreateFormulaPreference(this.checked);
+          });
+          toggle.dataset.toggleBound = 'true';
         }
       }
 
@@ -127,9 +314,7 @@ function resetWordTextOptions() {
         resetWordFormatInputs('wordTitleFormatOptions');
         resetWordFormatInputs('wordBodyFormatOptions');
         const extraFields = [
-          'wordBodyContext',
-          'wordBodyLanguage',
-          'wordBodyProfile'
+          'wordBodyContext'
         ];
         extraFields.forEach(function(fieldId) {
           const el = document.getElementById(fieldId);
@@ -144,10 +329,62 @@ function resetWordTextOptions() {
         });
         const toneSelect = document.getElementById('wordBodyTone');
         if (toneSelect) {
-          const fallback = toneSelect.dataset && toneSelect.dataset.defaultValue !== undefined ? toneSelect.dataset.defaultValue : toneSelect.defaultValue;
-          toneSelect.value = fallback !== undefined ? fallback : 'profesional';
+          toneSelect.value = WORD_TONE_DEFAULT;
         }
+        const toneCustom = document.getElementById('wordBodyToneCustom');
+        if (toneCustom) {
+          toneCustom.value = '';
+        }
+        const languageSelect = document.getElementById('wordBodyLanguage');
+        if (languageSelect) {
+          languageSelect.value = WORD_LANGUAGE_DEFAULT;
+        }
+        const languageCustom = document.getElementById('wordBodyLanguageCustom');
+        if (languageCustom) {
+          languageCustom.value = '';
+        }
+        const profileSelect = document.getElementById('wordBodyProfile');
+        if (profileSelect) {
+          profileSelect.value = WORD_PROFILE_DEFAULT;
+        }
+        const profileNote = document.getElementById('wordBodyProfileNote');
+        if (profileNote) {
+          profileNote.value = '';
+        }
+        const lengthSelect = document.getElementById('wordBodyLength');
+        if (lengthSelect) {
+          lengthSelect.value = WORD_LENGTH_DEFAULT;
+        }
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          const toggle = document.getElementById(key + 'Toggle');
+          if (toggle) {
+            toggle.checked = false;
+          }
+          const descToggle = document.getElementById(key + 'DescriptionToggle');
+          if (descToggle) {
+            descToggle.checked = false;
+          }
+          const descField = document.getElementById(key + 'Description');
+          if (descField) {
+            descField.value = '';
+          }
+        });
+        wordContextWebSources = [];
+        wordContextWebCollapsed = false;
+        renderWordContextWebSources();
+        const webToggle = document.getElementById('wordContextWebToggle');
+        if (webToggle) {
+          webToggle.checked = false;
+        }
+        updateWordContextWebVisibility();
+        resetWordAutoComments();
+        syncWordStructureSections();
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
         refreshWordPreviews();
+        bindCreateRangeInput();
+        updateCreateRangeDependentSections();
       }
 
 function updateWordFormatFlagClasses(container) {
@@ -181,22 +418,25 @@ function updateWordPreview(kind) {
         const formatContainer = document.getElementById(prefix + 'FormatOptions');
 
         if (!preview.dataset.baseText) {
-          preview.dataset.baseText = kind === 'body'
-            ? 'Ejemplo de párrafo adaptable a tu reporte, resaltando'
-            : 'Ejemplo de título';
-        }
-        if (kind === 'body' && !preview.dataset.baseKeywords) {
-          preview.dataset.baseKeywords = 'palabras clave';
+          preview.dataset.baseText = 'Ejemplo';
         }
 
         if (colorInput) {
           preview.style.color = colorInput.value || '';
         }
-        if (sizeInput && sizeInput.value) {
-          const parsed = parseFloat(sizeInput.value);
-          if (!isNaN(parsed)) {
-            preview.style.fontSize = parsed + 'px';
+        preview.style.removeProperty('font-size');
+        if (!preview.dataset.lockedFontSize) {
+          try {
+            const computed = window.getComputedStyle(preview).fontSize;
+            if (computed) {
+              preview.dataset.lockedFontSize = computed;
+            }
+          } catch (err) {
+            preview.dataset.lockedFontSize = '';
           }
+        }
+        if (preview.dataset.lockedFontSize) {
+          preview.style.fontSize = preview.dataset.lockedFontSize;
         }
         if (alignSelect) {
           preview.style.textAlign = alignSelect.value || '';
@@ -219,19 +459,16 @@ function updateWordPreview(kind) {
         }
         if (kind === 'body') {
           const textSpan = preview.querySelector('.word-preview-text');
-          const keywordsSpan = preview.querySelector('.word-preview-keywords');
           if (textSpan) {
             textSpan.textContent = preview.dataset.baseText;
           } else {
-            preview.textContent = preview.dataset.baseText + ' ' + (preview.dataset.baseKeywords || '');
-          }
-          if (keywordsSpan) {
-            keywordsSpan.textContent = preview.dataset.baseKeywords || '';
+            preview.textContent = preview.dataset.baseText;
           }
         } else {
-          preview.textContent = uppercaseToggle && uppercaseToggle.checked
+          const baseText = uppercaseToggle && uppercaseToggle.checked
             ? preview.dataset.baseText.toUpperCase()
             : preview.dataset.baseText;
+          preview.textContent = baseText;
         }
         if (kind === 'body' && highlightToggle) {
           preview.classList.toggle('word-preview-highlighted', highlightToggle.checked);
@@ -246,6 +483,379 @@ function updateWordPreview(kind) {
 function refreshWordPreviews() {
         updateWordPreview('title');
         updateWordPreview('body');
+      }
+
+function createEmptyWordWebSourceEntry() {
+        return { url: '', hasDescription: false, description: '' };
+      }
+
+function ensureWordContextWebSources() {
+        if (!Array.isArray(wordContextWebSources)) {
+          wordContextWebSources = [];
+        }
+        if (wordContextWebSources.length > WORD_WEB_SOURCE_LIMIT) {
+          wordContextWebSources = wordContextWebSources.slice(0, WORD_WEB_SOURCE_LIMIT);
+        }
+        return wordContextWebSources;
+      }
+
+function renderWordContextWebSources(options) {
+        const itemsContainer = document.getElementById('wordContextWebItems');
+        if (!itemsContainer) {
+          return;
+        }
+        const focusNew = !!(options && options.focusNew);
+        const sources = ensureWordContextWebSources();
+        itemsContainer.innerHTML = '';
+        sources.forEach(function(entry, index) {
+          const item = document.createElement('div');
+          item.className = 'word-context-web-item';
+
+          const row = document.createElement('div');
+          row.className = 'word-context-web-row';
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'header-ai-web-remove word-context-web-remove';
+          removeBtn.textContent = '×';
+          removeBtn.setAttribute('aria-label', 'Eliminar página web');
+          removeBtn.addEventListener('click', function() {
+            const list = ensureWordContextWebSources();
+            list.splice(index, 1);
+            renderWordContextWebSources();
+            updateWordContextWebVisibility();
+          });
+
+          const inputWrapper = document.createElement('div');
+          inputWrapper.className = 'header-ai-web-input-wrapper';
+          const input = document.createElement('input');
+          input.type = 'url';
+          input.className = 'word-context-web-input header-ai-web-input';
+          input.placeholder = 'https://ejemplo.com';
+          input.value = entry && entry.url ? entry.url : '';
+          input.addEventListener('input', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.url = this.value;
+            }
+          });
+          inputWrapper.appendChild(input);
+
+          row.appendChild(removeBtn);
+          row.appendChild(inputWrapper);
+          item.appendChild(row);
+
+          const descToggleLabel = document.createElement('label');
+          descToggleLabel.className = 'word-context-web-desc-toggle';
+          const descToggle = document.createElement('input');
+          descToggle.type = 'checkbox';
+          const descText = document.createElement('span');
+          descText.textContent = 'Agregar descripción';
+          const hasContent = entry && entry.description && entry.description.trim();
+          descToggle.checked = !!(entry && (entry.hasDescription || hasContent));
+          if (descToggle.checked) {
+            descToggleLabel.classList.add('is-active');
+          }
+          descToggleLabel.appendChild(descToggle);
+          descToggleLabel.appendChild(descText);
+          item.appendChild(descToggleLabel);
+
+          const descArea = document.createElement('textarea');
+          descArea.className = 'word-context-web-desc';
+          descArea.placeholder = 'Describe qué información se debe buscar';
+          descArea.value = entry && entry.description ? entry.description : '';
+          descArea.classList.toggle('is-visible', descToggle.checked);
+          descArea.addEventListener('input', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.description = this.value;
+            }
+          });
+          descToggle.addEventListener('change', function() {
+            const target = ensureWordContextWebSources()[index];
+            if (target) {
+              target.hasDescription = this.checked;
+              if (!this.checked) {
+                target.description = '';
+                descArea.value = '';
+              }
+            }
+            descArea.classList.toggle('is-visible', this.checked);
+            descToggleLabel.classList.toggle('is-active', this.checked);
+          });
+          item.appendChild(descArea);
+
+          itemsContainer.appendChild(item);
+          if (focusNew && index === sources.length - 1) {
+            setTimeout(function() {
+              input.focus();
+            }, 0);
+          }
+        });
+        updateWordContextWebVisibility();
+      }
+
+function updateWordContextWebVisibility() {
+        const toggle = document.getElementById('wordContextWebToggle');
+        const list = document.getElementById('wordContextWebList');
+        const collapseBtn = document.getElementById('wordContextWebCollapse');
+        const addBtn = document.getElementById('wordContextWebAdd');
+        const enabled = !!(toggle && toggle.checked);
+        const collapsed = !!wordContextWebCollapsed && enabled;
+        if (list) {
+          list.classList.toggle('is-visible', enabled && !collapsed);
+        }
+        if (collapseBtn) {
+          collapseBtn.disabled = !enabled;
+          collapseBtn.textContent = collapsed ? '▸' : '▾';
+          collapseBtn.setAttribute('aria-expanded', enabled && !collapsed ? 'true' : 'false');
+        }
+        if (addBtn) {
+          const sources = ensureWordContextWebSources();
+          addBtn.disabled = !enabled || collapsed || sources.length >= WORD_WEB_SOURCE_LIMIT;
+        }
+      }
+
+function syncWordStructureSection(key) {
+        const toggle = document.getElementById(key + 'Toggle');
+        const details = document.getElementById(key + 'Details');
+        const descToggle = document.getElementById(key + 'DescriptionToggle');
+        const descWrapper = document.getElementById(key + 'DescriptionWrapper');
+        const descInput = document.getElementById(key + 'Description');
+        const active = Boolean(toggle && toggle.checked);
+        if (details) {
+          details.classList.toggle('is-visible', active);
+        }
+        if (!active && descToggle) {
+          descToggle.checked = false;
+        }
+        const showDescription = Boolean(active && descToggle && descToggle.checked);
+        if (descWrapper) {
+          descWrapper.classList.toggle('is-visible', showDescription);
+        }
+        if (!showDescription && descInput) {
+          descInput.value = '';
+        }
+      }
+
+function syncWordStructureSections() {
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          syncWordStructureSection(key);
+        });
+      }
+
+function bindWordContextWebSources() {
+        const toggle = document.getElementById('wordContextWebToggle');
+        if (toggle && toggle.dataset.webBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            if (this.checked && ensureWordContextWebSources().length === 0) {
+              wordContextWebSources.push(createEmptyWordWebSourceEntry());
+              renderWordContextWebSources({ focusNew: true });
+            }
+            if (!this.checked) {
+              wordContextWebCollapsed = false;
+            }
+            updateWordContextWebVisibility();
+          });
+          toggle.dataset.webBound = 'true';
+        }
+        const addBtn = document.getElementById('wordContextWebAdd');
+        if (addBtn && addBtn.dataset.webBound !== 'true') {
+          addBtn.addEventListener('click', function() {
+            if (ensureWordContextWebSources().length >= WORD_WEB_SOURCE_LIMIT) {
+              return;
+            }
+            wordContextWebSources.push(createEmptyWordWebSourceEntry());
+            renderWordContextWebSources({ focusNew: true });
+            updateWordContextWebVisibility();
+          });
+          addBtn.dataset.webBound = 'true';
+        }
+        const collapseBtn = document.getElementById('wordContextWebCollapse');
+        if (collapseBtn && collapseBtn.dataset.webBound !== 'true') {
+          collapseBtn.addEventListener('click', function() {
+            if (collapseBtn.disabled) {
+              return;
+            }
+            wordContextWebCollapsed = !wordContextWebCollapsed;
+            updateWordContextWebVisibility();
+          });
+          collapseBtn.dataset.webBound = 'true';
+        }
+        renderWordContextWebSources();
+        updateWordContextWebVisibility();
+      }
+
+function bindWordStructureToggle(key) {
+        const toggle = document.getElementById(key + 'Toggle');
+        if (toggle && toggle.dataset.wordStructureBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            syncWordStructureSection(key);
+          });
+          toggle.dataset.wordStructureBound = 'true';
+        }
+        const descToggle = document.getElementById(key + 'DescriptionToggle');
+        if (descToggle && descToggle.dataset.wordStructureBound !== 'true') {
+          descToggle.addEventListener('change', function() {
+            syncWordStructureSection(key);
+          });
+          descToggle.dataset.wordStructureBound = 'true';
+        }
+      }
+
+function bindWordStructureToggles() {
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          bindWordStructureToggle(key);
+        });
+        syncWordStructureSections();
+      }
+
+function resetWordAutoComments() {
+        const toggle = document.getElementById('wordAutoCommentsToggle');
+        if (toggle) {
+          toggle.checked = false;
+        }
+        WORD_AUTO_COMMENT_KEYS.forEach(function(key) {
+          const option = document.getElementById('wordAutoComment' + capitalizeWordKey(key));
+          if (option) {
+            option.checked = false;
+          }
+        });
+        const customText = document.getElementById('wordAutoCommentsCustom');
+        if (customText) {
+          customText.value = '';
+        }
+        syncWordAutoComments();
+      }
+
+function capitalizeWordKey(key) {
+        if (!key) {
+          return '';
+        }
+        return key.charAt(0).toUpperCase() + key.slice(1);
+      }
+
+function syncWordAutoComments() {
+        const toggle = document.getElementById('wordAutoCommentsToggle');
+        const options = document.getElementById('wordAutoCommentsOptions');
+        const customToggle = document.getElementById('wordAutoCommentCustom');
+        const customWrapper = document.getElementById('wordAutoCommentsCustomWrapper');
+        const customText = document.getElementById('wordAutoCommentsCustom');
+        const enabled = !!(toggle && toggle.checked);
+        if (options) {
+          options.classList.toggle('is-visible', enabled);
+        }
+        if (!enabled) {
+          WORD_AUTO_COMMENT_KEYS.forEach(function(key) {
+            const option = document.getElementById('wordAutoComment' + capitalizeWordKey(key));
+            if (option) {
+              option.checked = false;
+            }
+          });
+        }
+        const showCustom = Boolean(enabled && customToggle && customToggle.checked);
+        if (customWrapper) {
+          customWrapper.classList.toggle('is-visible', showCustom);
+        }
+        if (!showCustom && customText) {
+          customText.value = '';
+        }
+      }
+
+function bindWordAutoComments() {
+        const toggle = document.getElementById('wordAutoCommentsToggle');
+        if (toggle && toggle.dataset.autoCommentsBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            syncWordAutoComments();
+          });
+          toggle.dataset.autoCommentsBound = 'true';
+        }
+        WORD_AUTO_COMMENT_KEYS.forEach(function(key) {
+          const control = document.getElementById('wordAutoComment' + capitalizeWordKey(key));
+          if (control && control.dataset.autoCommentsBound !== 'true') {
+            control.addEventListener('change', function() {
+              syncWordAutoComments();
+            });
+            control.dataset.autoCommentsBound = 'true';
+          }
+        });
+        const customField = document.getElementById('wordAutoCommentsCustom');
+        if (customField && customField.dataset.autoCommentsBound !== 'true') {
+          customField.addEventListener('input', function() {
+            // Mantener sincronizado el estado de comentarios personalizados si es necesario en el futuro.
+          });
+          customField.dataset.autoCommentsBound = 'true';
+        }
+        syncWordAutoComments();
+      }
+
+function syncWordLanguageControls() {
+        const select = document.getElementById('wordBodyLanguage');
+        const wrapper = document.getElementById('wordBodyLanguageCustomWrapper');
+        const input = document.getElementById('wordBodyLanguageCustom');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'other';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && input) {
+          input.value = '';
+        }
+      }
+
+function syncWordToneControls() {
+        const select = document.getElementById('wordBodyTone');
+        const wrapper = document.getElementById('wordBodyToneCustomWrapper');
+        const input = document.getElementById('wordBodyToneCustom');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'custom';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && input) {
+          input.value = '';
+        }
+      }
+
+function syncWordProfileControls() {
+        const select = document.getElementById('wordBodyProfile');
+        const wrapper = document.getElementById('wordBodyProfileNoteWrapper');
+        const note = document.getElementById('wordBodyProfileNote');
+        if (!select || !wrapper) {
+          return;
+        }
+        const shouldShow = select.value === 'custom';
+        wrapper.classList.toggle('is-visible', shouldShow);
+        if (!shouldShow && note) {
+          note.value = '';
+        }
+      }
+
+function bindWordContextSelects() {
+        const languageSelect = document.getElementById('wordBodyLanguage');
+        if (languageSelect && languageSelect.dataset.wordSelectBound !== 'true') {
+          languageSelect.addEventListener('change', function() {
+            syncWordLanguageControls();
+          });
+          languageSelect.dataset.wordSelectBound = 'true';
+        }
+        const toneSelect = document.getElementById('wordBodyTone');
+        if (toneSelect && toneSelect.dataset.wordSelectBound !== 'true') {
+          toneSelect.addEventListener('change', function() {
+            syncWordToneControls();
+          });
+          toneSelect.dataset.wordSelectBound = 'true';
+        }
+        const profileSelect = document.getElementById('wordBodyProfile');
+        if (profileSelect && profileSelect.dataset.wordSelectBound !== 'true') {
+          profileSelect.addEventListener('change', function() {
+            syncWordProfileControls();
+          });
+          profileSelect.dataset.wordSelectBound = 'true';
+        }
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
       }
 
 function syncWordTitleControls() {
@@ -289,23 +899,21 @@ function syncWordTitleControls() {
           }
         }
         if (manualToggle) {
-          if (autoActive) {
+          manualToggle.disabled = !isWordTheme;
+          if (manualToggle.disabled) {
             manualToggle.checked = false;
-            manualToggle.disabled = true;
             manualToggle.setAttribute('aria-disabled', 'true');
           } else {
-            manualToggle.disabled = !isWordTheme;
-            if (!manualToggle.disabled) {
-              manualToggle.removeAttribute('aria-disabled');
-            } else {
-              manualToggle.setAttribute('aria-disabled', 'true');
-            }
+            manualToggle.removeAttribute('aria-disabled');
           }
         }
         const manualActive = Boolean(isWordTheme && manualToggle && manualToggle.checked);
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
+          const shouldCollapse = formatOptions.dataset && formatOptions.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed('wordTitleFormatOptions', shouldCollapse);
         }
+        bindWordFormatCollapses();
         updateWordPreview('title');
       }
 
@@ -331,7 +939,10 @@ function syncWordBodyControls() {
         }
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
+          const shouldCollapse = formatOptions.dataset && formatOptions.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed('wordBodyFormatOptions', shouldCollapse);
         }
+        bindWordFormatCollapses();
         updateWordPreview('body');
       }
 
@@ -342,6 +953,12 @@ function syncWordContextCard() {
         }
         const isWordTheme = isWordThemeActiveForCreate();
         card.style.display = isWordTheme ? 'block' : 'none';
+        syncWordLanguageControls();
+        syncWordToneControls();
+        syncWordProfileControls();
+        syncWordStructureSections();
+        updateWordContextWebVisibility();
+        syncWordAutoComments();
       }
 
 function syncWordCreateOptions() {
@@ -410,6 +1027,59 @@ function bindWordFormatInputs() {
         }
       }
 
+function setWordFormatSectionCollapsed(sectionId, collapsed) {
+        const container = document.getElementById(sectionId);
+        if (!container) {
+          return;
+        }
+        const content = container.querySelector('.word-format-content');
+        const toggle = container.querySelector('.word-format-collapse');
+        const isCollapsed = !!collapsed;
+        container.classList.toggle('is-collapsed', isCollapsed);
+        if (content) {
+          content.style.display = isCollapsed ? 'none' : '';
+        }
+        if (toggle) {
+          const expandLabel = toggle.dataset && toggle.dataset.expandLabel
+            ? toggle.dataset.expandLabel
+            : 'Expandir opciones de formato';
+          const collapseLabel = toggle.dataset && toggle.dataset.collapseLabel
+            ? toggle.dataset.collapseLabel
+            : 'Replegar opciones de formato';
+          toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+          toggle.setAttribute('aria-label', isCollapsed ? expandLabel : collapseLabel);
+        }
+        container.dataset.wordCollapsed = isCollapsed ? 'true' : 'false';
+      }
+
+function toggleWordFormatSection(sectionId) {
+        const container = document.getElementById(sectionId);
+        if (!container) {
+          return;
+        }
+        const nextState = !(container.dataset && container.dataset.wordCollapsed === 'true');
+        setWordFormatSectionCollapsed(sectionId, nextState);
+      }
+
+function bindWordFormatCollapses() {
+        const sections = ['wordTitleFormatOptions', 'wordBodyFormatOptions'];
+        sections.forEach(function(sectionId) {
+          const container = document.getElementById(sectionId);
+          if (!container) {
+            return;
+          }
+          const toggle = container.querySelector('.word-format-collapse');
+          if (toggle && toggle.dataset.wordCollapseBound !== 'true') {
+            toggle.addEventListener('click', function() {
+              toggleWordFormatSection(sectionId);
+            });
+            toggle.dataset.wordCollapseBound = 'true';
+          }
+          const shouldCollapse = container.dataset && container.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed(sectionId, shouldCollapse);
+        });
+      }
+
 function resetPendingFormatState() {
         pendingFormatState = { applied: false, range: null };
       }
@@ -447,6 +1117,8 @@ function isCreateFormatDirty() {
 function resetCreateTabView(options) {
         options = options || {};
         if (!options.preserveRange) {
+          createFormulaPreference = true;
+          applyCreateFormulaPreference(true);
           resetPendingFormatState();
           clearRangeUI();
         }
@@ -469,6 +1141,7 @@ function resetCreateTabView(options) {
         clearCreateFormatDirty();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
+        updateCreateRangeDependentSections();
       }
 
 function clearRangeUI() {
@@ -482,7 +1155,10 @@ function clearRangeUI() {
           input.dataset.manual = 'false';
         }
         rangeInfo = null;
+        currentHeaders = [];
+        renderCreateHeaders();
         clearCreateFormatDirty();
+        updateCreateRangeDependentSections();
       }
 
 function setRangeUI(info, options) {
@@ -505,14 +1181,25 @@ function setRangeUI(info, options) {
           input.dataset.manual = 'false';
         }
         const incomingHeaders = Array.isArray(info.headers) ? info.headers : currentHeaders;
+        const previousPreference =
+          rangeInfo && typeof rangeInfo.updateFormulaReferences === 'boolean'
+            ? rangeInfo.updateFormulaReferences
+            : createFormulaPreference;
+        const incomingPreference =
+          typeof info.updateFormulaReferences === 'boolean'
+            ? info.updateFormulaReferences
+            : previousPreference;
         rangeInfo = {
           sheetName: info.sheetName,
           a1Notation: info.a1Notation,
           rows: rows,
           cols: cols,
-          headers: cloneHeaderModels(incomingHeaders)
+          headers: cloneHeaderModels(incomingHeaders),
+          updateFormulaReferences: normalizeFormulaPreference(incomingPreference)
         };
         rangeInfo.fullA1 = fullA1;
+        applyCreateFormulaPreference(rangeInfo.updateFormulaReferences);
+        updateCreateRangeDependentSections();
       }
 
 function getRangeInputValue() {
@@ -574,6 +1261,7 @@ function loadActiveRange(updateHeaders = true) {
           renderCreateHeaders();
           markCreateFormatDirty();
           resetPendingFormatState();
+          updateCreateRangeDependentSections();
         }).getActiveRangeInfo();
       }
 
@@ -622,6 +1310,7 @@ async function handleApplyFormat() {
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
+        const updateFormulaReferences = getCreateFormulaPreference();
 
         let response;
         try {
@@ -633,7 +1322,11 @@ async function handleApplyFormat() {
             validation.values.description,
             cloneHeaderModels(currentHeaders),
             style,
-            { skipSaving: true }
+            {
+              skipSaving: true,
+              updateFormulaReferences: updateFormulaReferences,
+              formulaPreference: updateFormulaReferences
+            }
           );
         } catch (err) {
           await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
@@ -651,6 +1344,7 @@ async function handleApplyFormat() {
           return false;
         }
 
+        let appliedPreference = updateFormulaReferences;
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
@@ -658,6 +1352,9 @@ async function handleApplyFormat() {
             renderCreateHeaders();
           }
           setPendingFormattedRange(response.rangeInfo);
+          if (typeof response.rangeInfo.updateFormulaReferences === 'boolean') {
+            appliedPreference = response.rangeInfo.updateFormulaReferences;
+          }
         } else {
           const parts = rangeA1.split('!');
           if (parts.length === 2) {
@@ -666,6 +1363,8 @@ async function handleApplyFormat() {
             resetPendingFormatState();
           }
         }
+
+        applyCreateFormulaPreference(appliedPreference);
 
         clearCreateFormatDirty();
 
@@ -747,8 +1446,9 @@ async function handleSaveAction(options) {
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
+        const updateFormulaReferences = getCreateFormulaPreference();
         const entryValues = Object.assign({}, validation.values, {
-          updateFormulaReferences: true
+          updateFormulaReferences: updateFormulaReferences
         });
 
         if (isCreateFormatDirty() && !options.skipFormatCheck) {
@@ -769,7 +1469,7 @@ async function handleSaveAction(options) {
             validation.values.description,
             cloneHeaderModels(currentHeaders),
             style,
-            { skipFormatting: true, formulaPreference: true }
+            { skipFormatting: true, formulaPreference: updateFormulaReferences }
           );
         } catch (err) {
           await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
@@ -787,13 +1487,20 @@ async function handleSaveAction(options) {
           return false;
         }
 
+        let appliedPreference = updateFormulaReferences;
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderCreateHeaders();
           }
+          if (typeof response.rangeInfo.updateFormulaReferences === 'boolean') {
+            appliedPreference = response.rangeInfo.updateFormulaReferences;
+          }
         }
+
+        entryValues.updateFormulaReferences = appliedPreference;
+        applyCreateFormulaPreference(appliedPreference);
 
         if (response && response.id) {
           lastSavedTableId = response.id;
@@ -911,13 +1618,22 @@ async function resolvePendingFormatting() {
         }
       }
 
-      function initializeWordRangeMode() {
+function initializeWordRangeMode() {
         bindWordRangeToggle();
+        bindCreateFormulaToggle();
+        applyCreateFormulaPreference(createFormulaPreference);
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordFormatCollapses();
+        bindWordContextWebSources();
+        bindWordContextSelects();
+        bindWordStructureToggles();
+        bindWordAutoComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
+        bindCreateRangeInput();
+        updateCreateRangeDependentSections();
       }
 
       if (document.readyState === 'loading') {
@@ -926,13 +1642,22 @@ async function resolvePendingFormatting() {
         initializeWordRangeMode();
       }
 
-      function notifyCreateThemeChanged() {
+function notifyCreateThemeChanged() {
         bindWordRangeToggle();
+        bindCreateFormulaToggle();
+        applyCreateFormulaPreference(createFormulaPreference);
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordFormatCollapses();
+        bindWordContextWebSources();
+        bindWordContextSelects();
+        bindWordStructureToggles();
+        bindWordAutoComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
+        bindCreateRangeInput();
+        updateCreateRangeDependentSections();
       }
 
       window.notifyCreateThemeChanged = notifyCreateThemeChanged;

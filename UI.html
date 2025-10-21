@@ -351,6 +351,19 @@
         opacity: 1;
         transform: translateY(0);
       }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']::after {
+        bottom: auto;
+        top: calc(100% + 8px);
+        transform: translateY(-4px);
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']::before {
+        bottom: auto;
+        top: calc(100% + 2px);
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
+      }
+      .tc-tooltip-target[data-tooltip][data-tooltip-position='below']:hover::after {
+        transform: translateY(0);
+      }
       .ai-report-order-label.tc-tooltip-target[data-tooltip]::after {
         bottom: auto;
         top: calc(100% + 8px);
@@ -396,6 +409,9 @@
         color: var(--tc-primary);
         margin: 0;
         letter-spacing: 0.01em;
+      }
+      body.theme-wordcrafter #appTitle {
+        color: #000000;
       }
       .theme-toggle {
         position: relative;
@@ -867,6 +883,39 @@
       .edit-saved-locate:active {
         transform: scale(0.95);
       }
+      body.theme-wordcrafter #editSavedTablesList {
+        border-color: rgba(28, 141, 212, 0.28);
+        background-color: #FFFFFF;
+      }
+      body.theme-wordcrafter .edit-saved-group-label {
+        color: #000000;
+      }
+      body.theme-wordcrafter .edit-saved-item {
+        background-image: linear-gradient(
+          90deg,
+          rgba(28, 141, 212, 0.42) 0 14px,
+          rgba(255, 255, 255, 0) 14px 100%
+        );
+      }
+      body.theme-wordcrafter .edit-saved-item:hover {
+        background-color: rgba(28, 141, 212, 0.12);
+      }
+      body.theme-wordcrafter .edit-saved-item.selected {
+        box-shadow: 0 0 0 2px rgba(28, 141, 212, 0.45);
+      }
+      body.theme-wordcrafter .edit-saved-locate {
+        background-color: rgba(28, 141, 212, 0.1);
+        color: #000000;
+      }
+      body.theme-wordcrafter .edit-saved-locate:hover {
+        background-color: rgba(28, 141, 212, 0.18);
+      }
+      body.theme-wordcrafter .edit-saved-empty {
+        color: #000000;
+      }
+      body.theme-wordcrafter .ai-report-favorite-clear-btn {
+        color: #000000;
+      }
       .edit-saved-empty {
         padding: 16px 12px;
         color: #000000;
@@ -915,6 +964,39 @@
       .ai-action-section {
         margin-top: 16px;
         display: none;
+      }
+      .ai-text-section {
+        display: none;
+      }
+      .ai-text-config {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .ai-text-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-text-row label {
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .ai-text-row textarea {
+        min-height: 72px;
+      }
+      .ai-text-highlights {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-text-highlights-detail {
+        display: none;
+        min-height: 60px;
+      }
+      .ai-text-highlights--active .ai-text-highlights-detail {
+        display: block;
       }
       .ai-report-options {
         display: flex;
@@ -3021,6 +3103,26 @@
         flex-wrap: wrap;
         margin-top: 12px;
       }
+      #createActionsContainer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #createActionsContainer .action-favorite-row,
+      #createActionsContainer button {
+        width: 100%;
+      }
+      #createActionsContainer button {
+        flex: 0 0 auto;
+      }
+      .action-favorite-row {
+        width: 100%;
+        display: flex;
+      }
+      .action-favorite-btn {
+        width: 100%;
+        justify-content: center;
+        display: flex;
+      }
       .action-buttons button {
         flex: 1 1 160px;
       }
@@ -3135,34 +3237,65 @@
         font-size: 13px;
         color: var(--tc-muted);
       }
+      .word-format-preview-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
       .word-format-preview {
-        min-width: 220px;
+        min-width: 0;
         flex: 0 0 auto;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 10px 14px;
         background: rgba(42, 176, 255, 0.15);
         color: var(--tc-primary-dark);
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
         transition: all 0.2s ease;
+        width: min(100%, 144px);
       }
       .word-format-preview.word-format-preview-body {
-        text-align: left;
+        text-align: center;
         font-weight: 500;
-        min-width: 260px;
-        line-height: 1.6;
+        min-width: 0;
+        width: min(100%, 144px);
+        line-height: 1.55;
       }
-      .word-format-preview .word-preview-keywords {
-        display: inline-block;
-        padding: 2px 6px;
+      .word-format-collapse {
+        border: none;
+        background: transparent;
+        color: var(--tc-muted);
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px;
         border-radius: 6px;
-        background: rgba(42, 176, 255, 0.22);
-        margin-left: 4px;
-        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
       }
-      .word-format-preview.word-preview-highlighted .word-preview-keywords {
-        background: rgba(255, 216, 102, 0.85);
+      .word-format-collapse:hover {
+        background-color: rgba(28, 141, 212, 0.12);
+        color: var(--tc-primary-dark);
+      }
+      .word-format-collapse:focus-visible {
+        outline: 2px solid rgba(28, 141, 212, 0.55);
+        outline-offset: 2px;
+      }
+      .word-format-options.is-collapsed .word-format-collapse {
+        transform: rotate(-90deg);
+      }
+      .word-format-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .word-format-options.is-collapsed .word-format-content {
+        display: none;
+      }
+      .word-format-preview.word-preview-highlighted {
+        background: rgba(255, 216, 102, 0.25);
+        box-shadow: inset 0 0 0 1px rgba(255, 216, 102, 0.6);
         color: #7c5a00;
       }
       .word-format-grid {
@@ -3186,6 +3319,27 @@
       }
       .word-format-group input[type='number'] {
         max-width: 160px;
+      }
+      .word-format-group--size {
+        flex: 0 0 160px;
+      }
+      .word-inline-field {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 4px;
+      }
+      .word-inline-field label {
+        margin: 0;
+        white-space: nowrap;
+      }
+      .word-inline-field input[type='number'] {
+        flex: 0 0 32px;
+        max-width: 32px;
+        text-align: center;
+      }
+      .word-font-size-input {
+        max-width: 32px;
       }
       .word-format-flags {
         display: flex;
@@ -3249,7 +3403,9 @@
       .word-context-heading {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 6px;
+        text-align: center;
       }
       .word-context-heading h3 {
         margin: 0;
@@ -3271,6 +3427,68 @@
         min-height: 96px;
         resize: vertical;
       }
+      .word-context-structure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-structure-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--tc-primary-dark);
+        background: rgba(255, 255, 255, 0.72);
+        border-radius: 9px;
+        padding: 6px 10px;
+        border: 1px solid rgba(28, 141, 212, 0.16);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .word-context-structure-toggle:hover {
+        border-color: rgba(28, 141, 212, 0.32);
+        box-shadow: 0 4px 10px rgba(28, 141, 212, 0.14);
+      }
+      .word-context-structure-toggle input {
+        margin: 0;
+        width: 12px;
+        height: 12px;
+      }
+      .word-context-structure-details {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        padding-left: 14px;
+        border-left: 2px solid rgba(28, 141, 212, 0.18);
+      }
+      .word-context-structure-details.is-visible {
+        display: flex;
+      }
+      .word-context-subtoggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-subtoggle input {
+        margin: 0;
+        width: 11px;
+        height: 11px;
+      }
+      .word-context-description-wrapper {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-context-description-wrapper.is-visible {
+        display: flex;
+      }
+      .word-context-description {
+        min-height: 72px;
+        resize: vertical;
+      }
       .word-context-columns {
         display: flex;
         flex-wrap: wrap;
@@ -3279,6 +3497,284 @@
       .word-context-columns .word-format-group {
         min-width: 180px;
         flex: 1 1 210px;
+      }
+      .word-context-columns .word-context-select {
+        position: relative;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(226, 242, 255, 0.85));
+        border-radius: 16px;
+        padding: 16px 18px;
+        box-shadow: 0 18px 36px rgba(42, 176, 255, 0.16);
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        gap: 12px;
+        overflow: hidden;
+      }
+      .word-context-columns .word-context-select::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(2, 132, 199, 0.9), rgba(59, 130, 246, 0.6));
+      }
+      .word-context-columns .word-context-select > * {
+        position: relative;
+        z-index: 1;
+      }
+      .word-context-select label {
+        font-size: 13px;
+        text-transform: none;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-select select,
+      .word-context-select textarea,
+      .word-context-select input[type='text'] {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+        width: 100%;
+      }
+      .word-context-helper-text {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+        line-height: 1.5;
+      }
+      .word-context-extra {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-context-extra.is-visible {
+        display: flex;
+      }
+      .word-context-extra label {
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.01em;
+        color: var(--tc-muted);
+        text-transform: uppercase;
+      }
+      .word-context-extra input,
+      .word-context-extra textarea {
+        font-size: 13px;
+      }
+      .word-context-length {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-context-length label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-length select {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.92);
+        font-weight: 500;
+        width: 100%;
+      }
+      .word-context-web {
+        margin-top: 14px;
+        border-top: 1px solid rgba(28, 141, 212, 0.18);
+        padding-top: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .word-context-web-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-web-collapse {
+        border: none;
+        background: rgba(28, 141, 212, 0.12);
+        color: var(--tc-primary-dark);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+      .word-context-web-collapse:hover:not(:disabled) {
+        background: rgba(28, 141, 212, 0.2);
+      }
+      .word-context-web-collapse:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .word-context-web-list {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-list.is-visible {
+        display: flex;
+      }
+      .word-context-web-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-context-web-item {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(28, 141, 212, 0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .word-context-web-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .word-context-web-input {
+        flex: 1 1 auto;
+      }
+      .word-context-web-remove {
+        margin-top: 2px;
+      }
+      body.theme-wordcrafter .js-comment-hint-field[data-themes='table'] {
+        display: none !important;
+      }
+      .word-context-web-desc-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-web-desc-toggle.is-active {
+        color: var(--tc-primary);
+      }
+      .word-context-web-desc {
+        display: none;
+        min-height: 60px;
+      }
+      .word-context-web-desc.is-visible {
+        display: block;
+      }
+      .word-context-web-add {
+        align-self: flex-start;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px dashed rgba(28, 141, 212, 0.4);
+        background: rgba(42, 176, 255, 0.08);
+        color: var(--tc-primary-dark);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      body.theme-wordcrafter .word-format-heading h4,
+      body.theme-wordcrafter .word-format-preview,
+      body.theme-wordcrafter .word-format-preview.word-preview-highlighted,
+      body.theme-wordcrafter .word-format-flag,
+      body.theme-wordcrafter .word-context-icon,
+      body.theme-wordcrafter .word-context-heading h3,
+      body.theme-wordcrafter .word-context-heading p,
+      body.theme-wordcrafter .word-context-structure-toggle,
+      body.theme-wordcrafter .word-context-subtoggle,
+      body.theme-wordcrafter .word-context-select label,
+      body.theme-wordcrafter .word-context-length label,
+      body.theme-wordcrafter .word-context-web-desc-toggle,
+      body.theme-wordcrafter .word-context-web-desc-toggle.is-active,
+      body.theme-wordcrafter .word-context-web-add,
+      body.theme-wordcrafter .word-automation-toggle,
+      body.theme-wordcrafter .word-automation-option,
+      body.theme-wordcrafter .word-automation-option label,
+      body.theme-wordcrafter .word-automation-option span,
+      body.theme-wordcrafter .word-automation-custom label,
+      body.theme-wordcrafter .ai-text-row label {
+        color: #000000;
+      }
+      body.theme-wordcrafter .word-format-collapse,
+      body.theme-wordcrafter .word-format-collapse:hover {
+        color: #000000;
+      }
+      .word-automation-section {
+        margin-top: 18px;
+        border-top: 1px solid rgba(28, 141, 212, 0.18);
+        padding-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .word-automation-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-automation-toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+      .word-automation-helper {
+        margin: 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+      }
+      .word-automation-options {
+        display: none;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .word-automation-options.is-visible {
+        display: flex;
+      }
+      .word-automation-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.22);
+        background: rgba(255, 255, 255, 0.85);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-automation-option input {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+      }
+      .word-automation-custom {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-automation-custom.is-visible {
+        display: flex;
+      }
+      .word-automation-custom label {
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--tc-muted);
+      }
+      .word-automation-custom textarea {
+        min-height: 72px;
+        resize: vertical;
       }
       .word-context-helper {
         margin-top: 10px;
@@ -3483,7 +3979,7 @@
           data-themes="table word"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
         >
-          Editar tabla
+          Editar Tabla
         </button>
         <button
           class="tab-btn tab-btn--tooltip-below"
@@ -3491,7 +3987,7 @@
           data-themes="table word"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
         >
-          Crear tabla
+          Crear Tabla
         </button>
         <button
           class="tab-btn"
@@ -3530,11 +4026,25 @@
           <div id="wordRangeFields">
             <div class="range-row">
               <div>
-                <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+                <strong>Rango actual:</strong> <span id="rangeLabel">—</span>
               </div>
               <div class="range-actions">
                 <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
               </div>
+            </div>
+            <div
+              class="toggle-group"
+              id="createFormulaToggleRow"
+              style="margin-top:8px;"
+            >
+              <label
+                class="checkbox-subtle js-comment-hint-trigger"
+                for="createUpdateFormulaRefs"
+                data-comment-hint="Mantiene las fórmulas coherentes cuando reubicas la tabla. Ej.: si =B2*2 se mueve una columna a la derecha, se actualizará a =C2*2."
+              >
+                <input type="checkbox" id="createUpdateFormulaRefs" checked />
+                Actualizar referencias de fórmulas al mover tabla.
+              </label>
             </div>
             <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
             <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
@@ -3550,8 +4060,23 @@
           </div>
         </div>
         <div class="section">
-          <label for="tableName">Título del texto</label>
-          <input type="text" id="tableName" placeholder="Ingrese un título..." />
+          <label
+            for="tableName"
+            id="createNameLabel"
+            class="tc-tooltip-target"
+            data-table-text="Nombre de la tabla"
+            data-word-text="Título del texto (Opcional)"
+            data-tooltip="Puedes dejarlo vacío o escribir un título manual."
+          >
+            Nombre de la tabla
+          </label>
+          <input
+            type="text"
+            id="tableName"
+            placeholder="Ingrese un nombre..."
+            data-table-placeholder="Ingrese un nombre..."
+            data-word-placeholder="Ingrese un título..."
+          />
           <div id="wordTitleOptions" class="word-text-options" style="display:none;">
             <div class="word-text-toggle-group">
               <label for="wordAutoTitleToggle" class="checkbox-subtle">
@@ -3563,82 +4088,131 @@
                 Editar formato del título manualmente
               </label>
             </div>
-            <div id="wordTitleFormatOptions" class="word-format-options">
+            <div id="wordTitleFormatOptions" class="word-format-options" data-word-collapsed="false">
               <div class="word-format-header">
                 <div class="word-format-heading">
                   <h4>Formato del título</h4>
                   <p>Ajusta estilo, tamaño y peso para presentar el título con presencia.</p>
                 </div>
-                <div
-                  id="wordTitlePreview"
-                  class="word-format-preview"
-                  aria-live="polite"
-                  aria-label="Vista previa del título"
-                >
-                  Ejemplo de título
+                <div class="word-format-preview-wrapper">
+                  <div
+                    id="wordTitlePreview"
+                    class="word-format-preview"
+                    aria-live="polite"
+                    aria-label="Vista previa del título"
+                  >
+                    <span class="word-preview-text">Ejemplo</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="word-format-collapse"
+                    aria-expanded="true"
+                    aria-controls="wordTitleFormatContent"
+                    data-expand-label="Expandir formato del título"
+                    data-collapse-label="Replegar formato del título"
+                  >
+                    ▾
+                  </button>
                 </div>
               </div>
-              <div class="word-format-grid">
-                <div class="word-format-group">
-                  <label for="wordTitleFontFamily">Fuente</label>
-                  <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
-                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
-                    <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
-                    <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
-                    <option value="'Raleway', Arial, sans-serif">Raleway</option>
-                    <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
-                  </select>
+              <div id="wordTitleFormatContent" class="word-format-content">
+                <div class="word-format-grid">
+                  <div class="word-format-group">
+                    <label
+                      for="wordTitleFontFamily"
+                      class="tc-tooltip-target"
+                      data-tooltip="Elige la tipografía base del título. Ej: Playfair para un estilo editorial."
+                      >Fuente</label
+                    >
+                    <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                      <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                      <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
+                      <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
+                      <option value="'Raleway', Arial, sans-serif">Raleway</option>
+                      <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
+                    </select>
+                  </div>
+                  <div class="word-format-group">
+                    <label
+                      for="wordTitleColor"
+                      class="tc-tooltip-target"
+                      data-tooltip="Selecciona el color principal del título. Ej: #1F2937 para mantener sobriedad."
+                      >Color de letra</label
+                    >
+                    <input
+                      type="color"
+                      id="wordTitleColor"
+                      value="#1F2937"
+                      data-default-value="#1F2937"
+                    />
+                  </div>
+                  <div class="word-format-group word-format-group--size">
+                    <div class="word-inline-field">
+                      <label
+                        for="wordTitleFontSize"
+                        class="tc-tooltip-target"
+                        data-tooltip="Define la altura del título. Ej: 32 para un encabezado protagonista."
+                        >Tamaño de letra</label
+                      >
+                      <input
+                        type="number"
+                        id="wordTitleFontSize"
+                        class="word-font-size-input"
+                        min="14"
+                        max="72"
+                        step="1"
+                        value="32"
+                        data-default-value="32"
+                      />
+                    </div>
+                  </div>
+                  <div class="word-format-group">
+                    <label
+                      for="wordTitleAlignment"
+                      class="tc-tooltip-target"
+                      data-tooltip="Indica cómo se alineará el título en el documento."
+                      >Alineación</label
+                    >
+                    <select id="wordTitleAlignment" data-default-value="center">
+                      <option value="left">Izquierda</option>
+                      <option value="center" selected>Centro</option>
+                      <option value="right">Derecha</option>
+                      <option value="justify">Justificada</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordTitleColor">Color de letra</label>
-                  <input
-                    type="color"
-                    id="wordTitleColor"
-                    value="#1F2937"
-                    data-default-value="#1F2937"
-                  />
+                <div class="word-format-flags">
+                  <label for="wordTitleBold" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleBold" /> Negrita</label
+                  >
+                  <label for="wordTitleUnderline" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
+                  >
+                  <label for="wordTitleItalics" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleItalics" /> Italik</label
+                  >
+                  <label for="wordTitleUppercase" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
+                  >
                 </div>
-                <div class="word-format-group">
-                  <label for="wordTitleFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordTitleFontSize"
-                    min="14"
-                    max="72"
-                    step="1"
-                    value="32"
-                    data-default-value="32"
-                  />
-                </div>
-                <div class="word-format-group">
-                  <label for="wordTitleAlignment">Alineación</label>
-                  <select id="wordTitleAlignment" data-default-value="center">
-                    <option value="left">Izquierda</option>
-                    <option value="center" selected>Centro</option>
-                    <option value="right">Derecha</option>
-                    <option value="justify">Justificada</option>
-                  </select>
-                </div>
-              </div>
-              <div class="word-format-flags">
-                <label for="wordTitleBold" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleBold" /> Negrita</label
-                >
-                <label for="wordTitleUnderline" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
-                >
-                <label for="wordTitleItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleItalics" /> Cursiva</label
-                >
-                <label for="wordTitleUppercase" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
-                >
               </div>
             </div>
           </div>
-          <div class="js-comment-hint-field">
-            <label for="tableDesc">Descripción del texto</label>
-            <textarea id="tableDesc" placeholder="Descripción del texto..."></textarea>
+          <div class="js-comment-hint-field" id="createDescriptionGroup">
+            <label
+              for="tableDesc"
+              id="createDescriptionLabel"
+              data-table-text="Descripción"
+              data-word-text=""
+            >
+              Descripción
+            </label>
+            <textarea
+              id="tableDesc"
+              placeholder="Descripción de la tabla..."
+              data-table-placeholder="Descripción de la tabla..."
+              data-word-placeholder=""
+            ></textarea>
           </div>
           <div id="wordContextCard" class="word-body-context-card" style="display:none;">
             <div class="word-context-header">
@@ -3650,41 +4224,229 @@
             </div>
             <div class="word-context-body">
               <div class="word-format-group">
-                <label for="wordBodyContext">Indicaciones clave</label>
+                <label
+                  for="wordBodyContext"
+                  class="tc-tooltip-target"
+                  data-tooltip="Resume objetivos, audiencia y puntos obligatorios. Ej: Dirigido a directores comerciales."
+                  >Indicaciones clave</label
+                >
                 <textarea
                   id="wordBodyContext"
                   rows="3"
                   placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
                 ></textarea>
               </div>
+              <div class="word-context-length">
+                <label
+                  for="wordBodyLength"
+                  class="tc-tooltip-target"
+                  data-tooltip="Determina cuántos párrafos generará la IA. Ej: 3 párrafos para un resumen breve."
+                  >Longitud del texto</label
+                >
+                <select id="wordBodyLength" data-default-value="auto">
+                  <option value="auto" selected>Automático (IA decide)</option>
+                  <option value="1">Muy breve (1 párrafo)</option>
+                  <option value="2">Resumen corto (2 párrafos)</option>
+                  <option value="3">Compacto (3 párrafos)</option>
+                  <option value="4">Equilibrado (4 párrafos)</option>
+                  <option value="5">Detallado (5 párrafos)</option>
+                  <option value="6">Profundo (6 párrafos)</option>
+                  <option value="7">Ampliado (7 párrafos)</option>
+                  <option value="8">Extenso (8 párrafos)</option>
+                  <option value="9">Muy extenso (9 párrafos)</option>
+                  <option value="10">Máxima profundidad (10 párrafos)</option>
+                  <option value="12">Investigación detallada (12 párrafos)</option>
+                  <option value="15">Informe completo (15 párrafos)</option>
+                </select>
+              </div>
+              <div class="word-context-structure">
+                <label
+                  class="word-context-structure-toggle tc-tooltip-target"
+                  data-tooltip="Activa una introducción breve que contextualice el contenido."
+                >
+                  <input type="checkbox" id="wordIntroToggle" />
+                  Agregar introducción
+                </label>
+                <div class="word-context-structure-details" id="wordIntroDetails">
+                  <label
+                    class="word-context-subtoggle tc-tooltip-target"
+                    data-tooltip="Describe qué debe mencionar la introducción. Ej: Presentar el proyecto y su objetivo."
+                  >
+                    <input type="checkbox" id="wordIntroDescriptionToggle" />
+                    Agregar descripción
+                  </label>
+                  <div class="word-context-description-wrapper" id="wordIntroDescriptionWrapper">
+                    <textarea
+                      id="wordIntroDescription"
+                      class="word-context-description"
+                      placeholder="Detalla el enfoque de la introducción..."
+                    ></textarea>
+                  </div>
+                </div>
+                <label
+                  class="word-context-structure-toggle tc-tooltip-target"
+                  data-tooltip="Incluye un cierre que resuma hallazgos o próximos pasos."
+                >
+                  <input type="checkbox" id="wordConclusionToggle" />
+                  Agregar conclusión
+                </label>
+                <div class="word-context-structure-details" id="wordConclusionDetails">
+                  <label
+                    class="word-context-subtoggle tc-tooltip-target"
+                    data-tooltip="Indica qué debe destacar la conclusión. Ej: Reforzar recomendaciones clave."
+                  >
+                    <input type="checkbox" id="wordConclusionDescriptionToggle" />
+                    Agregar descripción
+                  </label>
+                  <div class="word-context-description-wrapper" id="wordConclusionDescriptionWrapper">
+                    <textarea
+                      id="wordConclusionDescription"
+                      class="word-context-description"
+                      placeholder="Describe el foco de la conclusión..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
               <div class="word-context-columns">
-                <div class="word-format-group">
+                <div class="word-format-group word-context-select">
                   <label for="wordBodyLanguage">Idioma de salida</label>
-                  <input
-                    type="text"
-                    id="wordBodyLanguage"
-                    placeholder="Ej: Español neutro"
-                    data-default-value=""
-                  />
-                </div>
-                <div class="word-format-group">
-                  <label for="wordBodyTone">Tono del reporte</label>
-                  <select id="wordBodyTone" data-default-value="profesional">
-                    <option value="profesional" selected>Profesional</option>
-                    <option value="formal">Formal</option>
-                    <option value="informal">Informal</option>
-                    <option value="persuasivo">Persuasivo</option>
-                    <option value="didactico">Didáctico</option>
+                  <select id="wordBodyLanguage" data-default-value="auto">
+                    <option value="auto" selected>Detección automática (IA)</option>
+                    <option value="es">Español</option>
+                    <option value="en">Inglés</option>
+                    <option value="pt">Portugués</option>
+                    <option value="fr">Francés</option>
+                    <option value="other">Otro</option>
                   </select>
+                  <div id="wordBodyLanguageCustomWrapper" class="word-context-extra">
+                    <label for="wordBodyLanguageCustom">Idioma personalizado</label>
+                    <input
+                      type="text"
+                      id="wordBodyLanguageCustom"
+                      data-default-value=""
+                      placeholder="Ej: Alemán (Alemania)"
+                    />
+                  </div>
+                  <p class="word-context-helper-text">
+                    La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
+                  </p>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyProfile">Perfil profesional</label>
-                  <input
-                    type="text"
-                    id="wordBodyProfile"
-                    placeholder="Ej: Analista financiero senior"
-                    data-default-value=""
-                  />
+                <div class="word-format-group word-context-select">
+                  <label for="wordBodyTone">Tono del texto</label>
+                  <select id="wordBodyTone" data-default-value="neutral">
+                    <option value="neutral" selected>Neutral profesional</option>
+                    <option value="executive">Resumen ejecutivo</option>
+                    <option value="friendly">Cercano y motivador</option>
+                    <option value="analytical">Analítico y detallado</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                  <div id="wordBodyToneCustomWrapper" class="word-context-extra">
+                    <label for="wordBodyToneCustom">Detalle del tono personalizado</label>
+                    <input
+                      type="text"
+                      id="wordBodyToneCustom"
+                      data-default-value=""
+                      placeholder="Ej: Inspirador con foco en logros del equipo"
+                    />
+                  </div>
+                  <p class="word-context-helper-text">
+                    Define el tono que mejor represente la cultura de tu organización o el público objetivo que recibirá el texto.
+                  </p>
+                </div>
+                <div class="word-format-group word-context-select">
+                  <label for="wordBodyProfile">Perfil profesional del texto</label>
+                  <select id="wordBodyProfile" data-default-value="auto">
+                    <option value="auto" selected>Elegir automáticamente (IA)</option>
+                    <option value="executive">Dirección general</option>
+                    <option value="data-analyst">Analista de datos</option>
+                    <option value="finance">Dirección financiera</option>
+                    <option value="operations">Gerencia de operaciones</option>
+                    <option value="marketing">Marketing y comunicación</option>
+                    <option value="hr">Recursos humanos</option>
+                    <option value="it">Especialista en IT / Sistemas</option>
+                    <option value="sales">Liderazgo comercial</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
+                  <div id="wordBodyProfileNoteWrapper" class="word-context-extra">
+                    <label for="wordBodyProfileNote">Describe el perfil profesional</label>
+                    <textarea
+                      id="wordBodyProfileNote"
+                      data-default-value=""
+                      placeholder="Detalla el rol, prioridades o expectativas del perfil que leerá el texto"
+                    ></textarea>
+                  </div>
+                  <p class="word-context-helper-text">
+                    Ajusta ejemplos y recomendaciones para que la IA hable desde la mirada del rol más relevante.
+                  </p>
+                </div>
+              </div>
+              <div class="word-automation-section">
+                <label class="word-automation-toggle">
+                  <input type="checkbox" id="wordAutoCommentsToggle" />
+                  Automatizar comentarios en puntos clave
+                </label>
+                <p class="word-automation-helper">
+                  Deja que la IA marque hallazgos relevantes en el texto final.
+                </p>
+                <div class="word-automation-options" id="wordAutoCommentsOptions">
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="La IA agregará notas resaltando hallazgos relevantes en cada sección.">
+                    <input type="checkbox" id="wordAutoCommentInsights" />
+                    Señalar insights destacados
+                  </label>
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Marca advertencias sobre riesgos, brechas o indicadores fuera de rango.">
+                    <input type="checkbox" id="wordAutoCommentRisks" />
+                    Alertar riesgos o alertas tempranas
+                  </label>
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Sugiere próximos pasos y responsables para continuar el plan.">
+                    <input type="checkbox" id="wordAutoCommentFollowUp" />
+                    Recomendar próximos pasos
+                  </label>
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Activa comentarios guiados por tus propias indicaciones personalizadas.">
+                    <input type="checkbox" id="wordAutoCommentCustom" />
+                    Comentarios personalizados
+                  </label>
+                </div>
+                <div class="word-automation-custom" id="wordAutoCommentsCustomWrapper">
+                  <label for="wordAutoCommentsCustom">Describe los puntos clave personalizados</label>
+                  <textarea
+                    id="wordAutoCommentsCustom"
+                    placeholder="Ej: Destacar métricas fuera de objetivo y responsables involucrados"
+                  ></textarea>
+                </div>
+              </div>
+              <div class="word-context-web">
+                <div class="word-context-web-header">
+                  <label
+                    for="wordContextWebToggle"
+                    class="word-context-web-toggle tc-tooltip-target"
+                    data-tooltip="Añade fuentes externas para que la IA consulte hasta 10 enlaces verificados."
+                  >
+                    <input type="checkbox" id="wordContextWebToggle" />
+                    Utilizar información de páginas web
+                  </label>
+                  <button
+                    type="button"
+                    id="wordContextWebCollapse"
+                    class="word-context-web-collapse"
+                    aria-expanded="false"
+                    aria-label="Mostrar u ocultar páginas web"
+                  >
+                    ▾
+                  </button>
+                </div>
+                <div class="word-context-web-list" id="wordContextWebList">
+                  <div class="word-context-web-items" id="wordContextWebItems"></div>
+                  <button type="button" class="word-context-web-add" id="wordContextWebAdd">
+                    Agregar página
+                  </button>
                 </div>
               </div>
             </div>
@@ -3699,25 +4461,42 @@
                 Editar formato del cuerpo manualmente
               </label>
             </div>
-            <div id="wordBodyFormatOptions" class="word-format-options">
-              <div class="word-format-header">
-                <div class="word-format-heading">
-                  <h4>Formato del cuerpo</h4>
-                  <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
-                </div>
+            <div id="wordBodyFormatOptions" class="word-format-options" data-word-collapsed="false">
+            <div class="word-format-header">
+              <div class="word-format-heading">
+                <h4>Formato del cuerpo</h4>
+                <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
+              </div>
+              <div class="word-format-preview-wrapper">
                 <div
                   id="wordBodyPreview"
                   class="word-format-preview word-format-preview-body"
                   aria-live="polite"
                   aria-label="Vista previa del cuerpo"
                 >
-                  <span class="word-preview-text">Ejemplo de párrafo adaptable a tu reporte, resaltando</span>
-                  <span class="word-preview-keywords">palabras clave</span>
+                  <span class="word-preview-text">Ejemplo</span>
                 </div>
+                <button
+                  type="button"
+                  class="word-format-collapse"
+                  aria-expanded="true"
+                  aria-controls="wordBodyFormatContent"
+                  data-expand-label="Expandir formato del cuerpo"
+                  data-collapse-label="Replegar formato del cuerpo"
+                >
+                  ▾
+                </button>
               </div>
+            </div>
+            <div id="wordBodyFormatContent" class="word-format-content">
               <div class="word-format-grid">
                 <div class="word-format-group">
-                  <label for="wordBodyFontFamily">Fuente</label>
+                  <label
+                    for="wordBodyFontFamily"
+                    class="tc-tooltip-target"
+                    data-tooltip="Selecciona la tipografía del contenido. Ej: Roboto para lecturas ágiles."
+                    >Fuente</label
+                  >
                   <select id="wordBodyFontFamily" data-default-value="'Inter', Arial, sans-serif">
                     <option value="'Inter', Arial, sans-serif" selected>Inter</option>
                     <option value="'Roboto', Arial, sans-serif">Roboto</option>
@@ -3727,7 +4506,12 @@
                   </select>
                 </div>
                 <div class="word-format-group">
-                  <label for="wordBodyColor">Color de letra</label>
+                  <label
+                    for="wordBodyColor"
+                    class="tc-tooltip-target"
+                    data-tooltip="Define el color principal del cuerpo. Ej: tonos oscuros para máxima legibilidad."
+                    >Color de letra</label
+                  >
                   <input
                     type="color"
                     id="wordBodyColor"
@@ -3735,29 +4519,47 @@
                     data-default-value="#1F2937"
                   />
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordBodyFontSize"
-                    min="10"
-                    max="48"
-                    step="1"
-                    value="15"
-                    data-default-value="15"
-                  />
+                <div class="word-format-group word-format-group--size">
+                  <div class="word-inline-field">
+                    <label
+                      for="wordBodyFontSize"
+                      class="tc-tooltip-target"
+                      data-tooltip="Ajusta el tamaño del cuerpo. Ej: 15 para reportes ejecutivos."
+                      >Tamaño de letra</label
+                    >
+                    <input
+                      type="number"
+                      id="wordBodyFontSize"
+                      class="word-font-size-input"
+                      min="10"
+                      max="48"
+                      step="1"
+                      value="15"
+                      data-default-value="15"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group">
-                  <label for="wordBodyAlignment">Alineación</label>
-                  <select id="wordBodyAlignment" data-default-value="justify">
+                  <label
+                    for="wordBodyAlignment"
+                    class="tc-tooltip-target"
+                    data-tooltip="Selecciona cómo se distribuirá el texto generado en la página."
+                    >Alineación</label
+                  >
+                  <select id="wordBodyAlignment" data-default-value="center">
                     <option value="left">Izquierda</option>
-                    <option value="center">Centro</option>
+                    <option value="center" selected>Centro</option>
                     <option value="right">Derecha</option>
-                    <option value="justify" selected>Justificada</option>
+                    <option value="justify">Justificada</option>
                   </select>
                 </div>
                 <div class="word-format-group">
-                  <label for="wordBodyLineSpacing">Interlineado</label>
+                  <label
+                    for="wordBodyLineSpacing"
+                    class="tc-tooltip-target"
+                    data-tooltip="Ajusta el espacio entre líneas para mejorar la lectura."
+                    >Interlineado</label
+                  >
                   <select id="wordBodyLineSpacing" data-default-value="1.5">
                     <option value="1">1.0</option>
                     <option value="1.15">1.15</option>
@@ -3775,7 +4577,7 @@
                   ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
                 >
                 <label for="wordBodyItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyItalics" /> Cursiva</label
+                  ><input type="checkbox" id="wordBodyItalics" /> Italik</label
                 >
                 <label for="wordBodyHighlight" class="word-format-flag"
                   ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
@@ -3783,7 +4585,12 @@
               </div>
             </div>
           </div>
-          <div id="tableHeaderOptions" data-themes="table">
+          <div
+            id="tableHeaderOptions"
+            data-themes="table"
+            data-default-display="block"
+            style="display:none;"
+          >
             <label>Encabezados (puede editar y reordenar)</label>
             <ul id="headersList" class="header-list"></ul>
             <div class="toggle-group">
@@ -3803,19 +4610,61 @@
               <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
             </div>
           </div>
-          <div class="action-buttons">
-            <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
+          <div class="action-buttons" id="createActionsContainer" data-default-display="flex">
+            <div class="action-favorite-row">
+              <button
+                type="button"
+                id="createFavoriteBtn"
+                class="ai-report-favorite-btn action-favorite-btn"
+                aria-expanded="false"
+                data-favorite-context="create"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                <span class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
+            </div>
+            <button
+              id="applyFormatBtn"
+              class="btn-primary"
+              data-table-label="Aplicar formato"
+              data-word-label="Generar texto"
+            >
+              Aplicar formato
+            </button>
             <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
           </div>
         </div>
       </div>
+      </div>
 
       <div id="editTab" class="tab-content" data-themes="table word">
         <div class="section">
-          <label for="editSavedTables">Tablas guardadas</label>
+          <label
+            for="editSavedTables"
+            id="editSavedLabel"
+            data-table-label="Tablas guardadas"
+            data-word-label="Textos guardados"
+          >
+            Tablas guardadas
+          </label>
           <div class="edit-saved-container">
-            <div id="editSavedTablesList" aria-label="Tablas guardadas"></div>
-            <select id="editSavedTables" size="8"></select>
+            <div
+              id="editSavedTablesList"
+              aria-label="Tablas guardadas"
+              data-table-label="Tablas guardadas"
+              data-word-label="Textos guardados"
+              data-table-empty="No hay tablas guardadas"
+              data-word-empty="No hay textos guardados"
+              data-table-locate="Ir a la tabla"
+              data-word-locate="Ubicar texto"
+            ></div>
+            <select
+              id="editSavedTables"
+              size="8"
+              aria-label="Tablas guardadas"
+              data-table-label="Tablas guardadas"
+              data-word-label="Textos guardados"
+            ></select>
           </div>
         </div>
         <div id="editRangeSection" class="section" style="display:none;">
@@ -3874,6 +4723,20 @@
             <label><input type="checkbox" id="editToggleBorder" /> Bordes negros</label>
             <label><input type="checkbox" id="editToggleBold" /> Encabezado en negrita</label>
           </div>
+          <div class="action-buttons">
+            <div class="action-favorite-row">
+              <button
+                type="button"
+                id="editFavoriteBtn"
+                class="ai-report-favorite-btn action-favorite-btn"
+                aria-expanded="false"
+                data-favorite-context="edit"
+              >
+                <span class="ai-favorite-icon" aria-hidden="true">★</span>
+                <span class="ai-favorite-label">Agregar a favoritos</span>
+              </button>
+            </div>
+          </div>
           <div id="editActionsRow" class="action-buttons action-buttons--balanced" style="display:none;">
             <button id="editSaveTableBtn" class="btn-primary" disabled>Guardar tabla</button>
             <button id="editDeleteTableBtn" class="btn-danger" disabled>Borrar tabla</button>
@@ -3888,6 +4751,13 @@
             <div id="aiSavedTablesList" class="ai-multi-list" aria-label="Tablas disponibles"></div>
             <select id="aiSavedTables" multiple class="ai-hidden-select"></select>
           </div>
+          <label for="aiSavedTexts" style="margin-top:12px;">Textos disponibles</label>
+          <div class="ai-multi-select">
+            <div id="aiSavedTextsList" class="ai-multi-list" aria-label="Textos disponibles">
+              <div class="ai-multi-empty">No hay textos guardados</div>
+            </div>
+            <select id="aiSavedTexts" multiple class="ai-hidden-select"></select>
+          </div>
           <label
             for="aiActionSelect"
             style="margin-top:12px;"
@@ -3897,9 +4767,13 @@
             Acción a realizar
           </label>
           <select id="aiActionSelect" class="ai-action-select">
-            <option value="">Seleccionar</option>
-            <option value="report">Reporte</option>
-            <option value="ask">Pregunta IA</option>
+            <option value="" data-themes="table word">Seleccionar</option>
+            <option value="ask" data-themes="table word">Pregunta a la IA</option>
+            <option value="report" data-themes="table">Reporte</option>
+            <option value="text-summarize" data-themes="word">Resumir texto</option>
+            <option value="text-extend" data-themes="word">Extender texto</option>
+            <option value="text-commentary" data-themes="word">Comentarios automáticos</option>
+            <option value="text-polish" data-themes="word">Refinar estilo y tono</option>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>
@@ -6340,6 +7214,43 @@
                 Generar y enviar reporte
               </button>
             </div>
+          </div>
+          <div id="aiTextSection" class="ai-action-section ai-text-section">
+            <h3 id="aiTextTitle" class="ai-action-title">Acción con texto</h3>
+            <p id="aiTextDescription" class="ai-action-description">
+              Selecciona un texto guardado y elige la automatización que necesitás.
+            </p>
+            <div class="ai-text-config">
+              <div id="aiTextLengthGroup" class="ai-text-row">
+                <label for="aiTextLength" id="aiTextLengthLabel">Extensión deseada</label>
+                <select id="aiTextLength">
+                  <option value="concise">Breve y directo</option>
+                  <option value="balanced" selected>Equilibrado</option>
+                  <option value="detailed">Detallado</option>
+                </select>
+              </div>
+              <div class="ai-text-row">
+                <label for="aiTextGuidance">Indicaciones adicionales para la IA</label>
+                <textarea
+                  id="aiTextGuidance"
+                  rows="3"
+                  placeholder="Ej.: Priorizar hallazgos financieros y mantener tono ejecutivo."
+                ></textarea>
+              </div>
+              <div class="ai-text-row ai-text-highlights" id="aiTextHighlightsRow">
+                <label class="checkbox-subtle" id="aiTextHighlightsLabel">
+                  <input type="checkbox" id="aiTextHighlightsToggle" />
+                  Agregar comentarios en puntos clave
+                </label>
+                <textarea
+                  id="aiTextHighlightsDetail"
+                  class="ai-text-highlights-detail"
+                  rows="2"
+                  placeholder="Detalla qué métricas o ideas necesitan comentarios automáticos."
+                ></textarea>
+              </div>
+            </div>
+            <button type="button" id="aiTextApplyBtn" class="btn-primary">Aplicar acción de texto</button>
           </div>
         </div>
       </div>

@@ -214,6 +214,50 @@
       }, {});
       const REPORT_FEATURE_MAX_QUANTITY = 3;
       const REPORT_FEATURE_WEB_SOURCE_LIMIT = 3;
+      const AI_TEXT_ACTION_CONFIG = Object.freeze({
+        'text-summarize': {
+          title: 'Resumir texto',
+          description: 'Condensa los puntos clave del texto seleccionado en un resumen claro.',
+          showLength: true,
+          lengthLabel: 'Extensión del resumen',
+          lengthOptions: [
+            { value: 'concise', label: 'Breve (3-4 oraciones)' },
+            { value: 'balanced', label: 'Equilibrado (5-6 oraciones)' },
+            { value: 'detailed', label: 'Detallado (8-10 oraciones)' }
+          ],
+          showHighlights: true,
+          highlightLabel: 'Agregar comentarios en puntos clave'
+        },
+        'text-extend': {
+          title: 'Extender texto',
+          description: 'Amplía el texto con contexto adicional, ejemplos y recomendaciones.',
+          showLength: true,
+          lengthLabel: 'Profundidad adicional',
+          lengthOptions: [
+            { value: 'slight', label: 'Leve (1-2 párrafos extra)' },
+            { value: 'expanded', label: 'Extendido (3-4 párrafos extra)' },
+            { value: 'inDepth', label: 'Profundo (5+ párrafos extra)' }
+          ],
+          showHighlights: false
+        },
+        'text-commentary': {
+          title: 'Comentarios automáticos',
+          description: 'Genera anotaciones para destacar hallazgos, riesgos y próximos pasos.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Detallar los puntos donde querés comentarios',
+          highlightsDefault: true,
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        },
+        'text-polish': {
+          title: 'Refinar estilo y tono',
+          description: 'Mejora la redacción manteniendo el mensaje pero ajustando claridad, tono y coherencia.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Indicar qué tipo de mejoras esperás',
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        }
+      });
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -223,7 +267,8 @@
       let selectedReportFeatures = [];
       let reportFeatureState = {};
       let reportCustomizationState = createDefaultCustomizationState();
-      let reportFavoriteModalVisible = false;
+let reportFavoriteModalVisible = false;
+let activeReportFavoriteTrigger = null;
       let activeReportFavoriteId = '';
       let activeReportFavoriteName = '';
       let reportFeatureOrder = [];
@@ -235,6 +280,169 @@
       let reportDeliveryOutsideListenerAttached = false;
       let reportFileDateEnabled = false;
       let favoriteModalEscapeListenerAttached = false;
+      let activeFavoriteContext = null;
+
+      function resolveFavoriteContextFromTrigger(trigger) {
+        const contextAttr = trigger && trigger.dataset ? trigger.dataset.favoriteContext : '';
+        const theme = typeof currentTheme === 'string' ? currentTheme : document.body && document.body.classList.contains('theme-wordcrafter') ? 'word' : 'table';
+        if (contextAttr === 'create') {
+          return {
+            type: theme === 'word' ? 'createTextFavorite' : 'createTableFavorite',
+            scope: 'create',
+            theme: theme,
+            containerId: 'createTab'
+          };
+        }
+        if (contextAttr === 'edit') {
+          return {
+            type: theme === 'word' ? 'editTextFavorite' : 'editTableFavorite',
+            scope: 'edit',
+            theme: theme,
+            containerId: 'editTab'
+          };
+        }
+        return {
+          type: 'reportFavorite',
+          scope: 'report',
+          theme: theme,
+          containerId: null
+        };
+      }
+
+      function collectFavoriteContextFields(container) {
+        const result = [];
+        if (!container) {
+          return result;
+        }
+        const seen = Object.create(null);
+        const controls = container.querySelectorAll('input, select, textarea');
+        controls.forEach(function(control) {
+          if (!control) {
+            return;
+          }
+          const identifier = control.id || control.name;
+          if (!identifier) {
+            return;
+          }
+          const tagName = control.tagName ? control.tagName.toLowerCase() : '';
+          if (control.type === 'radio') {
+            const radioKey = 'radio:' + control.name;
+            if (seen[radioKey]) {
+              return;
+            }
+            seen[radioKey] = true;
+            const selected = container.querySelector("input[type='radio'][name='" + control.name + "']:checked");
+            result.push({
+              id: control.name,
+              kind: 'radio',
+              value: selected ? selected.value : ''
+            });
+            return;
+          }
+          if (seen[identifier]) {
+            return;
+          }
+          seen[identifier] = true;
+          let value;
+          if (control.type === 'checkbox') {
+            value = !!control.checked;
+          } else if (tagName === 'select' && control.multiple) {
+            value = Array.prototype.filter
+              .call(control.options, function(option) {
+                return option && option.selected && !option.disabled;
+              })
+              .map(function(option) {
+                return option.value;
+              });
+          } else {
+            value = control.value;
+          }
+          result.push({
+            id: identifier,
+            kind: control.type || tagName,
+            value: value
+          });
+        });
+        return result;
+      }
+
+      function validateWordCreateFavoriteRequirements(container) {
+        const missing = [];
+        const keyField = document.getElementById('wordBodyContext');
+        if (!keyField || !keyField.value || !String(keyField.value).trim()) {
+          missing.push('Indicaciones clave');
+        }
+        const introToggle = document.getElementById('wordIntroToggle');
+        const introDescToggle = document.getElementById('wordIntroDescriptionToggle');
+        if (
+          introToggle &&
+          introToggle.checked &&
+          introDescToggle &&
+          introDescToggle.checked
+        ) {
+          const introDesc = document.getElementById('wordIntroDescription');
+          if (!introDesc || !introDesc.value || !String(introDesc.value).trim()) {
+            missing.push('Descripción de la introducción');
+          }
+        }
+        const conclusionToggle = document.getElementById('wordConclusionToggle');
+        const conclusionDescToggle = document.getElementById('wordConclusionDescriptionToggle');
+        if (
+          conclusionToggle &&
+          conclusionToggle.checked &&
+          conclusionDescToggle &&
+          conclusionDescToggle.checked
+        ) {
+          const conclusionDesc = document.getElementById('wordConclusionDescription');
+          if (!conclusionDesc || !conclusionDesc.value || !String(conclusionDesc.value).trim()) {
+            missing.push('Descripción de la conclusión');
+          }
+        }
+        const autoToggle = document.getElementById('wordAutoCommentsToggle');
+        const customToggle = document.getElementById('wordAutoCommentCustom');
+        if (autoToggle && autoToggle.checked && customToggle && customToggle.checked) {
+          const customText = document.getElementById('wordAutoCommentsCustom');
+          if (!customText || !customText.value || !String(customText.value).trim()) {
+            missing.push('Detalle de comentarios personalizados');
+          }
+        }
+        if (missing.length === 0) {
+          return null;
+        }
+        return 'Faltan datos para guardar en favoritos\n• ' + missing.join('\n• ');
+      }
+
+      function buildGeneralFavoritePayload(name, context) {
+        const trimmedName = name ? String(name).trim() : '';
+        if (!trimmedName) {
+          return { error: 'Ingresá un nombre para el favorito.' };
+        }
+        if (!context || !context.containerId) {
+          return { error: 'No se pudo determinar la pestaña a guardar.' };
+        }
+        const container = document.getElementById(context.containerId);
+        if (!container) {
+          return { error: 'No se encontró la sección seleccionada.' };
+        }
+        if (context && context.theme === 'word' && context.type === 'createTextFavorite') {
+          const validationError = validateWordCreateFavoriteRequirements(container);
+          if (validationError) {
+            return { error: validationError };
+          }
+        }
+        const fields = collectFavoriteContextFields(container);
+        return {
+          payload: {
+            name: trimmedName,
+            context: {
+              type: context.type,
+              scope: context.scope,
+              theme: context.theme
+            },
+            fields: fields
+          }
+        };
+      }
 
 
       
@@ -4389,6 +4597,49 @@ async function loadReportFavoriteIntoPanel(action, options) {
         if (descField) {
           descField.value = action.descriptionEnabled ? action.descriptionText || '' : '';
         }
+        let context = activeFavoriteContext;
+        if (!context) {
+          context = resolveFavoriteContextFromTrigger(activeReportFavoriteTrigger);
+        }
+        const isReportContext = !context || context.type === 'reportFavorite';
+        if (!isReportContext) {
+          const generalResult = buildGeneralFavoritePayload(favoriteName, context);
+          if (generalResult && generalResult.error) {
+            await showMessageModal(generalResult.error, {
+              title: 'Información requerida',
+              variant: 'warning'
+            });
+            return;
+          }
+          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+          try {
+            savingReportFavorite = true;
+            if (saveBtn) {
+              saveBtn.disabled = true;
+            }
+            const result = await callServerFunction('saveGeneralFavorite', generalResult.payload);
+            if (result && result.error) {
+              throw new Error(result.error);
+            }
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+            await showMessageModal('Configuración guardada en favoritos.', {
+              title: 'Favorito guardado',
+              variant: 'success'
+            });
+          } catch (error) {
+            await showMessageModal(error && error.message ? error.message : 'No se pudo guardar el favorito.', {
+              title: 'Error al guardar',
+              variant: 'error'
+            });
+          } finally {
+            savingReportFavorite = false;
+            const saveControl = document.getElementById('aiReportFavoriteSaveBtn');
+            if (saveControl) {
+              saveControl.disabled = false;
+            }
+          }
+          return;
+        }
         const fileNameInput = document.getElementById('aiReportFileName');
         if (fileNameInput) {
           fileNameInput.value = action.fileName || '';
@@ -4445,13 +4696,15 @@ function getSelectedAiTableIds() {
         return values;
       }
 
-function openReportFavoriteModal() {
+function openReportFavoriteModal(triggerButton) {
         if (savingReportFavorite) {
           return;
         }
-        const editing = !!activeReportFavoriteId;
+        const trigger = triggerButton || document.getElementById('aiReportFavoriteBtn');
+        activeFavoriteContext = resolveFavoriteContextFromTrigger(trigger);
+        const editing = activeFavoriteContext && activeFavoriteContext.type === 'reportFavorite' && !!activeReportFavoriteId;
         const overlay = document.getElementById('aiFavoriteModalOverlay');
-        const trigger = document.getElementById('aiReportFavoriteBtn');
+        activeReportFavoriteTrigger = trigger || null;
         reportFavoriteModalVisible = true;
         if (overlay) {
           overlay.classList.add('show');
@@ -4462,13 +4715,21 @@ function openReportFavoriteModal() {
         }
         const title = document.getElementById('aiFavoriteModalTitle');
         if (title) {
-          title.textContent = editing ? 'Actualizar favorito' : 'Guardar en favoritos';
+          if (activeFavoriteContext && activeFavoriteContext.type !== 'reportFavorite') {
+            title.textContent = 'Guardar configuración en favoritos';
+          } else {
+            title.textContent = editing ? 'Actualizar favorito' : 'Guardar en favoritos';
+          }
         }
         const description = document.getElementById('aiFavoriteModalDescription');
         if (description) {
-          description.textContent = editing
-            ? 'Actualiza el nombre para identificar este reporte favorito.'
-            : 'Asigna un nombre para identificar este reporte más adelante.';
+          if (activeFavoriteContext && activeFavoriteContext.type !== 'reportFavorite') {
+            description.textContent = 'Asigná un nombre para reutilizar esta configuración rápidamente.';
+          } else {
+            description.textContent = editing
+              ? 'Actualiza el nombre para identificar este reporte favorito.'
+              : 'Asigna un nombre para identificar este reporte más adelante.';
+          }
         }
         const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
         if (saveBtn) {
@@ -4487,7 +4748,7 @@ function openReportFavoriteModal() {
 function closeReportFavoriteModal(options) {
         options = options || {};
         const overlay = document.getElementById('aiFavoriteModalOverlay');
-        const trigger = document.getElementById('aiReportFavoriteBtn');
+        const trigger = activeReportFavoriteTrigger || document.getElementById('aiReportFavoriteBtn');
         reportFavoriteModalVisible = false;
         if (overlay) {
           overlay.classList.remove('show');
@@ -4510,6 +4771,46 @@ function closeReportFavoriteModal(options) {
         if (saveBtn) {
           saveBtn.disabled = false;
         }
+        if (!reportFavoriteModalVisible) {
+          activeReportFavoriteTrigger = null;
+        }
+        if (!reportFavoriteModalVisible) {
+          activeFavoriteContext = null;
+        }
+      }
+
+function bindFavoriteModalControls() {
+        const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
+        if (favoriteCancelBtn && favoriteCancelBtn.dataset.bound !== 'true') {
+          favoriteCancelBtn.addEventListener('click', function() {
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+          });
+          favoriteCancelBtn.dataset.bound = 'true';
+        }
+        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (favoriteSaveBtn && favoriteSaveBtn.dataset.bound !== 'true') {
+          favoriteSaveBtn.addEventListener('click', function() {
+            handleReportFavoriteSave();
+          });
+          favoriteSaveBtn.dataset.bound = 'true';
+        }
+        const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
+        if (favoriteOverlay && favoriteOverlay.dataset.bound !== 'true') {
+          favoriteOverlay.addEventListener('click', function(event) {
+            if (event.target === favoriteOverlay) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteOverlay.dataset.bound = 'true';
+        }
+        if (!favoriteModalEscapeListenerAttached) {
+          document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && reportFavoriteModalVisible) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteModalEscapeListenerAttached = true;
+        }
       }
 
 async function handleReportFavoriteSave() {
@@ -4518,6 +4819,47 @@ async function handleReportFavoriteSave() {
         }
         const nameInput = document.getElementById('aiReportFavoriteName');
         const favoriteName = nameInput ? nameInput.value.trim() : '';
+        const context = activeFavoriteContext
+          ? activeFavoriteContext
+          : resolveFavoriteContextFromTrigger(activeReportFavoriteTrigger);
+        if (context && context.type !== 'reportFavorite') {
+          const generalResult = buildGeneralFavoritePayload(favoriteName, context);
+          if (generalResult && generalResult.error) {
+            await showMessageModal(generalResult.error, {
+              title: 'Información requerida',
+              variant: 'warning'
+            });
+            return;
+          }
+          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+          try {
+            savingReportFavorite = true;
+            if (saveBtn) {
+              saveBtn.disabled = true;
+            }
+            const result = await callServerFunction('saveGeneralFavorite', generalResult.payload);
+            if (result && result.error) {
+              throw new Error(result.error);
+            }
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+            await showMessageModal('Configuración guardada en favoritos.', {
+              title: 'Favorito guardado',
+              variant: 'success'
+            });
+          } catch (error) {
+            await showMessageModal(error && error.message ? error.message : 'No se pudo guardar el favorito.', {
+              title: 'Error al guardar',
+              variant: 'error'
+            });
+          } finally {
+            savingReportFavorite = false;
+            const saveControl = document.getElementById('aiReportFavoriteSaveBtn');
+            if (saveControl) {
+              saveControl.disabled = false;
+            }
+          }
+          return;
+        }
         const fileNameInput = document.getElementById('aiReportFileName');
         const fileNameValue = fileNameInput ? fileNameInput.value.trim() : '';
         const sanitizedFileName = sanitizeReportFileName(fileNameValue);
@@ -5200,10 +5542,11 @@ function saveReportPhone() {
         }
       }
 
-function initializeReportSection() {
+      function initializeReportSection() {
         if (reportSectionInitialized) {
           return;
         }
+        bindFavoriteModalControls();
         savedReportEmails = loadReportContactList('emails');
         savedReportPhones = loadReportContactList('phones');
         renderReportEmailList([]);
@@ -5315,18 +5658,6 @@ function initializeReportSection() {
             openReportFavoriteModal();
           });
         }
-        const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
-        if (favoriteCancelBtn) {
-          favoriteCancelBtn.addEventListener('click', function() {
-            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
-          });
-        }
-        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
-        if (favoriteSaveBtn) {
-          favoriteSaveBtn.addEventListener('click', function() {
-            handleReportFavoriteSave();
-          });
-        }
         const favoriteClearBtn = document.getElementById('aiReportFavoriteClearBtn');
         if (favoriteClearBtn && !favoriteClearBtn.dataset.bound) {
           favoriteClearBtn.addEventListener('click', function() {
@@ -5341,23 +5672,6 @@ function initializeReportSection() {
           });
           generateBtn.dataset.bound = 'true';
         }
-        const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
-        if (favoriteOverlay && !favoriteOverlay.dataset.bound) {
-          favoriteOverlay.addEventListener('click', function(event) {
-            if (event.target === favoriteOverlay) {
-              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
-            }
-          });
-          favoriteOverlay.dataset.bound = 'true';
-        }
-        if (!favoriteModalEscapeListenerAttached) {
-          document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && reportFavoriteModalVisible) {
-              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
-            }
-          });
-          favoriteModalEscapeListenerAttached = true;
-        }
         closeReportFavoriteModal({ resetName: true });
         updateReportFavoriteControls();
         updateSelectedReportChannels();
@@ -5365,10 +5679,318 @@ function initializeReportSection() {
         reportSectionInitialized = true;
       }
 
+function normalizeAiTheme(theme) {
+        return theme === 'word' ? 'word' : 'table';
+      }
+
+function getAiActionOptionThemes(option) {
+        if (!option || !option.dataset || !option.dataset.themes) {
+          return ['table', 'word'];
+        }
+        return option.dataset.themes
+          .split(/\s+/)
+          .map(function(entry) {
+            return entry.trim().toLowerCase();
+          })
+          .filter(function(entry) {
+            return entry === 'table' || entry === 'word';
+          });
+      }
+
+function isAiActionOptionAllowed(option, theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const allowedThemes = getAiActionOptionThemes(option);
+        if (allowedThemes.length === 0) {
+          return true;
+        }
+        return allowedThemes.indexOf(normalizedTheme) !== -1;
+      }
+
+function findPreferredAiActionValue(select, theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const preferred = normalizedTheme === 'word' ? 'ask' : 'report';
+        if (!select || !select.options) {
+          return '';
+        }
+        let firstAllowed = '';
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option.disabled || option.hidden) {
+            return;
+          }
+          if (!firstAllowed) {
+            firstAllowed = option.value;
+          }
+        });
+        let preferredValue = '';
+        if (preferred) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (
+              preferredValue ||
+              !option ||
+              option.value !== preferred ||
+              option.disabled ||
+              option.hidden
+            ) {
+              return;
+            }
+            preferredValue = option.value;
+          });
+          if (preferredValue) {
+            return preferredValue;
+          }
+        }
+        if (!preferredValue && normalizedTheme === 'table') {
+          let askValue = '';
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (
+              askValue ||
+              !option ||
+              option.value !== 'ask' ||
+              option.disabled ||
+              option.hidden
+            ) {
+              return;
+            }
+            askValue = option.value;
+          });
+          if (askValue) {
+            return askValue;
+          }
+        }
+        return firstAllowed || '';
+      }
+
+function syncAiActionOptionsForTheme(theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const select = document.getElementById('aiActionSelect');
+        if (!select || !select.options) {
+          return;
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option) {
+            return;
+          }
+          const allowed = isAiActionOptionAllowed(option, normalizedTheme);
+          option.hidden = !allowed;
+          if (allowed) {
+            option.removeAttribute('hidden');
+          } else {
+            option.setAttribute('hidden', 'hidden');
+          }
+          option.disabled = !allowed;
+        });
+        let currentValue = select.value;
+        const currentOption = select.options[select.selectedIndex];
+        if (!currentOption || currentOption.disabled || currentOption.hidden) {
+          currentValue = '';
+        }
+        if (!currentValue) {
+          const nextValue = findPreferredAiActionValue(select, normalizedTheme);
+          if (typeof nextValue === 'string') {
+            select.value = nextValue;
+          }
+        }
+        if (typeof updateAiActionState === 'function') {
+          updateAiActionState();
+        }
+      }
+
+function notifyAiThemeChanged(theme) {
+        syncAiActionOptionsForTheme(theme);
+      }
+
+function isTextAction(action) {
+        return typeof action === 'string' && action.indexOf('text-') === 0;
+      }
+
+function getAiTextConfig(action) {
+        const baseConfig = {
+          title: 'Acción con texto',
+          description: 'Configura la automatización para el texto seleccionado.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Agregar comentarios en puntos clave',
+          highlightsDefault: false,
+          lengthLabel: 'Extensión deseada',
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        };
+        if (!action || !Object.prototype.hasOwnProperty.call(AI_TEXT_ACTION_CONFIG, action)) {
+          return baseConfig;
+        }
+        return Object.assign({}, baseConfig, AI_TEXT_ACTION_CONFIG[action]);
+      }
+
+function resetAiTextSection() {
+        const lengthSelect = document.getElementById('aiTextLength');
+        if (lengthSelect) {
+          lengthSelect.value = 'balanced';
+        }
+        const guidance = document.getElementById('aiTextGuidance');
+        if (guidance) {
+          guidance.value = '';
+        }
+        const highlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        if (highlightsToggle) {
+          highlightsToggle.checked = false;
+        }
+        const highlightsDetail = document.getElementById('aiTextHighlightsDetail');
+        if (highlightsDetail) {
+          highlightsDetail.value = '';
+        }
+        syncAiTextHighlightsState();
+      }
+
+function syncAiTextHighlightsState() {
+        const row = document.getElementById('aiTextHighlightsRow');
+        const toggle = document.getElementById('aiTextHighlightsToggle');
+        const active = !!(toggle && toggle.checked);
+        if (row) {
+          row.classList.toggle('ai-text-highlights--active', active);
+        }
+      }
+
+function applyAiTextHighlightsDefault(config) {
+        const toggle = document.getElementById('aiTextHighlightsToggle');
+        if (!toggle) {
+          return;
+        }
+        if (config && config.showHighlights) {
+          toggle.checked = !!config.highlightsDefault;
+        } else {
+          toggle.checked = false;
+        }
+      }
+
+function updateAiTextSection(action) {
+        const section = document.getElementById('aiTextSection');
+        if (!section) {
+          return;
+        }
+        const config = getAiTextConfig(action);
+        const title = document.getElementById('aiTextTitle');
+        const description = document.getElementById('aiTextDescription');
+        const lengthGroup = document.getElementById('aiTextLengthGroup');
+        const lengthLabel = document.getElementById('aiTextLengthLabel');
+        const lengthSelect = document.getElementById('aiTextLength');
+        const highlightsRow = document.getElementById('aiTextHighlightsRow');
+        const highlightsLabel = document.getElementById('aiTextHighlightsLabel');
+        resetAiTextSection();
+        if (title) {
+          title.textContent = config.title;
+        }
+        if (description) {
+          description.textContent = config.description;
+        }
+        if (lengthGroup && lengthSelect && lengthLabel) {
+          if (config.showLength) {
+            lengthGroup.style.display = 'flex';
+            lengthLabel.textContent = config.lengthLabel || 'Extensión deseada';
+            lengthSelect.innerHTML = '';
+            const options = Array.isArray(config.lengthOptions) && config.lengthOptions.length
+              ? config.lengthOptions
+              : [{ value: 'balanced', label: 'Equilibrado' }];
+            options.forEach(function(option, index) {
+              const opt = document.createElement('option');
+              opt.value = option.value || 'balanced';
+              opt.textContent = option.label || 'Equilibrado';
+              if (index === 0) {
+                opt.selected = true;
+              }
+              lengthSelect.appendChild(opt);
+            });
+          } else {
+            lengthGroup.style.display = 'none';
+          }
+        }
+        if (highlightsRow && highlightsLabel) {
+          if (config.showHighlights) {
+            highlightsRow.style.display = 'flex';
+            const baseText = ' ' + (config.highlightLabel || 'Agregar comentarios en puntos clave');
+            const labelChildren = Array.from(highlightsLabel.childNodes);
+            labelChildren.forEach(function(node) {
+              if (node.nodeType === Node.TEXT_NODE) {
+                highlightsLabel.removeChild(node);
+              }
+            });
+            highlightsLabel.appendChild(document.createTextNode(baseText));
+          } else {
+            highlightsRow.style.display = 'none';
+          }
+        }
+        applyAiTextHighlightsDefault(config);
+        syncAiTextHighlightsState();
+      }
+
+function getSelectedAiTextValues() {
+        const select = document.getElementById('aiSavedTexts');
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+function handleAiTextAction() {
+        const actionSelect = document.getElementById('aiActionSelect');
+        const action = actionSelect ? actionSelect.value : '';
+        if (!isTextAction(action)) {
+          showMessageModal('Elegí una acción de texto para continuar.', {
+            title: 'Acción no disponible',
+            variant: 'error'
+          });
+          return;
+        }
+        const selectedTexts = getSelectedAiTextValues();
+        if (selectedTexts.length === 0) {
+          showMessageModal('Seleccioná al menos un texto guardado en la lista para aplicar la acción.', {
+            title: 'Seleccioná un texto',
+            variant: 'error'
+          });
+          return;
+        }
+        const guidance = document.getElementById('aiTextGuidance');
+        const highlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        const highlightsDetail = document.getElementById('aiTextHighlightsDetail');
+        const lengthSelect = document.getElementById('aiTextLength');
+        const config = getAiTextConfig(action);
+        const summaryParts = [];
+        if (lengthSelect && config.showLength) {
+          const selectedOption = lengthSelect.options[lengthSelect.selectedIndex];
+          if (selectedOption) {
+            summaryParts.push('Extensión: ' + selectedOption.textContent.trim());
+          }
+        }
+        if (guidance && guidance.value.trim()) {
+          summaryParts.push('Indicaciones: ' + guidance.value.trim());
+        }
+        if (highlightsToggle && highlightsToggle.checked) {
+          const detail = highlightsDetail && highlightsDetail.value.trim()
+            ? highlightsDetail.value.trim()
+            : 'Sin detalle específico';
+          summaryParts.push('Comentarios en puntos clave: ' + detail);
+        }
+        const message =
+          'Acción "' +
+          config.title.toLowerCase() +
+          '" lista para ejecutarse sobre ' +
+          (selectedTexts.length === 1 ? '1 texto' : selectedTexts.length + ' textos') +
+          (summaryParts.length ? '.\n\n' + summaryParts.join('\n') : '.');
+        showMessageModal(message, {
+          title: 'Configuración de texto preparada',
+          variant: 'success'
+        });
+      }
+
 function updateAiActionState() {
         const select = document.getElementById('aiActionSelect');
         const askSection = document.getElementById('aiAskSection');
         const reportSection = document.getElementById('aiReportSection');
+        const textSection = document.getElementById('aiTextSection');
         const questionInput = document.getElementById('questionInput');
         const askBtn = document.getElementById('askBtn');
         const answerBox = document.getElementById('answerBox');
@@ -5381,6 +6003,9 @@ function updateAiActionState() {
           if (reportSection) {
             reportSection.style.display = 'none';
           }
+          if (textSection) {
+            textSection.style.display = 'none';
+          }
           if (questionInput) {
             questionInput.disabled = false;
           }
@@ -5390,8 +6015,31 @@ function updateAiActionState() {
         } else if (action === 'report') {
           initializeReportSection();
           askSection.style.display = 'none';
+          if (textSection) {
+            textSection.style.display = 'none';
+          }
           if (reportSection) {
             reportSection.style.display = 'block';
+          }
+          if (questionInput) {
+            questionInput.value = '';
+            questionInput.disabled = true;
+          }
+          if (askBtn) {
+            askBtn.disabled = true;
+          }
+          if (answerBox) {
+            answerBox.value = '';
+          }
+        } else if (isTextAction(action)) {
+          askSection.style.display = 'none';
+          if (reportSection) {
+            reportSection.style.display = 'none';
+            resetReportSection();
+          }
+          if (textSection) {
+            textSection.style.display = 'block';
+            updateAiTextSection(action);
           }
           if (questionInput) {
             questionInput.value = '';
@@ -5407,6 +6055,9 @@ function updateAiActionState() {
           askSection.style.display = 'none';
           if (reportSection) {
             reportSection.style.display = 'none';
+          }
+          if (textSection) {
+            textSection.style.display = 'none';
           }
           resetReportSection();
           if (questionInput) {
@@ -5736,6 +6387,8 @@ function collectAskCustomization() {
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        bindFavoriteModalControls();
+        closeReportFavoriteModal({ resetName: true });
         const askSection = document.getElementById('aiAskSection');
         if (askSection) {
           setupCollapsibleControls(askSection);
@@ -5777,8 +6430,23 @@ function collectAskCustomization() {
         }
         const aiActionSelect = document.getElementById('aiActionSelect');
         if (aiActionSelect) {
+          const initialTheme =
+            document.body && document.body.classList.contains('theme-wordcrafter') ? 'word' : 'table';
+          syncAiActionOptionsForTheme(initialTheme);
           aiActionSelect.addEventListener('change', updateAiActionState);
-          updateAiActionState();
+        }
+        const aiTextHighlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        if (aiTextHighlightsToggle) {
+          aiTextHighlightsToggle.addEventListener('change', function() {
+            syncAiTextHighlightsState();
+          });
+          syncAiTextHighlightsState();
+        }
+        const aiTextApplyBtn = document.getElementById('aiTextApplyBtn');
+        if (aiTextApplyBtn) {
+          aiTextApplyBtn.addEventListener('click', function() {
+            handleAiTextAction();
+          });
         }
         const askToneSelect = document.getElementById('aiAskTone');
         if (askToneSelect) {
