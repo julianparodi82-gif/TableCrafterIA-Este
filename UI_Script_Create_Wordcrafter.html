@@ -4,7 +4,7 @@
 /* -------------------------------------------------------------------------- */
 const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
 const WORD_WEB_SOURCE_LIMIT = 10;
-const WORD_STRUCTURE_LINK_LIMIT = 3;
+const WORD_SECTION_WEB_LIMIT = 3;
 
 const WORD_CONTEXT_SECTION_CONFIG = [
       {
@@ -35,18 +35,32 @@ const WORD_STRUCTURE_SECTION_CONFIG = [
         toggleId: 'wordIntroToggle',
         wrapperId: 'wordIntroSection',
         fieldsId: 'wordIntroFields',
-        controlIds: ['wordIntroFocus']
+        controlIds: ['wordIntroFocus'],
+        webConfig: {
+          toggleId: 'wordIntroWebToggle',
+          bodyId: 'wordIntroWebBody',
+          listId: 'wordIntroWebList',
+          addId: 'wordIntroWebAdd',
+          stateKey: 'intro'
+        }
       },
       {
         toggleId: 'wordConclusionToggle',
         wrapperId: 'wordConclusionSection',
         fieldsId: 'wordConclusionFields',
-        controlIds: ['wordConclusionFocus']
+        controlIds: ['wordConclusionFocus'],
+        webConfig: {
+          toggleId: 'wordConclusionWebToggle',
+          bodyId: 'wordConclusionWebBody',
+          listId: 'wordConclusionWebList',
+          addId: 'wordConclusionWebAdd',
+          stateKey: 'conclusion'
+        }
       }
     ];
 
 let wordWebSourcesState = [];
-let wordStructureLinksState = [];
+let wordStructureSectionLinksState = { intro: [], conclusion: [] };
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -85,6 +99,7 @@ function resetWordTextOptions() {
         const manualTitleToggle = document.getElementById('wordManualTitleFormatToggle');
         const manualBodyToggle = document.getElementById('wordManualBodyFormatToggle');
         const titleInput = document.getElementById('tableName');
+        wordStructureSectionLinksState = { intro: [], conclusion: [] };
         if (autoToggle) {
           autoToggle.checked = false;
         }
@@ -139,19 +154,21 @@ function resetWordTextOptions() {
             toggle.checked = toggle.defaultChecked;
           }
           syncWordContextSection(section);
+          if (section.webConfig) {
+            const webToggleControl = document.getElementById(section.webConfig.toggleId);
+            if (webToggleControl) {
+              webToggleControl.checked = webToggleControl.defaultChecked;
+            }
+            setWordSectionLinksState(section.webConfig.stateKey, []);
+            renderWordSectionLinksList(section);
+          }
         });
-        const structureToggle = document.getElementById('wordStructureLinksToggle');
-        if (structureToggle) {
-          structureToggle.checked = structureToggle.defaultChecked;
-        }
         const webToggle = document.getElementById('wordWebSourcesToggle');
         if (webToggle) {
           webToggle.checked = webToggle.defaultChecked;
         }
         wordWebSourcesState = [];
         renderWordWebSourcesList();
-        wordStructureLinksState = [];
-        renderWordStructureLinksList();
         refreshWordPreviews();
         syncWordWebSourcesCard();
         syncWordStructureCard();
@@ -314,12 +331,15 @@ function syncWordBodyControls() {
       }
 
 function syncWordContextCard() {
-        const card = document.getElementById('wordContextCard');
-        if (!card) {
-          return;
-        }
+        const contextCard = document.getElementById('wordContextCard');
+        const personalizationCard = document.getElementById('wordPersonalizationCard');
         const isWordTheme = isWordThemeActiveForCreate();
-        card.style.display = isWordTheme ? 'block' : 'none';
+        if (contextCard) {
+          contextCard.style.display = isWordTheme ? 'block' : 'none';
+        }
+        if (personalizationCard) {
+          personalizationCard.style.display = isWordTheme ? 'block' : 'none';
+        }
         if (isWordTheme) {
           syncWordContextSections();
         }
@@ -377,6 +397,7 @@ function bindWordContextToggles() {
 function syncWordStructureSections() {
         WORD_STRUCTURE_SECTION_CONFIG.forEach(function(section) {
           syncWordContextSection(section);
+          syncWordSectionWebControls(section);
         });
       }
 
@@ -386,50 +407,66 @@ function bindWordStructureSectionToggles() {
           if (toggle && toggle.dataset.wordStructureBound !== 'true') {
             toggle.addEventListener('change', function() {
               syncWordContextSection(section);
+              syncWordSectionWebControls(section);
             });
             toggle.dataset.wordStructureBound = 'true';
           }
         });
       }
 
-function renderWordStructureLinksList() {
-        const list = document.getElementById('wordStructureLinksList');
+function ensureWordSectionLinksState(sectionKey) {
+        if (!sectionKey) {
+          return [];
+        }
+        if (!wordStructureSectionLinksState || typeof wordStructureSectionLinksState !== 'object') {
+          wordStructureSectionLinksState = {};
+        }
+        if (!Array.isArray(wordStructureSectionLinksState[sectionKey])) {
+          wordStructureSectionLinksState[sectionKey] = [];
+        }
+        return wordStructureSectionLinksState[sectionKey];
+      }
+
+function setWordSectionLinksState(sectionKey, newState) {
+        if (!sectionKey) {
+          return;
+        }
+        if (!wordStructureSectionLinksState || typeof wordStructureSectionLinksState !== 'object') {
+          wordStructureSectionLinksState = {};
+        }
+        wordStructureSectionLinksState[sectionKey] = Array.isArray(newState) ? newState : [];
+      }
+
+function renderWordSectionLinksList(section) {
+        if (!section || !section.webConfig) {
+          return;
+        }
+        const config = section.webConfig;
+        const list = document.getElementById(config.listId);
         if (!list) {
           return;
         }
-        if (!Array.isArray(wordStructureLinksState)) {
-          wordStructureLinksState = [];
-        }
-        if (wordStructureLinksState.length > WORD_STRUCTURE_LINK_LIMIT) {
-          wordStructureLinksState = wordStructureLinksState.slice(0, WORD_STRUCTURE_LINK_LIMIT);
+        const stateKey = config.stateKey;
+        const currentState = ensureWordSectionLinksState(stateKey);
+        if (currentState.length > WORD_SECTION_WEB_LIMIT) {
+          setWordSectionLinksState(stateKey, currentState.slice(0, WORD_SECTION_WEB_LIMIT));
         }
         list.innerHTML = '';
-        wordStructureLinksState.forEach(function(entry, index) {
+        ensureWordSectionLinksState(stateKey).forEach(function(entry, index) {
           const normalized = entry && typeof entry === 'object' ? entry : {};
           const row = document.createElement('div');
           row.className = 'word-web-row';
+          row.dataset.wordSection = stateKey;
+          row.dataset.wordIndex = String(index);
 
           const removeBtn = document.createElement('button');
           removeBtn.type = 'button';
           removeBtn.className = 'word-web-remove';
-          removeBtn.dataset.index = String(index);
-          removeBtn.title = 'Eliminar referencia';
-          removeBtn.addEventListener('click', function() {
-            if (!Array.isArray(wordStructureLinksState)) {
-              wordStructureLinksState = [];
-            }
-            wordStructureLinksState.splice(index, 1);
-            renderWordStructureLinksList();
-            syncWordStructureLinksCard();
-          });
-          const removeIcon = document.createElement('span');
-          removeIcon.setAttribute('aria-hidden', 'true');
-          removeIcon.textContent = '×';
-          removeBtn.appendChild(removeIcon);
-          const removeSr = document.createElement('span');
-          removeSr.className = 'visually-hidden';
-          removeSr.textContent = 'Eliminar referencia ' + (index + 1);
-          removeBtn.appendChild(removeSr);
+          removeBtn.dataset.wordSection = stateKey;
+          removeBtn.dataset.wordWebRemove = String(index);
+          removeBtn.setAttribute('aria-label', 'Eliminar referencia ' + (index + 1));
+          removeBtn.title = 'Eliminar';
+          removeBtn.textContent = '×';
           row.appendChild(removeBtn);
 
           const urlInput = document.createElement('input');
@@ -437,15 +474,11 @@ function renderWordStructureLinksList() {
           urlInput.className = 'word-web-input';
           urlInput.placeholder = 'https://ejemplo.com';
           urlInput.value = normalized.url ? normalized.url : '';
-          urlInput.dataset.index = String(index);
-          urlInput.dataset.field = 'url';
-          urlInput.addEventListener('input', function(event) {
-            const target = event.target;
-            const idx = Number(target.dataset.index);
-            if (!Number.isNaN(idx) && wordStructureLinksState[idx]) {
-              wordStructureLinksState[idx].url = target.value;
-            }
-          });
+          urlInput.dataset.wordSection = stateKey;
+          urlInput.dataset.wordWebIndex = String(index);
+          urlInput.dataset.wordWebField = 'url';
+          urlInput.autocomplete = 'off';
+          urlInput.spellcheck = false;
           row.appendChild(urlInput);
 
           const descInput = document.createElement('input');
@@ -453,45 +486,82 @@ function renderWordStructureLinksList() {
           descInput.className = 'word-web-input';
           descInput.placeholder = 'Descripción breve de la referencia';
           descInput.value = normalized.description ? normalized.description : '';
-          descInput.dataset.index = String(index);
-          descInput.dataset.field = 'description';
-          descInput.addEventListener('input', function(event) {
-            const target = event.target;
-            const idx = Number(target.dataset.index);
-            if (!Number.isNaN(idx) && wordStructureLinksState[idx]) {
-              wordStructureLinksState[idx].description = target.value;
-            }
-          });
+          descInput.dataset.wordSection = stateKey;
+          descInput.dataset.wordWebIndex = String(index);
+          descInput.dataset.wordWebField = 'description';
+          descInput.autocomplete = 'off';
           row.appendChild(descInput);
 
           list.appendChild(row);
         });
       }
 
-function syncWordStructureLinksCard() {
-        const toggle = document.getElementById('wordStructureLinksToggle');
-        const body = document.getElementById('wordStructureLinksBody');
-        const list = document.getElementById('wordStructureLinksList');
-        const addBtn = document.getElementById('wordStructureLinksAdd');
-        const isActive = Boolean(toggle && toggle.checked);
-        if (isActive) {
-          if (!Array.isArray(wordStructureLinksState)) {
-            wordStructureLinksState = [];
+function syncWordSectionWebControls(section) {
+        if (!section || !section.webConfig) {
+          return;
+        }
+        const config = section.webConfig;
+        const mainToggle = section.toggleId ? document.getElementById(section.toggleId) : null;
+        const sectionActive = Boolean(!section.toggleId || (mainToggle && mainToggle.checked));
+        const webToggle = document.getElementById(config.toggleId);
+        const body = document.getElementById(config.bodyId);
+        const list = document.getElementById(config.listId);
+        const addBtn = document.getElementById(config.addId);
+
+        if (webToggle) {
+          webToggle.disabled = !sectionActive;
+          if (!sectionActive) {
+            webToggle.checked = false;
           }
-          if (wordStructureLinksState.length === 0) {
-            wordStructureLinksState.push({ url: '', description: '' });
-            renderWordStructureLinksList();
+          if (webToggle.disabled) {
+            webToggle.setAttribute('aria-disabled', 'true');
+          } else {
+            webToggle.removeAttribute('aria-disabled');
           }
         }
+
+        if (!sectionActive) {
+          if (body) {
+            body.classList.add('is-hidden');
+            body.setAttribute('aria-hidden', 'true');
+          }
+          if (list) {
+            const inputs = list.querySelectorAll('.word-web-input');
+            inputs.forEach(function(input) {
+              input.disabled = true;
+              input.setAttribute('aria-disabled', 'true');
+            });
+            const removeButtons = list.querySelectorAll('.word-web-remove');
+            removeButtons.forEach(function(button) {
+              button.disabled = true;
+              button.setAttribute('aria-disabled', 'true');
+            });
+          }
+          if (addBtn) {
+            addBtn.disabled = true;
+          }
+          return;
+        }
+
+        const isWebActive = Boolean(webToggle && webToggle.checked);
+        if (isWebActive) {
+          const state = ensureWordSectionLinksState(config.stateKey);
+          if (state.length === 0) {
+            state.push({ url: '', description: '' });
+            setWordSectionLinksState(config.stateKey, state);
+          }
+        }
+        renderWordSectionLinksList(section);
+
         if (body) {
-          body.classList.toggle('is-hidden', !isActive);
-          body.setAttribute('aria-hidden', String(!isActive));
+          body.classList.toggle('is-hidden', !isWebActive);
+          body.setAttribute('aria-hidden', String(!isWebActive));
         }
         if (list) {
           const inputs = list.querySelectorAll('.word-web-input');
           inputs.forEach(function(input) {
-            input.disabled = !isActive;
-            if (!isActive) {
+            input.disabled = !isWebActive;
+            if (!isWebActive) {
               input.setAttribute('aria-disabled', 'true');
             } else {
               input.removeAttribute('aria-disabled');
@@ -499,8 +569,8 @@ function syncWordStructureLinksCard() {
           });
           const removeButtons = list.querySelectorAll('.word-web-remove');
           removeButtons.forEach(function(button) {
-            button.disabled = !isActive;
-            if (!isActive) {
+            button.disabled = !isWebActive;
+            if (!isWebActive) {
               button.setAttribute('aria-disabled', 'true');
             } else {
               button.removeAttribute('aria-disabled');
@@ -508,33 +578,87 @@ function syncWordStructureLinksCard() {
           });
         }
         if (addBtn) {
-          addBtn.disabled = !isActive || wordStructureLinksState.length >= WORD_STRUCTURE_LINK_LIMIT;
+          const state = ensureWordSectionLinksState(config.stateKey);
+          addBtn.disabled = !isWebActive || state.length >= WORD_SECTION_WEB_LIMIT;
         }
       }
 
-function bindWordStructureLinksControls() {
-        const toggle = document.getElementById('wordStructureLinksToggle');
-        if (toggle && toggle.dataset.wordStructureLinksBound !== 'true') {
-          toggle.addEventListener('change', function() {
-            syncWordStructureLinksCard();
-          });
-          toggle.dataset.wordStructureLinksBound = 'true';
-        }
-        const addBtn = document.getElementById('wordStructureLinksAdd');
-        if (addBtn && addBtn.dataset.wordStructureLinksBound !== 'true') {
-          addBtn.addEventListener('click', function() {
-            if (!Array.isArray(wordStructureLinksState)) {
-              wordStructureLinksState = [];
-            }
-            if (wordStructureLinksState.length >= WORD_STRUCTURE_LINK_LIMIT) {
-              return;
-            }
-            wordStructureLinksState.push({ url: '', description: '' });
-            renderWordStructureLinksList();
-            syncWordStructureLinksCard();
-          });
-          addBtn.dataset.wordStructureLinksBound = 'true';
-        }
+function bindWordSectionWebControls() {
+        WORD_STRUCTURE_SECTION_CONFIG.forEach(function(section) {
+          if (!section.webConfig) {
+            return;
+          }
+          const config = section.webConfig;
+          const toggle = document.getElementById(config.toggleId);
+          if (toggle && toggle.dataset.wordSectionWebBound !== 'true') {
+            toggle.addEventListener('change', function() {
+              syncWordSectionWebControls(section);
+            });
+            toggle.dataset.wordSectionWebBound = 'true';
+          }
+          const addBtn = document.getElementById(config.addId);
+          if (addBtn && addBtn.dataset.wordSectionWebBound !== 'true') {
+            addBtn.addEventListener('click', function() {
+              const current = ensureWordSectionLinksState(config.stateKey);
+              if (current.length >= WORD_SECTION_WEB_LIMIT) {
+                return;
+              }
+              current.push({ url: '', description: '' });
+              setWordSectionLinksState(config.stateKey, current);
+              renderWordSectionLinksList(section);
+              syncWordSectionWebControls(section);
+            });
+            addBtn.dataset.wordSectionWebBound = 'true';
+          }
+          const list = document.getElementById(config.listId);
+          if (list && list.dataset.wordSectionWebBound !== 'true') {
+            list.addEventListener('click', function(event) {
+              const target = event.target;
+              if (!target) {
+                return;
+              }
+              let removeButton = null;
+              if (typeof target.closest === 'function') {
+                removeButton = target.closest('.word-web-remove');
+              } else if (target.parentElement && target.parentElement.classList && target.parentElement.classList.contains('word-web-remove')) {
+                removeButton = target.parentElement;
+              }
+              if (removeButton) {
+                const sectionKey = removeButton.dataset.wordSection;
+                const index = Number(removeButton.dataset.wordWebRemove);
+                if (!Number.isNaN(index)) {
+                  const state = ensureWordSectionLinksState(sectionKey);
+                  state.splice(index, 1);
+                  setWordSectionLinksState(sectionKey, state);
+                  renderWordSectionLinksList(section);
+                  syncWordSectionWebControls(section);
+                }
+              }
+            });
+            list.addEventListener('input', function(event) {
+              const target = event.target;
+              if (!target || !target.classList || !target.classList.contains('word-web-input')) {
+                return;
+              }
+              const sectionKey = target.dataset.wordSection;
+              const index = Number(target.dataset.wordWebIndex);
+              const field = target.dataset.wordWebField;
+              if (!sectionKey || Number.isNaN(index) || !field) {
+                return;
+              }
+              const state = ensureWordSectionLinksState(sectionKey);
+              if (!state[index]) {
+                state[index] = { url: '', description: '' };
+              }
+              if (field === 'url') {
+                state[index].url = target.value;
+              } else if (field === 'description') {
+                state[index].description = target.value;
+              }
+            });
+            list.dataset.wordSectionWebBound = 'true';
+          }
+        });
       }
 
 function syncWordStructureCard() {
@@ -548,12 +672,11 @@ function syncWordStructureCard() {
           return;
         }
         syncWordStructureSections();
-        syncWordStructureLinksCard();
       }
 
 function bindWordStructureControls() {
         bindWordStructureSectionToggles();
-        bindWordStructureLinksControls();
+        bindWordSectionWebControls();
       }
 
 function renderWordWebSourcesList() {

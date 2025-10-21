@@ -3142,24 +3142,24 @@
         color: var(--tc-muted);
       }
       .word-format-preview {
-        min-width: 110px;
-        max-width: 160px;
+        min-width: 90px;
+        max-width: 120px;
         flex: 0 0 auto;
         border-radius: 12px;
-        padding: 6px 10px;
+        padding: 4px 8px;
         background: rgba(42, 176, 255, 0.15);
         color: #000000;
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
         transition: all 0.2s ease;
-        font-size: 15px;
+        font-size: 14px;
       }
       .word-format-preview.word-format-preview-body {
         text-align: left;
         font-weight: 500;
-        min-width: 130px;
-        max-width: 180px;
+        min-width: 100px;
+        max-width: 140px;
         line-height: 1.5;
         font-size: 13px;
       }
@@ -3196,12 +3196,33 @@
         margin-left: 8px;
       }
       .word-format-group.word-format-group--inline input[type='number'] {
-        width: 56px;
+        width: 46px;
         padding: 4px 6px;
         border-radius: 10px;
         border: 1px solid rgba(28, 141, 212, 0.28);
         font-size: 12px;
         color: #000000;
+        text-align: center;
+      }
+      .word-format-group.word-format-group--color {
+        gap: 4px;
+      }
+      .word-format-group.word-format-group--color .word-format-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .word-format-group.word-format-group--color label {
+        margin-bottom: 0;
+      }
+      .word-format-group.word-format-group--color input[type='color'] {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 6px;
+        border: 1px solid rgba(28, 141, 212, 0.28);
+        background-color: #FFFFFF;
       }
       .word-format-group label {
         font-weight: 600;
@@ -3211,7 +3232,8 @@
         text-transform: uppercase;
       }
       .word-format-group input[type='number'] {
-        max-width: 160px;
+        max-width: 80px;
+        text-align: center;
       }
       .word-format-flags {
         display: flex;
@@ -3253,6 +3275,46 @@
         display: none;
         box-shadow: 0 24px 48px rgba(30, 136, 191, 0.18);
       }
+      .word-personalization-card {
+        margin-top: 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(42, 176, 255, 0.12), rgba(2, 132, 199, 0.08));
+        border: 1px solid rgba(28, 141, 212, 0.28);
+        padding: 18px 20px;
+        display: none;
+        box-shadow: 0 22px 44px rgba(30, 136, 191, 0.16);
+      }
+      .word-personalization-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: center;
+      }
+      .word-personalization-grid .word-context-section {
+        flex: 1 1 210px;
+        min-width: 200px;
+        background: rgba(42, 176, 255, 0.08);
+        border-color: rgba(28, 141, 212, 0.28);
+        box-shadow: 0 14px 34px rgba(42, 176, 255, 0.16);
+      }
+      .word-personalization-grid .word-context-fields {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(28, 141, 212, 0.2);
+      }
+      .word-personalization-grid .word-context-fields select {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.24);
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #000000;
+        background-color: #FFFFFF;
+      }
+      .word-personalization-grid .word-format-group {
+        min-width: 180px;
+        flex: 1 1 auto;
+      }
       .word-structure-card {
         margin-top: 16px;
         border-radius: 18px;
@@ -3276,14 +3338,13 @@
         border-color: rgba(28, 141, 212, 0.28);
         box-shadow: 0 14px 34px rgba(42, 176, 255, 0.16);
       }
-      .word-structure-links {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(28, 141, 212, 0.2);
-        border-radius: 14px;
-        padding: 14px 16px;
+      .word-structure-web {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
-      .word-structure-links .word-web-items {
-        margin-bottom: 10px;
+      .word-structure-web .word-web-body {
+        margin-top: 0;
       }
       .word-context-header {
         display: flex;
@@ -3291,19 +3352,6 @@
         gap: 14px;
         flex-wrap: wrap;
         margin-bottom: 16px;
-      }
-      .word-context-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.82);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: var(--tc-primary-dark);
-        box-shadow: 0 10px 18px rgba(42, 176, 255, 0.2);
-        flex-shrink: 0;
       }
       .word-context-heading {
         display: flex;
@@ -3358,37 +3406,6 @@
         min-height: 96px;
         resize: vertical;
       }
-      .word-context-columns {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        justify-content: center;
-      }
-      .word-context-columns .word-context-section {
-        flex: 1 1 210px;
-        min-width: 200px;
-        background: rgba(42, 176, 255, 0.08);
-        border-color: rgba(28, 141, 212, 0.28);
-        box-shadow: 0 14px 34px rgba(42, 176, 255, 0.16);
-      }
-      .word-context-columns .word-context-fields {
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(28, 141, 212, 0.2);
-      }
-      .word-context-columns .word-context-fields select {
-        border-radius: 10px;
-        border: 1px solid rgba(28, 141, 212, 0.24);
-        padding: 8px 10px;
-        font-size: 13px;
-        color: #000000;
-        background-color: #FFFFFF;
-      }
-      .word-context-columns .word-format-group {
-        min-width: 180px;
-        flex: 1 1 auto;
-      }
       #wordWebSourcesCard .word-context-header {
         align-items: center;
       }
@@ -3403,8 +3420,8 @@
       .word-web-card {
         margin-top: 16px;
         border-radius: 18px;
-        background: linear-gradient(135deg, rgba(42, 176, 255, 0.16), rgba(2, 132, 199, 0.12));
-        border: 1px solid rgba(28, 141, 212, 0.32);
+        background: #FFFFFF;
+        border: 1px solid rgba(28, 141, 212, 0.24);
         padding: 18px 20px;
         display: none;
         box-shadow: 0 24px 48px rgba(30, 136, 191, 0.18);
@@ -3837,14 +3854,16 @@
                     <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
                   </select>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordTitleColor">Color de letra</label>
-                  <input
-                    type="color"
-                    id="wordTitleColor"
-                    value="#1F2937"
-                    data-default-value="#1F2937"
-                  />
+                <div class="word-format-group word-format-group--color">
+                  <div class="word-format-label-row">
+                    <label for="wordTitleColor">Color de letra</label>
+                    <input
+                      type="color"
+                      id="wordTitleColor"
+                      value="#1F2937"
+                      data-default-value="#1F2937"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group word-format-group--inline">
                   <label for="wordTitleFontSize">Tamaño de letra</label>
@@ -3878,7 +3897,7 @@
                   ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
                 >
                 <label for="wordTitleItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleItalics" /> Cursiva</label
+                  ><input type="checkbox" id="wordTitleItalics" /> Italic</label
                 >
                 <label for="wordTitleUppercase" class="word-format-flag"
                   ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
@@ -3892,11 +3911,10 @@
           </div>
           <div id="wordStructureCard" class="word-structure-card" style="display:none;">
             <div class="word-context-header">
-              <div class="word-context-icon" aria-hidden="true">🧭</div>
               <div class="word-context-heading">
                 <h3
                   class="tc-tooltip-target"
-                  data-tooltip="Activa bloques adicionales para guiar la introducción, conclusión y referencias."
+                  data-tooltip="Activa bloques adicionales para guiar la introducción y la conclusión."
                 >
                   Componentes opcionales
                 </h3>
@@ -3931,6 +3949,21 @@
                       Resume qué debe enfatizarse al comenzar el texto.
                     </p>
                   </div>
+                  <div class="word-structure-web">
+                    <label
+                      for="wordIntroWebToggle"
+                      class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                      data-tooltip="Activa enlaces que la IA puede usar para fundamentar la introducción."
+                    >
+                      <input type="checkbox" id="wordIntroWebToggle" />
+                      Usar información de páginas web
+                    </label>
+                    <div id="wordIntroWebBody" class="word-web-body is-hidden" aria-hidden="true">
+                      <div id="wordIntroWebList" class="word-web-items"></div>
+                      <button type="button" id="wordIntroWebAdd" class="word-web-add">Agregar referencia</button>
+                      <p class="word-context-helper">Puedes añadir hasta 3 enlaces con su descripción.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div id="wordConclusionSection" class="word-context-section">
@@ -3960,34 +3993,33 @@
                       Señala el mensaje de cierre que esperas transmitir.
                     </p>
                   </div>
+                  <div class="word-structure-web">
+                    <label
+                      for="wordConclusionWebToggle"
+                      class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                      data-tooltip="Activa enlaces que la IA puede usar para reforzar la conclusión."
+                    >
+                      <input type="checkbox" id="wordConclusionWebToggle" />
+                      Usar información de páginas web
+                    </label>
+                    <div id="wordConclusionWebBody" class="word-web-body is-hidden" aria-hidden="true">
+                      <div id="wordConclusionWebList" class="word-web-items"></div>
+                      <button type="button" id="wordConclusionWebAdd" class="word-web-add">Agregar referencia</button>
+                      <p class="word-context-helper">Puedes añadir hasta 3 enlaces con su descripción.</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="word-structure-links">
-              <label
-                for="wordStructureLinksToggle"
-                class="checkbox-subtle word-context-toggle tc-tooltip-target"
-                data-tooltip="Incorpora hasta tres enlaces con contexto para enriquecer las secciones opcionales."
-              >
-                <input type="checkbox" id="wordStructureLinksToggle" />
-                Agregar referencias web
-              </label>
-              <div id="wordStructureLinksBody" class="word-web-body is-hidden" aria-hidden="true">
-                <div id="wordStructureLinksList" class="word-web-items"></div>
-                <button type="button" id="wordStructureLinksAdd" class="word-web-add">Agregar referencia</button>
-                <p class="word-context-helper">Puedes añadir hasta 3 enlaces con su descripción.</p>
               </div>
             </div>
           </div>
           <div id="wordContextCard" class="word-body-context-card" style="display:none;">
             <div class="word-context-header">
-              <div class="word-context-icon" aria-hidden="true">✦</div>
               <div class="word-context-heading">
                 <h3
                   class="tc-tooltip-target"
                   data-tooltip="Comparte detalles clave para adaptar el texto a tu audiencia y objetivos."
                 >
-                  Contexto
+                  Indicaciones clave
                 </h3>
                 <p>Brinda pistas para adaptar el contenido a tu audiencia y objetivos.</p>
               </div>
@@ -3999,7 +4031,7 @@
                     class="word-context-section-title tc-tooltip-target"
                     data-tooltip="Describe la situación, audiencia y objetivos principales."
                   >
-                    Contexto
+                    Indicaciones clave
                   </span>
                   <p class="word-context-description">
                     Describe la situación, audiencia y objetivos principales. Esta información es obligatoria para personalizar la respuesta.
@@ -4026,119 +4058,134 @@
                   </div>
                 </div>
               </div>
-              <div class="word-context-columns">
-                <div id="wordLanguageSection" class="word-context-section">
-                  <div class="word-context-section-head">
-                    <span
-                      class="word-context-section-title tc-tooltip-target"
-                      data-tooltip="Escoge el idioma final del contenido generado."
+            </div>
+            <p class="word-context-helper">
+              Estas indicaciones ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
+            </p>
+          </div>
+          <div id="wordPersonalizationCard" class="word-personalization-card" style="display:none;">
+            <div class="word-context-header">
+              <div class="word-context-heading">
+                <h3
+                  class="tc-tooltip-target"
+                  data-tooltip="Configura el idioma, tono y perfil para personalizar el texto."
+                >
+                  Personalización
+                </h3>
+                <p>Elige cómo debe entregarse el texto para mantenerse alineado con tu marca.</p>
+              </div>
+            </div>
+            <div class="word-personalization-grid">
+              <div id="wordLanguageSection" class="word-context-section">
+                <div class="word-context-section-head">
+                  <span
+                    class="word-context-section-title tc-tooltip-target"
+                    data-tooltip="Escoge el idioma final del contenido generado."
+                  >
+                    Idioma de salida
+                  </span>
+                  <p class="word-context-description">
+                    Define el idioma final del texto. Ej.: Español (México) para presentaciones regionales.
+                  </p>
+                </div>
+                <div id="wordLanguageFields" class="word-context-fields">
+                  <div class="word-format-group">
+                    <label
+                      for="wordBodyLanguage"
+                      class="tc-tooltip-target"
+                      data-tooltip="Selecciona el idioma en el que quieres recibir el texto."
                     >
                       Idioma de salida
-                    </span>
-                    <p class="word-context-description">
-                      Define el idioma final del texto. Ej.: Español (México) para presentaciones regionales.
-                    </p>
-                  </div>
-                  <div id="wordLanguageFields" class="word-context-fields">
-                    <div class="word-format-group">
-                      <label
-                        for="wordBodyLanguage"
-                        class="tc-tooltip-target"
-                        data-tooltip="Selecciona el idioma en el que quieres recibir el texto."
-                      >
-                        Idioma de salida
-                      </label>
-                      <select id="wordBodyLanguage" data-default-value="">
-                        <option value="" selected>Selecciona un idioma</option>
-                        <option value="Español (neutro)">Español (neutro)</option>
-                        <option value="Español (México)">Español (México)</option>
-                        <option value="Español (España)">Español (España)</option>
-                        <option value="Inglés (EE. UU.)">Inglés (EE. UU.)</option>
-                        <option value="Inglés (Reino Unido)">Inglés (Reino Unido)</option>
-                        <option value="Portugués (Brasil)">Portugués (Brasil)</option>
-                        <option value="Francés">Francés</option>
-                        <option value="Alemán">Alemán</option>
-                        <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
-                      </select>
-                    </div>
+                    </label>
+                    <select id="wordBodyLanguage" data-default-value="">
+                      <option value="" selected>Selecciona un idioma</option>
+                      <option value="Español (neutro)">Español (neutro)</option>
+                      <option value="Español (México)">Español (México)</option>
+                      <option value="Español (España)">Español (España)</option>
+                      <option value="Inglés (EE. UU.)">Inglés (EE. UU.)</option>
+                      <option value="Inglés (Reino Unido)">Inglés (Reino Unido)</option>
+                      <option value="Portugués (Brasil)">Portugués (Brasil)</option>
+                      <option value="Francés">Francés</option>
+                      <option value="Alemán">Alemán</option>
+                      <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
+                    </select>
                   </div>
                 </div>
-                <div id="wordToneSection" class="word-context-section">
-                  <div class="word-context-section-head">
-                    <span
-                      class="word-context-section-title tc-tooltip-target"
-                      data-tooltip="Selecciona cómo debe sentirse el texto al leerlo."
+              </div>
+              <div id="wordToneSection" class="word-context-section">
+                <div class="word-context-section-head">
+                  <span
+                    class="word-context-section-title tc-tooltip-target"
+                    data-tooltip="Selecciona cómo debe sentirse el texto al leerlo."
+                  >
+                    Tono del texto
+                  </span>
+                  <p class="word-context-description">
+                    Escoge la voz narrativa. Ej.: Conversacional para textos cercanos o Persuasivo para campañas.
+                  </p>
+                </div>
+                <div id="wordToneFields" class="word-context-fields">
+                  <div class="word-format-group">
+                    <label
+                      for="wordBodyTone"
+                      class="tc-tooltip-target"
+                      data-tooltip="Define la intención comunicativa del texto."
                     >
                       Tono del texto
-                    </span>
-                    <p class="word-context-description">
-                      Escoge la voz narrativa. Ej.: Conversacional para textos cercanos o Persuasivo para campañas.
-                    </p>
-                  </div>
-                  <div id="wordToneFields" class="word-context-fields">
-                    <div class="word-format-group">
-                      <label
-                        for="wordBodyTone"
-                        class="tc-tooltip-target"
-                        data-tooltip="Define la intención comunicativa del texto."
-                      >
-                        Tono del texto
-                      </label>
-                      <select id="wordBodyTone" data-default-value="profesional">
-                        <option value="profesional" selected>Profesional</option>
-                        <option value="formal">Formal y sobrio</option>
-                        <option value="informal">Conversacional</option>
-                        <option value="persuasivo">Persuasivo</option>
-                        <option value="didactico">Didáctico</option>
-                        <option value="inspirador">Inspirador</option>
-                        <option value="analitico">Analítico</option>
-                      </select>
-                    </div>
+                    </label>
+                    <select id="wordBodyTone" data-default-value="profesional">
+                      <option value="profesional" selected>Profesional</option>
+                      <option value="formal">Formal y sobrio</option>
+                      <option value="informal">Conversacional</option>
+                      <option value="persuasivo">Persuasivo</option>
+                      <option value="didactico">Didáctico</option>
+                      <option value="inspirador">Inspirador</option>
+                      <option value="analitico">Analítico</option>
+                    </select>
                   </div>
                 </div>
-                <div id="wordProfileSection" class="word-context-section">
-                  <div class="word-context-section-head">
-                    <span
-                      class="word-context-section-title tc-tooltip-target"
-                      data-tooltip="Define quién firma o representa el reporte."
+              </div>
+              <div id="wordProfileSection" class="word-context-section">
+                <div class="word-context-section-head">
+                  <span
+                    class="word-context-section-title tc-tooltip-target"
+                    data-tooltip="Define quién firma o representa el reporte."
+                  >
+                    Perfil profesional
+                  </span>
+                  <p class="word-context-description">
+                    Indica el rol que firma el contenido. Ej.: Directora de marketing regional para notas comerciales.
+                  </p>
+                </div>
+                <div id="wordProfileFields" class="word-context-fields">
+                  <div class="word-format-group">
+                    <label
+                      for="wordBodyProfile"
+                      class="tc-tooltip-target"
+                      data-tooltip="Selecciona el perfil que debe reflejarse en el texto."
                     >
                       Perfil profesional
-                    </span>
-                    <p class="word-context-description">
-                      Indica el rol que firma el contenido. Ej.: Directora de marketing regional para notas comerciales.
-                    </p>
-                  </div>
-                  <div id="wordProfileFields" class="word-context-fields">
-                    <div class="word-format-group">
-                      <label
-                        for="wordBodyProfile"
-                        class="tc-tooltip-target"
-                        data-tooltip="Selecciona el perfil que debe reflejarse en el texto."
-                      >
-                        Perfil profesional
-                      </label>
-                      <select id="wordBodyProfile" data-default-value="">
-                        <option value="" selected>Selecciona un perfil</option>
-                        <option value="Analista financiero senior">Analista financiero senior</option>
-                        <option value="Directora de marketing regional">Directora de marketing regional</option>
-                        <option value="Director ejecutivo (CEO)">Director ejecutivo (CEO)</option>
-                        <option value="Consultor de datos">Consultor de datos</option>
-                        <option value="Especialista en recursos humanos">Especialista en recursos humanos</option>
-                        <option value="Periodista de negocios">Periodista de negocios</option>
-                        <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
-                      </select>
-                    </div>
+                    </label>
+                    <select id="wordBodyProfile" data-default-value="">
+                      <option value="" selected>Selecciona un perfil</option>
+                      <option value="Analista financiero senior">Analista financiero senior</option>
+                      <option value="Directora de marketing regional">Directora de marketing regional</option>
+                      <option value="Director ejecutivo (CEO)">Director ejecutivo (CEO)</option>
+                      <option value="Consultor de datos">Consultor de datos</option>
+                      <option value="Especialista en recursos humanos">Especialista en recursos humanos</option>
+                      <option value="Periodista de negocios">Periodista de negocios</option>
+                      <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
+                    </select>
                   </div>
                 </div>
               </div>
             </div>
             <p class="word-context-helper">
-              Estos campos ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
+              Ajusta estos campos para que la IA combine el estilo adecuado con tus indicaciones clave.
             </p>
           </div>
           <div id="wordWebSourcesCard" class="word-web-card" style="display:none;">
             <div class="word-context-header">
-              <div class="word-context-icon" aria-hidden="true">🌐</div>
               <div class="word-context-heading">
                 <h3
                   class="tc-tooltip-target"
@@ -4200,14 +4247,16 @@
                     <option value="'Source Serif Pro', 'Times New Roman', serif">Source Serif Pro</option>
                   </select>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyColor">Color de letra</label>
-                  <input
-                    type="color"
-                    id="wordBodyColor"
-                    value="#1F2937"
-                    data-default-value="#1F2937"
-                  />
+                <div class="word-format-group word-format-group--color">
+                  <div class="word-format-label-row">
+                    <label for="wordBodyColor">Color de letra</label>
+                    <input
+                      type="color"
+                      id="wordBodyColor"
+                      value="#1F2937"
+                      data-default-value="#1F2937"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group word-format-group--inline">
                   <label for="wordBodyFontSize">Tamaño de letra</label>
@@ -4251,7 +4300,7 @@
                   ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
                 >
                 <label for="wordBodyItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyItalics" /> Cursiva</label
+                  ><input type="checkbox" id="wordBodyItalics" /> Italic</label
                 >
                 <label for="wordBodyHighlight" class="word-format-flag"
                   ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
