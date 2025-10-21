@@ -92,6 +92,20 @@ function restoreReportEditorHome() {
   reportEditorMounted = false;
 }
 
+function initReportEditorPortal() {
+  const portal = getReportEditorPortal();
+  if (!portal || !portal.section) {
+    return;
+  }
+  if (portal.host && portal.host.contains(portal.section)) {
+    portal.host.removeChild(portal.section);
+  }
+  if (portal.placeholder && !portal.placeholder.contains(portal.section)) {
+    portal.placeholder.appendChild(portal.section);
+  }
+  reportEditorMounted = false;
+}
+
 function updateActionEditorHeader(action) {
   const title = document.getElementById('aiActionEditorTitle');
   const subtitle = document.getElementById('aiActionEditorSubtitle');
