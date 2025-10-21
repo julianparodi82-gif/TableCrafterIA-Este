@@ -1,6 +1,7 @@
 <script>
 let currentHeaders = [];
 let rangeInfo = null;
+let createFormulaPreference = true;
 let createFormatDirty = false;
 let pendingFormatState = { applied: false, range: null };
 const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
@@ -79,6 +80,8 @@ function syncCreateRangeModeUI() {
         const applyBtn = document.getElementById('applyFormatBtn');
         const headerOptions = document.getElementById('tableHeaderOptions');
         const saveBtn = document.getElementById('saveTableBtn');
+        const formulaToggleRow = document.getElementById('createFormulaToggleRow');
+        const formulaToggle = document.getElementById('createUpdateFormulaRefs');
         if (toggleRow) {
           toggleRow.style.display = isWordTheme ? 'flex' : 'none';
         }
@@ -137,7 +140,56 @@ function syncCreateRangeModeUI() {
             saveBtn.removeAttribute('aria-disabled');
           }
         }
+        if (formulaToggleRow) {
+          formulaToggleRow.style.display = isWordTheme ? 'none' : '';
+        }
+        if (formulaToggle) {
+          const shouldDisableFormula = Boolean(isWordTheme);
+          formulaToggle.disabled = shouldDisableFormula;
+          if (shouldDisableFormula) {
+            formulaToggle.setAttribute('aria-disabled', 'true');
+          } else {
+            formulaToggle.removeAttribute('aria-disabled');
+          }
+        }
         syncCreateMetadataForTheme();
+      }
+
+function applyCreateFormulaPreference(value) {
+        const normalized = normalizeFormulaPreference(value);
+        createFormulaPreference = normalized;
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle) {
+          toggle.checked = normalized;
+        }
+        if (rangeInfo && typeof rangeInfo === 'object') {
+          rangeInfo.updateFormulaReferences = normalized;
+        }
+        return normalized;
+      }
+
+function getCreateFormulaPreference() {
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle) {
+          return !!toggle.checked;
+        }
+        if (typeof createFormulaPreference === 'boolean') {
+          return createFormulaPreference;
+        }
+        if (rangeInfo && typeof rangeInfo.updateFormulaReferences === 'boolean') {
+          return rangeInfo.updateFormulaReferences;
+        }
+        return true;
+      }
+
+function bindCreateFormulaToggle() {
+        const toggle = document.getElementById('createUpdateFormulaRefs');
+        if (toggle && toggle.dataset.toggleBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            applyCreateFormulaPreference(this.checked);
+          });
+          toggle.dataset.toggleBound = 'true';
+        }
       }
 
 function resetWordFormatInputs(containerId) {
@@ -987,6 +1039,8 @@ function isCreateFormatDirty() {
 function resetCreateTabView(options) {
         options = options || {};
         if (!options.preserveRange) {
+          createFormulaPreference = true;
+          applyCreateFormulaPreference(true);
           resetPendingFormatState();
           clearRangeUI();
         }
@@ -1045,14 +1099,24 @@ function setRangeUI(info, options) {
           input.dataset.manual = 'false';
         }
         const incomingHeaders = Array.isArray(info.headers) ? info.headers : currentHeaders;
+        const previousPreference =
+          rangeInfo && typeof rangeInfo.updateFormulaReferences === 'boolean'
+            ? rangeInfo.updateFormulaReferences
+            : createFormulaPreference;
+        const incomingPreference =
+          typeof info.updateFormulaReferences === 'boolean'
+            ? info.updateFormulaReferences
+            : previousPreference;
         rangeInfo = {
           sheetName: info.sheetName,
           a1Notation: info.a1Notation,
           rows: rows,
           cols: cols,
-          headers: cloneHeaderModels(incomingHeaders)
+          headers: cloneHeaderModels(incomingHeaders),
+          updateFormulaReferences: normalizeFormulaPreference(incomingPreference)
         };
         rangeInfo.fullA1 = fullA1;
+        applyCreateFormulaPreference(rangeInfo.updateFormulaReferences);
       }
 
 function getRangeInputValue() {
@@ -1162,6 +1226,7 @@ async function handleApplyFormat() {
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
+        const updateFormulaReferences = getCreateFormulaPreference();
 
         let response;
         try {
@@ -1173,7 +1238,11 @@ async function handleApplyFormat() {
             validation.values.description,
             cloneHeaderModels(currentHeaders),
             style,
-            { skipSaving: true }
+            {
+              skipSaving: true,
+              updateFormulaReferences: updateFormulaReferences,
+              formulaPreference: updateFormulaReferences
+            }
           );
         } catch (err) {
           await showMessageModal('No se pudo aplicar el formato: ' + (err && err.message ? err.message : err), {
@@ -1191,6 +1260,7 @@ async function handleApplyFormat() {
           return false;
         }
 
+        let appliedPreference = updateFormulaReferences;
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
@@ -1198,6 +1268,9 @@ async function handleApplyFormat() {
             renderCreateHeaders();
           }
           setPendingFormattedRange(response.rangeInfo);
+          if (typeof response.rangeInfo.updateFormulaReferences === 'boolean') {
+            appliedPreference = response.rangeInfo.updateFormulaReferences;
+          }
         } else {
           const parts = rangeA1.split('!');
           if (parts.length === 2) {
@@ -1206,6 +1279,8 @@ async function handleApplyFormat() {
             resetPendingFormatState();
           }
         }
+
+        applyCreateFormulaPreference(appliedPreference);
 
         clearCreateFormatDirty();
 
@@ -1287,8 +1362,9 @@ async function handleSaveAction(options) {
         const bold = document.getElementById('toggleBold').checked;
         const style = { headerColor: headerColor, altColor1: alt1, altColor2: alt2, border: border, bold: bold };
         const tableId = editingId;
+        const updateFormulaReferences = getCreateFormulaPreference();
         const entryValues = Object.assign({}, validation.values, {
-          updateFormulaReferences: true
+          updateFormulaReferences: updateFormulaReferences
         });
 
         if (isCreateFormatDirty() && !options.skipFormatCheck) {
@@ -1309,7 +1385,7 @@ async function handleSaveAction(options) {
             validation.values.description,
             cloneHeaderModels(currentHeaders),
             style,
-            { skipFormatting: true, formulaPreference: true }
+            { skipFormatting: true, formulaPreference: updateFormulaReferences }
           );
         } catch (err) {
           await showMessageModal('No se pudo guardar la tabla: ' + (err && err.message ? err.message : err), {
@@ -1327,13 +1403,20 @@ async function handleSaveAction(options) {
           return false;
         }
 
+        let appliedPreference = updateFormulaReferences;
         if (response && response.rangeInfo) {
           setRangeUI(response.rangeInfo, { force: true });
           if (Array.isArray(response.rangeInfo.headers)) {
             currentHeaders = cloneHeaderModels(response.rangeInfo.headers);
             renderCreateHeaders();
           }
+          if (typeof response.rangeInfo.updateFormulaReferences === 'boolean') {
+            appliedPreference = response.rangeInfo.updateFormulaReferences;
+          }
         }
+
+        entryValues.updateFormulaReferences = appliedPreference;
+        applyCreateFormulaPreference(appliedPreference);
 
         if (response && response.id) {
           lastSavedTableId = response.id;
@@ -1453,6 +1536,8 @@ async function resolvePendingFormatting() {
 
 function initializeWordRangeMode() {
         bindWordRangeToggle();
+        bindCreateFormulaToggle();
+        applyCreateFormulaPreference(createFormulaPreference);
         bindWordTextToggles();
         bindWordFormatInputs();
         bindWordFormatCollapses();
@@ -1473,6 +1558,8 @@ function initializeWordRangeMode() {
 
 function notifyCreateThemeChanged() {
         bindWordRangeToggle();
+        bindCreateFormulaToggle();
+        applyCreateFormulaPreference(createFormulaPreference);
         bindWordTextToggles();
         bindWordFormatInputs();
         bindWordFormatCollapses();

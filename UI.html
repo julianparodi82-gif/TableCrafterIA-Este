@@ -4015,11 +4015,25 @@
           <div id="wordRangeFields">
             <div class="range-row">
               <div>
-                <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+                <strong>Rango actual:</strong> <span id="rangeLabel">—</span>
               </div>
               <div class="range-actions">
                 <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
               </div>
+            </div>
+            <div
+              class="toggle-group"
+              id="createFormulaToggleRow"
+              style="margin-top:8px;"
+            >
+              <label
+                class="checkbox-subtle js-comment-hint-trigger"
+                for="createUpdateFormulaRefs"
+                data-comment-hint="Mantiene las fórmulas coherentes cuando reubicas la tabla. Ej.: si =B2*2 se mueve una columna a la derecha, se actualizará a =C2*2."
+              >
+                <input type="checkbox" id="createUpdateFormulaRefs" checked />
+                Actualizar referencias de fórmulas al mover tabla.
+              </label>
             </div>
             <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
             <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
