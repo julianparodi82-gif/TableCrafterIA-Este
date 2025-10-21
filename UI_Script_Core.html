@@ -3182,7 +3182,7 @@ document.addEventListener('DOMContentLoaded', function() {
           window.clearTimeout(sidebarEntryCleanupTimeout);
           sidebarEntryCleanupTimeout = null;
         }
-        if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
+        if (!themeToggle || !appTitle || !body) {
           return;
         }
 
@@ -3319,6 +3319,9 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
+          if (!themeMessage) {
+            return;
+          }
           const themeKey = currentTheme === 'word' ? 'word' : 'table';
           const resolved = welcomePreferenceResolved;
           const themePreference = hideWelcomePreference[themeKey];
@@ -3489,12 +3492,16 @@ function playSidebarAnimation() {
             body.classList.add('theme-wordcrafter');
             body.classList.remove('theme-tablecrafter');
             appTitle.textContent = 'WordCrafterAI';
-            themeMessageContent.innerHTML = wordMessage;
+            if (themeMessageContent) {
+              themeMessageContent.innerHTML = wordMessage;
+            }
           } else {
             body.classList.add('theme-tablecrafter');
             body.classList.remove('theme-wordcrafter');
             appTitle.textContent = 'TableCrafterAI';
-            themeMessageContent.innerHTML = tableMessage;
+            if (themeMessageContent) {
+              themeMessageContent.innerHTML = tableMessage;
+            }
           }
           updateTabLabelsForTheme(nextTheme);
           syncSavedContentLabels(nextTheme);
@@ -3523,7 +3530,9 @@ function playSidebarAnimation() {
           themeMessageClose.addEventListener('click', function() {
             const hideForFuture = Boolean(themeMessageDismiss && themeMessageDismiss.checked);
             persistWelcomePreference(hideForFuture, { sync: false });
-            themeMessage.classList.add('is-hidden');
+            if (themeMessage) {
+              themeMessage.classList.add('is-hidden');
+            }
           });
         }
 
@@ -3532,7 +3541,9 @@ function playSidebarAnimation() {
             const shouldHide = this.checked;
             persistWelcomePreference(shouldHide);
             if (!shouldHide) {
-              themeMessage.classList.remove('is-hidden');
+              if (themeMessage) {
+                themeMessage.classList.remove('is-hidden');
+              }
             }
           });
         }
