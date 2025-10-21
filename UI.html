@@ -3069,6 +3069,80 @@
         margin-top: 6px;
         color: var(--tc-muted);
       }
+      .word-text-options {
+        margin-top: 12px;
+        background: rgba(15, 118, 110, 0.06);
+        border: 1px solid rgba(13, 107, 90, 0.25);
+        border-radius: 10px;
+        padding: 12px 14px;
+        display: none;
+      }
+      .word-text-options .checkbox-subtle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .word-text-options .word-format-toggle {
+        margin-top: 8px;
+      }
+      .word-format-options {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(15, 76, 129, 0.12);
+        display: none;
+      }
+      .word-format-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .word-format-group {
+        flex: 1 1 160px;
+        min-width: 140px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .word-format-group label {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--tc-muted-strong);
+      }
+      .word-format-group input[type='number'] {
+        max-width: 120px;
+      }
+      .word-format-flags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .word-format-flags label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .word-body-extra {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+      }
+      .word-body-extra .word-body-columns {
+        display: grid;
+        gap: 12px;
+      }
+      @media (min-width: 720px) {
+        .word-body-extra .word-body-columns {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
       #editActionsRow {
         margin-top: 20px;
       }
@@ -3336,9 +3410,162 @@
         <div class="section">
           <label for="tableName">Título del texto</label>
           <input type="text" id="tableName" placeholder="Ingrese un título..." />
+          <div id="wordTitleOptions" class="word-text-options" style="display:none;">
+            <label for="wordAutoTitleToggle" class="checkbox-subtle">
+              <input type="checkbox" id="wordAutoTitleToggle" />
+              Generar título automáticamente con IA
+            </label>
+            <label for="wordManualTitleFormatToggle" class="checkbox-subtle word-format-toggle">
+              <input type="checkbox" id="wordManualTitleFormatToggle" />
+              Editar formato del título manualmente
+            </label>
+            <div id="wordTitleFormatOptions" class="word-format-options">
+              <div class="word-format-grid">
+                <div class="word-format-group">
+                  <label for="wordTitleColor">Color de letra</label>
+                  <input
+                    type="color"
+                    id="wordTitleColor"
+                    value="#1F2937"
+                    data-default-value="#1F2937"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordTitleFontSize">Tamaño de letra</label>
+                  <input
+                    type="number"
+                    id="wordTitleFontSize"
+                    min="10"
+                    max="72"
+                    step="1"
+                    value="28"
+                    data-default-value="28"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordTitleAlignment">Alineación</label>
+                  <select id="wordTitleAlignment" data-default-value="center">
+                    <option value="left">Izquierda</option>
+                    <option value="center" selected>Centro</option>
+                    <option value="right">Derecha</option>
+                    <option value="justify">Justificada</option>
+                  </select>
+                </div>
+              </div>
+              <div class="word-format-flags">
+                <label for="wordTitleBold"><input type="checkbox" id="wordTitleBold" /> Negrita</label>
+                <label for="wordTitleUnderline"
+                  ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
+                >
+                <label for="wordTitleItalics"><input type="checkbox" id="wordTitleItalics" /> Cursiva</label>
+                <label for="wordTitleUppercase"
+                  ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
+                >
+              </div>
+            </div>
+          </div>
           <div class="js-comment-hint-field">
             <label for="tableDesc">Descripción del texto</label>
             <textarea id="tableDesc" placeholder="Descripción del texto..."></textarea>
+          </div>
+          <div id="wordBodyOptions" class="word-text-options" style="display:none;">
+            <label for="wordManualBodyFormatToggle" class="checkbox-subtle">
+              <input type="checkbox" id="wordManualBodyFormatToggle" />
+              Editar formato del cuerpo manualmente
+            </label>
+            <div id="wordBodyFormatOptions" class="word-format-options">
+              <div class="word-format-grid">
+                <div class="word-format-group">
+                  <label for="wordBodyColor">Color de letra</label>
+                  <input
+                    type="color"
+                    id="wordBodyColor"
+                    value="#374151"
+                    data-default-value="#374151"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyFontSize">Tamaño de letra</label>
+                  <input
+                    type="number"
+                    id="wordBodyFontSize"
+                    min="10"
+                    max="48"
+                    step="1"
+                    value="14"
+                    data-default-value="14"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyAlignment">Alineación</label>
+                  <select id="wordBodyAlignment" data-default-value="justify">
+                    <option value="left">Izquierda</option>
+                    <option value="center">Centro</option>
+                    <option value="right">Derecha</option>
+                    <option value="justify" selected>Justificada</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyLineSpacing">Interlineado</label>
+                  <select id="wordBodyLineSpacing" data-default-value="1.5">
+                    <option value="1">1.0</option>
+                    <option value="1.15">1.15</option>
+                    <option value="1.5" selected>1.5</option>
+                    <option value="2">2.0</option>
+                  </select>
+                </div>
+              </div>
+              <div class="word-format-flags">
+                <label for="wordBodyBold"><input type="checkbox" id="wordBodyBold" /> Negrita</label>
+                <label for="wordBodyUnderline"
+                  ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
+                >
+                <label for="wordBodyItalics"><input type="checkbox" id="wordBodyItalics" /> Cursiva</label>
+                <label for="wordBodyHighlight"
+                  ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
+                >
+              </div>
+            </div>
+            <div class="word-body-extra">
+              <div>
+                <label for="wordBodyContext">Contexto y personalización</label>
+                <textarea
+                  id="wordBodyContext"
+                  rows="3"
+                  placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
+                ></textarea>
+              </div>
+              <div class="word-body-columns">
+                <div class="word-format-group">
+                  <label for="wordBodyLanguage">Idioma de salida</label>
+                  <input
+                    type="text"
+                    id="wordBodyLanguage"
+                    placeholder="Ej: Español neutro"
+                    data-default-value=""
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyTone">Tono del reporte</label>
+                  <select id="wordBodyTone" data-default-value="profesional">
+                    <option value="profesional" selected>Profesional</option>
+                    <option value="formal">Formal</option>
+                    <option value="informal">Informal</option>
+                    <option value="persuasivo">Persuasivo</option>
+                    <option value="didactico">Didáctico</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyProfile">Perfil profesional</label>
+                  <input
+                    type="text"
+                    id="wordBodyProfile"
+                    placeholder="Ej: Analista financiero senior"
+                    data-default-value=""
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           <div id="tableHeaderOptions" data-themes="table">
             <label>Encabezados (puede editar y reordenar)</label>
