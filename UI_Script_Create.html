@@ -157,7 +157,7 @@ function syncWordTitleControls() {
         const formatOptions = document.getElementById('wordTitleFormatOptions');
         const titleInput = document.getElementById('tableName');
         if (container) {
-          container.style.display = isWordTheme ? '' : 'none';
+          container.style.display = isWordTheme ? 'block' : 'none';
         }
         if (!isWordTheme) {
           if (autoToggle) {
@@ -205,7 +205,7 @@ function syncWordTitleControls() {
         }
         const manualActive = Boolean(isWordTheme && manualToggle && manualToggle.checked);
         if (formatOptions) {
-          formatOptions.style.display = manualActive ? '' : 'none';
+          formatOptions.style.display = manualActive ? 'block' : 'none';
         }
       }
 
@@ -215,7 +215,7 @@ function syncWordBodyControls() {
         const manualToggle = document.getElementById('wordManualBodyFormatToggle');
         const formatOptions = document.getElementById('wordBodyFormatOptions');
         if (container) {
-          container.style.display = isWordTheme ? '' : 'none';
+          container.style.display = isWordTheme ? 'block' : 'none';
         }
         if (!isWordTheme && manualToggle) {
           manualToggle.checked = false;
@@ -230,7 +230,7 @@ function syncWordBodyControls() {
           }
         }
         if (formatOptions) {
-          formatOptions.style.display = manualActive ? '' : 'none';
+          formatOptions.style.display = manualActive ? 'block' : 'none';
         }
       }
 
