@@ -726,7 +726,10 @@ function syncWordTitleControls() {
         const manualActive = Boolean(isWordTheme && manualToggle && manualToggle.checked);
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
+          const shouldCollapse = formatOptions.dataset && formatOptions.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed('wordTitleFormatOptions', shouldCollapse);
         }
+        bindWordFormatCollapses();
         updateWordPreview('title');
       }
 
@@ -752,7 +755,10 @@ function syncWordBodyControls() {
         }
         if (formatOptions) {
           formatOptions.style.display = manualActive ? 'block' : 'none';
+          const shouldCollapse = formatOptions.dataset && formatOptions.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed('wordBodyFormatOptions', shouldCollapse);
         }
+        bindWordFormatCollapses();
         updateWordPreview('body');
       }
 
@@ -835,6 +841,59 @@ function bindWordFormatInputs() {
             attach(control, 'body');
           });
         }
+      }
+
+function setWordFormatSectionCollapsed(sectionId, collapsed) {
+        const container = document.getElementById(sectionId);
+        if (!container) {
+          return;
+        }
+        const content = container.querySelector('.word-format-content');
+        const toggle = container.querySelector('.word-format-collapse');
+        const isCollapsed = !!collapsed;
+        container.classList.toggle('is-collapsed', isCollapsed);
+        if (content) {
+          content.style.display = isCollapsed ? 'none' : '';
+        }
+        if (toggle) {
+          const expandLabel = toggle.dataset && toggle.dataset.expandLabel
+            ? toggle.dataset.expandLabel
+            : 'Expandir opciones de formato';
+          const collapseLabel = toggle.dataset && toggle.dataset.collapseLabel
+            ? toggle.dataset.collapseLabel
+            : 'Replegar opciones de formato';
+          toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+          toggle.setAttribute('aria-label', isCollapsed ? expandLabel : collapseLabel);
+        }
+        container.dataset.wordCollapsed = isCollapsed ? 'true' : 'false';
+      }
+
+function toggleWordFormatSection(sectionId) {
+        const container = document.getElementById(sectionId);
+        if (!container) {
+          return;
+        }
+        const nextState = !(container.dataset && container.dataset.wordCollapsed === 'true');
+        setWordFormatSectionCollapsed(sectionId, nextState);
+      }
+
+function bindWordFormatCollapses() {
+        const sections = ['wordTitleFormatOptions', 'wordBodyFormatOptions'];
+        sections.forEach(function(sectionId) {
+          const container = document.getElementById(sectionId);
+          if (!container) {
+            return;
+          }
+          const toggle = container.querySelector('.word-format-collapse');
+          if (toggle && toggle.dataset.wordCollapseBound !== 'true') {
+            toggle.addEventListener('click', function() {
+              toggleWordFormatSection(sectionId);
+            });
+            toggle.dataset.wordCollapseBound = 'true';
+          }
+          const shouldCollapse = container.dataset && container.dataset.wordCollapsed === 'true';
+          setWordFormatSectionCollapsed(sectionId, shouldCollapse);
+        });
       }
 
 function resetPendingFormatState() {
@@ -1342,6 +1401,7 @@ function initializeWordRangeMode() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordFormatCollapses();
         bindWordContextWebSources();
         bindWordContextSelects();
         bindWordStructureToggles();
@@ -1361,6 +1421,7 @@ function notifyCreateThemeChanged() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordFormatCollapses();
         bindWordContextWebSources();
         bindWordContextSelects();
         bindWordStructureToggles();

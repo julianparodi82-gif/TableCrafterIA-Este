@@ -366,6 +366,52 @@ let activeReportFavoriteTrigger = null;
         return result;
       }
 
+      function validateWordCreateFavoriteRequirements(container) {
+        const missing = [];
+        const keyField = document.getElementById('wordBodyContext');
+        if (!keyField || !keyField.value || !String(keyField.value).trim()) {
+          missing.push('Indicaciones clave');
+        }
+        const introToggle = document.getElementById('wordIntroToggle');
+        const introDescToggle = document.getElementById('wordIntroDescriptionToggle');
+        if (
+          introToggle &&
+          introToggle.checked &&
+          introDescToggle &&
+          introDescToggle.checked
+        ) {
+          const introDesc = document.getElementById('wordIntroDescription');
+          if (!introDesc || !introDesc.value || !String(introDesc.value).trim()) {
+            missing.push('Descripción de la introducción');
+          }
+        }
+        const conclusionToggle = document.getElementById('wordConclusionToggle');
+        const conclusionDescToggle = document.getElementById('wordConclusionDescriptionToggle');
+        if (
+          conclusionToggle &&
+          conclusionToggle.checked &&
+          conclusionDescToggle &&
+          conclusionDescToggle.checked
+        ) {
+          const conclusionDesc = document.getElementById('wordConclusionDescription');
+          if (!conclusionDesc || !conclusionDesc.value || !String(conclusionDesc.value).trim()) {
+            missing.push('Descripción de la conclusión');
+          }
+        }
+        const autoToggle = document.getElementById('wordAutoCommentsToggle');
+        const customToggle = document.getElementById('wordAutoCommentCustom');
+        if (autoToggle && autoToggle.checked && customToggle && customToggle.checked) {
+          const customText = document.getElementById('wordAutoCommentsCustom');
+          if (!customText || !customText.value || !String(customText.value).trim()) {
+            missing.push('Detalle de comentarios personalizados');
+          }
+        }
+        if (missing.length === 0) {
+          return null;
+        }
+        return 'Faltan datos para guardar en favoritos\n• ' + missing.join('\n• ');
+      }
+
       function buildGeneralFavoritePayload(name, context) {
         const trimmedName = name ? String(name).trim() : '';
         if (!trimmedName) {
@@ -377,6 +423,12 @@ let activeReportFavoriteTrigger = null;
         const container = document.getElementById(context.containerId);
         if (!container) {
           return { error: 'No se encontró la sección seleccionada.' };
+        }
+        if (context && context.theme === 'word' && context.type === 'createTextFavorite') {
+          const validationError = validateWordCreateFavoriteRequirements(container);
+          if (validationError) {
+            return { error: validationError };
+          }
         }
         const fields = collectFavoriteContextFields(container);
         return {
@@ -4727,6 +4779,40 @@ function closeReportFavoriteModal(options) {
         }
       }
 
+function bindFavoriteModalControls() {
+        const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
+        if (favoriteCancelBtn && favoriteCancelBtn.dataset.bound !== 'true') {
+          favoriteCancelBtn.addEventListener('click', function() {
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+          });
+          favoriteCancelBtn.dataset.bound = 'true';
+        }
+        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+        if (favoriteSaveBtn && favoriteSaveBtn.dataset.bound !== 'true') {
+          favoriteSaveBtn.addEventListener('click', function() {
+            handleReportFavoriteSave();
+          });
+          favoriteSaveBtn.dataset.bound = 'true';
+        }
+        const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
+        if (favoriteOverlay && favoriteOverlay.dataset.bound !== 'true') {
+          favoriteOverlay.addEventListener('click', function(event) {
+            if (event.target === favoriteOverlay) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteOverlay.dataset.bound = 'true';
+        }
+        if (!favoriteModalEscapeListenerAttached) {
+          document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && reportFavoriteModalVisible) {
+              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
+            }
+          });
+          favoriteModalEscapeListenerAttached = true;
+        }
+      }
+
 async function handleReportFavoriteSave() {
         if (savingReportFavorite) {
           return;
@@ -5456,10 +5542,11 @@ function saveReportPhone() {
         }
       }
 
-function initializeReportSection() {
+      function initializeReportSection() {
         if (reportSectionInitialized) {
           return;
         }
+        bindFavoriteModalControls();
         savedReportEmails = loadReportContactList('emails');
         savedReportPhones = loadReportContactList('phones');
         renderReportEmailList([]);
@@ -5571,18 +5658,6 @@ function initializeReportSection() {
             openReportFavoriteModal();
           });
         }
-        const favoriteCancelBtn = document.getElementById('aiReportFavoriteCancelBtn');
-        if (favoriteCancelBtn) {
-          favoriteCancelBtn.addEventListener('click', function() {
-            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
-          });
-        }
-        const favoriteSaveBtn = document.getElementById('aiReportFavoriteSaveBtn');
-        if (favoriteSaveBtn) {
-          favoriteSaveBtn.addEventListener('click', function() {
-            handleReportFavoriteSave();
-          });
-        }
         const favoriteClearBtn = document.getElementById('aiReportFavoriteClearBtn');
         if (favoriteClearBtn && !favoriteClearBtn.dataset.bound) {
           favoriteClearBtn.addEventListener('click', function() {
@@ -5596,23 +5671,6 @@ function initializeReportSection() {
             handleReportGenerate();
           });
           generateBtn.dataset.bound = 'true';
-        }
-        const favoriteOverlay = document.getElementById('aiFavoriteModalOverlay');
-        if (favoriteOverlay && !favoriteOverlay.dataset.bound) {
-          favoriteOverlay.addEventListener('click', function(event) {
-            if (event.target === favoriteOverlay) {
-              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
-            }
-          });
-          favoriteOverlay.dataset.bound = 'true';
-        }
-        if (!favoriteModalEscapeListenerAttached) {
-          document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && reportFavoriteModalVisible) {
-              closeReportFavoriteModal({ resetName: false, focusTrigger: true });
-            }
-          });
-          favoriteModalEscapeListenerAttached = true;
         }
         closeReportFavoriteModal({ resetName: true });
         updateReportFavoriteControls();
@@ -6209,6 +6267,8 @@ function collectAskCustomization() {
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        bindFavoriteModalControls();
+        closeReportFavoriteModal({ resetName: true });
         const askSection = document.getElementById('aiAskSection');
         if (askSection) {
           setupCollapsibleControls(askSection);

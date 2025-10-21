@@ -663,6 +663,62 @@ function getSavedTableFromCache(id) {
 
       
 
+function getActiveTheme() {
+        if (typeof currentTheme === 'string' && currentTheme) {
+          return currentTheme === 'word' ? 'word' : 'table';
+        }
+        const body = document.body;
+        if (body && body.classList.contains('theme-wordcrafter')) {
+          return 'word';
+        }
+        return 'table';
+      }
+
+function filterSavedEntriesByTheme(entries, theme) {
+        const normalizedTheme = theme === 'word' ? 'word' : 'table';
+        const list = Array.isArray(entries) ? entries : [];
+        return list.filter(function(entry) {
+          if (!entry || !entry.id) {
+            return false;
+          }
+          const rawTheme = (entry.theme || entry.type || entry.kind || entry.category || '').toString().toLowerCase();
+          if (rawTheme) {
+            if (normalizedTheme === 'word') {
+              if (rawTheme.indexOf('word') === 0 || rawTheme.indexOf('text') === 0 || rawTheme.indexOf('texto') === 0) {
+                return true;
+              }
+              if (rawTheme.indexOf('table') === 0 || rawTheme.indexOf('tabla') === 0) {
+                return false;
+              }
+            } else if (rawTheme.indexOf('word') === 0 || rawTheme.indexOf('text') === 0 || rawTheme.indexOf('texto') === 0) {
+              return false;
+            }
+          }
+          const id = String(entry.id).toLowerCase();
+          if (normalizedTheme === 'word') {
+            if (
+              id.indexOf('text:') === 0 ||
+              id.indexOf('texto:') === 0 ||
+              id.indexOf('word:') === 0 ||
+              id.indexOf('wordtext:') === 0
+            ) {
+              return true;
+            }
+            if (!entry.rangeA1 && !entry.fullRangeA1 && !entry.sheetName) {
+              return true;
+            }
+            return false;
+          }
+          if (id.indexOf('text:') === 0 || id.indexOf('texto:') === 0 || id.indexOf('word:') === 0) {
+            return false;
+          }
+          if (!entry.rangeA1 && !entry.fullRangeA1) {
+            return false;
+          }
+          return true;
+        });
+      }
+
 function resolveSelectOption(options, id, key, fallback) {
         if (!options || typeof options !== 'object') {
           return fallback;
@@ -689,6 +745,7 @@ function updateSavedTableSelects(targetIds, list, config) {
         const entries = Array.isArray(list) ? list : [];
         const options = config || {};
         const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+        const activeTheme = getActiveTheme();
 
         ids.forEach(function(id) {
           const select = document.getElementById(id);
@@ -706,6 +763,10 @@ function updateSavedTableSelects(targetIds, list, config) {
             }
           }
 
+          const targetEntries = id === 'editSavedTables'
+            ? filterSavedEntriesByTheme(entries, activeTheme)
+            : entries.slice();
+
           let defaultSettings = {
             placeholder: '-- Seleccione --',
             multi: false,
@@ -716,7 +777,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           };
 
           if (id === 'aiSavedTables') {
-            const totalOptions = entries.length + 1;
+            const totalOptions = targetEntries.length + 1;
             defaultSettings = {
               placeholder: '-- Seleccione una o más tablas --',
               multi: true,
@@ -738,7 +799,7 @@ function updateSavedTableSelects(targetIds, list, config) {
 
           select.multiple = isMulti;
           if (isMulti) {
-            const total = entries.length + (includeAll ? 1 : 0);
+            const total = targetEntries.length + (includeAll ? 1 : 0);
             const computedSize = customSize || Math.min(Math.max(total, 4), 12);
             select.size = computedSize;
           } else {
@@ -761,7 +822,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
 
           const validValues = {};
-          entries.forEach(function(entry) {
+          targetEntries.forEach(function(entry) {
             if (entry && entry.id) {
               validValues[entry.id] = true;
             }
@@ -778,7 +839,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           if (groupBySheet) {
             const grouped = Object.create(null);
             const order = [];
-            entries.forEach(function(entry) {
+            targetEntries.forEach(function(entry) {
               if (!entry || !entry.id) {
                 return;
               }
@@ -802,7 +863,7 @@ function updateSavedTableSelects(targetIds, list, config) {
               select.appendChild(optgroup);
             });
           } else {
-            entries.forEach(function(entry) {
+            targetEntries.forEach(function(entry) {
               if (!entry || !entry.id) {
                 return;
               }
@@ -889,11 +950,11 @@ function updateSavedTableSelects(targetIds, list, config) {
             });
           }
 
-          if (entries.length === 0) {
+          if (targetEntries.length === 0) {
             if (isMulti) {
               const emptyOption = document.createElement('option');
               emptyOption.value = '';
-              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.textContent = activeTheme === 'word' ? 'No hay textos guardados' : 'No hay tablas guardadas';
               emptyOption.disabled = true;
               emptyOption.selected = true;
               select.appendChild(emptyOption);
@@ -904,7 +965,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
 
           if (id === 'editSavedTables') {
-            renderEditSavedTablesList(entries, {
+            renderEditSavedTablesList(targetEntries, {
               groupBySheet: groupBySheet,
               disabled: select.disabled,
               selectedValue: !select.disabled ? select.value : ''
@@ -925,10 +986,6 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
         });
       }
-
-
-
-      
 
 function applySavedTablesFromCache(targetIds, config) {
         updateSavedTableSelects(targetIds, savedTablesCache, config || {});

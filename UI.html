@@ -882,7 +882,7 @@
       }
       body.theme-wordcrafter #editSavedTablesList {
         border-color: rgba(28, 141, 212, 0.28);
-        background-color: rgba(229, 246, 255, 0.72);
+        background-color: #FFFFFF;
       }
       body.theme-wordcrafter .edit-saved-group-label {
         color: #0B5CA8;
@@ -3220,6 +3220,12 @@
         font-size: 13px;
         color: var(--tc-muted);
       }
+      .word-format-preview-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
       .word-format-preview {
         min-width: 0;
         flex: 0 0 auto;
@@ -3239,6 +3245,36 @@
         min-width: 0;
         width: min(100%, 144px);
         line-height: 1.55;
+      }
+      .word-format-collapse {
+        border: none;
+        background: transparent;
+        color: var(--tc-muted);
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      }
+      .word-format-collapse:hover {
+        background-color: rgba(28, 141, 212, 0.12);
+        color: var(--tc-primary-dark);
+      }
+      .word-format-collapse:focus-visible {
+        outline: 2px solid rgba(28, 141, 212, 0.55);
+        outline-offset: 2px;
+      }
+      .word-format-options.is-collapsed .word-format-collapse {
+        transform: rotate(-90deg);
+      }
+      .word-format-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .word-format-options.is-collapsed .word-format-content {
+        display: none;
       }
       .word-format-preview.word-preview-highlighted {
         background: rgba(255, 216, 102, 0.25);
@@ -3985,99 +4021,113 @@
                 Editar formato del título manualmente
               </label>
             </div>
-            <div id="wordTitleFormatOptions" class="word-format-options">
+            <div id="wordTitleFormatOptions" class="word-format-options" data-word-collapsed="false">
               <div class="word-format-header">
                 <div class="word-format-heading">
                   <h4>Formato del título</h4>
                   <p>Ajusta estilo, tamaño y peso para presentar el título con presencia.</p>
                 </div>
-                <div
-                  id="wordTitlePreview"
-                  class="word-format-preview"
-                  aria-live="polite"
-                  aria-label="Vista previa del título"
-                >
-                  Ejemplo
+                <div class="word-format-preview-wrapper">
+                  <div
+                    id="wordTitlePreview"
+                    class="word-format-preview"
+                    aria-live="polite"
+                    aria-label="Vista previa del título"
+                  >
+                    <span class="word-preview-text">Ejemplo</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="word-format-collapse"
+                    aria-expanded="true"
+                    aria-controls="wordTitleFormatContent"
+                    data-expand-label="Expandir formato del título"
+                    data-collapse-label="Replegar formato del título"
+                  >
+                    ▾
+                  </button>
                 </div>
               </div>
-              <div class="word-format-grid">
-                <div class="word-format-group">
-                  <label
-                    for="wordTitleFontFamily"
-                    class="tc-tooltip-target"
-                    data-tooltip="Elige la tipografía base del título. Ej: Playfair para un estilo editorial."
-                    >Fuente</label
-                  >
-                  <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
-                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
-                    <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
-                    <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
-                    <option value="'Raleway', Arial, sans-serif">Raleway</option>
-                    <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
-                  </select>
-                </div>
-                <div class="word-format-group">
-                  <label
-                    for="wordTitleColor"
-                    class="tc-tooltip-target"
-                    data-tooltip="Selecciona el color principal del título. Ej: #1F2937 para mantener sobriedad."
-                    >Color de letra</label
-                  >
-                  <input
-                    type="color"
-                    id="wordTitleColor"
-                    value="#1F2937"
-                    data-default-value="#1F2937"
-                  />
-                </div>
-                <div class="word-format-group word-format-group--size">
-                  <div class="word-inline-field">
+              <div id="wordTitleFormatContent" class="word-format-content">
+                <div class="word-format-grid">
+                  <div class="word-format-group">
                     <label
-                      for="wordTitleFontSize"
+                      for="wordTitleFontFamily"
                       class="tc-tooltip-target"
-                      data-tooltip="Define la altura del título. Ej: 32 para un encabezado protagonista."
-                      >Tamaño de letra</label
+                      data-tooltip="Elige la tipografía base del título. Ej: Playfair para un estilo editorial."
+                      >Fuente</label
+                    >
+                    <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                      <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                      <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
+                      <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
+                      <option value="'Raleway', Arial, sans-serif">Raleway</option>
+                      <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
+                    </select>
+                  </div>
+                  <div class="word-format-group">
+                    <label
+                      for="wordTitleColor"
+                      class="tc-tooltip-target"
+                      data-tooltip="Selecciona el color principal del título. Ej: #1F2937 para mantener sobriedad."
+                      >Color de letra</label
                     >
                     <input
-                      type="number"
-                      id="wordTitleFontSize"
-                      class="word-font-size-input"
-                      min="14"
-                      max="72"
-                      step="1"
-                      value="32"
-                      data-default-value="32"
+                      type="color"
+                      id="wordTitleColor"
+                      value="#1F2937"
+                      data-default-value="#1F2937"
                     />
                   </div>
+                  <div class="word-format-group word-format-group--size">
+                    <div class="word-inline-field">
+                      <label
+                        for="wordTitleFontSize"
+                        class="tc-tooltip-target"
+                        data-tooltip="Define la altura del título. Ej: 32 para un encabezado protagonista."
+                        >Tamaño de letra</label
+                      >
+                      <input
+                        type="number"
+                        id="wordTitleFontSize"
+                        class="word-font-size-input"
+                        min="14"
+                        max="72"
+                        step="1"
+                        value="32"
+                        data-default-value="32"
+                      />
+                    </div>
+                  </div>
+                  <div class="word-format-group">
+                    <label
+                      for="wordTitleAlignment"
+                      class="tc-tooltip-target"
+                      data-tooltip="Indica cómo se alineará el título en el documento."
+                      >Alineación</label
+                    >
+                    <select id="wordTitleAlignment" data-default-value="center">
+                      <option value="left">Izquierda</option>
+                      <option value="center" selected>Centro</option>
+                      <option value="right">Derecha</option>
+                      <option value="justify">Justificada</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="word-format-group">
-                  <label
-                    for="wordTitleAlignment"
-                    class="tc-tooltip-target"
-                    data-tooltip="Indica cómo se alineará el título en el documento."
-                    >Alineación</label
+                <div class="word-format-flags">
+                  <label for="wordTitleBold" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleBold" /> Negrita</label
                   >
-                  <select id="wordTitleAlignment" data-default-value="center">
-                    <option value="left">Izquierda</option>
-                    <option value="center" selected>Centro</option>
-                    <option value="right">Derecha</option>
-                    <option value="justify">Justificada</option>
-                  </select>
+                  <label for="wordTitleUnderline" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
+                  >
+                  <label for="wordTitleItalics" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleItalics" /> Italik</label
+                  >
+                  <label for="wordTitleUppercase" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
+                  >
                 </div>
-              </div>
-              <div class="word-format-flags">
-                <label for="wordTitleBold" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleBold" /> Negrita</label
-                >
-                <label for="wordTitleUnderline" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
-                >
-                <label for="wordTitleItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleItalics" /> Italik</label
-                >
-                <label for="wordTitleUppercase" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
-                >
               </div>
             </div>
           </div>
@@ -4256,19 +4306,27 @@
                   Deja que la IA marque hallazgos relevantes en el texto final.
                 </p>
                 <div class="word-automation-options" id="wordAutoCommentsOptions">
-                  <label class="word-automation-option">
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="La IA agregará notas resaltando hallazgos relevantes en cada sección.">
                     <input type="checkbox" id="wordAutoCommentInsights" />
                     Señalar insights destacados
                   </label>
-                  <label class="word-automation-option">
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Marca advertencias sobre riesgos, brechas o indicadores fuera de rango.">
                     <input type="checkbox" id="wordAutoCommentRisks" />
                     Alertar riesgos o alertas tempranas
                   </label>
-                  <label class="word-automation-option">
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Sugiere próximos pasos y responsables para continuar el plan.">
                     <input type="checkbox" id="wordAutoCommentFollowUp" />
                     Recomendar próximos pasos
                   </label>
-                  <label class="word-automation-option">
+                  <label
+                  class="word-automation-option tc-tooltip-target"
+                  data-tooltip="Activa comentarios guiados por tus propias indicaciones personalizadas.">
                     <input type="checkbox" id="wordAutoCommentCustom" />
                     Comentarios personalizados
                   </label>
@@ -4320,12 +4378,13 @@
                 Editar formato del cuerpo manualmente
               </label>
             </div>
-            <div id="wordBodyFormatOptions" class="word-format-options">
-              <div class="word-format-header">
-                <div class="word-format-heading">
-                  <h4>Formato del cuerpo</h4>
-                  <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
-                </div>
+            <div id="wordBodyFormatOptions" class="word-format-options" data-word-collapsed="false">
+            <div class="word-format-header">
+              <div class="word-format-heading">
+                <h4>Formato del cuerpo</h4>
+                <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
+              </div>
+              <div class="word-format-preview-wrapper">
                 <div
                   id="wordBodyPreview"
                   class="word-format-preview word-format-preview-body"
@@ -4334,7 +4393,19 @@
                 >
                   <span class="word-preview-text">Ejemplo</span>
                 </div>
+                <button
+                  type="button"
+                  class="word-format-collapse"
+                  aria-expanded="true"
+                  aria-controls="wordBodyFormatContent"
+                  data-expand-label="Expandir formato del cuerpo"
+                  data-collapse-label="Replegar formato del cuerpo"
+                >
+                  ▾
+                </button>
               </div>
+            </div>
+            <div id="wordBodyFormatContent" class="word-format-content">
               <div class="word-format-grid">
                 <div class="word-format-group">
                   <label
