@@ -3142,34 +3142,30 @@
         color: var(--tc-muted);
       }
       .word-format-preview {
-        min-width: 220px;
+        min-width: 150px;
+        max-width: 220px;
         flex: 0 0 auto;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 10px 14px;
         background: rgba(42, 176, 255, 0.15);
         color: #000000;
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
         transition: all 0.2s ease;
+        font-size: 18px;
       }
       .word-format-preview.word-format-preview-body {
         text-align: left;
         font-weight: 500;
-        min-width: 260px;
+        min-width: 180px;
+        max-width: 260px;
         line-height: 1.6;
+        font-size: 15px;
       }
-      .word-format-preview .word-preview-keywords {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 6px;
-        background: rgba(42, 176, 255, 0.22);
-        margin-left: 4px;
-        font-weight: 600;
-      }
-      .word-format-preview.word-preview-highlighted .word-preview-keywords {
-        background: rgba(255, 216, 102, 0.85);
-        color: #7c5a00;
+      .word-format-preview.word-preview-highlighted {
+        box-shadow: inset 0 0 0 1px rgba(255, 216, 102, 0.85);
+        background: rgba(255, 216, 102, 0.35);
       }
       .word-format-grid {
         display: flex;
@@ -3182,6 +3178,29 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+      .word-format-group.word-format-group--inline {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .word-format-group.word-format-group--inline label {
+        margin: 0;
+        font-weight: 600;
+      }
+      .word-format-group.word-format-group--inline .word-format-size-input {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .word-format-group.word-format-group--inline input[type='number'] {
+        width: 70px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.28);
+        font-size: 13px;
+        color: #000000;
       }
       .word-format-group label {
         font-weight: 600;
@@ -3309,11 +3328,34 @@
       .word-context-columns {
         display: flex;
         flex-wrap: wrap;
-        gap: 14px;
+        gap: 16px;
       }
       .word-context-columns .word-context-section {
         flex: 1 1 210px;
         min-width: 200px;
+        background: rgba(42, 176, 255, 0.08);
+        border-color: rgba(28, 141, 212, 0.28);
+        box-shadow: 0 14px 34px rgba(42, 176, 255, 0.16);
+      }
+      .word-context-columns .word-context-section .checkbox-subtle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .word-context-columns .word-context-fields {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(28, 141, 212, 0.2);
+      }
+      .word-context-columns .word-context-fields select {
+        border-radius: 10px;
+        border: 1px solid rgba(28, 141, 212, 0.24);
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #000000;
+        background-color: #FFFFFF;
       }
       .word-context-columns .word-format-group {
         min-width: 180px;
@@ -3371,22 +3413,27 @@
         font-size: 13px;
       }
       .word-web-remove {
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(28, 141, 212, 0.32);
-        border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #000000;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        background: rgba(0, 0, 0, 0.05);
+        color: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        line-height: 1;
         cursor: pointer;
-        transition: background-color 0.2s ease, border-color 0.2s ease;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
       }
       .word-web-remove:hover:not(:disabled) {
-        background: rgba(42, 176, 255, 0.12);
-        border-color: rgba(28, 141, 212, 0.48);
+        background: rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.32);
+        color: rgba(0, 0, 0, 0.8);
       }
       .word-web-remove:disabled {
-        opacity: 0.6;
+        opacity: 0.4;
         cursor: not-allowed;
       }
       .word-web-add {
@@ -3410,6 +3457,9 @@
         font-size: 14px;
         font-weight: 700;
         color: #000000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
       .word-context-description {
         margin: 0;
@@ -3706,15 +3756,29 @@
           </div>
         </div>
         <div class="section">
-          <label for="tableName">Título del texto</label>
+          <label
+            for="tableName"
+            class="tc-tooltip-target"
+            data-tooltip="Define el nombre principal del documento. Puedes ajustar el formato incluso si se genera automáticamente."
+          >
+            Título del texto
+          </label>
           <input type="text" id="tableName" placeholder="Ingrese un título..." />
           <div id="wordTitleOptions" class="word-text-options" style="display:none;">
             <div class="word-text-toggle-group">
-              <label for="wordAutoTitleToggle" class="checkbox-subtle">
+              <label
+                for="wordAutoTitleToggle"
+                class="checkbox-subtle tc-tooltip-target"
+                data-tooltip="Activa la generación automática y podrás seguir ajustando el estilo del título."
+              >
                 <input type="checkbox" id="wordAutoTitleToggle" />
                 Generar título automáticamente con IA
               </label>
-              <label for="wordManualTitleFormatToggle" class="checkbox-subtle word-format-toggle">
+              <label
+                for="wordManualTitleFormatToggle"
+                class="checkbox-subtle word-format-toggle tc-tooltip-target"
+                data-tooltip="Habilita los controles para personalizar el aspecto del título."
+              >
                 <input type="checkbox" id="wordManualTitleFormatToggle" />
                 Editar formato del título manualmente
               </label>
@@ -3731,7 +3795,7 @@
                   aria-live="polite"
                   aria-label="Vista previa del título"
                 >
-                  Ejemplo de título
+                  Ejemplo
                 </div>
               </div>
               <div class="word-format-grid">
@@ -3754,17 +3818,19 @@
                     data-default-value="#1F2937"
                   />
                 </div>
-                <div class="word-format-group">
+                <div class="word-format-group word-format-group--inline">
                   <label for="wordTitleFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordTitleFontSize"
-                    min="14"
-                    max="72"
-                    step="1"
-                    value="32"
-                    data-default-value="32"
-                  />
+                  <div class="word-format-size-input">
+                    <input
+                      type="number"
+                      id="wordTitleFontSize"
+                      min="14"
+                      max="72"
+                      step="1"
+                      value="32"
+                      data-default-value="32"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group">
                   <label for="wordTitleAlignment">Alineación</label>
@@ -3800,21 +3866,37 @@
             <div class="word-context-header">
               <div class="word-context-icon" aria-hidden="true">✦</div>
               <div class="word-context-heading">
-                <h3>Contexto</h3>
+                <h3
+                  class="tc-tooltip-target"
+                  data-tooltip="Comparte detalles clave para adaptar el texto a tu audiencia y objetivos."
+                >
+                  Contexto
+                </h3>
                 <p>Brinda pistas para adaptar el contenido a tu audiencia y objetivos.</p>
               </div>
             </div>
             <div class="word-context-body">
               <div id="wordContextDetailsWrapper" class="word-context-section">
                 <div class="word-context-section-head">
-                  <span class="word-context-section-title">Contexto</span>
+                  <span
+                    class="word-context-section-title tc-tooltip-target"
+                    data-tooltip="Describe la situación, audiencia y objetivos principales."
+                  >
+                    Contexto
+                  </span>
                   <p class="word-context-description">
                     Describe la situación, audiencia y objetivos principales. Esta información es obligatoria para personalizar la respuesta.
                   </p>
                 </div>
                 <div id="wordContextDetailsFields" class="word-context-fields">
                   <div class="word-format-group">
-                    <label for="wordBodyContext">Indicaciones clave</label>
+                    <label
+                      for="wordBodyContext"
+                      class="tc-tooltip-target"
+                      data-tooltip="Detalla datos imprescindibles para orientar el texto."
+                    >
+                      Indicaciones clave
+                    </label>
                     <textarea
                       id="wordBodyContext"
                       rows="3"
@@ -3829,13 +3911,23 @@
               </div>
               <div class="word-context-columns">
                 <div id="wordLanguageSection" class="word-context-section">
-                  <label for="wordLanguageToggle" class="checkbox-subtle word-context-toggle">
+                  <label
+                    for="wordLanguageToggle"
+                    class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                    data-tooltip="Activa este bloque para fijar el idioma en el que se entregará el texto."
+                  >
                     <input type="checkbox" id="wordLanguageToggle" checked />
                     Idioma de salida
                   </label>
                   <div id="wordLanguageFields" class="word-context-fields">
                     <div class="word-format-group">
-                      <label for="wordBodyLanguage">Idioma de salida</label>
+                      <label
+                        for="wordBodyLanguage"
+                        class="tc-tooltip-target"
+                        data-tooltip="Escoge el idioma final del contenido generado."
+                      >
+                        Idioma de salida
+                      </label>
                       <select id="wordBodyLanguage" data-default-value="">
                         <option value="" selected>Selecciona un idioma</option>
                         <option value="Español (neutro)">Español (neutro)</option>
@@ -3855,13 +3947,23 @@
                   </div>
                 </div>
                 <div id="wordToneSection" class="word-context-section">
-                  <label for="wordToneToggle" class="checkbox-subtle word-context-toggle">
+                  <label
+                    for="wordToneToggle"
+                    class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                    data-tooltip="Habilita este control para indicar el tono deseado para la narración."
+                  >
                     <input type="checkbox" id="wordToneToggle" checked />
                     Tono del texto
                   </label>
                   <div id="wordToneFields" class="word-context-fields">
                     <div class="word-format-group">
-                      <label for="wordBodyTone">Tono del texto</label>
+                      <label
+                        for="wordBodyTone"
+                        class="tc-tooltip-target"
+                        data-tooltip="Selecciona cómo debe sentirse el texto al leerlo."
+                      >
+                        Tono del texto
+                      </label>
                       <select id="wordBodyTone" data-default-value="profesional">
                         <option value="profesional" selected>Profesional</option>
                         <option value="formal">Formal y sobrio</option>
@@ -3878,13 +3980,23 @@
                   </div>
                 </div>
                 <div id="wordProfileSection" class="word-context-section">
-                  <label for="wordProfileToggle" class="checkbox-subtle word-context-toggle">
+                  <label
+                    for="wordProfileToggle"
+                    class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                    data-tooltip="Activa este bloque si necesitas que el texto represente a un perfil profesional específico."
+                  >
                     <input type="checkbox" id="wordProfileToggle" checked />
                     Perfil profesional
                   </label>
                   <div id="wordProfileFields" class="word-context-fields">
                     <div class="word-format-group">
-                      <label for="wordBodyProfile">Perfil profesional</label>
+                      <label
+                        for="wordBodyProfile"
+                        class="tc-tooltip-target"
+                        data-tooltip="Define quién firma o representa el reporte."
+                      >
+                        Perfil profesional
+                      </label>
                       <select id="wordBodyProfile" data-default-value="">
                         <option value="" selected>Selecciona un perfil</option>
                         <option value="Analista financiero senior">Analista financiero senior</option>
@@ -3911,10 +4023,19 @@
             <div class="word-context-header">
               <div class="word-context-icon" aria-hidden="true">🌐</div>
               <div class="word-context-heading">
-                <h3>Fuentes de apoyo</h3>
+                <h3
+                  class="tc-tooltip-target"
+                  data-tooltip="Incluye enlaces confiables para que la IA complemente el contenido."
+                >
+                  Fuentes de apoyo
+                </h3>
                 <p>Incluye enlaces relevantes para enriquecer el texto generado.</p>
               </div>
-              <label for="wordWebSourcesToggle" class="checkbox-subtle word-context-toggle">
+              <label
+                for="wordWebSourcesToggle"
+                class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                data-tooltip="Activa el uso de páginas externas y administra hasta 10 enlaces."
+              >
                 <input type="checkbox" id="wordWebSourcesToggle" />
                 Usar información de páginas web
               </label>
@@ -3927,7 +4048,11 @@
           </div>
           <div id="wordBodyOptions" class="word-text-options" style="display:none;">
             <div class="word-text-toggle-group">
-              <label for="wordManualBodyFormatToggle" class="checkbox-subtle">
+              <label
+                for="wordManualBodyFormatToggle"
+                class="checkbox-subtle tc-tooltip-target"
+                data-tooltip="Activa los controles para definir el aspecto del cuerpo del texto."
+              >
                 <input type="checkbox" id="wordManualBodyFormatToggle" />
                 Editar formato del cuerpo manualmente
               </label>
@@ -3944,8 +4069,7 @@
                   aria-live="polite"
                   aria-label="Vista previa del cuerpo"
                 >
-                  <span class="word-preview-text">Ejemplo de párrafo adaptable a tu reporte, resaltando</span>
-                  <span class="word-preview-keywords">palabras clave</span>
+                  Ejemplo
                 </div>
               </div>
               <div class="word-format-grid">
@@ -3968,17 +4092,19 @@
                     data-default-value="#1F2937"
                   />
                 </div>
-                <div class="word-format-group">
+                <div class="word-format-group word-format-group--inline">
                   <label for="wordBodyFontSize">Tamaño de letra</label>
-                  <input
-                    type="number"
-                    id="wordBodyFontSize"
-                    min="10"
-                    max="48"
-                    step="1"
-                    value="15"
-                    data-default-value="15"
-                  />
+                  <div class="word-format-size-input">
+                    <input
+                      type="number"
+                      id="wordBodyFontSize"
+                      min="10"
+                      max="48"
+                      step="1"
+                      value="15"
+                      data-default-value="15"
+                    />
+                  </div>
                 </div>
                 <div class="word-format-group">
                   <label for="wordBodyAlignment">Alineación</label>
