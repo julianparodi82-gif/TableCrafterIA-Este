@@ -7,6 +7,7 @@ let editRangeInfo = null;
 let editingId = '';
 let editFormatDirty = false;
 let editSavedListCollapsed = false;
+let editSavedTextsCollapsed = false;
 
 /* -------------------------------------------------------------------------- */
 /*  TableCrafter Edit Tab Saved Tables UI                                     */
@@ -45,6 +46,36 @@ function syncEditSavedListCollapseClass() {
 function setEditSavedListCollapsed(collapsed) {
         editSavedListCollapsed = !!collapsed;
         syncEditSavedListCollapseClass();
+      }
+
+function syncEditSavedTextsCollapseClass() {
+        const listEl = document.getElementById('editSavedTextsList');
+        const selectEl = document.getElementById('editSavedTexts');
+        if (!listEl) {
+          return;
+        }
+        const hasSelection = !!(
+          selectEl &&
+          !selectEl.disabled &&
+          selectEl.value &&
+          String(selectEl.value).trim()
+        );
+        const shouldCollapse =
+          hasSelection && editSavedTextsCollapsed && !listEl.classList.contains('disabled');
+        if (shouldCollapse) {
+          listEl.classList.add('collapsed');
+          listEl.setAttribute('aria-expanded', 'false');
+          listEl.dataset.collapsed = 'true';
+        } else {
+          listEl.classList.remove('collapsed');
+          listEl.setAttribute('aria-expanded', 'true');
+          listEl.dataset.collapsed = 'false';
+        }
+      }
+
+function setEditSavedTextsCollapsed(collapsed) {
+        editSavedTextsCollapsed = !!collapsed;
+        syncEditSavedTextsCollapseClass();
       }
 
 /* -------------------------------------------------------------------------- */
@@ -149,6 +180,50 @@ function createEditSavedItem(entry, selected, disabled) {
         return item;
       }
 
+function createEditSavedTextItem(entry, selected, disabled) {
+        const item = document.createElement('div');
+        item.className = 'edit-saved-item';
+        if (selected) {
+          item.classList.add('selected');
+        }
+        if (disabled) {
+          item.classList.add('disabled');
+          item.tabIndex = -1;
+          item.setAttribute('aria-disabled', 'true');
+        } else {
+          item.tabIndex = 0;
+          item.setAttribute('aria-disabled', 'false');
+        }
+        const entryId = entry && entry.id ? String(entry.id) : '';
+        item.dataset.value = entryId;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        styleEditListItem(item, entry);
+
+        const label = document.createElement('span');
+        label.className = 'edit-saved-label';
+        label.textContent = entry && entry.name ? entry.name : entryId || 'Texto sin título';
+        item.appendChild(label);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'edit-saved-locate';
+        btn.dataset.value = entryId;
+        btn.title = 'Ver texto';
+        btn.disabled = true;
+        btn.tabIndex = disabled ? -1 : 0;
+        const icon = document.createElement('span');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '📄';
+        btn.appendChild(icon);
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = 'Ver texto';
+        btn.appendChild(sr);
+        item.appendChild(btn);
+        return item;
+      }
+
 function renderEditSavedTablesList(entries, config) {
         const listEl = document.getElementById('editSavedTablesList');
         const selectEl = document.getElementById('editSavedTables');
@@ -217,6 +292,65 @@ function renderEditSavedTablesList(entries, config) {
         syncEditSavedListCollapseClass();
       }
 
+function renderEditSavedTextsList(entries, config) {
+        const listEl = document.getElementById('editSavedTextsList');
+        const selectEl = document.getElementById('editSavedTexts');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const data = Array.isArray(entries) ? entries : [];
+        const options = config || {};
+        const disabled = !!options.disabled;
+        const selectedValue = options.selectedValue ? String(options.selectedValue) : '';
+        listEl.innerHTML = '';
+        listEl.setAttribute('role', 'listbox');
+        listEl.setAttribute('aria-multiselectable', 'false');
+        listEl.classList.toggle('disabled', disabled);
+        listEl.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+        if (!selectEl.disabled && disabled) {
+          selectEl.disabled = true;
+        }
+
+        if (disabled || data.length === 0) {
+          setEditSavedTextsCollapsed(false);
+          const empty = document.createElement('div');
+          empty.className = 'edit-saved-empty';
+          empty.textContent = 'No hay textos guardados';
+          listEl.appendChild(empty);
+          selectEl.innerHTML = '';
+          selectEl.disabled = true;
+          syncEditSavedTextsCollapseClass();
+          return;
+        }
+
+        selectEl.disabled = false;
+        selectEl.innerHTML = '';
+        data.forEach(function(entry) {
+          if (!entry || !entry.id) {
+            return;
+          }
+          const option = document.createElement('option');
+          option.value = String(entry.id);
+          option.textContent = entry.name || entry.id;
+          selectEl.appendChild(option);
+        });
+        if (selectedValue) {
+          selectEl.value = selectedValue;
+        }
+
+        data.forEach(function(entry) {
+          if (!entry || !entry.id) {
+            return;
+          }
+          const isSelected = entry.id === selectedValue;
+          const item = createEditSavedTextItem(entry, isSelected, disabled);
+          listEl.appendChild(item);
+        });
+
+        syncEditSavedTextsHighlight();
+      }
+
 function syncEditSavedTablesHighlight() {
         const listEl = document.getElementById('editSavedTablesList');
         const selectEl = document.getElementById('editSavedTables');
@@ -240,6 +374,51 @@ function syncEditSavedTablesHighlight() {
           }
         });
         syncEditSavedListCollapseClass();
+      }
+
+function syncEditSavedTextsHighlight() {
+        const listEl = document.getElementById('editSavedTextsList');
+        const selectEl = document.getElementById('editSavedTexts');
+        if (!listEl || !selectEl) {
+          return;
+        }
+        const selectedValue = !selectEl.disabled && selectEl.value ? String(selectEl.value) : '';
+        listEl.querySelectorAll('.edit-saved-item').forEach(function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedValue && value === selectedValue) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+        syncEditSavedTextsCollapseClass();
+      }
+
+function initializeSavedTextsUi() {
+        const select = document.getElementById('editSavedTexts');
+        if (select && select.dataset.wordTextBound !== 'true') {
+          select.addEventListener('change', function() {
+            syncEditSavedTextsHighlight();
+          });
+          select.dataset.wordTextBound = 'true';
+        }
+        if (!initializeSavedTextsUi._initialized) {
+          renderEditSavedTextsList([], {});
+          initializeSavedTextsUi._initialized = true;
+        }
+      }
+
+if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSavedTextsUi);
+      } else {
+        initializeSavedTextsUi();
       }
 
 
@@ -269,6 +448,33 @@ function selectEditSavedTable(value) {
           return;
         }
         if (select.disabled) {
+          return;
+        }
+        const normalized = value ? String(value) : '';
+        let hasMatch = false;
+        if (select.options && select.options.length) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value === normalized) {
+              hasMatch = true;
+            }
+          });
+        }
+        if (!normalized || !hasMatch) {
+          select.value = '';
+          const event = new Event('change', { bubbles: true });
+          select.dispatchEvent(event);
+          return;
+        }
+        if (select.value !== normalized) {
+          select.value = normalized;
+        }
+        const event = new Event('change', { bubbles: true });
+        select.dispatchEvent(event);
+      }
+
+function selectEditSavedText(value) {
+        const select = document.getElementById('editSavedTexts');
+        if (!select || select.disabled) {
           return;
         }
         const normalized = value ? String(value) : '';
@@ -341,10 +547,15 @@ function resetEditTabView(options) {
           if (select) {
             select.value = '';
           }
+          const textSelect = document.getElementById('editSavedTexts');
+          if (textSelect) {
+            textSelect.value = '';
+          }
           if (opts.clearEditingId !== false) {
             editingId = '';
           }
           setEditSavedListCollapsed(false);
+          setEditSavedTextsCollapsed(false);
         } else if (opts.clearEditingId) {
           editingId = '';
         }
@@ -403,6 +614,7 @@ function resetEditTabView(options) {
           updateFormulasToggle.checked = true;
         }
         syncEditSavedTablesHighlight();
+        syncEditSavedTextsHighlight();
       }
 
 function clearEditRangeUI() {
@@ -1081,7 +1293,9 @@ const TableCrafterEditTab = Object.freeze({
         resetView: resetEditTabView,
         loadActiveRange: loadEditActiveRange,
         applyFormat: handleEditApplyFormat,
-        saveTable: handleEditSaveAction
+        saveTable: handleEditSaveAction,
+        selectSavedText: selectEditSavedText,
+        renderSavedTexts: renderEditSavedTextsList
       });
 
 window.TableCrafterEditTab = TableCrafterEditTab;
