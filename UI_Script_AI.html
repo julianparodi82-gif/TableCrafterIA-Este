@@ -104,7 +104,8 @@
         { value: 'es', label: 'Español' },
         { value: 'en', label: 'Inglés' },
         { value: 'pt', label: 'Portugués' },
-        { value: 'fr', label: 'Francés' }
+        { value: 'fr', label: 'Francés' },
+        { value: 'other', label: 'Otro' }
       ]);
       const REPORT_OUTPUT_LANGUAGE_SET = REPORT_OUTPUT_LANGUAGE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
@@ -115,10 +116,15 @@
         { value: 'neutral', label: 'Neutral profesional' },
         { value: 'executive', label: 'Resumen ejecutivo' },
         { value: 'friendly', label: 'Cercano y motivador' },
-        { value: 'analytical', label: 'Analítico y detallado' }
+        { value: 'analytical', label: 'Analítico y detallado' },
+        { value: 'custom', label: 'Personalizado' }
       ]);
       const REPORT_TONE_SET = REPORT_TONE_OPTIONS.reduce(function(map, option) {
         map[option.value] = true;
+        return map;
+      }, {});
+      const REPORT_TONE_LABELS = REPORT_TONE_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
         return map;
       }, {});
       const REPORT_OUTPUT_LANGUAGE_TOOLTIPS = Object.freeze({
@@ -126,13 +132,15 @@
         es: 'Redacta todo el reporte en español neutro.',
         en: 'Entrega el reporte completo en inglés profesional.',
         pt: 'Genera cada sección en portugués.',
-        fr: 'Produce el reporte final en francés.'
+        fr: 'Produce el reporte final en francés.',
+        other: 'Define manualmente el idioma exacto en el que deseas el reporte.'
       });
       const REPORT_TONE_TOOLTIPS = Object.freeze({
         neutral: 'Mantiene un tono formal y equilibrado para cualquier audiencia.',
         executive: 'Resume hallazgos con foco directivo y conclusiones rápidas.',
         friendly: 'Utiliza un lenguaje cercano y motivador para equipos.',
-        analytical: 'Profundiza en datos y justificativos con detalle.'
+        analytical: 'Profundiza en datos y justificativos con detalle.',
+        custom: 'Describe con tus palabras el estilo comunicacional que necesitas.'
       });
       const REPORT_SUMMARY_LENGTH_TOOLTIPS = Object.freeze({
         concise: 'Entre 1 y 2 oraciones con los resultados clave. Ej: "Ventas +12% vs. objetivo trimestral."',
@@ -174,6 +182,10 @@
         map[option.value] = true;
         return map;
       }, {});
+      const REPORT_PERSONA_LABELS = REPORT_PERSONA_OPTIONS.reduce(function(map, option) {
+        map[option.value] = option.label;
+        return map;
+      }, {});
       const REPORT_PERSONA_TOOLTIPS = Object.freeze({
         auto: 'La IA elige el perfil adecuado según tablas y público objetivo.',
         executive: 'Enfatiza visión global, riesgos y próximos pasos para la dirección.',
@@ -192,6 +204,8 @@
         persona: 'Perfil profesional'
       });
       const REPORT_CUSTOMIZATION_OPTIONS = Object.freeze(['outputLanguage', 'tone', 'persona']);
+      const ASK_TONE_DEFAULT = REPORT_TONE_DEFAULT;
+      const ASK_PERSONA_DEFAULT = REPORT_PERSONA_DEFAULT;
       const OPTIONAL_COMMENT_HINT_TEXT =
         'Completar esta descripción de la mejor forma posible ayuda a que la IA entienda mejor.';
       const REPORT_FEATURE_LABELS = REPORT_FEATURE_OPTIONS.reduce(function(map, option) {
@@ -1076,6 +1090,23 @@ function sanitizeReportFileName(value) {
         return text;
       }
 
+function updateReportDateTooltip() {
+        const label = document.getElementById('aiReportDateToggleLabel');
+        if (!label) {
+          return;
+        }
+        const input = document.getElementById('aiReportFileName');
+        const rawValue = input ? input.value : '';
+        const baseName = sanitizeReportFileName(rawValue) || 'Reporte';
+        const suffix = getReportDateSuffix().replace(/^_/, '');
+        const extension = getCurrentReportExtension() || 'pdf';
+        let example = baseName + '_' + suffix;
+        if (extension) {
+          example += '.' + extension;
+        }
+        label.dataset.tooltip = 'Agrega la fecha al final del nombre del archivo. Ej: ' + example;
+      }
+
 function updateReportFileExtension() {
         const preview = document.getElementById('aiReportFilePreview');
         if (!preview) {
@@ -1089,12 +1120,15 @@ function updateReportFileExtension() {
         let finalName = '';
         if (sanitizedBase) {
           finalName = sanitizedBase + suffix;
-          if (ext) {
-            finalName += '.' + ext;
-          }
+        } else if (suffix) {
+          finalName = suffix.slice(1);
+        }
+        if (finalName && ext) {
+          finalName += '.' + ext;
         }
         preview.textContent = finalName || '—';
         preview.dataset.empty = finalName ? 'false' : 'true';
+        updateReportDateTooltip();
       }
 
 function handleReportFileDateToggle(checked) {
@@ -2172,7 +2206,19 @@ function getReportFeatureAssociationOptions() {
           }
           return map;
         }, Object.create(null));
-        if (!hasAllOption) {
+        if (hasAllOption) {
+          cache.forEach(function(entry) {
+            if (!entry || !entry.id) {
+              return;
+            }
+            const label = entry.name || entry.fullRangeA1 || entry.id;
+            if (allowedSet[entry.id]) {
+              return;
+            }
+            allowedSet[entry.id] = true;
+            entries.push({ id: entry.id, name: label });
+          });
+        } else {
           normalizedIds.forEach(function(id) {
             if (!id || id === ALL_TABLES_OPTION_VALUE) {
               return;
@@ -2182,6 +2228,9 @@ function getReportFeatureAssociationOptions() {
               return;
             }
             const label = entry.name || entry.fullRangeA1 || entry.id;
+            if (allowedSet[entry.id]) {
+              return;
+            }
             allowedSet[entry.id] = true;
             entries.push({ id: entry.id, name: label });
           });
@@ -2189,8 +2238,6 @@ function getReportFeatureAssociationOptions() {
         let message = '';
         if (normalizedIds.length === 0) {
           message = 'Selecciona tablas en la parte superior para asociarlas a cada característica.';
-        } else if (hasAllOption) {
-          message = 'Para asociar tablas específicas, elige tablas individuales en la parte superior.';
         } else if (entries.length === 0) {
           message = 'Las tablas seleccionadas ya no están disponibles. Actualiza la lista e inténtalo nuevamente.';
         }
@@ -2202,13 +2249,94 @@ function getReportFeatureAssociationOptions() {
         };
       }
 
+function getFeatureAssociationListForSelect(select) {
+        if (!select) {
+          return null;
+        }
+        const feature = select.getAttribute('data-feature-instance-table-select');
+        const index = select.getAttribute('data-instance-index');
+        if (!feature || index === null) {
+          return null;
+        }
+        const wrapper = typeof select.closest === 'function'
+          ? select.closest('[data-feature-instance-table-select-wrapper="' + feature + '"]')
+          : null;
+        if (wrapper) {
+          const withinWrapper = wrapper.querySelector(
+            '[data-feature-instance-table-list="' + feature + '"][data-instance-index="' + index + '"]'
+          );
+          if (withinWrapper) {
+            return withinWrapper;
+          }
+        }
+        return document.querySelector(
+          '[data-feature-instance-table-list="' + feature + '"][data-instance-index="' + index + '"]'
+        );
+      }
+
+function syncFeatureAssociationListFromSelect(select) {
+        const list = getFeatureAssociationListForSelect(select);
+        if (!list) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        getSelectedOptionValues(select).forEach(function(value) {
+          selectedSet[String(value)] = true;
+        });
+        const items = list.querySelectorAll('.ai-feature-association-item');
+        items.forEach(function(item) {
+          if (!item || !item.dataset) {
+            return;
+          }
+          const value = item.dataset.value ? String(item.dataset.value) : '';
+          const isSelected = !!selectedSet[value];
+          item.classList.toggle('selected', isSelected);
+          item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        });
+      }
+
+function setFeatureAssociationListDisabled(select, disabled) {
+        const list = getFeatureAssociationListForSelect(select);
+        if (!list) {
+          return;
+        }
+        const isDisabled = !!disabled;
+        list.classList.toggle('disabled', isDisabled);
+        list.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
+        const items = list.querySelectorAll('.ai-feature-association-item');
+        items.forEach(function(item) {
+          if (!item) {
+            return;
+          }
+          item.tabIndex = isDisabled ? -1 : 0;
+        });
+      }
+
 function populateFeatureTableSelect(select, options, selectedValues) {
         if (!select) {
           return;
         }
-        const previousScroll = select.scrollTop;
-        const previousFocus = document.activeElement === select;
+        const list = getFeatureAssociationListForSelect(select);
+        let previousScroll = 0;
+        let previousFocusValue = '';
+        if (list) {
+          previousScroll = list.scrollTop;
+          const focusedItem = list.querySelector('.ai-feature-association-item:focus');
+          if (focusedItem && focusedItem.dataset && focusedItem.dataset.value) {
+            previousFocusValue = String(focusedItem.dataset.value);
+          }
+          list.setAttribute('role', 'listbox');
+          list.setAttribute('aria-multiselectable', 'true');
+        }
         select.innerHTML = '';
+        const selectedSet = Object.create(null);
+        if (Array.isArray(selectedValues)) {
+          selectedValues.forEach(function(value) {
+            if (value) {
+              selectedSet[String(value)] = true;
+            }
+          });
+        }
         options.forEach(function(option) {
           if (!option || !option.id) {
             return;
@@ -2216,24 +2344,78 @@ function populateFeatureTableSelect(select, options, selectedValues) {
           const opt = document.createElement('option');
           opt.value = option.id;
           opt.textContent = option.name || option.id;
+          opt.selected = !!selectedSet[String(option.id)];
           select.appendChild(opt);
         });
-        const selectedSet = Object.create(null);
-        if (Array.isArray(selectedValues)) {
-          selectedValues.forEach(function(value) {
-            selectedSet[String(value)] = true;
+        if (list) {
+          list.innerHTML = '';
+          options.forEach(function(option) {
+            if (!option || !option.id) {
+              return;
+            }
+            const item = document.createElement('div');
+            item.className = 'ai-feature-association-item';
+            item.dataset.value = option.id;
+            item.setAttribute('role', 'option');
+            item.tabIndex = 0;
+            const label = document.createElement('span');
+            label.className = 'ai-feature-association-label';
+            label.textContent = option.name || option.id;
+            item.appendChild(label);
+            const check = document.createElement('span');
+            check.className = 'ai-feature-association-check';
+            item.appendChild(check);
+            list.appendChild(item);
           });
         }
-        Array.prototype.forEach.call(select.options, function(option) {
-          if (!option || !option.value) {
-            return;
+        syncFeatureAssociationListFromSelect(select);
+        if (list) {
+          if (previousFocusValue) {
+            const focusItem = list.querySelector(
+              '.ai-feature-association-item[data-value="' + previousFocusValue + '"]'
+            );
+            if (focusItem) {
+              focusItem.focus();
+            }
           }
-          option.selected = !!selectedSet[option.value];
-        });
-        if (previousFocus) {
-          select.focus();
+          list.scrollTop = previousScroll;
         }
-        select.scrollTop = previousScroll;
+      }
+
+function toggleFeatureAssociationValue(feature, index, value) {
+        if (!feature) {
+          return;
+        }
+        const normalizedIndex = index === undefined || index === null ? '' : String(index);
+        if (!normalizedIndex) {
+          return;
+        }
+        const select = document.querySelector(
+          '[data-feature-instance-table-select="' + feature + '"][data-instance-index="' + normalizedIndex + '"]'
+        );
+        if (!select || select.disabled) {
+          return;
+        }
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        const options = select.options ? Array.prototype.slice.call(select.options) : [];
+        if (!options.length) {
+          return;
+        }
+        let targetOption = null;
+        options.forEach(function(option) {
+          if (option && option.value === targetValue) {
+            targetOption = option;
+          }
+        });
+        if (!targetOption) {
+          return;
+        }
+        targetOption.selected = !targetOption.selected;
+        syncFeatureAssociationListFromSelect(select);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
 function bindChartTypeTooltip(select) {
@@ -2397,15 +2579,17 @@ function refreshReportFeatureOption(feature) {
             state.instanceListEnumStyles = normalizedListEnumStyles.slice();
           }
           const associationOptions = getReportFeatureAssociationOptions();
+          const hasEntries = associationOptions.entries.length > 0;
+          const canAssociate = !!state.selected && hasEntries;
           let normalizedTableToggles = normalizeFeatureTableToggleArray(state.instanceTablesEnabled);
           let normalizedTableSelections = normalizeFeatureTableSelectionArray(
             state.instanceTables,
-            associationOptions.hasAllOption ? null : associationOptions.allowedSet
+            associationOptions.allowedSet
           );
           if (!state.selected) {
             normalizedTableToggles = createEmptyFeatureTableToggleArray();
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
-          } else if (associationOptions.entries.length === 0 && !associationOptions.hasAllOption) {
+          } else if (!hasEntries) {
             normalizedTableSelections = createEmptyFeatureTableSelectionArray();
           }
           const quantityValue = clampReportFeatureQuantity(state.quantity, feature);
@@ -2486,8 +2670,6 @@ function refreshReportFeatureOption(feature) {
               enumStyleSelect.value = styleValue;
               enumStyleSelect.disabled = !withinRange || enumerateValue !== 'yes';
             }
-            const canAssociate =
-              !!state.selected && associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
             if (tableToggle) {
               const toggleEnabled = withinRange && !!state.selected;
               tableToggle.disabled = !toggleEnabled;
@@ -2498,27 +2680,43 @@ function refreshReportFeatureOption(feature) {
                 normalizedTableSelections[index] = [];
               }
             }
-            const shouldShowTableSelect =
-              withinRange && normalizedTableToggles[index] && canAssociate;
+            const shouldShowTableSelect = withinRange && normalizedTableToggles[index];
             if (tableSelectWrapper) {
               tableSelectWrapper.classList.toggle('ai-hidden', !shouldShowTableSelect);
             }
             if (tableSelect) {
               if (shouldShowTableSelect) {
-                populateFeatureTableSelect(
-                  tableSelect,
-                  associationOptions.entries,
-                  normalizedTableSelections[index]
-                );
-                tableSelect.disabled = false;
+                if (hasEntries) {
+                  populateFeatureTableSelect(
+                    tableSelect,
+                    associationOptions.entries,
+                    normalizedTableSelections[index]
+                  );
+                } else {
+                  tableSelect.innerHTML = '';
+                  const tableList = getFeatureAssociationListForSelect(tableSelect);
+                  if (tableList) {
+                    tableList.innerHTML = '';
+                  }
+                }
+                tableSelect.disabled = !canAssociate;
+                setFeatureAssociationListDisabled(tableSelect, !canAssociate);
               } else {
                 tableSelect.innerHTML = '';
                 tableSelect.disabled = true;
+                const tableList = getFeatureAssociationListForSelect(tableSelect);
+                if (tableList) {
+                  tableList.innerHTML = '';
+                }
+                setFeatureAssociationListDisabled(tableSelect, true);
               }
             }
             if (tableEmptyMessage) {
               const shouldShowEmpty =
-                withinRange && normalizedTableToggles[index] && !!associationOptions.message && !canAssociate;
+                withinRange &&
+                normalizedTableToggles[index] &&
+                !!associationOptions.message &&
+                (!canAssociate || !hasEntries);
               tableEmptyMessage.classList.toggle('ai-hidden', !shouldShowEmpty);
               if (shouldShowEmpty) {
                 tableEmptyMessage.textContent = associationOptions.message;
@@ -2745,7 +2943,7 @@ function handleReportFeatureInstanceTableToggle(feature, index, enabled) {
           normalizeFeatureTableSelectionArray(state.instanceTables)
         );
         const associationOptions = getReportFeatureAssociationOptions();
-        const canAssociate = associationOptions.entries.length > 0 && !associationOptions.hasAllOption;
+        const canAssociate = associationOptions.entries.length > 0;
         if (!enabled) {
           toggles[safeIndex] = false;
           selections[safeIndex] = [];
@@ -2770,7 +2968,7 @@ function handleReportFeatureInstanceTableSelection(feature, index, values) {
           return;
         }
         const associationOptions = getReportFeatureAssociationOptions();
-        if (associationOptions.hasAllOption || associationOptions.entries.length === 0) {
+        if (associationOptions.entries.length === 0) {
           return;
         }
         const safeIndex = Math.max(0, Math.min(REPORT_FEATURE_MAX_QUANTITY - 1, parsedIndex));
@@ -2931,6 +3129,56 @@ function initializeReportFeatureControls() {
             });
             select.dataset.bound = 'true';
           });
+          const tableLists = option.querySelectorAll(
+            '[data-feature-instance-table-list="' + feature + '"]'
+          );
+          tableLists.forEach(function(list) {
+            if (!list || list.dataset.bound) {
+              return;
+            }
+            list.addEventListener('click', function(event) {
+              if (list.classList.contains('disabled') || list.getAttribute('aria-disabled') === 'true') {
+                return;
+              }
+              const target = event.target;
+              if (!target) {
+                return;
+              }
+              const item = typeof target.closest === 'function' ? target.closest('.ai-feature-association-item') : null;
+              if (!item || !item.dataset || !item.dataset.value) {
+                return;
+              }
+              const index = list.dataset ? list.dataset.instanceIndex : undefined;
+              if (index === undefined || index === '') {
+                return;
+              }
+              toggleFeatureAssociationValue(feature, index, item.dataset.value);
+            });
+            list.addEventListener('keydown', function(event) {
+              if (
+                list.classList.contains('disabled') ||
+                list.getAttribute('aria-disabled') === 'true' ||
+                (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar')
+              ) {
+                return;
+              }
+              const target = event.target;
+              if (!target) {
+                return;
+              }
+              const item = typeof target.closest === 'function' ? target.closest('.ai-feature-association-item') : null;
+              if (!item || !item.dataset || !item.dataset.value) {
+                return;
+              }
+              event.preventDefault();
+              const index = list.dataset ? list.dataset.instanceIndex : undefined;
+              if (index === undefined || index === '') {
+                return;
+              }
+              toggleFeatureAssociationValue(feature, index, item.dataset.value);
+            });
+            list.dataset.bound = 'true';
+          });
           const summaryLengthSelector = option.querySelector(
             '[data-feature-summary-length="' + feature + '"]'
           );
@@ -2996,10 +3244,24 @@ function normalizePersonaCustomNote(value) {
         return String(value).trim();
       }
 
+function normalizeOutputLanguageCustomValue(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
+function normalizeToneCustomValue(value) {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
 function createDefaultCustomizationState() {
         return {
-          outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT },
-          tone: { enabled: false, value: REPORT_TONE_DEFAULT },
+          outputLanguage: { enabled: false, value: REPORT_OUTPUT_LANGUAGE_DEFAULT, customValue: '' },
+          tone: { enabled: false, value: REPORT_TONE_DEFAULT, customValue: '' },
           persona: { enabled: false, value: REPORT_PERSONA_DEFAULT, customNote: '' }
         };
       }
@@ -3012,10 +3274,14 @@ function normalizeReportCustomizationInput(source) {
         if (source.outputLanguage && typeof source.outputLanguage === 'object') {
           base.outputLanguage.enabled = !!source.outputLanguage.enabled;
           base.outputLanguage.value = normalizeOutputLanguageValue(source.outputLanguage.value);
+          base.outputLanguage.customValue = normalizeOutputLanguageCustomValue(
+            source.outputLanguage.customValue
+          );
         }
         if (source.tone && typeof source.tone === 'object') {
           base.tone.enabled = !!source.tone.enabled;
           base.tone.value = normalizeToneValue(source.tone.value);
+          base.tone.customValue = normalizeToneCustomValue(source.tone.customValue);
         }
         if (source.persona && typeof source.persona === 'object') {
           base.persona.enabled = !!source.persona.enabled;
@@ -3024,13 +3290,21 @@ function normalizeReportCustomizationInput(source) {
         }
         if (!base.outputLanguage.enabled) {
           base.outputLanguage.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+          base.outputLanguage.customValue = '';
         }
         if (!base.tone.enabled) {
           base.tone.value = REPORT_TONE_DEFAULT;
+          base.tone.customValue = '';
         }
         if (!base.persona.enabled) {
           base.persona.value = REPORT_PERSONA_DEFAULT;
           base.persona.customNote = '';
+        }
+        if (base.outputLanguage.value !== 'other') {
+          base.outputLanguage.customValue = '';
+        }
+        if (base.tone.value !== 'custom') {
+          base.tone.customValue = '';
         }
         if (base.persona.value !== 'custom') {
           base.persona.customNote = '';
@@ -3038,11 +3312,13 @@ function normalizeReportCustomizationInput(source) {
         return {
           outputLanguage: {
             enabled: base.outputLanguage.enabled,
-            value: base.outputLanguage.value
+            value: base.outputLanguage.value,
+            customValue: base.outputLanguage.customValue
           },
           tone: {
             enabled: base.tone.enabled,
-            value: base.tone.value
+            value: base.tone.value,
+            customValue: base.tone.customValue
           },
           persona: {
             enabled: base.persona.enabled,
@@ -3059,8 +3335,17 @@ function ensureReportCustomizationOption(option) {
         if (!reportCustomizationState[option]) {
           const defaults = createDefaultCustomizationState();
           reportCustomizationState[option] = Object.assign({}, defaults[option]);
+          return reportCustomizationState[option];
         }
-        return reportCustomizationState[option];
+        const defaults = createDefaultCustomizationState();
+        const state = reportCustomizationState[option];
+        const defaultState = defaults[option] || {};
+        Object.keys(defaultState).forEach(function(key) {
+          if (!Object.prototype.hasOwnProperty.call(state, key)) {
+            state[key] = defaultState[key];
+          }
+        });
+        return state;
       }
 
 function getReportCustomizationOptionElement(option) {
@@ -3129,12 +3414,36 @@ function refreshReportCustomizationOption(option) {
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_OUTPUT_LANGUAGE_TOOLTIPS);
           }
+          const customWrapper = element.querySelector('[data-custom-output-language-wrapper]');
+          if (customWrapper) {
+            const shouldShowCustom = isEnabled && normalizeOutputLanguageValue(state.value) === 'other';
+            customWrapper.classList.toggle('ai-hidden', !shouldShowCustom);
+            const customInput = customWrapper.querySelector('[data-custom-output-language-input]');
+            if (customInput) {
+              customInput.disabled = !shouldShowCustom;
+              customInput.required = shouldShowCustom;
+              customInput.value = shouldShowCustom
+                ? normalizeOutputLanguageCustomValue(state.customValue)
+                : '';
+            }
+          }
         } else if (option === 'tone') {
           const select = element.querySelector('[data-custom-select="tone"]');
           if (select) {
             const value = isEnabled ? normalizeToneValue(state.value) : REPORT_TONE_DEFAULT;
             select.value = value;
             bindSelectTooltipWithMap(select, REPORT_TONE_TOOLTIPS);
+          }
+          const customWrapper = element.querySelector('[data-custom-tone-wrapper]');
+          if (customWrapper) {
+            const shouldShowCustom = isEnabled && normalizeToneValue(state.value) === 'custom';
+            customWrapper.classList.toggle('ai-hidden', !shouldShowCustom);
+            const customInput = customWrapper.querySelector('[data-custom-tone-input]');
+            if (customInput) {
+              customInput.disabled = !shouldShowCustom;
+              customInput.required = shouldShowCustom;
+              customInput.value = shouldShowCustom ? normalizeToneCustomValue(state.customValue) : '';
+            }
           }
         } else if (option === 'persona') {
           const select = element.querySelector('[data-custom-select="persona"]');
@@ -3188,8 +3497,10 @@ function handleReportCustomizationSelection(option, checked) {
         if (!state.enabled) {
           if (option === 'outputLanguage') {
             state.value = REPORT_OUTPUT_LANGUAGE_DEFAULT;
+            state.customValue = '';
           } else if (option === 'tone') {
             state.value = REPORT_TONE_DEFAULT;
+            state.customValue = '';
           } else if (option === 'persona') {
             state.value = REPORT_PERSONA_DEFAULT;
             state.customNote = '';
@@ -3207,8 +3518,14 @@ function handleReportCustomizationValueChange(option, value) {
         }
         if (option === 'outputLanguage') {
           state.value = normalizeOutputLanguageValue(value);
+          if (state.value !== 'other') {
+            state.customValue = '';
+          }
         } else if (option === 'tone') {
           state.value = normalizeToneValue(value);
+          if (state.value !== 'custom') {
+            state.customValue = '';
+          }
         } else if (option === 'persona') {
           state.value = normalizePersonaValue(value);
           if (state.value !== 'custom') {
@@ -3217,6 +3534,24 @@ function handleReportCustomizationValueChange(option, value) {
         }
         refreshReportCustomizationOption(option);
         updateReportCustomizationSummary();
+      }
+
+function handleReportCustomizationOutputLanguageCustomChange(value) {
+        const state = ensureReportCustomizationOption('outputLanguage');
+        if (!state.enabled || normalizeOutputLanguageValue(state.value) !== 'other') {
+          state.customValue = '';
+          return;
+        }
+        state.customValue = normalizeOutputLanguageCustomValue(value);
+      }
+
+function handleReportCustomizationToneCustomChange(value) {
+        const state = ensureReportCustomizationOption('tone');
+        if (!state.enabled || normalizeToneValue(state.value) !== 'custom') {
+          state.customValue = '';
+          return;
+        }
+        state.customValue = normalizeToneCustomValue(value);
       }
 
 function handleReportCustomizationPersonaNoteChange(value) {
@@ -3272,6 +3607,24 @@ function initializeReportCustomizationControls() {
               });
               select.dataset.bound = 'true';
             }
+            if (option === 'outputLanguage') {
+              const customInput = wrapper.querySelector('[data-custom-output-language-input]');
+              if (customInput && !customInput.dataset.bound) {
+                customInput.addEventListener('input', function() {
+                  handleReportCustomizationOutputLanguageCustomChange(customInput.value);
+                });
+                customInput.dataset.bound = 'true';
+              }
+            }
+            if (option === 'tone') {
+              const customInput = wrapper.querySelector('[data-custom-tone-input]');
+              if (customInput && !customInput.dataset.bound) {
+                customInput.addEventListener('input', function() {
+                  handleReportCustomizationToneCustomChange(customInput.value);
+                });
+                customInput.dataset.bound = 'true';
+              }
+            }
             if (option === 'persona') {
               const noteInput = wrapper.querySelector('[data-custom-persona-note-input]');
               if (noteInput && !noteInput.dataset.bound) {
@@ -3305,11 +3658,13 @@ function getReportCustomizationPayload() {
         return {
           outputLanguage: {
             enabled: normalized.outputLanguage.enabled,
-            value: normalized.outputLanguage.value
+            value: normalized.outputLanguage.value,
+            customValue: normalized.outputLanguage.customValue
           },
           tone: {
             enabled: normalized.tone.enabled,
-            value: normalized.tone.value
+            value: normalized.tone.value,
+            customValue: normalized.tone.customValue
           },
           persona: {
             enabled: normalized.persona.enabled,
@@ -3317,6 +3672,29 @@ function getReportCustomizationPayload() {
             customNote: normalized.persona.customNote
           }
         };
+      }
+
+function validateReportCustomization(customization) {
+        if (!customization || typeof customization !== 'object') {
+          return '';
+        }
+        if (
+          customization.outputLanguage &&
+          customization.outputLanguage.enabled &&
+          customization.outputLanguage.value === 'other' &&
+          !customization.outputLanguage.customValue
+        ) {
+          return 'Indica el idioma personalizado del reporte.';
+        }
+        if (
+          customization.tone &&
+          customization.tone.enabled &&
+          customization.tone.value === 'custom' &&
+          !customization.tone.customValue
+        ) {
+          return 'Describe el tono personalizado del reporte.';
+        }
+        return '';
       }
 
 function normalizeFeatureId(value) {
@@ -3850,6 +4228,14 @@ async function handleReportFavoriteSave() {
           };
         });
         const customizationPayload = getReportCustomizationPayload();
+        const customizationError = validateReportCustomization(customizationPayload);
+        if (customizationError) {
+          await showMessageModal(customizationError, {
+            title: 'Información requerida',
+            variant: 'warning'
+          });
+          return;
+        }
         const payload = {
           name: favoriteName,
           format: selectedReportFormat,
@@ -4454,6 +4840,89 @@ function updateAiActionState() {
         }
       }
 
+function updateAskCustomizationSummary() {
+        const summary = document.getElementById('aiAskCustomizationSummary');
+        if (!summary) {
+          return;
+        }
+        const toneSelect = document.getElementById('aiAskTone');
+        const personaSelect = document.getElementById('aiAskPersona');
+        const toneValue = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const personaValue = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const toneLabel = REPORT_TONE_LABELS[toneValue] || REPORT_TONE_LABELS[ASK_TONE_DEFAULT];
+        const personaLabel = REPORT_PERSONA_LABELS[personaValue] || REPORT_PERSONA_LABELS[ASK_PERSONA_DEFAULT];
+        const summaryText = 'Tono: ' + toneLabel + ' • Perfil: ' + personaLabel;
+        summary.textContent = summaryText;
+        summary.classList.remove('ai-hidden');
+      }
+
+function updateAskToneCustom() {
+        const toneSelect = document.getElementById('aiAskTone');
+        const customWrapper = document.getElementById('aiAskToneCustomWrapper');
+        const customInput = document.getElementById('aiAskToneCustom');
+        const value = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const shouldShow = value === 'custom';
+        if (customWrapper) {
+          customWrapper.classList.toggle('ai-hidden', !shouldShow);
+        }
+        if (customInput) {
+          customInput.disabled = !shouldShow;
+          customInput.required = shouldShow;
+          if (!shouldShow) {
+            customInput.value = '';
+          }
+        }
+        updateAskCustomizationSummary();
+      }
+
+function updateAskPersonaCustom() {
+        const personaSelect = document.getElementById('aiAskPersona');
+        const customWrapper = document.getElementById('aiAskPersonaCustomWrapper');
+        const customInput = document.getElementById('aiAskPersonaCustom');
+        const value = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const shouldShow = value === 'custom';
+        if (customWrapper) {
+          customWrapper.classList.toggle('ai-hidden', !shouldShow);
+        }
+        if (customInput) {
+          customInput.disabled = !shouldShow;
+          customInput.required = shouldShow;
+          if (!shouldShow) {
+            customInput.value = '';
+          }
+        }
+        updateAskCustomizationSummary();
+      }
+
+function collectAskCustomization() {
+        const toneSelect = document.getElementById('aiAskTone');
+        const personaSelect = document.getElementById('aiAskPersona');
+        const toneValue = toneSelect ? normalizeToneValue(toneSelect.value) : ASK_TONE_DEFAULT;
+        const personaValue = personaSelect ? normalizePersonaValue(personaSelect.value) : ASK_PERSONA_DEFAULT;
+        const toneCustomInput = document.getElementById('aiAskToneCustom');
+        const personaCustomInput = document.getElementById('aiAskPersonaCustom');
+        const toneCustomText = toneCustomInput ? toneCustomInput.value.trim() : '';
+        const personaCustomText = personaCustomInput ? personaCustomInput.value.trim() : '';
+        if (toneValue === 'custom' && !toneCustomText) {
+          return {
+            error: 'Describe el tono personalizado antes de enviar la consulta.',
+            focus: toneCustomInput
+          };
+        }
+        if (personaValue === 'custom' && !personaCustomText) {
+          return {
+            error: 'Describe el perfil profesional personalizado antes de enviar la consulta.',
+            focus: personaCustomInput
+          };
+        }
+        return {
+          tone: toneValue,
+          toneCustom: toneValue === 'custom' ? toneCustomText : '',
+          persona: personaValue,
+          personaCustom: personaValue === 'custom' ? personaCustomText : ''
+        };
+      }
+
 
 
       document.getElementById('editSavedTables').addEventListener('change', function() {
@@ -4640,6 +5109,17 @@ function updateAiActionState() {
           });
           return;
         }
+        const customization = collectAskCustomization();
+        if (customization && customization.error) {
+          showMessageModal(customization.error, {
+            title: 'Dato faltante',
+            variant: 'error'
+          });
+          if (customization.focus && typeof customization.focus.focus === 'function') {
+            customization.focus.focus();
+          }
+          return;
+        }
         const payload = selectedValues.indexOf(ALL_TABLES_OPTION_VALUE) !== -1 ? ALL_TABLES_OPTION_VALUE : selectedValues;
         const answerField = document.getElementById('answerBox');
         if (answerField) {
@@ -4656,13 +5136,17 @@ function updateAiActionState() {
               answerField.value = res.answer || '';
             }
           }
-        }).askQuestion(payload, question);
+        }).askQuestion(payload, question, customization || null);
       });
 
       document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        const askSection = document.getElementById('aiAskSection');
+        if (askSection) {
+          setupCollapsibleControls(askSection);
+        }
         const aiSelect = document.getElementById('aiSavedTables');
         const aiList = document.getElementById('aiSavedTablesList');
         if (aiSelect) {
@@ -4702,6 +5186,16 @@ function updateAiActionState() {
         if (aiActionSelect) {
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
+        }
+        const askToneSelect = document.getElementById('aiAskTone');
+        if (askToneSelect) {
+          askToneSelect.addEventListener('change', updateAskToneCustom);
+          updateAskToneCustom();
+        }
+        const askPersonaSelect = document.getElementById('aiAskPersona');
+        if (askPersonaSelect) {
+          askPersonaSelect.addEventListener('change', updateAskPersonaCustom);
+          updateAskPersonaCustom();
         }
         applyReportFeatureTooltips();
         applyReportChartTypeTooltips();

@@ -15,7 +15,7 @@
         margin: 0;
         padding: 0;
         background: var(--tc-body-gradient);
-        color: var(--tc-text);
+        color: #000000;
         line-height: 1.5;
         overflow: hidden;
         transition: background var(--tc-transition-duration) ease, color var(--tc-transition-duration) ease;
@@ -26,8 +26,8 @@
         align-items: stretch;
       }
       body.theme-tablecrafter {
-        --tc-text: #0F3A26;
-        --tc-muted: #3C6F55;
+        --tc-text: #000000;
+        --tc-muted: #000000;
         --tc-primary: #2EA37D;
         --tc-primary-dark: #1F7D5A;
         --tc-primary-light: #DFF6EB;
@@ -47,8 +47,8 @@
         --tc-body-gradient: linear-gradient(160deg, #F4FBF6 0%, #E1F4E7 48%, #EEF9F1 100%);
       }
       body.theme-wordcrafter {
-        --tc-text: #0F2438;
-        --tc-muted: #39536B;
+        --tc-text: #000000;
+        --tc-muted: #000000;
         --tc-primary: #2AB0FF;
         --tc-primary-dark: #1C8DD4;
         --tc-primary-light: #D9F2FF;
@@ -68,14 +68,14 @@
         --tc-body-gradient: linear-gradient(160deg, #F0F7FF 0%, #D8EFFF 48%, #E8F7FF 100%);
       }
       .sidebar-scroll-wrapper {
-        direction: rtl;
+        direction: ltr;
+        writing-mode: horizontal-tb;
         overflow-y: auto;
         overflow-x: hidden;
         padding: 16px;
         box-sizing: border-box;
         width: 100%;
         max-height: 100vh;
-        scrollbar-gutter: stable both-edges;
         flex: 1 1 auto;
       }
       .tab-btn,
@@ -105,7 +105,7 @@
         margin-bottom: 16px;
         font-size: 20px;
         font-weight: 600;
-        color: var(--tc-primary);
+        color: #000000;
       }
       .container {
         background: transparent;
@@ -222,7 +222,7 @@
       .tab-btn:hover {
         background-color: var(--tc-primary-light);
         border-color: var(--tc-primary);
-        color: var(--tc-primary-dark);
+        color: #000000;
         box-shadow: var(--tc-shadow-soft);
       }
       .tab-btn.active {
@@ -243,7 +243,7 @@
         left: 50%;
         bottom: calc(100% + 8px);
         transform: translateX(-50%);
-        background: rgba(17, 24, 39, 0.92);
+        background: var(--tc-tooltip-bg);
         color: #F9FAFB;
         padding: 8px 10px;
         border-radius: 6px;
@@ -258,6 +258,7 @@
         z-index: 12;
         box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
         white-space: pre-line;
+        text-transform: none;
       }
       .tab-btn[data-tooltip]::before {
         content: '';
@@ -267,7 +268,7 @@
         transform: translateX(-50%);
         border-width: 6px;
         border-style: solid;
-        border-color: rgba(17, 24, 39, 0.92) transparent transparent transparent;
+        border-color: var(--tc-tooltip-bg) transparent transparent transparent;
         opacity: 0;
         transition: opacity 0.15s ease;
         pointer-events: none;
@@ -276,17 +277,6 @@
       .tab-btn[data-tooltip]:hover::after,
       .tab-btn[data-tooltip]:hover::before {
         opacity: 1;
-      }
-      .tab-nav-primary .tab-btn[data-tooltip]::after {
-        bottom: auto;
-        top: calc(100% + 8px);
-        transform: translateX(-50%);
-      }
-      .tab-nav-primary .tab-btn[data-tooltip]::before {
-        bottom: auto;
-        top: calc(100% + 4px);
-        transform: translateX(-50%) rotate(180deg);
-        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
       .tc-tooltip-target[data-tooltip],
       .ai-feature-chip-label[data-tooltip] {
@@ -314,6 +304,10 @@
         pointer-events: none;
         z-index: 14;
         white-space: pre-line;
+        text-transform: none;
+      }
+      .ai-feature-association-toggle.tc-tooltip-target[data-tooltip]::after {
+        text-transform: none;
       }
       .tc-tooltip-target[data-tooltip]::before,
       .ai-feature-chip-label[data-tooltip]::before {
@@ -331,18 +325,20 @@
       }
       .tc-tooltip-target[data-tooltip]:hover::after,
       .tc-tooltip-target[data-tooltip]:hover::before,
-      .tc-tooltip-target[data-tooltip]:focus::after,
-      .tc-tooltip-target[data-tooltip]:focus::before,
-      .tc-tooltip-target[data-tooltip]:focus-visible::after,
-      .tc-tooltip-target[data-tooltip]:focus-visible::before,
       .ai-feature-chip-label[data-tooltip]:hover::after,
-      .ai-feature-chip-label[data-tooltip]:hover::before,
-      .ai-feature-chip-label[data-tooltip]:focus::after,
-      .ai-feature-chip-label[data-tooltip]:focus::before,
-      .ai-feature-chip-label[data-tooltip]:focus-visible::after,
-      .ai-feature-chip-label[data-tooltip]:focus-visible::before {
+      .ai-feature-chip-label[data-tooltip]:hover::before {
         opacity: 1;
         transform: translateY(0);
+      }
+      .ai-report-order-label.tc-tooltip-target[data-tooltip]::after {
+        bottom: auto;
+        top: calc(100% + 8px);
+        transform: translateY(-4px);
+      }
+      .ai-report-order-label.tc-tooltip-target[data-tooltip]::before {
+        bottom: auto;
+        top: calc(100% + 4px);
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
       .tab-content {
         display: none;
@@ -485,7 +481,7 @@
       .theme-message-close:hover,
       .theme-message-close:focus {
         background-color: var(--tc-primary-soft);
-        color: var(--tc-primary-dark);
+        color: #000000;
         outline: none;
       }
       .theme-message-content {
@@ -550,15 +546,15 @@
       .theme-message-optout input:checked + .theme-message-optout-switch .theme-message-optout-thumb {
         transform: translateX(16px);
       }
-      .tab-btn .tab-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
+      .tab-btn--tooltip-below[data-tooltip]::after {
+        top: calc(100% + 8px);
+        bottom: auto;
+        transform: translateX(-50%);
       }
-      .tab-btn .favorite-icon {
-        color: #D4AF37;
-        font-size: 11px;
-        line-height: 1;
+      .tab-btn--tooltip-below[data-tooltip]::before {
+        top: calc(100% + 4px);
+        bottom: auto;
+        border-color: transparent transparent var(--tc-tooltip-bg) transparent;
       }
       .section {
         margin-bottom: 22px;
@@ -588,6 +584,13 @@
         justify-content: space-between;
         gap: 12px;
       }
+      .tc-card-footer {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .tc-card-footer--right {
+        justify-content: flex-end;
+      }
       .tc-card-title {
         display: flex;
         align-items: flex-start;
@@ -603,7 +606,7 @@
         height: 36px;
         border-radius: 10px;
         background: var(--tc-primary-light);
-        color: var(--tc-primary);
+        color: #000000;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -675,7 +678,7 @@
         border-radius: 999px;
         font-size: 12px;
         background: var(--tc-primary-light);
-        color: var(--tc-primary);
+        color: #000000;
       }
       .tc-card-actions {
         display: flex;
@@ -787,7 +790,7 @@
       .edit-saved-group-label {
         font-weight: 700;
         font-size: 15px;
-        color: #1F2937;
+        color: #000000;
         padding: 4px 12px 0;
       }
       .edit-saved-item {
@@ -843,7 +846,7 @@
       }
       .edit-saved-empty {
         padding: 16px 12px;
-        color: #6B7280;
+        color: #000000;
         font-size: 14px;
         text-align: center;
       }
@@ -899,7 +902,7 @@
       .ai-report-btn {
         border: 1px solid var(--tc-primary);
         background-color: var(--tc-primary-soft);
-        color: var(--tc-primary-dark);
+        color: #000000;
         padding: 6px 12px;
         border-radius: 20px;
         font-size: 13px;
@@ -943,7 +946,7 @@
         padding: 2px 10px;
         border-radius: 999px;
         background-color: var(--tc-primary-soft);
-        color: var(--tc-primary-dark);
+        color: #000000;
         font-size: 12px;
         font-weight: 600;
       }
@@ -1004,7 +1007,7 @@
         gap: 8px;
         margin-top: 12px;
         font-size: 14px;
-        color: #374151;
+        color: #000000;
       }
       .ai-report-description-toggle input {
         margin: 0;
@@ -1035,18 +1038,24 @@
         gap: 6px;
         margin-top: -4px;
         font-size: 12px;
-        color: #4B5563;
+        color: #000000;
       }
       .ai-report-date-toggle input {
         margin: 0;
       }
       .ai-report-file-preview {
         font-size: 12px;
-        color: #6B7280;
+        color: #000000;
         margin-top: -2px;
       }
       .ai-report-file-preview[data-empty='true'] {
-        color: #9CA3AF;
+        color: #000000;
+      }
+      .ai-question-hint {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: var(--tc-muted);
+        line-height: 1.45;
       }
       .ai-report-features {
         margin-top: 12px;
@@ -1139,6 +1148,19 @@
         visibility: visible;
         transform: translateY(0);
       }
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::after {
+        top: auto;
+        bottom: calc(100% + 8px);
+      }
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint]::after {
+        transform: translateY(6px);
+      }
+      .ai-feature-description.ai-comment-hint[data-comment-hint][data-comment-visible='true']::before,
+      .ai-feature-description.ai-comment-hint[data-comment-hint][data-comment-visible='true']::after {
+        transform: translateY(0);
+      }
       @media (prefers-reduced-motion: reduce) {
         .ai-comment-hint[data-comment-hint]::before,
         .ai-comment-hint[data-comment-hint]::after {
@@ -1167,7 +1189,7 @@
       .ai-feature-chip.is-selected {
         border-color: var(--tc-primary);
         background-color: var(--tc-primary-light);
-        color: var(--tc-primary-dark);
+        color: #000000;
         box-shadow: 0 1px 2px var(--tc-primary-soft);
       }
       .ai-feature-chip.is-selected .ai-feature-chip-check {
@@ -1196,7 +1218,7 @@
         text-align: center;
         font-size: 13px;
         font-weight: 600;
-        color: #1F2937;
+        color: #000000;
         background-color: #FFFFFF;
       }
       .ai-feature-extra {
@@ -1245,7 +1267,7 @@
         display: block;
         font-size: 11px;
         font-weight: 600;
-        color: #4B5563;
+        color: #000000;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         margin-bottom: 4px;
@@ -1285,6 +1307,10 @@
         gap: 6px;
         font-size: 12px;
         color: var(--tc-muted);
+        cursor: pointer;
+      }
+      .ai-feature-association-toggle.tc-tooltip-target[data-tooltip] {
+        cursor: pointer;
       }
       .ai-feature-association-toggle input {
         margin: 0;
@@ -1294,16 +1320,73 @@
         flex-direction: column;
         gap: 6px;
       }
-      .ai-feature-association-select select {
-        border-radius: 8px;
+      .ai-feature-association-list {
         border: 1px solid var(--tc-border);
+        border-radius: 8px;
         background-color: var(--tc-surface);
-        font-size: 12px;
-        padding: 6px 10px;
-        min-height: 88px;
+        padding: 6px 4px;
+        max-height: 180px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        scrollbar-gutter: stable;
       }
-      .ai-feature-association-select select:disabled {
+      .ai-feature-association-list.disabled {
         opacity: 0.6;
+        pointer-events: none;
+      }
+      .ai-feature-association-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 10px;
+        margin: 0 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        color: var(--tc-text);
+      }
+      .ai-feature-association-item:hover,
+      .ai-feature-association-item:focus {
+        background-color: var(--tc-primary-soft);
+        outline: none;
+      }
+      .ai-feature-association-item.selected {
+        box-shadow: 0 0 0 2px var(--tc-primary-ring);
+      }
+      .ai-feature-association-label {
+        flex: 1 1 auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .ai-feature-association-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid var(--tc-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        color: transparent;
+        background-color: rgba(255, 255, 255, 0.9);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+      .ai-feature-association-item.selected .ai-feature-association-check {
+        background-color: var(--tc-primary);
+        border-color: var(--tc-primary);
+        color: #FFFFFF;
+      }
+      .ai-feature-association-item.selected .ai-feature-association-check::after {
+        content: '\2713';
+      }
+      .ai-feature-association-hidden-select {
+        display: none;
       }
       .ai-feature-association-note {
         font-size: 10px;
@@ -1312,7 +1395,7 @@
       }
       .ai-feature-association-empty {
         font-size: 11px;
-        color: #b45309;
+        color: #000000;
         background: rgba(250, 204, 21, 0.18);
         border-radius: 8px;
         padding: 6px 8px;
@@ -1445,7 +1528,7 @@
         right: 0;
         border: none;
         background: none;
-        color: var(--tc-primary);
+        color: #000000;
         font-weight: 600;
         cursor: pointer;
         display: inline-flex;
@@ -1455,10 +1538,10 @@
         transition: color 0.2s ease;
       }
       .ai-custom-collapse:hover {
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .ai-custom-collapse[disabled] {
-        color: #9CA3AF;
+        color: #000000;
         cursor: not-allowed;
       }
       .ai-custom-collapse-icon {
@@ -1514,7 +1597,7 @@
       .ai-custom-hints {
         margin: 0;
         padding-left: 18px;
-        color: #455470;
+        color: #000000;
         font-size: 12px;
         display: flex;
         flex-direction: column;
@@ -1566,11 +1649,11 @@
         flex-wrap: wrap;
         gap: 12px;
         font-size: 12px;
-        color: #6B7280;
+        color: #000000;
       }
       .ai-action-summary {
         margin: 8px 0 0;
-        color: #374151;
+        color: #000000;
         font-size: 13px;
         white-space: pre-line;
       }
@@ -1610,10 +1693,10 @@
       }
       .ai-report-favorite-btn:hover {
         background-color: #F3F4F6;
-        border-color: #9CA3AF;
+        border-color: #000000;
       }
       .ai-report-favorite-btn .ai-favorite-icon {
-        color: #F59E0B;
+        color: #C38F00;
         font-size: 16px;
         line-height: 1;
       }
@@ -1647,7 +1730,7 @@
       .ai-report-order-btn:disabled {
         background: #E5E7EB;
         border-color: #E5E7EB;
-        color: #9CA3AF;
+        color: #000000;
         box-shadow: none;
         cursor: not-allowed;
         transform: none;
@@ -1655,7 +1738,7 @@
       .ai-report-order-helper {
         margin: 0;
         font-size: 12px;
-        color: #6B7280;
+        color: #000000;
         line-height: 1.4;
       }
       .ai-report-order-summary {
@@ -1674,7 +1757,7 @@
         border: 1px solid rgba(37, 99, 235, 0.24);
         font-size: 11px;
         font-weight: 600;
-        color: #1D4ED8;
+        color: #000000;
         line-height: 1.2;
       }
       .ai-report-order-overlay {
@@ -1692,15 +1775,16 @@
         display: flex;
       }
       .ai-report-order-panel {
-        width: min(440px, 94vw);
-        max-height: 100%;
+        width: min(580px, 96vw);
+        height: min(92vh, 820px);
+        max-height: min(96vh, 860px);
         background: linear-gradient(180deg, rgba(248, 250, 255, 0.98) 0%, #FFFFFF 22%);
         border-radius: 20px;
         box-shadow: 0 22px 48px rgba(15, 23, 42, 0.28);
-        padding: 26px 24px 24px;
+        padding: 26px 26px 22px;
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 14px;
         border: 1px solid rgba(99, 102, 241, 0.18);
         position: relative;
         overflow: hidden;
@@ -1730,9 +1814,9 @@
       .ai-report-order-title-group {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 12px;
         background: rgba(37, 99, 235, 0.08);
         border: 1px solid rgba(37, 99, 235, 0.14);
       }
@@ -1740,29 +1824,29 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
         background: linear-gradient(135deg, #2563EB 0%, #4338CA 100%);
         color: #FFFFFF;
-        font-size: 22px;
-        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+        font-size: 18px;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
       }
       .ai-report-order-heading {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
       }
       .ai-report-order-header h3 {
         margin: 0;
-        font-size: 20px;
-        color: #1E3A8A;
+        font-size: 18px;
+        color: #000000;
       }
       .ai-report-order-header p {
         margin: 0;
-        color: #4B5563;
-        font-size: 13px;
-        line-height: 1.5;
+        color: #000000;
+        font-size: 12px;
+        line-height: 1.4;
       }
       .ai-report-order-list {
         margin: 0;
@@ -1770,9 +1854,11 @@
         list-style: none;
         display: flex;
         flex-direction: column;
+        flex: 1 1 auto;
         gap: 12px;
         overflow-y: auto;
-        max-height: 52vh;
+        max-height: none;
+        min-height: 420px;
         padding-right: 6px;
       }
       .ai-report-order-item {
@@ -1800,7 +1886,7 @@
         opacity: 0.65;
       }
       .ai-report-order-item.drag-over {
-        border-color: #2563EB;
+        border-color: #000000;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
         background: #EFF6FF;
         transform: translateY(-1px);
@@ -1815,7 +1901,7 @@
       .ai-report-order-label {
         font-size: 13px;
         font-weight: 600;
-        color: #1F2937;
+        color: #000000;
         white-space: nowrap;
         position: relative;
         display: inline-flex;
@@ -1834,14 +1920,14 @@
       }
       .ai-report-order-meta {
         font-size: 11px;
-        color: #6366F1;
+        color: #000000;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .ai-report-order-handle {
         font-size: 18px;
-        color: #2563EB;
+        color: #000000;
         line-height: 1;
         flex-shrink: 0;
         letter-spacing: 2px;
@@ -1852,7 +1938,7 @@
         padding: 28px 18px;
         text-align: center;
         font-size: 13px;
-        color: #6B7280;
+        color: #000000;
         background: rgba(248, 250, 255, 0.8);
       }
       .ai-report-order-actions {
@@ -1867,12 +1953,14 @@
           justify-content: center;
         }
         .ai-report-order-panel {
-          width: min(480px, 96vw);
+          width: min(520px, 96vw);
+          height: min(92vh, 720px);
+          max-height: min(96vh, 760px);
           border-radius: 18px;
           padding: 22px 20px 20px;
         }
         .ai-report-order-list {
-          max-height: 56vh;
+          min-height: 320px;
         }
       }
       .ai-report-generate-btn {
@@ -1916,7 +2004,7 @@
       .ai-favorite-modal p {
         margin: 0;
         font-size: 13px;
-        color: #4B5563;
+        color: #000000;
       }
       .ai-hidden {
         display: none !important;
@@ -1938,7 +2026,7 @@
         margin: 0;
         font-size: 16px;
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .ai-delivery-description {
         margin: 0;
@@ -2001,7 +2089,7 @@
         margin-left: auto;
         background: none;
         border: none;
-        color: #DC2626;
+        color: #000000;
         font-weight: 700;
         font-size: 16px;
         line-height: 1;
@@ -2024,7 +2112,7 @@
       }
       .ai-contact-name {
         font-size: 11px;
-        color: #6B7280;
+        color: #000000;
       }
       .ai-contact-value {
         font-size: 13px;
@@ -2032,10 +2120,10 @@
         font-weight: 600;
       }
       .ai-contact-item input:checked ~ .ai-contact-details .ai-contact-name {
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .ai-contact-item input:checked ~ .ai-contact-details .ai-contact-value {
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .ai-contact-empty {
         font-size: 12px;
@@ -2049,10 +2137,10 @@
         color: var(--tc-muted);
       }
       .ai-helper-text.success {
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .ai-helper-text.error {
-        color: #B91C1C;
+        color: #000000;
       }
       .ai-delivery-selector {
         position: relative;
@@ -2118,7 +2206,7 @@
         align-items: center;
         gap: 4px;
         background-color: var(--tc-primary-soft);
-        color: var(--tc-primary-dark);
+        color: #000000;
         padding: 4px 10px;
         border-radius: 999px;
         font-size: 12px;
@@ -2127,13 +2215,25 @@
       .ai-action-title {
         font-size: 18px;
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
         margin: 0 0 4px;
       }
       .ai-action-description {
         color: var(--tc-muted);
         font-size: 14px;
         margin: 0 0 12px;
+      }
+      .ai-ask-customization {
+        margin: 12px 0 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ai-ask-option .ai-custom-top {
+        padding-right: 0;
+      }
+      .ai-ask-option .ai-custom-intro {
+        margin-bottom: 0;
       }
       .ai-answer-output {
         min-height: 120px;
@@ -2155,7 +2255,7 @@
         border: 1px solid #E5E7EB;
         border-radius: 4px;
         background-color: #FFFFFF;
-        max-height: 240px;
+        max-height: 360px;
         overflow-y: auto;
       }
       .header-item {
@@ -2173,6 +2273,31 @@
         align-items: center;
         gap: 6px;
       }
+      .header-item-drag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background-color: #EEF0F4;
+        color: #000000;
+        cursor: grab;
+        font-size: 16px;
+        line-height: 1;
+        user-select: none;
+        flex-shrink: 0;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .header-item-drag:hover {
+        background-color: #E1E4EB;
+        color: #000000;
+      }
+      .header-item-drag:active,
+      .header-item.dragging .header-item-drag {
+        cursor: grabbing;
+        background-color: #E1E4EB;
+      }
       .header-item input[type="text"] {
         flex: 1 1 auto;
         min-height: 32px;
@@ -2180,6 +2305,20 @@
       .header-item-actions {
         display: flex;
         gap: 4px;
+      }
+      .header-item.dragging {
+        opacity: 0.65;
+        background-color: #EEF2FF;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.18);
+        border-radius: 6px;
+      }
+      .header-list.header-list-dragging {
+        cursor: grabbing;
+      }
+      .header-list.header-list-dragging .header-item input,
+      .header-list.header-list-dragging .header-item button,
+      .header-list.header-list-dragging .header-item label {
+        pointer-events: none;
       }
       .header-item button {
         border: none;
@@ -2201,7 +2340,7 @@
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        color: var(--tc-primary);
+        color: #000000;
         cursor: pointer;
       }
       .header-ai-toggle input {
@@ -2243,7 +2382,7 @@
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        color: #4B5563;
+        color: #000000;
         cursor: pointer;
       }
       .header-desc-toggle input {
@@ -2472,7 +2611,7 @@
       }
       .small-text {
         font-size: 12px;
-        color: #6B7280;
+        color: #000000;
       }
       .tc-modal-overlay {
         position: fixed;
@@ -2543,7 +2682,7 @@
       }
       .tc-modal-btn.secondary {
         background-color: var(--tc-primary-light);
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .tc-modal-btn.secondary:hover {
         background-color: var(--tc-primary);
@@ -2551,19 +2690,19 @@
       }
       .tc-modal-overlay[data-variant="info"] .tc-modal-icon {
         background: var(--tc-primary-light);
-        color: var(--tc-primary);
+        color: #000000;
       }
       .tc-modal-overlay[data-variant="success"] .tc-modal-icon {
         background: #DCFCE7;
-        color: #15803D;
+        color: #000000;
       }
       .tc-modal-overlay[data-variant="error"] .tc-modal-icon {
         background: #FEE2E2;
-        color: #B91C1C;
+        color: #000000;
       }
       .tc-modal-overlay[data-variant="warning"] .tc-modal-icon {
         background: #FEF3C7;
-        color: #B45309;
+        color: #000000;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -2602,7 +2741,7 @@
           </span>
         </label>
       </div>
-      <div id="themeMessage" class="theme-message" role="region" aria-live="polite">
+      <div id="themeMessage" class="theme-message is-hidden" role="region" aria-live="polite">
         <button type="button" id="themeMessageClose" class="theme-message-close" aria-label="Cerrar mensaje">
           &times;
         </button>
@@ -2640,7 +2779,7 @@
       </div>
       <div class="tab-nav tab-nav-primary">
         <button
-          class="tab-btn active"
+          class="tab-btn tab-btn--tooltip-below active"
           data-tab="aiTab"
           data-themes="table word"
           data-tooltip="Gestiona consultas, reportes y contactos asistidos por IA."
@@ -2648,7 +2787,7 @@
           Panel IA
         </button>
         <button
-          class="tab-btn"
+          class="tab-btn tab-btn--tooltip-below"
           data-tab="editTab"
           data-themes="table"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
@@ -2656,7 +2795,7 @@
           Editar tabla
         </button>
         <button
-          class="tab-btn"
+          class="tab-btn tab-btn--tooltip-below"
           data-tab="createTab"
           data-themes="table"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
@@ -2677,9 +2816,7 @@
           data-themes="table"
           data-tooltip="Organiza y reutiliza tus plantillas y recursos destacados."
         >
-          <span class="tab-label"
-            >Plantillas<span class="favorite-icon" aria-hidden="true">⭐</span></span
-          >
+          Plantillas
         </button>
         <button
           class="tab-btn"
@@ -2687,9 +2824,7 @@
           data-themes="table word"
           data-tooltip="Accede y edita reportes, tablas y preguntas guardadas."
         >
-          <span class="tab-label"
-            >Acciones<span class="favorite-icon" aria-hidden="true">⭐</span></span
-          >
+          Acciones
         </button>
       </div>
 
@@ -2829,23 +2964,130 @@
           </label>
           <select id="aiActionSelect" class="ai-action-select">
             <option value="">Seleccionar</option>
-            <option value="ask">Pregunta IA</option>
             <option value="report">Reporte</option>
-            <option value="autoTable">Tabla automática</option>
-            <option value="editTable">Editar tabla</option>
+            <option value="ask">Pregunta IA</option>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>
             <p class="ai-action-description">
               Selecciona las tablas y formula una consulta para recibir una respuesta generada automáticamente.
             </p>
+            <div
+              id="aiAskCustomizationWrapper"
+              class="ai-collapsible"
+              data-open="true"
+            >
+              <div class="ai-collapsible-header">
+                <div class="ai-collapsible-title">
+                  <h3 class="ai-action-title">Contexto y personalización</h3>
+                  <span id="aiAskCustomizationSummary" class="ai-collapsible-badge ai-hidden"></span>
+                </div>
+                <button
+                  type="button"
+                  class="ai-collapse-toggle"
+                  id="aiAskCustomizationToggle"
+                  data-target="aiAskCustomizationWrapper"
+                  data-open-text="Replegar"
+                  data-closed-text="Desplegar"
+                  aria-expanded="true"
+                  aria-controls="aiAskCustomizationBody"
+                >
+                  <span class="ai-collapse-toggle-text">Replegar</span>
+                  <span class="ai-collapse-toggle-icon" aria-hidden="true">▴</span>
+                </button>
+              </div>
+              <div class="ai-collapsible-body" id="aiAskCustomizationBody">
+                <p class="ai-report-helper" style="margin-top:0;">
+                  Define el tono y el perfil profesional antes de enviar tu consulta a la IA.
+                </p>
+                <div class="ai-customization-list ai-ask-customization">
+                  <div class="ai-custom-option ai-ask-option" data-ask-option="tone">
+                    <div class="ai-custom-top">
+                      <h4 class="ai-action-title">Tono de la respuesta</h4>
+                      <p class="ai-custom-intro">
+                        Elige el estilo de redacción que prefieres para la respuesta generada.
+                      </p>
+                    </div>
+                    <div class="ai-custom-fields">
+                      <div class="ai-custom-field">
+                        <label
+                          for="aiAskTone"
+                          class="tc-tooltip-target"
+                          data-tooltip="Elige el estilo de redacción que prefieres para la respuesta generada."
+                        >
+                          Tono de la respuesta
+                        </label>
+                        <select id="aiAskTone">
+                          <option value="neutral">Neutral profesional</option>
+                          <option value="executive">Resumen ejecutivo</option>
+                          <option value="friendly">Cercano y motivador</option>
+                          <option value="analytical">Analítico y detallado</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </div>
+                      <div class="ai-custom-field ai-hidden" id="aiAskToneCustomWrapper">
+                        <label for="aiAskToneCustom">Describe el tono personalizado</label>
+                        <textarea
+                          id="aiAskToneCustom"
+                          placeholder="Ej. Comunicativo, inspirador y orientado a logros"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ai-custom-option ai-ask-option" data-ask-option="persona">
+                    <div class="ai-custom-top">
+                      <h4 class="ai-action-title">Perfil profesional de la respuesta</h4>
+                      <p class="ai-custom-intro">
+                        Indica a qué rol profesional debe dirigirse la respuesta de la IA.
+                      </p>
+                    </div>
+                    <div class="ai-custom-fields">
+                      <div class="ai-custom-field">
+                        <label
+                          for="aiAskPersona"
+                          class="tc-tooltip-target"
+                          data-tooltip="Indica a qué rol profesional debe dirigirse la respuesta."
+                        >
+                          Perfil profesional de la respuesta
+                        </label>
+                        <select id="aiAskPersona">
+                          <option value="auto">Elegir automáticamente (IA)</option>
+                          <option value="executive">Dirección general</option>
+                          <option value="data-analyst">Analista de datos</option>
+                          <option value="finance">Dirección financiera</option>
+                          <option value="operations">Gerencia de operaciones</option>
+                          <option value="marketing">Marketing y comunicación</option>
+                          <option value="hr">Recursos humanos</option>
+                          <option value="it">Especialista en IT / Sistemas</option>
+                          <option value="sales">Liderazgo comercial</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </div>
+                      <div class="ai-custom-field ai-hidden" id="aiAskPersonaCustomWrapper">
+                        <label for="aiAskPersonaCustom">Describe el perfil profesional objetivo</label>
+                        <textarea
+                          id="aiAskPersonaCustom"
+                          placeholder="Ej. Gerente de soporte regional enfocado en tiempos de respuesta"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <label for="questionInput">Pregunta para la IA</label>
             <textarea
               id="questionInput"
               class="ai-question-input"
-              placeholder="Escribe tu pregunta..."
+              placeholder="Ej: ¿Qué productos registraron el mayor crecimiento este trimestre?"
+              aria-describedby="aiQuestionExamples"
               disabled
             ></textarea>
+            <p id="aiQuestionExamples" class="ai-question-hint">
+              Ejemplos: ¿Qué tendencias detecta la IA en las ventas por región? • ¿Qué riesgos debo comunicar al directorio? • Resume los logros clave del equipo comercial.
+            </p>
             <button id="askBtn" class="btn-secondary" style="margin-top:8px;" disabled>Preguntar</button>
             <div id="apiWarning" class="small-text" style="margin-top:8px;"></div>
             <label for="answerBox" style="margin-top:12px;">Respuesta de la IA</label>
@@ -2884,9 +3126,10 @@
               </div>
               <p id="aiReportFilePreview" class="ai-report-file-preview" data-empty="true"></p>
               <label
-                class="ai-report-date-toggle"
+                class="ai-report-date-toggle tc-tooltip-target"
+                id="aiReportDateToggleLabel"
                 for="aiReportFileDateToggle"
-                
+                data-tooltip="Agrega la fecha al final del nombre del archivo. Ej: Reporte_12_03_24.pdf"
               >
                 <input type="checkbox" id="aiReportFileDateToggle" /> Agregar fecha al nombre
               </label>
@@ -3013,7 +3256,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="chart">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="chart">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="0"
                         >
@@ -3033,7 +3276,7 @@
                               placeholder="Ej. Evolución mensual de ventas"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-chart-1"
@@ -3069,7 +3312,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-1"
                             >
                               <input
@@ -3085,12 +3328,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3104,7 +3355,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="1"
                         >
@@ -3124,7 +3375,7 @@
                               placeholder="Ej. Distribución por categorías"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-chart-2"
@@ -3160,7 +3411,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-2"
                             >
                               <input
@@ -3176,12 +3427,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3195,7 +3454,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="chart"
                           data-instance-index="2"
                         >
@@ -3215,7 +3474,7 @@
                               placeholder="Ej. Comparativo anual proyectado"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-chart-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-chart-3"
@@ -3251,7 +3510,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-chart-3"
                             >
                               <input
@@ -3267,12 +3526,20 @@
                               data-feature-instance-table-select-wrapper="chart"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="chart"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-chart-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="chart"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este gráfico.
@@ -3316,7 +3583,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="table">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="table">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="0"
                         >
@@ -3336,7 +3603,7 @@
                               placeholder="Ej. Indicadores comerciales por trimestre"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-table-1"
@@ -3351,7 +3618,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-1"
                             >
                               <input
@@ -3367,12 +3634,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3386,7 +3661,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="1"
                         >
@@ -3406,7 +3681,7 @@
                               placeholder="Ej. Rendimiento por equipo y objetivo"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-table-2"
@@ -3421,7 +3696,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-2"
                             >
                               <input
@@ -3437,12 +3712,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3456,7 +3739,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="table"
                           data-instance-index="2"
                         >
@@ -3476,7 +3759,7 @@
                               placeholder="Ej. Proyección de ingresos por escenario"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-table-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-table-3"
@@ -3491,7 +3774,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-table-3"
                             >
                               <input
@@ -3507,12 +3790,20 @@
                               data-feature-instance-table-select-wrapper="table"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="table"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-table-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="table"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas como origen para esta tabla.
@@ -3556,7 +3847,7 @@
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="list">
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="list">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="0"
                         >
@@ -3576,7 +3867,7 @@
                               placeholder="Ej. Prioridades clave para el comité ejecutivo"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-1">Descripción 1</label>
                             <textarea
                               id="aiFeatureInstance-list-1"
@@ -3636,7 +3927,7 @@
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-1"
                             >
                               <input
@@ -3652,12 +3943,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -3671,7 +3970,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="1"
                         >
@@ -3691,7 +3990,7 @@
                               placeholder="Ej. Riesgos a monitorear en la operación"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-2">Descripción 2</label>
                             <textarea
                               id="aiFeatureInstance-list-2"
@@ -3751,7 +4050,7 @@
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-2"
                             >
                               <input
@@ -3767,12 +4066,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -3786,7 +4093,7 @@
                           </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="list"
                           data-instance-index="2"
                         >
@@ -3806,7 +4113,7 @@
                               placeholder="Ej. Acciones recomendadas por área"
                             />
                           </div>
-                          <div class="ai-feature-description">
+                          <div class="ai-feature-description js-comment-hint-field">
                             <label for="aiFeatureInstance-list-3">Descripción 3</label>
                             <textarea
                               id="aiFeatureInstance-list-3"
@@ -3866,7 +4173,7 @@
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-list-3"
                             >
                               <input
@@ -3882,12 +4189,20 @@
                               data-feature-instance-table-select-wrapper="list"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="list"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-list-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="list"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para esta lista.
@@ -3930,22 +4245,6 @@
                     </div>
                     <div class="ai-feature-extra ai-hidden" data-feature-extra="summary">
                       <div class="ai-feature-summary-preferences">
-                        <div class="ai-feature-summary-title">
-                          <label
-                            for="aiFeatureSummaryTitle"
-                            class="tc-tooltip-target"
-                            data-tooltip="Añade un título breve si quieres que el resumen aparezca destacado."
-                          >
-                            Título del resumen (opcional)
-                          </label>
-                          <input
-                            type="text"
-                            id="aiFeatureSummaryTitle"
-                            data-feature-instance-title="summary"
-                            data-instance-index="0"
-                            placeholder="Ej. Resumen ejecutivo del trimestre"
-                          />
-                        </div>
                         <div class="ai-feature-summary-length">
                           <label
                             for="aiFeatureSummaryLength"
@@ -3987,17 +4286,48 @@
                       </div>
                       <div class="ai-feature-instances ai-hidden" data-feature-instances="summary">
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="0"
                         >
+                          <div class="ai-feature-summary-title">
+                            <label
+                              for="aiFeatureSummaryTitle"
+                              class="tc-tooltip-target"
+                              data-tooltip="Añade un título breve si quieres que el resumen aparezca destacado."
+                            >
+                              Título del resumen (opcional)
+                            </label>
+                            <input
+                              type="text"
+                              id="aiFeatureSummaryTitle"
+                              data-feature-instance-title="summary"
+                              data-instance-index="0"
+                              placeholder="Ej. Resumen ejecutivo del trimestre"
+                            />
+                          </div>
+                          <div class="ai-feature-description js-comment-hint-field">
+                            <label
+                              for="aiFeatureInstance-summary-1"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción del resumen
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-1"
+                              data-feature-instance-input="summary"
+                              data-instance-index="0"
+                              placeholder="Explica el resumen general que debe redactar la IA"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="0"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-1"
                             >
                               <input
@@ -4013,12 +4343,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="0"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="0"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-1"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="0"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4030,34 +4368,34 @@
                               ></p>
                             </div>
                           </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-1"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción del resumen
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-1"
-                              data-feature-instance-input="summary"
-                              data-instance-index="0"
-                              placeholder="Explica el resumen general que debe redactar la IA"
-                            ></textarea>
-                          </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="1"
                         >
+                          <div class="ai-feature-description js-comment-hint-field">
+                            <label
+                              for="aiFeatureInstance-summary-2"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 2
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-2"
+                              data-feature-instance-input="summary"
+                              data-instance-index="1"
+                              placeholder="Explica el segundo resumen que debe redactar la IA"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="1"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-2"
                             >
                               <input
@@ -4073,12 +4411,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="1"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="1"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-2"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="1"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4090,34 +4436,34 @@
                               ></p>
                             </div>
                           </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-2"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción 2
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-2"
-                              data-feature-instance-input="summary"
-                              data-instance-index="1"
-                              placeholder="Explica el segundo resumen que debe redactar la IA"
-                            ></textarea>
-                          </div>
                         </div>
                         <div
-                          class="ai-feature-instance ai-hidden ai-optional-comment js-comment-hint-field"
+                          class="ai-feature-instance ai-hidden ai-optional-comment"
                           data-feature-instance="summary"
                           data-instance-index="2"
                         >
+                          <div class="ai-feature-description js-comment-hint-field">
+                            <label
+                              for="aiFeatureInstance-summary-3"
+                              class="tc-tooltip-target"
+                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
+                            >
+                              Descripción 3
+                            </label>
+                            <textarea
+                              id="aiFeatureInstance-summary-3"
+                              data-feature-instance-input="summary"
+                              data-instance-index="2"
+                              placeholder="Describe un tercer resumen si aplica"
+                            ></textarea>
+                          </div>
                           <div
                             class="ai-feature-association"
                             data-feature-instance-table-wrapper="summary"
                             data-instance-index="2"
                           >
                             <label
-                              class="ai-feature-association-toggle"
+                              class="ai-feature-association-toggle tc-tooltip-target" data-tooltip="Selecciona tablas específicas para este bloque."
                               for="aiFeatureTableToggle-summary-3"
                             >
                               <input
@@ -4133,12 +4479,20 @@
                               data-feature-instance-table-select-wrapper="summary"
                               data-instance-index="2"
                             >
+                              <div
+                                class="ai-feature-association-list"
+                                data-feature-instance-table-list="summary"
+                                data-instance-index="2"
+                                role="listbox"
+                                aria-multiselectable="true"
+                              ></div>
                               <select
                                 id="aiFeatureTables-summary-3"
                                 multiple
                                 size="4"
                                 data-feature-instance-table-select="summary"
                                 data-instance-index="2"
+                                class="ai-feature-association-hidden-select"
                               ></select>
                               <p class="ai-feature-association-note">
                                 Elige una o más tablas para este resumen.
@@ -4149,21 +4503,6 @@
                                 data-instance-index="2"
                               ></p>
                             </div>
-                          </div>
-                          <div class="ai-feature-description">
-                            <label
-                              for="aiFeatureInstance-summary-3"
-                              class="tc-tooltip-target"
-                              data-tooltip="Describe el enfoque, métricas y aprendizajes que debe sintetizar la IA."
-                            >
-                              Descripción 3
-                            </label>
-                            <textarea
-                              id="aiFeatureInstance-summary-3"
-                              data-feature-instance-input="summary"
-                              data-instance-index="2"
-                              placeholder="Describe un tercer resumen si aplica"
-                            ></textarea>
                           </div>
                         </div>
                       </div>
@@ -4255,11 +4594,30 @@
                             <option value="en">Inglés</option>
                             <option value="pt">Portugués</option>
                             <option value="fr">Francés</option>
+                            <option value="other">Otro</option>
                           </select>
+                        </div>
+                        <div
+                          class="ai-custom-field ai-hidden"
+                          data-custom-output-language-wrapper
+                        >
+                          <label
+                            for="aiReportOutputLanguageCustom"
+                            class="tc-tooltip-target"
+                            data-tooltip="Especifica el idioma exacto que debe usar la IA."
+                          >
+                            Idioma personalizado
+                          </label>
+                          <input
+                            type="text"
+                            id="aiReportOutputLanguageCustom"
+                            data-custom-output-language-input
+                            placeholder="Ej: Alemán (Alemania)"
+                          />
                         </div>
                         <p
                           class="ai-custom-helper"
-                          
+
                         >
                           La IA traducirá conclusiones, insights y recomendaciones al idioma elegido sin alterar datos ni cifras clave.
                         </p>
@@ -4314,7 +4672,23 @@
                             <option value="executive">Resumen ejecutivo</option>
                             <option value="friendly">Cercano y motivador</option>
                             <option value="analytical">Analítico y detallado</option>
+                            <option value="custom">Personalizado</option>
                           </select>
+                        </div>
+                        <div class="ai-custom-field ai-hidden" data-custom-tone-wrapper>
+                          <label
+                            for="aiReportToneCustom"
+                            class="tc-tooltip-target"
+                            data-tooltip="Describe con tus palabras el tono deseado."
+                          >
+                            Detalle del tono personalizado
+                          </label>
+                          <input
+                            type="text"
+                            id="aiReportToneCustom"
+                            data-custom-tone-input
+                            placeholder="Ej: Inspirador con foco en logros del equipo"
+                          />
                         </div>
                         <p
                           class="ai-custom-helper"
@@ -4415,9 +4789,7 @@
                 >
                   Orden de reporte
                 </button>
-                <p class="ai-report-order-helper">
-                  Define cómo se presentarán gráficos, listas y resúmenes en el reporte final.
-                </p>
+                <p class="ai-report-order-helper">Organiza el orden de cada sección del reporte.</p>
                 <div
                   id="aiReportOrderSummary"
                   class="ai-report-order-summary ai-hidden"
@@ -4628,10 +5000,12 @@
                   <p class="tc-card-subtitle">Guarda estructuras listas para reutilizar en nuevos reportes.</p>
                 </div>
               </div>
-              <button type="button" id="templateRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
             <div id="templateGridEmpty" class="tc-card-empty">Aún no guardaste plantillas.</div>
             <div id="templateGrid" class="tc-template-grid" role="list"></div>
+            <div class="tc-card-footer tc-card-footer--right">
+              <button type="button" id="templateRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
           </div>
           <div class="tc-card">
             <h3 class="tc-card-heading">Detalles de la plantilla</h3>
@@ -4659,7 +5033,6 @@
                   </p>
                 </div>
               </div>
-              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
             </div>
             <div class="tc-form-field">
               <label for="aiSavedActions">Lista de acciones</label>
@@ -4668,6 +5041,9 @@
               </select>
             </div>
             <div id="aiActionsEmptyMessage" class="tc-card-empty">No hay acciones guardadas todavía.</div>
+            <div class="tc-card-footer tc-card-footer--right">
+              <button type="button" id="aiSavedActionsRefreshBtn" class="btn-secondary">Actualizar</button>
+            </div>
           </div>
           <div class="tc-card">
             <h3 class="tc-card-heading">Detalle seleccionado</h3>
@@ -4710,9 +5086,7 @@
             <div class="ai-report-order-heading">
               <h3 id="aiReportOrderTitle">Orden del reporte</h3>
               <p id="aiReportOrderDescription">
-                Arrastra y suelta para elegir la secuencia de cada componente. Si no defines tablas específicas, se
-                usarán todas las seleccionadas. Pasa el cursor por las etiquetas para ver nombres, descripciones y
-                ajustes clave.
+                Arrastrá cada componente para definir el orden y usá las etiquetas para ver detalles rápidos.
               </p>
             </div>
           </div>

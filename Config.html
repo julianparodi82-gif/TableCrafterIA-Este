@@ -352,7 +352,25 @@
         google.script.run.withSuccessHandler(function(res) {
           const toggle = document.getElementById('welcomeToggle');
           if (!toggle) return;
-          toggle.checked = !(res && res.hideWelcome);
+          const data = res && typeof res === 'object' ? res : {};
+          const parseHidden = function(entry) {
+            return entry === true || entry === 'true';
+          };
+          let hideTable = false;
+          let hideWord = false;
+          if (
+            !Object.prototype.hasOwnProperty.call(data, 'hideTable') &&
+            !Object.prototype.hasOwnProperty.call(data, 'hideWord') &&
+            Object.prototype.hasOwnProperty.call(data, 'hideWelcome')
+          ) {
+            const legacy = parseHidden(data.hideWelcome);
+            hideTable = legacy;
+            hideWord = legacy;
+          } else {
+            hideTable = parseHidden(data.hideTable);
+            hideWord = parseHidden(data.hideWord);
+          }
+          toggle.checked = !(hideTable && hideWord);
         }).getWelcomeMessagePreference();
       });
       // Guardar clave
@@ -385,7 +403,7 @@
           document.getElementById('message').textContent = shouldShow
             ? 'El mensaje de bienvenida volverá a mostrarse.'
             : 'El mensaje de bienvenida permanecerá oculto.';
-        }).setWelcomeMessagePreference(shouldShow);
+        }).setWelcomeMessagePreference(shouldShow, 'all');
       });
     </script>
   </body>
