@@ -3106,6 +3106,16 @@ async function attemptTabChange(tabId, options) {
 
 
 
+      const refreshRangeBtn = document.getElementById('refreshRangeBtn');
+      if (refreshRangeBtn && refreshRangeBtn.dataset.refreshBound !== 'true') {
+        refreshRangeBtn.addEventListener('click', function() {
+          if (typeof loadActiveRange === 'function') {
+            loadActiveRange(true);
+          }
+        });
+        refreshRangeBtn.dataset.refreshBound = 'true';
+      }
+
       const applyFormatBtn = document.getElementById('applyFormatBtn');
       if (applyFormatBtn && applyFormatBtn.dataset.applyBound !== 'true') {
         applyFormatBtn.addEventListener('click', function() {
