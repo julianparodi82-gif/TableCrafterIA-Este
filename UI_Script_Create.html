@@ -67,6 +67,26 @@ function updateCreateRangeDependentSections() {
         const hasSelection = hasCreateRangeSelection();
         setElementDisplay(headerOptions, !isWordTheme && hasSelection);
         setElementDisplay(actionsContainer, isWordTheme || hasSelection);
+        const applyBtn = document.getElementById('applyFormatBtn');
+        const saveBtn = document.getElementById('saveTableBtn');
+        if (!isWordTheme) {
+          if (applyBtn) {
+            applyBtn.disabled = !hasSelection;
+            if (applyBtn.disabled) {
+              applyBtn.setAttribute('aria-disabled', 'true');
+            } else {
+              applyBtn.removeAttribute('aria-disabled');
+            }
+          }
+          if (saveBtn) {
+            saveBtn.disabled = !hasSelection;
+            if (saveBtn.disabled) {
+              saveBtn.setAttribute('aria-disabled', 'true');
+            } else {
+              saveBtn.removeAttribute('aria-disabled');
+            }
+          }
+        }
       }
 
 function bindCreateRangeInput() {
