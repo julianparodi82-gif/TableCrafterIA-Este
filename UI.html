@@ -3231,6 +3231,7 @@
         display: flex;
         align-items: flex-start;
         gap: 14px;
+        flex-wrap: wrap;
         margin-bottom: 16px;
       }
       .word-context-icon {
@@ -3265,7 +3266,35 @@
       .word-context-body {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 16px;
+      }
+      .word-context-section {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(28, 141, 212, 0.24);
+        border-radius: 16px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 10px 28px rgba(42, 176, 255, 0.16);
+        transition: opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .word-context-section.is-disabled {
+        opacity: 0.6;
+        border-color: rgba(28, 141, 212, 0.16);
+        box-shadow: none;
+      }
+      .word-context-toggle {
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .word-context-fields.is-hidden {
+        display: none;
       }
       .word-context-body textarea {
         min-height: 96px;
@@ -3276,14 +3305,103 @@
         flex-wrap: wrap;
         gap: 14px;
       }
+      .word-context-columns .word-context-section {
+        flex: 1 1 210px;
+        min-width: 200px;
+      }
       .word-context-columns .word-format-group {
         min-width: 180px;
-        flex: 1 1 210px;
+        flex: 1 1 auto;
+      }
+      #wordWebSourcesCard .word-context-header {
+        align-items: center;
+      }
+      #wordWebSourcesCard .word-context-header .word-context-toggle {
+        margin-left: auto;
       }
       .word-context-helper {
         margin-top: 10px;
         font-size: 12px;
         color: rgba(0, 0, 0, 0.7);
+      }
+      .word-web-card {
+        margin-top: 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(42, 176, 255, 0.16), rgba(2, 132, 199, 0.12));
+        border: 1px solid rgba(28, 141, 212, 0.32);
+        padding: 18px 20px;
+        display: none;
+        box-shadow: 0 24px 48px rgba(30, 136, 191, 0.18);
+      }
+      .word-web-body {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .word-web-body.is-hidden {
+        display: none;
+      }
+      .word-web-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-web-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(28, 141, 212, 0.2);
+        border-radius: 14px;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+      }
+      .word-web-input {
+        flex: 1 1 auto;
+        border: 1px solid rgba(28, 141, 212, 0.28);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      .word-web-remove {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(28, 141, 212, 0.32);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .word-web-remove:hover:not(:disabled) {
+        background: rgba(42, 176, 255, 0.12);
+        border-color: rgba(28, 141, 212, 0.48);
+      }
+      .word-web-remove:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .word-web-add {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px dashed rgba(28, 141, 212, 0.4);
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .word-web-add:hover:not(:disabled) {
+        background: rgba(42, 176, 255, 0.12);
+        border-color: rgba(28, 141, 212, 0.48);
+      }
+      .word-web-add:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
       #editActionsRow {
         margin-top: 20px;
@@ -3649,48 +3767,98 @@
               </div>
             </div>
             <div class="word-context-body">
-              <div class="word-format-group">
-                <label for="wordBodyContext">Indicaciones clave</label>
-                <textarea
-                  id="wordBodyContext"
-                  rows="3"
-                  placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
-                ></textarea>
+              <div id="wordContextDetailsWrapper" class="word-context-section">
+                <label for="wordContextDetailsToggle" class="checkbox-subtle word-context-toggle">
+                  <input type="checkbox" id="wordContextDetailsToggle" checked />
+                  Contexto y personalización
+                </label>
+                <div id="wordContextDetailsFields" class="word-context-fields">
+                  <div class="word-format-group">
+                    <label for="wordBodyContext">Indicaciones clave</label>
+                    <textarea
+                      id="wordBodyContext"
+                      rows="3"
+                      placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
+                    ></textarea>
+                  </div>
+                </div>
               </div>
               <div class="word-context-columns">
-                <div class="word-format-group">
-                  <label for="wordBodyLanguage">Idioma de salida</label>
-                  <input
-                    type="text"
-                    id="wordBodyLanguage"
-                    placeholder="Ej: Español neutro"
-                    data-default-value=""
-                  />
+                <div id="wordLanguageSection" class="word-context-section">
+                  <label for="wordLanguageToggle" class="checkbox-subtle word-context-toggle">
+                    <input type="checkbox" id="wordLanguageToggle" checked />
+                    Idioma de salida
+                  </label>
+                  <div id="wordLanguageFields" class="word-context-fields">
+                    <div class="word-format-group">
+                      <label for="wordBodyLanguage">Idioma de salida</label>
+                      <input
+                        type="text"
+                        id="wordBodyLanguage"
+                        placeholder="Ej: Español neutro"
+                        data-default-value=""
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyTone">Tono del reporte</label>
-                  <select id="wordBodyTone" data-default-value="profesional">
-                    <option value="profesional" selected>Profesional</option>
-                    <option value="formal">Formal</option>
-                    <option value="informal">Informal</option>
-                    <option value="persuasivo">Persuasivo</option>
-                    <option value="didactico">Didáctico</option>
-                  </select>
+                <div id="wordToneSection" class="word-context-section">
+                  <label for="wordToneToggle" class="checkbox-subtle word-context-toggle">
+                    <input type="checkbox" id="wordToneToggle" checked />
+                    Tono del reporte
+                  </label>
+                  <div id="wordToneFields" class="word-context-fields">
+                    <div class="word-format-group">
+                      <label for="wordBodyTone">Tono del reporte</label>
+                      <select id="wordBodyTone" data-default-value="profesional">
+                        <option value="profesional" selected>Profesional</option>
+                        <option value="formal">Formal</option>
+                        <option value="informal">Informal</option>
+                        <option value="persuasivo">Persuasivo</option>
+                        <option value="didactico">Didáctico</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div class="word-format-group">
-                  <label for="wordBodyProfile">Perfil profesional</label>
-                  <input
-                    type="text"
-                    id="wordBodyProfile"
-                    placeholder="Ej: Analista financiero senior"
-                    data-default-value=""
-                  />
+                <div id="wordProfileSection" class="word-context-section">
+                  <label for="wordProfileToggle" class="checkbox-subtle word-context-toggle">
+                    <input type="checkbox" id="wordProfileToggle" checked />
+                    Perfil profesional
+                  </label>
+                  <div id="wordProfileFields" class="word-context-fields">
+                    <div class="word-format-group">
+                      <label for="wordBodyProfile">Perfil profesional</label>
+                      <input
+                        type="text"
+                        id="wordBodyProfile"
+                        placeholder="Ej: Analista financiero senior"
+                        data-default-value=""
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             <p class="word-context-helper">
               Estos campos ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
             </p>
+          </div>
+          <div id="wordWebSourcesCard" class="word-web-card" style="display:none;">
+            <div class="word-context-header">
+              <div class="word-context-icon" aria-hidden="true">🌐</div>
+              <div class="word-context-heading">
+                <h3>Fuentes de apoyo</h3>
+                <p>Incluye enlaces relevantes para enriquecer el texto generado.</p>
+              </div>
+              <label for="wordWebSourcesToggle" class="checkbox-subtle word-context-toggle">
+                <input type="checkbox" id="wordWebSourcesToggle" />
+                Usar información de páginas web
+              </label>
+            </div>
+            <div id="wordWebSourcesBody" class="word-web-body is-hidden" aria-hidden="true">
+              <div id="wordWebSourcesList" class="word-web-items"></div>
+              <button type="button" id="wordWebSourcesAdd" class="word-web-add">Agregar página</button>
+              <p class="word-context-helper">Puedes añadir hasta 10 páginas relevantes para tu reporte.</p>
+            </div>
           </div>
           <div id="wordBodyOptions" class="word-text-options" style="display:none;">
             <div class="word-text-toggle-group">

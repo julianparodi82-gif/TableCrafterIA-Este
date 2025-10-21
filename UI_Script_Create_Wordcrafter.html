@@ -3,6 +3,36 @@
 /*  WordCrafter Create Tab UI                                                 */
 /* -------------------------------------------------------------------------- */
 const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
+const WORD_WEB_SOURCE_LIMIT = 10;
+
+const WORD_CONTEXT_SECTION_CONFIG = [
+      {
+        toggleId: 'wordContextDetailsToggle',
+        wrapperId: 'wordContextDetailsWrapper',
+        fieldsId: 'wordContextDetailsFields',
+        controlIds: ['wordBodyContext']
+      },
+      {
+        toggleId: 'wordLanguageToggle',
+        wrapperId: 'wordLanguageSection',
+        fieldsId: 'wordLanguageFields',
+        controlIds: ['wordBodyLanguage']
+      },
+      {
+        toggleId: 'wordToneToggle',
+        wrapperId: 'wordToneSection',
+        fieldsId: 'wordToneFields',
+        controlIds: ['wordBodyTone']
+      },
+      {
+        toggleId: 'wordProfileToggle',
+        wrapperId: 'wordProfileSection',
+        fieldsId: 'wordProfileFields',
+        controlIds: ['wordBodyProfile']
+      }
+    ];
+
+let wordWebSourcesState = [];
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -82,7 +112,21 @@ function resetWordTextOptions() {
           const fallback = toneSelect.dataset && toneSelect.dataset.defaultValue !== undefined ? toneSelect.dataset.defaultValue : toneSelect.defaultValue;
           toneSelect.value = fallback !== undefined ? fallback : 'profesional';
         }
+        WORD_CONTEXT_SECTION_CONFIG.forEach(function(section) {
+          const toggle = document.getElementById(section.toggleId);
+          if (toggle) {
+            toggle.checked = toggle.defaultChecked;
+          }
+          syncWordContextSection(section);
+        });
+        const webToggle = document.getElementById('wordWebSourcesToggle');
+        if (webToggle) {
+          webToggle.checked = webToggle.defaultChecked;
+        }
+        wordWebSourcesState = [];
+        renderWordWebSourcesList();
         refreshWordPreviews();
+        syncWordWebSourcesCard();
       }
 
 function updateWordFormatFlagClasses(container) {
@@ -277,12 +321,209 @@ function syncWordContextCard() {
         }
         const isWordTheme = isWordThemeActiveForCreate();
         card.style.display = isWordTheme ? 'block' : 'none';
+        if (isWordTheme) {
+          syncWordContextSections();
+        }
+      }
+
+function syncWordContextSection(section) {
+        if (!section) {
+          return;
+        }
+        const toggle = document.getElementById(section.toggleId);
+        const wrapper = document.getElementById(section.wrapperId);
+        const fields = document.getElementById(section.fieldsId);
+        const isActive = Boolean(!toggle || toggle.checked);
+        if (wrapper) {
+          wrapper.classList.toggle('is-disabled', !isActive);
+        }
+        if (fields) {
+          fields.classList.toggle('is-hidden', !isActive);
+          fields.setAttribute('aria-hidden', String(!isActive));
+        }
+        if (Array.isArray(section.controlIds)) {
+          section.controlIds.forEach(function(controlId) {
+            const control = document.getElementById(controlId);
+            if (!control) {
+              return;
+            }
+            control.disabled = !isActive;
+            if (!isActive) {
+              control.setAttribute('aria-disabled', 'true');
+            } else {
+              control.removeAttribute('aria-disabled');
+            }
+          });
+        }
+      }
+
+function syncWordContextSections() {
+        WORD_CONTEXT_SECTION_CONFIG.forEach(function(section) {
+          syncWordContextSection(section);
+        });
+      }
+
+function bindWordContextToggles() {
+        WORD_CONTEXT_SECTION_CONFIG.forEach(function(section) {
+          const toggle = document.getElementById(section.toggleId);
+          if (toggle && toggle.dataset.wordContextBound !== 'true') {
+            toggle.addEventListener('change', function() {
+              syncWordContextSection(section);
+            });
+            toggle.dataset.wordContextBound = 'true';
+          }
+        });
+      }
+
+function renderWordWebSourcesList() {
+        const list = document.getElementById('wordWebSourcesList');
+        if (!list) {
+          return;
+        }
+        if (wordWebSourcesState.length > WORD_WEB_SOURCE_LIMIT) {
+          wordWebSourcesState = wordWebSourcesState.slice(0, WORD_WEB_SOURCE_LIMIT);
+        }
+        list.innerHTML = '';
+        wordWebSourcesState.forEach(function(value, index) {
+          const row = document.createElement('div');
+          row.className = 'word-web-row';
+          row.dataset.wordWebIndex = String(index);
+          const input = document.createElement('input');
+          input.type = 'url';
+          input.className = 'word-web-input';
+          input.placeholder = 'https://ejemplo.com/recurso';
+          input.value = value || '';
+          input.dataset.wordWebIndex = String(index);
+          input.setAttribute('aria-label', 'Página web ' + (index + 1));
+          input.autocomplete = 'off';
+          input.spellcheck = false;
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'word-web-remove';
+          removeBtn.textContent = 'Quitar';
+          removeBtn.dataset.wordWebRemove = String(index);
+          removeBtn.setAttribute('aria-label', 'Quitar página web ' + (index + 1));
+          row.appendChild(input);
+          row.appendChild(removeBtn);
+          list.appendChild(row);
+        });
+      }
+
+function bindWordWebSourcesControls() {
+        const toggle = document.getElementById('wordWebSourcesToggle');
+        if (toggle && toggle.dataset.wordWebBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            if (toggle.checked && wordWebSourcesState.length === 0) {
+              wordWebSourcesState.push('');
+              renderWordWebSourcesList();
+            }
+            syncWordWebSourcesCard();
+          });
+          toggle.dataset.wordWebBound = 'true';
+        }
+        const addBtn = document.getElementById('wordWebSourcesAdd');
+        if (addBtn && addBtn.dataset.wordWebBound !== 'true') {
+          addBtn.addEventListener('click', function() {
+            if (wordWebSourcesState.length >= WORD_WEB_SOURCE_LIMIT) {
+              return;
+            }
+            wordWebSourcesState.push('');
+            renderWordWebSourcesList();
+            syncWordWebSourcesCard();
+            const list = document.getElementById('wordWebSourcesList');
+            if (list) {
+              const inputs = list.querySelectorAll('.word-web-input');
+              const newest = inputs[inputs.length - 1];
+              if (newest) {
+                newest.focus();
+              }
+            }
+          });
+          addBtn.dataset.wordWebBound = 'true';
+        }
+        const list = document.getElementById('wordWebSourcesList');
+        if (list && list.dataset.wordWebBound !== 'true') {
+          list.addEventListener('input', function(event) {
+            const target = event.target;
+            if (!target || !target.classList || !target.classList.contains('word-web-input')) {
+              return;
+            }
+            const index = parseInt(target.dataset.wordWebIndex || '-1', 10);
+            if (isNaN(index) || index < 0 || index >= wordWebSourcesState.length) {
+              return;
+            }
+            wordWebSourcesState[index] = target.value.trim();
+          });
+          list.addEventListener('click', function(event) {
+            const button = event.target && event.target.closest('[data-word-web-remove]');
+            if (!button) {
+              return;
+            }
+            const index = parseInt(button.dataset.wordWebRemove || '-1', 10);
+            if (isNaN(index) || index < 0 || index >= wordWebSourcesState.length) {
+              return;
+            }
+            wordWebSourcesState.splice(index, 1);
+            renderWordWebSourcesList();
+            syncWordWebSourcesCard();
+          });
+          list.dataset.wordWebBound = 'true';
+        }
+      }
+
+function syncWordWebSourcesCard() {
+        const card = document.getElementById('wordWebSourcesCard');
+        if (!card) {
+          return;
+        }
+        const isWordTheme = isWordThemeActiveForCreate();
+        card.style.display = isWordTheme ? 'block' : 'none';
+        if (!isWordTheme) {
+          return;
+        }
+        const toggle = document.getElementById('wordWebSourcesToggle');
+        const body = document.getElementById('wordWebSourcesBody');
+        const list = document.getElementById('wordWebSourcesList');
+        const addBtn = document.getElementById('wordWebSourcesAdd');
+        const isActive = Boolean(toggle && toggle.checked);
+        if (isActive && wordWebSourcesState.length === 0) {
+          wordWebSourcesState.push('');
+          renderWordWebSourcesList();
+        }
+        if (body) {
+          body.classList.toggle('is-hidden', !isActive);
+          body.setAttribute('aria-hidden', String(!isActive));
+        }
+        if (list) {
+          const inputs = list.querySelectorAll('.word-web-input');
+          inputs.forEach(function(input) {
+            input.disabled = !isActive;
+            if (!isActive) {
+              input.setAttribute('aria-disabled', 'true');
+            } else {
+              input.removeAttribute('aria-disabled');
+            }
+          });
+          const removeButtons = list.querySelectorAll('.word-web-remove');
+          removeButtons.forEach(function(button) {
+            button.disabled = !isActive;
+            if (!isActive) {
+              button.setAttribute('aria-disabled', 'true');
+            } else {
+              button.removeAttribute('aria-disabled');
+            }
+          });
+        }
+        if (addBtn) {
+          addBtn.disabled = !isActive || wordWebSourcesState.length >= WORD_WEB_SOURCE_LIMIT;
+        }
       }
 
 function syncWordCreateOptions() {
         syncWordTitleControls();
         syncWordBodyControls();
         syncWordContextCard();
+        syncWordWebSourcesCard();
       }
 
 function bindWordTextToggles() {
@@ -310,6 +551,7 @@ function bindWordTextToggles() {
           });
           manualBodyToggle.dataset.toggleBound = 'true';
         }
+        bindWordContextToggles();
       }
 
 function bindWordFormatInputs() {
@@ -360,6 +602,8 @@ function initializeWordRangeMode() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordWebSourcesControls();
+        renderWordWebSourcesList();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
@@ -375,6 +619,8 @@ function notifyCreateThemeChanged() {
         bindWordRangeToggle();
         bindWordTextToggles();
         bindWordFormatInputs();
+        bindWordWebSourcesControls();
+        renderWordWebSourcesList();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
         refreshWordPreviews();
@@ -391,6 +637,8 @@ const WordCrafterCreateTab = Object.freeze({
         bindRangeToggle: bindWordRangeToggle,
         bindTextToggles: bindWordTextToggles,
         bindFormatInputs: bindWordFormatInputs,
+        bindContextToggles: bindWordContextToggles,
+        bindWebSources: bindWordWebSourcesControls,
         notifyThemeChanged: notifyCreateThemeChanged
       });
 
