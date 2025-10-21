@@ -170,6 +170,27 @@
       .tab-nav-primary {
         margin-bottom: 20px;
       }
+      body.theme-wordcrafter .tab-nav-primary {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-areas:
+          'tab-ai tab-ai tab-edit tab-edit tab-create tab-create'
+          '. tab-triggers tab-triggers tab-actions tab-actions .';
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='aiTab'] {
+        grid-area: tab-ai;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='editTab'] {
+        grid-area: tab-edit;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='createTab'] {
+        grid-area: tab-create;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='triggersTab'] {
+        grid-area: tab-triggers;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='actionsTab'] {
+        grid-area: tab-actions;
+      }
       @media (min-width: 641px) {
         .tab-nav-primary {
           grid-template-areas:
@@ -3003,6 +3024,267 @@
       .action-buttons button {
         flex: 1 1 160px;
       }
+      .word-range-toggle {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .word-range-toggle label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .word-range-info {
+        background: rgba(13, 107, 90, 0.08);
+        border: 1px solid rgba(13, 107, 90, 0.25);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin: 4px 0 12px;
+        color: var(--tc-text);
+      }
+      .word-range-info strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+      .word-range-info p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--tc-muted);
+      }
+      .word-cursor-notice {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(148, 163, 184, 0.2);
+        color: var(--tc-text);
+        font-size: 13px;
+      }
+      .word-range-legend {
+        margin-top: 6px;
+        color: var(--tc-muted);
+      }
+      .word-text-options {
+        margin-top: 14px;
+        background: linear-gradient(120deg, rgba(42, 176, 255, 0.12), rgba(95, 209, 255, 0.08));
+        border: 1px solid rgba(28, 141, 212, 0.28);
+        border-radius: 16px;
+        padding: 16px 18px;
+        display: none;
+        box-shadow: 0 18px 40px rgba(30, 136, 191, 0.12);
+      }
+      .word-text-toggle-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .word-text-options .checkbox-subtle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--tc-text);
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 12px;
+        padding: 10px 14px;
+        border: 1px solid transparent;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .word-text-options .checkbox-subtle:hover {
+        border-color: rgba(28, 141, 212, 0.35);
+        box-shadow: 0 6px 12px rgba(28, 141, 212, 0.16);
+      }
+      .word-text-options .word-format-toggle {
+        margin-top: 4px;
+      }
+      .word-format-options {
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid rgba(28, 141, 212, 0.18);
+        display: none;
+        box-shadow: 0 14px 32px rgba(42, 176, 255, 0.16);
+      }
+      .word-format-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .word-format-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .word-format-heading h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tc-primary-dark);
+      }
+      .word-format-heading p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--tc-muted);
+      }
+      .word-format-preview {
+        min-width: 220px;
+        flex: 0 0 auto;
+        border-radius: 12px;
+        padding: 14px 18px;
+        background: rgba(42, 176, 255, 0.15);
+        color: var(--tc-primary-dark);
+        font-weight: 600;
+        text-align: center;
+        box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
+        transition: all 0.2s ease;
+      }
+      .word-format-preview.word-format-preview-body {
+        text-align: left;
+        font-weight: 500;
+        min-width: 260px;
+        line-height: 1.6;
+      }
+      .word-format-preview .word-preview-keywords {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: rgba(42, 176, 255, 0.22);
+        margin-left: 4px;
+        font-weight: 600;
+      }
+      .word-format-preview.word-preview-highlighted .word-preview-keywords {
+        background: rgba(255, 216, 102, 0.85);
+        color: #7c5a00;
+      }
+      .word-format-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      .word-format-group {
+        flex: 1 1 190px;
+        min-width: 160px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-format-group label {
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.01em;
+        color: var(--tc-muted);
+        text-transform: uppercase;
+      }
+      .word-format-group input[type='number'] {
+        max-width: 160px;
+      }
+      .word-format-flags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .word-format-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(28, 141, 212, 0.25);
+        background: rgba(42, 176, 255, 0.08);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .word-format-flag input {
+        margin: 0;
+      }
+      .word-format-flag.is-active {
+        background: rgba(42, 176, 255, 0.22);
+        border-color: rgba(28, 141, 212, 0.5);
+        box-shadow: 0 8px 18px rgba(42, 176, 255, 0.22);
+      }
+      .word-body-extra {
+        display: none;
+      }
+      .word-body-context-card {
+        margin-top: 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(42, 176, 255, 0.16), rgba(2, 132, 199, 0.12));
+        border: 1px solid rgba(28, 141, 212, 0.32);
+        padding: 18px 20px;
+        display: none;
+        box-shadow: 0 24px 48px rgba(30, 136, 191, 0.18);
+      }
+      .word-context-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .word-context-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.82);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: var(--tc-primary-dark);
+        box-shadow: 0 10px 18px rgba(42, 176, 255, 0.2);
+        flex-shrink: 0;
+      }
+      .word-context-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-context-heading h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--tc-primary-dark);
+      }
+      .word-context-heading p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--tc-muted);
+      }
+      .word-context-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .word-context-body textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+      .word-context-columns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      .word-context-columns .word-format-group {
+        min-width: 180px;
+        flex: 1 1 210px;
+      }
+      .word-context-helper {
+        margin-top: 10px;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.7);
+      }
       #editActionsRow {
         margin-top: 20px;
       }
@@ -3198,7 +3480,7 @@
         <button
           class="tab-btn tab-btn--tooltip-below"
           data-tab="editTab"
-          data-themes="table"
+          data-themes="table word"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
         >
           Editar tabla
@@ -3206,7 +3488,7 @@
         <button
           class="tab-btn tab-btn--tooltip-below"
           data-tab="createTab"
-          data-themes="table"
+          data-themes="table word"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
         >
           Crear tabla
@@ -3237,46 +3519,289 @@
         </button>
       </div>
 
-      <div id="createTab" class="tab-content" data-themes="table">
+      <div id="createTab" class="tab-content" data-themes="table word">
         <div class="section">
-          <div class="range-row">
-            <div>
-              <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+          <div id="wordRangeToggleRow" class="word-range-toggle" style="display:none;">
+            <label for="wordUseRangeToggle" class="checkbox-subtle">
+              <input type="checkbox" id="wordUseRangeToggle" />
+              Seleccionar rango
+            </label>
+          </div>
+          <div id="wordRangeFields">
+            <div class="range-row">
+              <div>
+                <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+              </div>
+              <div class="range-actions">
+                <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+              </div>
             </div>
-            <div class="range-actions">
-              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
+            <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
+            <div class="small-text" style="margin-top:4px;">
+              Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+            </div>
+            <div id="wordRangeLegend" class="small-text word-range-legend" style="display:none;">
+              Las celdas del rango elegido se combinarán automáticamente antes de pegar el texto generado.
             </div>
           </div>
-          <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
-          <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
-          <div class="small-text" style="margin-top:4px;">
-            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+          <div id="wordCursorNotice" class="word-cursor-notice" style="display:none;">
+            El texto se pegará donde esté el cursor actual.
           </div>
         </div>
         <div class="section">
-          <label for="tableName">Nombre de la tabla</label>
-          <input type="text" id="tableName" placeholder="Ingrese un nombre..." />
+          <label for="tableName">Título del texto</label>
+          <input type="text" id="tableName" placeholder="Ingrese un título..." />
+          <div id="wordTitleOptions" class="word-text-options" style="display:none;">
+            <div class="word-text-toggle-group">
+              <label for="wordAutoTitleToggle" class="checkbox-subtle">
+                <input type="checkbox" id="wordAutoTitleToggle" />
+                Generar título automáticamente con IA
+              </label>
+              <label for="wordManualTitleFormatToggle" class="checkbox-subtle word-format-toggle">
+                <input type="checkbox" id="wordManualTitleFormatToggle" />
+                Editar formato del título manualmente
+              </label>
+            </div>
+            <div id="wordTitleFormatOptions" class="word-format-options">
+              <div class="word-format-header">
+                <div class="word-format-heading">
+                  <h4>Formato del título</h4>
+                  <p>Ajusta estilo, tamaño y peso para presentar el título con presencia.</p>
+                </div>
+                <div
+                  id="wordTitlePreview"
+                  class="word-format-preview"
+                  aria-live="polite"
+                  aria-label="Vista previa del título"
+                >
+                  Ejemplo de título
+                </div>
+              </div>
+              <div class="word-format-grid">
+                <div class="word-format-group">
+                  <label for="wordTitleFontFamily">Fuente</label>
+                  <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                    <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
+                    <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
+                    <option value="'Raleway', Arial, sans-serif">Raleway</option>
+                    <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordTitleColor">Color de letra</label>
+                  <input
+                    type="color"
+                    id="wordTitleColor"
+                    value="#1F2937"
+                    data-default-value="#1F2937"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordTitleFontSize">Tamaño de letra</label>
+                  <input
+                    type="number"
+                    id="wordTitleFontSize"
+                    min="14"
+                    max="72"
+                    step="1"
+                    value="32"
+                    data-default-value="32"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordTitleAlignment">Alineación</label>
+                  <select id="wordTitleAlignment" data-default-value="center">
+                    <option value="left">Izquierda</option>
+                    <option value="center" selected>Centro</option>
+                    <option value="right">Derecha</option>
+                    <option value="justify">Justificada</option>
+                  </select>
+                </div>
+              </div>
+              <div class="word-format-flags">
+                <label for="wordTitleBold" class="word-format-flag"
+                  ><input type="checkbox" id="wordTitleBold" /> Negrita</label
+                >
+                <label for="wordTitleUnderline" class="word-format-flag"
+                  ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
+                >
+                <label for="wordTitleItalics" class="word-format-flag"
+                  ><input type="checkbox" id="wordTitleItalics" /> Cursiva</label
+                >
+                <label for="wordTitleUppercase" class="word-format-flag"
+                  ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
+                >
+              </div>
+            </div>
+          </div>
           <div class="js-comment-hint-field">
-            <label for="tableDesc">Descripción</label>
-            <textarea id="tableDesc" placeholder="Descripción de la tabla..."></textarea>
+            <label for="tableDesc">Descripción del texto</label>
+            <textarea id="tableDesc" placeholder="Descripción del texto..."></textarea>
           </div>
-          <label>Encabezados (puede editar y reordenar)</label>
-          <ul id="headersList" class="header-list"></ul>
-          <div class="toggle-group">
-            <label for="colorHeader">Color encabezado</label>
-            <input type="color" id="colorHeader" />
+          <div id="wordContextCard" class="word-body-context-card" style="display:none;">
+            <div class="word-context-header">
+              <div class="word-context-icon" aria-hidden="true">✦</div>
+              <div class="word-context-heading">
+                <h3>Contexto y personalización</h3>
+                <p>Brinda pistas para adaptar el contenido a tu audiencia y objetivos.</p>
+              </div>
+            </div>
+            <div class="word-context-body">
+              <div class="word-format-group">
+                <label for="wordBodyContext">Indicaciones clave</label>
+                <textarea
+                  id="wordBodyContext"
+                  rows="3"
+                  placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
+                ></textarea>
+              </div>
+              <div class="word-context-columns">
+                <div class="word-format-group">
+                  <label for="wordBodyLanguage">Idioma de salida</label>
+                  <input
+                    type="text"
+                    id="wordBodyLanguage"
+                    placeholder="Ej: Español neutro"
+                    data-default-value=""
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyTone">Tono del reporte</label>
+                  <select id="wordBodyTone" data-default-value="profesional">
+                    <option value="profesional" selected>Profesional</option>
+                    <option value="formal">Formal</option>
+                    <option value="informal">Informal</option>
+                    <option value="persuasivo">Persuasivo</option>
+                    <option value="didactico">Didáctico</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyProfile">Perfil profesional</label>
+                  <input
+                    type="text"
+                    id="wordBodyProfile"
+                    placeholder="Ej: Analista financiero senior"
+                    data-default-value=""
+                  />
+                </div>
+              </div>
+            </div>
+            <p class="word-context-helper">
+              Estos campos ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
+            </p>
           </div>
-          <div class="toggle-group">
-            <label for="colorAlt1">Color filas alternas 1</label>
-            <input type="color" id="colorAlt1" />
+          <div id="wordBodyOptions" class="word-text-options" style="display:none;">
+            <div class="word-text-toggle-group">
+              <label for="wordManualBodyFormatToggle" class="checkbox-subtle">
+                <input type="checkbox" id="wordManualBodyFormatToggle" />
+                Editar formato del cuerpo manualmente
+              </label>
+            </div>
+            <div id="wordBodyFormatOptions" class="word-format-options">
+              <div class="word-format-header">
+                <div class="word-format-heading">
+                  <h4>Formato del cuerpo</h4>
+                  <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
+                </div>
+                <div
+                  id="wordBodyPreview"
+                  class="word-format-preview word-format-preview-body"
+                  aria-live="polite"
+                  aria-label="Vista previa del cuerpo"
+                >
+                  <span class="word-preview-text">Ejemplo de párrafo adaptable a tu reporte, resaltando</span>
+                  <span class="word-preview-keywords">palabras clave</span>
+                </div>
+              </div>
+              <div class="word-format-grid">
+                <div class="word-format-group">
+                  <label for="wordBodyFontFamily">Fuente</label>
+                  <select id="wordBodyFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                    <option value="'Roboto', Arial, sans-serif">Roboto</option>
+                    <option value="'Open Sans', Arial, sans-serif">Open Sans</option>
+                    <option value="'Lora', 'Times New Roman', serif">Lora</option>
+                    <option value="'Source Serif Pro', 'Times New Roman', serif">Source Serif Pro</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyColor">Color de letra</label>
+                  <input
+                    type="color"
+                    id="wordBodyColor"
+                    value="#1F2937"
+                    data-default-value="#1F2937"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyFontSize">Tamaño de letra</label>
+                  <input
+                    type="number"
+                    id="wordBodyFontSize"
+                    min="10"
+                    max="48"
+                    step="1"
+                    value="15"
+                    data-default-value="15"
+                  />
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyAlignment">Alineación</label>
+                  <select id="wordBodyAlignment" data-default-value="justify">
+                    <option value="left">Izquierda</option>
+                    <option value="center">Centro</option>
+                    <option value="right">Derecha</option>
+                    <option value="justify" selected>Justificada</option>
+                  </select>
+                </div>
+                <div class="word-format-group">
+                  <label for="wordBodyLineSpacing">Interlineado</label>
+                  <select id="wordBodyLineSpacing" data-default-value="1.5">
+                    <option value="1">1.0</option>
+                    <option value="1.15">1.15</option>
+                    <option value="1.5" selected>1.5</option>
+                    <option value="1.75">1.75</option>
+                    <option value="2">2.0</option>
+                  </select>
+                </div>
+              </div>
+              <div class="word-format-flags">
+                <label for="wordBodyBold" class="word-format-flag"
+                  ><input type="checkbox" id="wordBodyBold" /> Negrita</label
+                >
+                <label for="wordBodyUnderline" class="word-format-flag"
+                  ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
+                >
+                <label for="wordBodyItalics" class="word-format-flag"
+                  ><input type="checkbox" id="wordBodyItalics" /> Cursiva</label
+                >
+                <label for="wordBodyHighlight" class="word-format-flag"
+                  ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
+                >
+              </div>
+            </div>
           </div>
-          <div class="toggle-group">
-            <label for="colorAlt2">Color filas alternas 2</label>
-            <input type="color" id="colorAlt2" />
-          </div>
-          <div class="toggle-group">
-            <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
-            <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
+          <div id="tableHeaderOptions" data-themes="table">
+            <label>Encabezados (puede editar y reordenar)</label>
+            <ul id="headersList" class="header-list"></ul>
+            <div class="toggle-group">
+              <label for="colorHeader">Color encabezado</label>
+              <input type="color" id="colorHeader" />
+            </div>
+            <div class="toggle-group">
+              <label for="colorAlt1">Color filas alternas 1</label>
+              <input type="color" id="colorAlt1" />
+            </div>
+            <div class="toggle-group">
+              <label for="colorAlt2">Color filas alternas 2</label>
+              <input type="color" id="colorAlt2" />
+            </div>
+            <div class="toggle-group">
+              <label><input type="checkbox" id="toggleBorder" checked /> Bordes negros</label>
+              <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
+            </div>
           </div>
           <div class="action-buttons">
             <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
@@ -3285,7 +3810,7 @@
         </div>
       </div>
 
-      <div id="editTab" class="tab-content" data-themes="table">
+      <div id="editTab" class="tab-content" data-themes="table word">
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
           <div class="edit-saved-container">
