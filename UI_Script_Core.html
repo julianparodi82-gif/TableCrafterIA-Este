@@ -3334,6 +3334,13 @@ function playSidebarAnimation() {
             themeMessageContent.innerHTML = tableMessage;
           }
           updateTabLabelsForTheme(nextTheme);
+          if (typeof notifyCreateThemeChanged === 'function') {
+            try {
+              notifyCreateThemeChanged(nextTheme);
+            } catch (err) {
+              console.log('No se pudo sincronizar la vista de creación con el cambio de tema.', err);
+            }
+          }
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
           if (themeChanged || settings.forceSync) {

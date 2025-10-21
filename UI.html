@@ -3024,6 +3024,51 @@
       .action-buttons button {
         flex: 1 1 160px;
       }
+      .word-range-toggle {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .word-range-toggle label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--tc-text);
+      }
+      .word-range-info {
+        background: rgba(13, 107, 90, 0.08);
+        border: 1px solid rgba(13, 107, 90, 0.25);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin: 4px 0 12px;
+        color: var(--tc-text);
+      }
+      .word-range-info strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+      .word-range-info p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--tc-muted);
+      }
+      .word-cursor-notice {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(148, 163, 184, 0.2);
+        color: var(--tc-text);
+        font-size: 13px;
+      }
+      .word-range-legend {
+        margin-top: 6px;
+        color: var(--tc-muted);
+      }
       #editActionsRow {
         margin-top: 20px;
       }
@@ -3260,18 +3305,39 @@
 
       <div id="createTab" class="tab-content" data-themes="table word">
         <div class="section">
-          <div class="range-row">
-            <div>
-              <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+          <div id="wordRangeToggleRow" class="word-range-toggle" style="display:none;">
+            <label for="wordUseRangeToggle" class="checkbox-subtle">
+              <input type="checkbox" id="wordUseRangeToggle" checked />
+              Seleccionar un rango antes de pegar
+            </label>
+          </div>
+          <div id="wordRangeInfo" class="word-range-info" style="display:none;" role="note">
+            <strong>Pegá el texto dentro de un rango combinado</strong>
+            <p>
+              Al activar esta opción podrás elegir dónde insertar el contenido y combinar automáticamente las celdas
+              seleccionadas antes de pegarlo.
+            </p>
+          </div>
+          <div id="wordRangeFields">
+            <div class="range-row">
+              <div>
+                <strong>Rango activo:</strong> <span id="rangeLabel">—</span>
+              </div>
+              <div class="range-actions">
+                <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+              </div>
             </div>
-            <div class="range-actions">
-              <button id="refreshRangeBtn" class="btn-secondary" title="Actualizar rango activo">Actualizar</button>
+            <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
+            <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
+            <div class="small-text" style="margin-top:4px;">
+              Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+            </div>
+            <div id="wordRangeLegend" class="small-text word-range-legend" style="display:none;">
+              Las celdas del rango elegido se combinarán automáticamente antes de pegar el texto generado.
             </div>
           </div>
-          <label for="rangeInput" style="margin-top:12px;">Rango a utilizar</label>
-          <input type="text" id="rangeInput" placeholder="Ej: Hoja1!A1:D10" />
-          <div class="small-text" style="margin-top:4px;">
-            Puede escribir el rango manualmente o usar "Actualizar" para tomar la selección activa.
+          <div id="wordCursorNotice" class="word-cursor-notice" style="display:none;">
+            El texto se pegará donde esté el cursor actual.
           </div>
         </div>
         <div class="section">
