@@ -67,6 +67,12 @@
         --tc-tooltip-bg: rgba(8, 45, 68, 0.92);
         --tc-body-gradient: linear-gradient(160deg, #F0F7FF 0%, #D8EFFF 48%, #E8F7FF 100%);
       }
+      body.theme-wordcrafter .is-table-only {
+        display: none !important;
+      }
+      body.theme-tablecrafter .is-word-only {
+        display: none !important;
+      }
       .sidebar-scroll-wrapper {
         direction: ltr;
         writing-mode: horizontal-tb;
@@ -3128,7 +3134,7 @@
         margin: 0;
         font-size: 16px;
         font-weight: 700;
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .word-format-heading p {
         margin: 0;
@@ -3141,7 +3147,7 @@
         border-radius: 12px;
         padding: 14px 18px;
         background: rgba(42, 176, 255, 0.15);
-        color: var(--tc-primary-dark);
+        color: #000000;
         font-weight: 600;
         text-align: center;
         box-shadow: inset 0 0 0 1px rgba(42, 176, 255, 0.3);
@@ -3181,7 +3187,7 @@
         font-weight: 600;
         font-size: 12px;
         letter-spacing: 0.01em;
-        color: var(--tc-muted);
+        color: #000000;
         text-transform: uppercase;
       }
       .word-format-group input[type='number'] {
@@ -3203,7 +3209,7 @@
         background: rgba(42, 176, 255, 0.08);
         font-size: 12px;
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
       }
@@ -3256,7 +3262,7 @@
         margin: 0;
         font-size: 18px;
         font-weight: 700;
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .word-context-heading p {
         margin: 0;
@@ -3286,7 +3292,7 @@
       }
       .word-context-toggle {
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
       }
       .word-context-fields {
         display: flex;
@@ -3371,7 +3377,7 @@
         padding: 6px 12px;
         font-size: 12px;
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease;
       }
@@ -3391,9 +3397,41 @@
         padding: 8px 16px;
         font-size: 13px;
         font-weight: 600;
-        color: var(--tc-primary-dark);
+        color: #000000;
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .word-context-section-head {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .word-context-section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #000000;
+      }
+      .word-context-description {
+        margin: 0;
+        font-size: 12px;
+        color: #000000;
+        line-height: 1.4;
+      }
+      .word-action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .word-favorite-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .word-favorite-icon {
+        font-size: 16px;
+        color: #FFAA00;
       }
       .word-web-add:hover:not(:disabled) {
         background: rgba(42, 176, 255, 0.12);
@@ -3754,7 +3792,7 @@
               </div>
             </div>
           </div>
-          <div class="js-comment-hint-field">
+          <div class="js-comment-hint-field is-table-only" data-themes="table">
             <label for="tableDesc">Descripción del texto</label>
             <textarea id="tableDesc" placeholder="Descripción del texto..."></textarea>
           </div>
@@ -3762,16 +3800,18 @@
             <div class="word-context-header">
               <div class="word-context-icon" aria-hidden="true">✦</div>
               <div class="word-context-heading">
-                <h3>Contexto y personalización</h3>
+                <h3>Contexto</h3>
                 <p>Brinda pistas para adaptar el contenido a tu audiencia y objetivos.</p>
               </div>
             </div>
             <div class="word-context-body">
               <div id="wordContextDetailsWrapper" class="word-context-section">
-                <label for="wordContextDetailsToggle" class="checkbox-subtle word-context-toggle">
-                  <input type="checkbox" id="wordContextDetailsToggle" checked />
-                  Contexto y personalización
-                </label>
+                <div class="word-context-section-head">
+                  <span class="word-context-section-title">Contexto</span>
+                  <p class="word-context-description">
+                    Describe la situación, audiencia y objetivos principales. Esta información es obligatoria para personalizar la respuesta.
+                  </p>
+                </div>
                 <div id="wordContextDetailsFields" class="word-context-fields">
                   <div class="word-format-group">
                     <label for="wordBodyContext">Indicaciones clave</label>
@@ -3779,7 +3819,11 @@
                       id="wordBodyContext"
                       rows="3"
                       placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
+                      required
                     ></textarea>
+                    <p class="word-context-description">
+                      Ej.: Informe trimestral para el comité directivo con enfoque en resultados de ventas B2B.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -3792,30 +3836,44 @@
                   <div id="wordLanguageFields" class="word-context-fields">
                     <div class="word-format-group">
                       <label for="wordBodyLanguage">Idioma de salida</label>
-                      <input
-                        type="text"
-                        id="wordBodyLanguage"
-                        placeholder="Ej: Español neutro"
-                        data-default-value=""
-                      />
+                      <select id="wordBodyLanguage" data-default-value="">
+                        <option value="" selected>Selecciona un idioma</option>
+                        <option value="Español (neutro)">Español (neutro)</option>
+                        <option value="Español (México)">Español (México)</option>
+                        <option value="Español (España)">Español (España)</option>
+                        <option value="Inglés (EE. UU.)">Inglés (EE. UU.)</option>
+                        <option value="Inglés (Reino Unido)">Inglés (Reino Unido)</option>
+                        <option value="Portugués (Brasil)">Portugués (Brasil)</option>
+                        <option value="Francés">Francés</option>
+                        <option value="Alemán">Alemán</option>
+                        <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
+                      </select>
+                      <p class="word-context-description">
+                        Define el idioma final del texto. Ej.: Español (México) para presentaciones regionales.
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div id="wordToneSection" class="word-context-section">
                   <label for="wordToneToggle" class="checkbox-subtle word-context-toggle">
                     <input type="checkbox" id="wordToneToggle" checked />
-                    Tono del reporte
+                    Tono del texto
                   </label>
                   <div id="wordToneFields" class="word-context-fields">
                     <div class="word-format-group">
-                      <label for="wordBodyTone">Tono del reporte</label>
+                      <label for="wordBodyTone">Tono del texto</label>
                       <select id="wordBodyTone" data-default-value="profesional">
                         <option value="profesional" selected>Profesional</option>
-                        <option value="formal">Formal</option>
-                        <option value="informal">Informal</option>
+                        <option value="formal">Formal y sobrio</option>
+                        <option value="informal">Conversacional</option>
                         <option value="persuasivo">Persuasivo</option>
                         <option value="didactico">Didáctico</option>
+                        <option value="inspirador">Inspirador</option>
+                        <option value="analitico">Analítico</option>
                       </select>
+                      <p class="word-context-description">
+                        Escoge la voz narrativa. Ej.: Conversacional para textos cercanos o Persuasivo para campañas.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3827,12 +3885,19 @@
                   <div id="wordProfileFields" class="word-context-fields">
                     <div class="word-format-group">
                       <label for="wordBodyProfile">Perfil profesional</label>
-                      <input
-                        type="text"
-                        id="wordBodyProfile"
-                        placeholder="Ej: Analista financiero senior"
-                        data-default-value=""
-                      />
+                      <select id="wordBodyProfile" data-default-value="">
+                        <option value="" selected>Selecciona un perfil</option>
+                        <option value="Analista financiero senior">Analista financiero senior</option>
+                        <option value="Directora de marketing regional">Directora de marketing regional</option>
+                        <option value="Director ejecutivo (CEO)">Director ejecutivo (CEO)</option>
+                        <option value="Consultor de datos">Consultor de datos</option>
+                        <option value="Especialista en recursos humanos">Especialista en recursos humanos</option>
+                        <option value="Periodista de negocios">Periodista de negocios</option>
+                        <option value="Otro (descríbelo en el contexto)">Otro (descríbelo en el contexto)</option>
+                      </select>
+                      <p class="word-context-description">
+                        Indica el rol que firma el contenido. Ej.: Directora de marketing regional para notas comerciales.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3971,7 +4036,14 @@
               <label><input type="checkbox" id="toggleBold" checked /> Encabezado en negrita</label>
             </div>
           </div>
-          <div class="action-buttons">
+          <div class="word-action-buttons is-word-only" data-themes="word">
+            <button id="wordFavoriteBtn" class="btn-secondary word-favorite-btn">
+              <span class="word-favorite-icon" aria-hidden="true">★</span>
+              Agregar a favoritos
+            </button>
+            <button id="wordGenerateBtn" class="btn-primary">Generar Texto</button>
+          </div>
+          <div class="action-buttons is-table-only" data-themes="table">
             <button id="applyFormatBtn" class="btn-primary">Aplicar formato</button>
             <button id="saveTableBtn" class="btn-secondary">Guardar tabla</button>
           </div>
