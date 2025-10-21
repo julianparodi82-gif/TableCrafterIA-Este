@@ -465,6 +465,64 @@ function toggleAiListValue(value) {
         updateAiListSelectionUI(selectEl);
       }
 
+function updateAiTextListSelectionUI(select) {
+        const listEl = document.getElementById('aiSavedTextsList');
+        if (!listEl || !select) {
+          return;
+        }
+        const selectedSet = Object.create(null);
+        if (select.options) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (option && option.value && option.selected && !option.disabled) {
+              selectedSet[option.value] = true;
+            }
+          });
+        }
+        const items = listEl.querySelectorAll('.ai-multi-item');
+        Array.prototype.forEach.call(items, function(item) {
+          const value = item && item.dataset ? item.dataset.value : '';
+          if (!value) {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+            return;
+          }
+          if (selectedSet[value]) {
+            item.classList.add('selected');
+            item.setAttribute('aria-selected', 'true');
+          } else {
+            item.classList.remove('selected');
+            item.setAttribute('aria-selected', 'false');
+          }
+        });
+      }
+
+function toggleAiTextListValue(value) {
+        const selectEl = document.getElementById('aiSavedTexts');
+        const listEl = document.getElementById('aiSavedTextsList');
+        if (!selectEl || !listEl || selectEl.disabled) {
+          return;
+        }
+        const options = selectEl.options ? Array.prototype.slice.call(selectEl.options) : [];
+        if (!options.length) {
+          return;
+        }
+        const targetValue = String(value || '');
+        if (!targetValue) {
+          return;
+        }
+        let targetOption = null;
+        options.forEach(function(option) {
+          if (option && option.value === targetValue) {
+            targetOption = option;
+          }
+        });
+        if (!targetOption) {
+          return;
+        }
+        targetOption.selected = !targetOption.selected;
+        updateAiTextListSelectionUI(selectEl);
+      }
+
 function normalizeReportEmailEntry(entry) {
         if (!entry) {
           return null;
@@ -5732,10 +5790,223 @@ function collectAskCustomization() {
         }).askQuestion(payload, question, customization || null);
       });
 
+      function setupWordToggleFields(root) {
+        if (!root) {
+          return;
+        }
+        var selects = root.querySelectorAll('[data-word-toggle-target]');
+        Array.prototype.forEach.call(selects, function(select) {
+          if (!select) {
+            return;
+          }
+          var targetId = select.getAttribute('data-word-toggle-target');
+          if (!targetId) {
+            return;
+          }
+          var valuesAttr = select.getAttribute('data-word-toggle-value') || '';
+          var values = valuesAttr
+            .split(',')
+            .map(function(value) {
+              return value.trim();
+            })
+            .filter(function(value) {
+              return Boolean(value);
+            });
+          if (!values.length) {
+            values = ['custom'];
+          }
+          var target = document.getElementById(targetId);
+          if (!target) {
+            return;
+          }
+          var fieldId = select.getAttribute('data-word-toggle-field');
+          var inputs = [];
+          if (fieldId) {
+            var field = document.getElementById(fieldId);
+            if (field) {
+              inputs = field.querySelectorAll('textarea, input, select');
+            }
+          }
+          if (!inputs.length) {
+            inputs = target.querySelectorAll('textarea, input, select');
+          }
+          var updateVisibility = function() {
+            var show = values.indexOf(select.value) !== -1;
+            if (show) {
+              target.classList.remove('ai-hidden');
+            } else {
+              target.classList.add('ai-hidden');
+            }
+            Array.prototype.forEach.call(inputs, function(input) {
+              if (!input) {
+                return;
+              }
+              input.disabled = !show;
+            });
+            if (!show && target.contains(document.activeElement) && typeof select.focus === 'function') {
+              select.focus();
+            }
+          };
+          select.addEventListener('change', updateVisibility);
+          updateVisibility();
+        });
+        var checkboxToggles = root.querySelectorAll('[data-word-check-target]');
+        Array.prototype.forEach.call(checkboxToggles, function(toggle) {
+          if (!toggle) {
+            return;
+          }
+          var targetId = toggle.getAttribute('data-word-check-target');
+          if (!targetId) {
+            return;
+          }
+          var target = document.getElementById(targetId);
+          if (!target) {
+            return;
+          }
+          var mode = (toggle.getAttribute('data-word-check-mode') || '').toLowerCase();
+          var inputs = target.querySelectorAll('textarea, input, select');
+          var update = function() {
+            var show = mode === 'invert' ? !toggle.checked : !!toggle.checked;
+            if (show) {
+              target.classList.remove('ai-hidden');
+            } else {
+              target.classList.add('ai-hidden');
+            }
+            Array.prototype.forEach.call(inputs, function(input) {
+              if (!input) {
+                return;
+              }
+              input.disabled = !show;
+            });
+            if (!show && target.contains(document.activeElement) && typeof toggle.focus === 'function') {
+              toggle.focus();
+            }
+          };
+          toggle.addEventListener('change', update);
+          update();
+        });
+      }
+
+      function setupWordActionPanels(root) {
+        if (!root) {
+          return;
+        }
+        var panels = Array.prototype.slice.call(root.querySelectorAll('[data-word-action-panel]'));
+        if (!panels.length) {
+          return;
+        }
+        var select = root.querySelector('#wordActionSelect');
+        var infoElement = root.querySelector('[data-word-action-info]');
+        var panelMap = panels.reduce(function(map, panel) {
+          var key = panel.getAttribute('data-word-action-panel');
+          if (key) {
+            map[key] = panel;
+          }
+          if (!panel.hasAttribute('role')) {
+            panel.setAttribute('role', 'tabpanel');
+          }
+          if (!panel.hasAttribute('tabindex')) {
+            panel.setAttribute('tabindex', '0');
+          }
+          return map;
+        }, {});
+        var getFirstAction = function() {
+          var keys = Object.keys(panelMap);
+          return keys.length ? keys[0] : '';
+        };
+        var updateInfo = function(action) {
+          if (!infoElement) {
+            return;
+          }
+          var title = '';
+          var description = '';
+          if (select && select.options) {
+            Array.prototype.forEach.call(select.options, function(option) {
+              if (!option || !option.value) {
+                return;
+              }
+              if (option.value === action) {
+                title = option.getAttribute('data-info-title') || option.textContent || '';
+                description = option.getAttribute('data-info') || '';
+              }
+            });
+          }
+          var tooltipText = '';
+          if (title && description) {
+            tooltipText = title + '\n' + description;
+          } else if (title) {
+            tooltipText = title;
+          } else if (description) {
+            tooltipText = description;
+          }
+          if (tooltipText) {
+            infoElement.setAttribute('data-tooltip', tooltipText);
+            infoElement.removeAttribute('data-tooltip-disabled');
+          } else {
+            infoElement.removeAttribute('data-tooltip');
+            infoElement.setAttribute('data-tooltip-disabled', 'true');
+          }
+          var ariaLabel = 'Información de la acción seleccionada';
+          if (title) {
+            ariaLabel = 'Información sobre "' + title + '"';
+          }
+          if (description) {
+            ariaLabel += '. ' + description;
+          }
+          infoElement.setAttribute('aria-label', ariaLabel);
+        };
+        var activate = function(action) {
+          if (!action || !panelMap[action]) {
+            return;
+          }
+          Object.keys(panelMap).forEach(function(key) {
+            var panel = panelMap[key];
+            var isActive = key === action;
+            panel.classList.toggle('is-active', isActive);
+            if (isActive) {
+              panel.removeAttribute('hidden');
+              panel.setAttribute('aria-hidden', 'false');
+            } else {
+              panel.setAttribute('aria-hidden', 'true');
+              if (!panel.hasAttribute('hidden')) {
+                panel.setAttribute('hidden', 'hidden');
+              }
+            }
+          });
+          if (select && select.value !== action) {
+            select.value = action;
+          }
+          updateInfo(action);
+        };
+        var ensureInitialAction = function(candidate) {
+          if (candidate && panelMap[candidate]) {
+            return candidate;
+          }
+          if (select && select.value && panelMap[select.value]) {
+            return select.value;
+          }
+          return getFirstAction();
+        };
+        var initialAction = ensureInitialAction(root.getAttribute('data-word-default-action'));
+        if (select) {
+          select.addEventListener('change', function() {
+            activate(select.value);
+          });
+        }
+        if (initialAction) {
+          activate(initialAction);
+        }
+      }
+
       document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('beforeunload', handleSidebarBeforeUnload);
         setDefaultStyles();
         setEditDefaultStyles();
+        var wordRoot = document.querySelector('.ai-word-mode');
+        if (wordRoot) {
+          setupWordActionPanels(wordRoot);
+          setupWordToggleFields(wordRoot);
+        }
         const askSection = document.getElementById('aiAskSection');
         if (askSection) {
           setupCollapsibleControls(askSection);
@@ -5773,6 +6044,42 @@ function collectAskCustomization() {
             }
             event.preventDefault();
             toggleAiListValue(item.dataset.value);
+          });
+        }
+        const aiTextSelect = document.getElementById('aiSavedTexts');
+        const aiTextList = document.getElementById('aiSavedTextsList');
+        if (aiTextSelect) {
+          aiTextSelect.addEventListener('change', function() {
+            updateAiTextListSelectionUI(aiTextSelect);
+          });
+          updateAiTextListSelectionUI(aiTextSelect);
+        }
+        if (aiTextList) {
+          aiTextList.addEventListener('click', function(event) {
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiTextList.classList.contains('disabled')) {
+              return;
+            }
+            toggleAiTextListValue(item.dataset.value);
+          });
+          aiTextList.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            const target = event.target;
+            if (!target) {
+              return;
+            }
+            const item = typeof target.closest === 'function' ? target.closest('.ai-multi-item') : null;
+            if (!item || !item.dataset || !item.dataset.value || aiTextList.classList.contains('disabled')) {
+              return;
+            }
+            event.preventDefault();
+            toggleAiTextListValue(item.dataset.value);
           });
         }
         const aiActionSelect = document.getElementById('aiActionSelect');

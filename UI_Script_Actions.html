@@ -4,6 +4,23 @@ const ACTION_CHANNEL_LABELS = Object.freeze({
   email: 'Correo electrónico',
   whatsapp: 'WhatsApp'
 });
+const REPORT_FORMAT_LABELS_IN_ACTIONS =
+  typeof REPORT_FORMAT_LABELS !== 'undefined'
+    ? REPORT_FORMAT_LABELS
+    : {
+        pdf: 'PDF',
+        excel: 'Excel',
+        sheets: 'Google Sheets'
+      };
+const REPORT_FEATURE_LABELS_IN_ACTIONS =
+  typeof REPORT_FEATURE_LABELS !== 'undefined'
+    ? REPORT_FEATURE_LABELS
+    : {
+        chart: 'Gráfico',
+        table: 'Tabla',
+        list: 'Lista',
+        summary: 'Resumen'
+      };
 const ACTION_EDITOR_DEFAULT_SUBTITLE =
   'Ajustá las características guardadas y actualizá el favorito directamente desde este panel.';
 
@@ -18,6 +35,8 @@ let queuedSavedActionsRefresh = null;
 let savedActionsRefreshTimer = 0;
 let savedActionsPanelInitialized = false;
 let pendingSavedActionMutation = null;
+let savedActionsMenuInitialized = false;
+let savedActionsMenuOpen = false;
 
 function getCurrentSavedActionId() {
   return currentSavedActionId;
@@ -25,6 +44,30 @@ function getCurrentSavedActionId() {
 
 function getSavedActionsSnapshot() {
   return savedActionsCache.slice();
+}
+
+function findSavedActionInCache(actionId) {
+  const id = actionId ? String(actionId) : '';
+  if (!id) {
+    return null;
+  }
+  return (
+    savedActionsCache.find(function(action) {
+      return action && action.id === id;
+    }) || null
+  );
+}
+
+function countReportFavoriteActions(actions) {
+  if (!Array.isArray(actions)) {
+    return 0;
+  }
+  return actions.reduce(function(total, action) {
+    if (action && action.type === 'reportFavorite') {
+      return total + 1;
+    }
+    return total;
+  }, 0);
 }
 
 function dispatchSavedActionsUpdated() {
@@ -64,6 +107,10 @@ function getReportEditorPortal() {
     placeholder: placeholder
   };
   return reportEditorPortal;
+}
+
+function initReportEditorPortal() {
+  getReportEditorPortal();
 }
 
 function mountReportEditorInActions() {
@@ -174,6 +221,9 @@ function exitReportFavoriteEditor(options) {
 }
 
 function notifyActionsTabChanged(targetTab) {
+  if (savedActionsMenuOpen) {
+    closeSavedActionsMenu();
+  }
   if (targetTab === 'aiTab') {
     if (reportEditorMounted || (currentSavedActionDetails && currentSavedActionDetails.type === 'reportFavorite')) {
       exitReportFavoriteEditor({ clearFavorite: false });
@@ -227,10 +277,12 @@ function renderSavedActionsSelect(actions, selectedId, options) {
   if (list.length === 0) {
     select.disabled = true;
     updateSavedActionsEmptyState(false);
+    renderSavedActionsMenu([], '');
     return { hasEntries: false, selectedId: '' };
   }
   const tooltipMap = Object.create(null);
-  list
+  const actionMap = Object.create(null);
+  const sortedList = list
     .slice()
     .sort(function(a, b) {
       const nameA = (a && a.name ? a.name : '').toLowerCase();
@@ -242,24 +294,34 @@ function renderSavedActionsSelect(actions, selectedId, options) {
         return 1;
       }
       return 0;
-    })
-    .forEach(function(action) {
-      if (!action || !action.id) {
-        return;
-      }
-      const option = document.createElement('option');
-      option.value = action.id;
-      const label = action.name ? action.name : 'Acción sin nombre';
-      option.textContent = label + ' • ' + getActionTypeLabel(action.type);
-      const tooltip = buildSavedActionTooltip(action);
-      if (tooltip) {
-        option.title = tooltip;
-        tooltipMap[action.id] = tooltip;
-      }
-      select.appendChild(option);
     });
+  sortedList.forEach(function(action) {
+    if (!action || !action.id) {
+      return;
+    }
+    const option = document.createElement('option');
+    option.value = action.id;
+    const label = action.name ? action.name : 'Acción sin nombre';
+    option.textContent = label + ' • ' + getActionTypeLabel(action.type);
+    const tooltip = buildSavedActionTooltip(action);
+    if (tooltip) {
+      option.title = tooltip;
+      tooltipMap[action.id] = tooltip;
+    }
+    select.appendChild(option);
+    actionMap[action.id] = action;
+  });
   select.disabled = false;
   updateSavedActionsEmptyState(true);
+  const optionEntries = Array.prototype.filter.call(select.options, function(option) {
+    return option && option.value;
+  });
+  const favoriteOption = optionEntries.find(function(option) {
+    const entry = actionMap[option.value];
+    return entry && entry.type === 'reportFavorite';
+  });
+  const fallbackOption = optionEntries.length ? optionEntries[0] : null;
+  const preferredOption = favoriteOption || fallbackOption || null;
   let fallbackTooltipUpdater = null;
   if (typeof bindSelectTooltipWithMap === 'function') {
     bindSelectTooltipWithMap(select, tooltipMap);
@@ -292,11 +354,8 @@ function renderSavedActionsSelect(actions, selectedId, options) {
     if (match) {
       select.value = normalized;
     } else if (opts.autoSelectFirst !== false) {
-      const firstOption = Array.prototype.find.call(select.options, function(option) {
-        return option && option.value;
-      });
-      if (firstOption) {
-        select.value = firstOption.value;
+      if (preferredOption) {
+        select.value = preferredOption.value;
         autoSelectedFirst = true;
       } else {
         select.value = '';
@@ -305,11 +364,8 @@ function renderSavedActionsSelect(actions, selectedId, options) {
       select.value = '';
     }
   } else if (opts.autoSelectFirst !== false) {
-    const firstOption = Array.prototype.find.call(select.options, function(option) {
-      return option && option.value;
-    });
-    if (firstOption) {
-      select.value = firstOption.value;
+    if (preferredOption) {
+      select.value = preferredOption.value;
       autoSelectedFirst = true;
     } else {
       select.value = '';
@@ -331,6 +387,7 @@ function renderSavedActionsSelect(actions, selectedId, options) {
   } else if (fallbackTooltipUpdater) {
     fallbackTooltipUpdater();
   }
+  renderSavedActionsMenu(list, select.value || '');
   return {
     hasEntries: list.length > 0,
     selectedId: select.value || '',
@@ -386,6 +443,9 @@ function clearSavedActionDetails(options) {
   if (container) {
     container.classList.add('ai-hidden');
   }
+  updateSavedActionsTriggerLabel('', {
+    totalFavorites: countReportFavoriteActions(savedActionsCache)
+  });
 }
 
 function formatActionChannel(value) {
@@ -402,7 +462,7 @@ function buildReportFavoriteSummary(action) {
   }
   const parts = [];
   if (action.format) {
-    const formatLabel = REPORT_FORMAT_LABELS[action.format] || action.format;
+    const formatLabel = REPORT_FORMAT_LABELS_IN_ACTIONS[action.format] || action.format;
     parts.push('Formato: ' + formatLabel);
   }
   if (Array.isArray(action.featureDetails) && action.featureDetails.length > 0) {
@@ -412,7 +472,7 @@ function buildReportFavoriteSummary(action) {
           return '';
         }
         const featureId = detail.feature;
-        const baseLabel = REPORT_FEATURE_LABELS[featureId] || featureId;
+        const baseLabel = REPORT_FEATURE_LABELS_IN_ACTIONS[featureId] || featureId;
         const quantity = detail.quantity;
         if (typeof quantity === 'number' && quantity > 1) {
           return baseLabel + ' × ' + quantity;
@@ -428,7 +488,7 @@ function buildReportFavoriteSummary(action) {
   } else if (Array.isArray(action.features) && action.features.length > 0) {
     const labels = action.features
       .map(function(feature) {
-        return REPORT_FEATURE_LABELS[feature] || feature;
+        return REPORT_FEATURE_LABELS_IN_ACTIONS[feature] || feature;
       })
       .filter(function(label) {
         return !!label;
@@ -604,6 +664,257 @@ function buildSavedActionTooltip(action) {
   return parts.join('\n');
 }
 
+function updateSavedActionsTriggerLabel(actionId, options) {
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (!trigger) {
+    return;
+  }
+  const opts = options || {};
+  const totalFavorites =
+    typeof opts.totalFavorites === 'number'
+      ? opts.totalFavorites
+      : countReportFavoriteActions(savedActionsCache);
+  const placeholder = opts.placeholder || 'Elegí un reporte favorito';
+  const labelNode = trigger.querySelector('.ai-saved-actions-trigger-label');
+  const hintNode = trigger.querySelector('.ai-saved-actions-trigger-hint');
+  let labelText = placeholder;
+  let hintText = 'Mostrar favoritos guardados';
+  let appliedId = '';
+  if (totalFavorites <= 0) {
+    hintText = 'Agregá un reporte a favoritos';
+  }
+  if (!actionId && totalFavorites > 0) {
+    hintText =
+      totalFavorites === 1
+        ? '1 favorito disponible'
+        : totalFavorites + ' favoritos disponibles';
+  }
+  if (actionId) {
+    const match = findSavedActionInCache(actionId);
+    if (match && match.type === 'reportFavorite') {
+      labelText = match.name ? match.name : 'Acción sin nombre';
+      hintText = getActionTypeLabel(match.type);
+      appliedId = actionId;
+    }
+  }
+  if (labelNode) {
+    labelNode.textContent = labelText;
+  }
+  if (hintNode) {
+    hintNode.textContent = hintText;
+  }
+  trigger.dataset.selectedId = appliedId;
+}
+
+function closeSavedActionsMenu() {
+  const menu = document.getElementById('aiSavedActionsMenu');
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (menu) {
+    menu.classList.add('ai-hidden');
+  }
+  if (trigger) {
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+  savedActionsMenuOpen = false;
+}
+
+function openSavedActionsMenu() {
+  const menu = document.getElementById('aiSavedActionsMenu');
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (!menu || !trigger || trigger.disabled) {
+    return;
+  }
+  menu.classList.remove('ai-hidden');
+  trigger.setAttribute('aria-expanded', 'true');
+  savedActionsMenuOpen = true;
+  const selected = menu.querySelector('.ai-saved-actions-item--selected');
+  const focusTarget = selected || menu.querySelector('.ai-saved-actions-item');
+  if (focusTarget) {
+    focusTarget.focus();
+  }
+}
+
+function toggleSavedActionsMenu() {
+  if (savedActionsMenuOpen) {
+    closeSavedActionsMenu();
+  } else {
+    openSavedActionsMenu();
+  }
+}
+
+function handleSavedActionsMenuOutsideClick(event) {
+  if (!savedActionsMenuOpen) {
+    return;
+  }
+  const menu = document.getElementById('aiSavedActionsMenu');
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (!menu || !trigger) {
+    return;
+  }
+  const target = event.target;
+  if (menu.contains(target) || trigger.contains(target)) {
+    return;
+  }
+  closeSavedActionsMenu();
+}
+
+function handleSavedActionsMenuKeydown(event) {
+  if (!savedActionsMenuOpen && event.target && event.target.id === 'aiSavedActionsTrigger') {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openSavedActionsMenu();
+    }
+    return;
+  }
+  if (savedActionsMenuOpen) {
+    const menu = document.getElementById('aiSavedActionsMenu');
+    if (menu && event.target && menu.contains(event.target)) {
+      const items = Array.prototype.filter.call(menu.querySelectorAll('.ai-saved-actions-item'), function(item) {
+        return !item.disabled;
+      });
+      if (items.length) {
+        const currentIndex = items.indexOf(event.target);
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          const nextIndex = currentIndex >= 0 && currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          items[nextIndex].focus();
+          return;
+        }
+        if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          items[prevIndex].focus();
+          return;
+        }
+      }
+    }
+  }
+  if (event.key === 'Escape' && savedActionsMenuOpen) {
+    closeSavedActionsMenu();
+    const trigger = document.getElementById('aiSavedActionsTrigger');
+    if (trigger) {
+      trigger.focus();
+    }
+  }
+}
+
+function selectSavedActionFromMenu(actionId) {
+  const select = document.getElementById('aiSavedActions');
+  if (select) {
+    select.value = actionId || '';
+    const changeEvent = new Event('change', { bubbles: true });
+    select.dispatchEvent(changeEvent);
+  } else if (actionId) {
+    loadSavedActionDetails(actionId);
+  }
+  const totalFavorites = countReportFavoriteActions(savedActionsCache);
+  updateSavedActionsTriggerLabel(actionId, {
+    totalFavorites: totalFavorites
+  });
+  renderSavedActionsMenu(savedActionsCache, actionId);
+  closeSavedActionsMenu();
+}
+
+function renderSavedActionsMenu(actions, selectedId) {
+  const menu = document.getElementById('aiSavedActionsMenu');
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (!menu || !trigger) {
+    return;
+  }
+  const list = Array.isArray(actions) ? actions : [];
+  const favorites = list.filter(function(action) {
+    return action && action.type === 'reportFavorite';
+  });
+  const normalizedSelected = selectedId ? String(selectedId) : '';
+  const selectedFavoriteId = favorites.some(function(action) {
+    return action && action.id === normalizedSelected;
+  })
+    ? normalizedSelected
+    : '';
+  menu.innerHTML = '';
+  if (!favorites.length) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'ai-saved-actions-empty';
+    emptyState.textContent = 'No hay reportes favoritos guardados todavía.';
+    menu.appendChild(emptyState);
+    trigger.disabled = true;
+    updateSavedActionsTriggerLabel('', {
+      totalFavorites: 0,
+      placeholder: 'No hay favoritos guardados'
+    });
+    updateSavedActionsEmptyState(false);
+    closeSavedActionsMenu();
+    return;
+  }
+  trigger.disabled = false;
+  favorites
+    .slice()
+    .sort(function(a, b) {
+      const nameA = (a && a.name ? a.name : '').toLowerCase();
+      const nameB = (b && b.name ? b.name : '').toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    })
+    .forEach(function(action) {
+      if (!action || !action.id) {
+        return;
+      }
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'ai-saved-actions-item';
+      item.dataset.actionId = action.id;
+      item.setAttribute('role', 'option');
+      item.textContent = action.name ? action.name : 'Acción sin nombre';
+      const tooltip = buildSavedActionTooltip(action);
+      if (tooltip) {
+        item.title = tooltip.replace(/\n/g, ' • ');
+      }
+      if (action.id === selectedFavoriteId) {
+        item.classList.add('ai-saved-actions-item--selected');
+        item.setAttribute('aria-selected', 'true');
+      } else {
+        item.setAttribute('aria-selected', 'false');
+      }
+      item.addEventListener('click', function() {
+        selectSavedActionFromMenu(action.id);
+      });
+      item.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          selectSavedActionFromMenu(action.id);
+        }
+      });
+      menu.appendChild(item);
+    });
+  updateSavedActionsTriggerLabel(selectedFavoriteId, {
+    totalFavorites: favorites.length
+  });
+  updateSavedActionsEmptyState(true);
+}
+
+function bindSavedActionsMenuEvents() {
+  if (savedActionsMenuInitialized) {
+    return;
+  }
+  const trigger = document.getElementById('aiSavedActionsTrigger');
+  if (!trigger) {
+    return;
+  }
+  trigger.addEventListener('click', function(event) {
+    event.preventDefault();
+    toggleSavedActionsMenu();
+  });
+  trigger.addEventListener('keydown', handleSavedActionsMenuKeydown);
+  document.addEventListener('click', handleSavedActionsMenuOutsideClick);
+  document.addEventListener('keydown', handleSavedActionsMenuKeydown);
+  savedActionsMenuInitialized = true;
+}
+
 async function renderSavedActionDetails(action) {
   const container = document.getElementById('aiActionDetails');
   if (!container) {
@@ -614,6 +925,9 @@ async function renderSavedActionDetails(action) {
     return;
   }
   currentSavedActionDetails = action;
+  updateSavedActionsTriggerLabel(action.id, {
+    totalFavorites: countReportFavoriteActions(savedActionsCache)
+  });
   container.classList.remove('ai-hidden');
   if (action.type === 'reportFavorite') {
     const cardWrapper = document.getElementById('aiActionDetailCard');
@@ -795,6 +1109,7 @@ function initSavedActionsPanel() {
   }
   savedActionsPanelInitialized = true;
   initReportEditorPortal();
+  bindSavedActionsMenuEvents();
   const cardWrapper = document.getElementById('aiActionDetailCard');
   if (cardWrapper) {
     cardWrapper.classList.add('ai-hidden');
