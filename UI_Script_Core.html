@@ -3217,6 +3217,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tabButtonsList = Array.from(document.querySelectorAll('.tab-btn'));
         tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
+        tabButtonsList.forEach(function(btn) {
+          if (!btn || btn.dataset.tabBound === 'true') {
+            return;
+          }
+          btn.addEventListener('click', function(event) {
+            event.preventDefault();
+            const targetTab = btn.dataset ? btn.dataset.tab : '';
+            if (targetTab) {
+              attemptTabChange(targetTab);
+            }
+          });
+          btn.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            event.preventDefault();
+            const targetTab = btn.dataset ? btn.dataset.tab : '';
+            if (targetTab) {
+              attemptTabChange(targetTab);
+            }
+          });
+          btn.dataset.tabBound = 'true';
+        });
         const tabButtonRefs = {
           ai: document.querySelector(".tab-btn[data-tab='aiTab']"),
           edit: document.querySelector(".tab-btn[data-tab='editTab']"),
@@ -3480,6 +3503,13 @@ function playSidebarAnimation() {
               notifyCreateThemeChanged(nextTheme);
             } catch (err) {
               console.log('No se pudo sincronizar la vista de creación con el cambio de tema.', err);
+            }
+          }
+          if (typeof notifyAiThemeChanged === 'function') {
+            try {
+              notifyAiThemeChanged(nextTheme);
+            } catch (err) {
+              console.log('No se pudo sincronizar el panel IA con el cambio de tema.', err);
             }
           }
           updateTabVisibilityForTheme(nextTheme);

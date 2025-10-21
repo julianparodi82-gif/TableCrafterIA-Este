@@ -410,6 +410,9 @@
         margin: 0;
         letter-spacing: 0.01em;
       }
+      body.theme-wordcrafter #appTitle {
+        color: #000000;
+      }
       .theme-toggle {
         position: relative;
         display: inline-flex;
@@ -885,7 +888,7 @@
         background-color: #FFFFFF;
       }
       body.theme-wordcrafter .edit-saved-group-label {
-        color: #0B5CA8;
+        color: #000000;
       }
       body.theme-wordcrafter .edit-saved-item {
         background-image: linear-gradient(
@@ -902,13 +905,16 @@
       }
       body.theme-wordcrafter .edit-saved-locate {
         background-color: rgba(28, 141, 212, 0.1);
-        color: #0B5CA8;
+        color: #000000;
       }
       body.theme-wordcrafter .edit-saved-locate:hover {
         background-color: rgba(28, 141, 212, 0.18);
       }
       body.theme-wordcrafter .edit-saved-empty {
-        color: #0B5CA8;
+        color: #000000;
+      }
+      body.theme-wordcrafter .ai-report-favorite-clear-btn {
+        color: #000000;
       }
       .edit-saved-empty {
         padding: 16px 12px;
@@ -3665,6 +3671,32 @@
         font-weight: 600;
         cursor: pointer;
       }
+      body.theme-wordcrafter .word-format-heading h4,
+      body.theme-wordcrafter .word-format-preview,
+      body.theme-wordcrafter .word-format-preview.word-preview-highlighted,
+      body.theme-wordcrafter .word-format-flag,
+      body.theme-wordcrafter .word-context-icon,
+      body.theme-wordcrafter .word-context-heading h3,
+      body.theme-wordcrafter .word-context-heading p,
+      body.theme-wordcrafter .word-context-structure-toggle,
+      body.theme-wordcrafter .word-context-subtoggle,
+      body.theme-wordcrafter .word-context-select label,
+      body.theme-wordcrafter .word-context-length label,
+      body.theme-wordcrafter .word-context-web-desc-toggle,
+      body.theme-wordcrafter .word-context-web-desc-toggle.is-active,
+      body.theme-wordcrafter .word-context-web-add,
+      body.theme-wordcrafter .word-automation-toggle,
+      body.theme-wordcrafter .word-automation-option,
+      body.theme-wordcrafter .word-automation-option label,
+      body.theme-wordcrafter .word-automation-option span,
+      body.theme-wordcrafter .word-automation-custom label,
+      body.theme-wordcrafter .ai-text-row label {
+        color: #000000;
+      }
+      body.theme-wordcrafter .word-format-collapse,
+      body.theme-wordcrafter .word-format-collapse:hover {
+        color: #000000;
+      }
       .word-automation-section {
         margin-top: 18px;
         border-top: 1px solid rgba(28, 141, 212, 0.18);
@@ -4677,15 +4709,13 @@
             Acción a realizar
           </label>
           <select id="aiActionSelect" class="ai-action-select">
-            <option value="">Seleccionar</option>
-            <option value="report">Reporte</option>
-            <option value="ask">Pregunta IA</option>
-            <optgroup label="Acciones con texto">
-              <option value="text-summarize">Resumir texto</option>
-              <option value="text-extend">Extender texto</option>
-              <option value="text-commentary">Comentarios automáticos</option>
-              <option value="text-polish">Refinar estilo y tono</option>
-            </optgroup>
+            <option value="" data-themes="table word">Seleccionar</option>
+            <option value="ask" data-themes="table word">Pregunta a la IA</option>
+            <option value="report" data-themes="table">Reporte</option>
+            <option value="text-summarize" data-themes="word">Resumir texto</option>
+            <option value="text-extend" data-themes="word">Extender texto</option>
+            <option value="text-commentary" data-themes="word">Comentarios automáticos</option>
+            <option value="text-polish" data-themes="word">Refinar estilo y tono</option>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>

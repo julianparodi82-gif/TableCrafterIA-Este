@@ -5679,6 +5679,126 @@ function saveReportPhone() {
         reportSectionInitialized = true;
       }
 
+function normalizeAiTheme(theme) {
+        return theme === 'word' ? 'word' : 'table';
+      }
+
+function getAiActionOptionThemes(option) {
+        if (!option || !option.dataset || !option.dataset.themes) {
+          return ['table', 'word'];
+        }
+        return option.dataset.themes
+          .split(/\s+/)
+          .map(function(entry) {
+            return entry.trim().toLowerCase();
+          })
+          .filter(function(entry) {
+            return entry === 'table' || entry === 'word';
+          });
+      }
+
+function isAiActionOptionAllowed(option, theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const allowedThemes = getAiActionOptionThemes(option);
+        if (allowedThemes.length === 0) {
+          return true;
+        }
+        return allowedThemes.indexOf(normalizedTheme) !== -1;
+      }
+
+function findPreferredAiActionValue(select, theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const preferred = normalizedTheme === 'word' ? 'ask' : 'report';
+        if (!select || !select.options) {
+          return '';
+        }
+        let firstAllowed = '';
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option.disabled || option.hidden) {
+            return;
+          }
+          if (!firstAllowed) {
+            firstAllowed = option.value;
+          }
+        });
+        let preferredValue = '';
+        if (preferred) {
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (
+              preferredValue ||
+              !option ||
+              option.value !== preferred ||
+              option.disabled ||
+              option.hidden
+            ) {
+              return;
+            }
+            preferredValue = option.value;
+          });
+          if (preferredValue) {
+            return preferredValue;
+          }
+        }
+        if (!preferredValue && normalizedTheme === 'table') {
+          let askValue = '';
+          Array.prototype.forEach.call(select.options, function(option) {
+            if (
+              askValue ||
+              !option ||
+              option.value !== 'ask' ||
+              option.disabled ||
+              option.hidden
+            ) {
+              return;
+            }
+            askValue = option.value;
+          });
+          if (askValue) {
+            return askValue;
+          }
+        }
+        return firstAllowed || '';
+      }
+
+function syncAiActionOptionsForTheme(theme) {
+        const normalizedTheme = normalizeAiTheme(theme);
+        const select = document.getElementById('aiActionSelect');
+        if (!select || !select.options) {
+          return;
+        }
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (!option) {
+            return;
+          }
+          const allowed = isAiActionOptionAllowed(option, normalizedTheme);
+          option.hidden = !allowed;
+          if (allowed) {
+            option.removeAttribute('hidden');
+          } else {
+            option.setAttribute('hidden', 'hidden');
+          }
+          option.disabled = !allowed;
+        });
+        let currentValue = select.value;
+        const currentOption = select.options[select.selectedIndex];
+        if (!currentOption || currentOption.disabled || currentOption.hidden) {
+          currentValue = '';
+        }
+        if (!currentValue) {
+          const nextValue = findPreferredAiActionValue(select, normalizedTheme);
+          if (typeof nextValue === 'string') {
+            select.value = nextValue;
+          }
+        }
+        if (typeof updateAiActionState === 'function') {
+          updateAiActionState();
+        }
+      }
+
+function notifyAiThemeChanged(theme) {
+        syncAiActionOptionsForTheme(theme);
+      }
+
 function isTextAction(action) {
         return typeof action === 'string' && action.indexOf('text-') === 0;
       }
@@ -6310,8 +6430,10 @@ function collectAskCustomization() {
         }
         const aiActionSelect = document.getElementById('aiActionSelect');
         if (aiActionSelect) {
+          const initialTheme =
+            document.body && document.body.classList.contains('theme-wordcrafter') ? 'word' : 'table';
+          syncAiActionOptionsForTheme(initialTheme);
           aiActionSelect.addEventListener('change', updateAiActionState);
-          updateAiActionState();
         }
         const aiTextHighlightsToggle = document.getElementById('aiTextHighlightsToggle');
         if (aiTextHighlightsToggle) {
