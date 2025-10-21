@@ -1,9 +1,16 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab State                                               */
+/* -------------------------------------------------------------------------- */
 let editHeaders = [];
 let editRangeInfo = null;
 let editingId = '';
 let editFormatDirty = false;
 let editSavedListCollapsed = false;
+
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab Saved Tables UI                                     */
+/* -------------------------------------------------------------------------- */
 
 
 
@@ -39,6 +46,10 @@ function setEditSavedListCollapsed(collapsed) {
         editSavedListCollapsed = !!collapsed;
         syncEditSavedListCollapseClass();
       }
+
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab Formula Preference                                  */
+/* -------------------------------------------------------------------------- */
 
 function updateCachedFormulaPreference(tableId, value, options) {
         if (!tableId) {
@@ -236,6 +247,10 @@ function syncEditSavedTablesHighlight() {
 
       
 
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab Formatting State                                   */
+/* -------------------------------------------------------------------------- */
+
 function clearEditFormatDirty() {
         editFormatDirty = false;
       }
@@ -313,6 +328,10 @@ function setEditDefaultStyles() {
         if (borderToggle) borderToggle.checked = DEFAULT_STYLE.border;
         if (boldToggle) boldToggle.checked = DEFAULT_STYLE.bold;
       }
+
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab View Management                                     */
+/* -------------------------------------------------------------------------- */
 
 function resetEditTabView(options) {
         const opts = options || {};
@@ -715,6 +734,10 @@ async function openActionForEditing(action) {
 
       
 
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Edit Tab Actions                                            */
+/* -------------------------------------------------------------------------- */
+
 async function handleEditApplyFormat() {
         if (!editingId) {
           await showMessageModal('Seleccione una tabla guardada antes de aplicar el formato.', {
@@ -1051,4 +1074,16 @@ async function handleEditSaveAction(options) {
         });
         return true;
       }
+const TableCrafterEditTab = Object.freeze({
+        markDirty: markEditFormatDirty,
+        clearDirty: clearEditFormatDirty,
+        isDirty: isEditFormatDirty,
+        resetView: resetEditTabView,
+        loadActiveRange: loadEditActiveRange,
+        applyFormat: handleEditApplyFormat,
+        saveTable: handleEditSaveAction
+      });
+
+window.TableCrafterEditTab = TableCrafterEditTab;
+
 </script>

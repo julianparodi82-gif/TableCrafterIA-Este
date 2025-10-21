@@ -1,4 +1,7 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter AI Tab State                                                 */
+/* -------------------------------------------------------------------------- */
       const REPORT_STORAGE_KEYS = Object.freeze({
         emails: 'tc_report_emails',
         phones: 'tc_report_phones'
@@ -5856,4 +5859,16 @@ function collectAskCustomization() {
         setActiveTab('aiTab', { force: true });
       });
     
+const TableCrafterAiTab = Object.freeze({
+        initialize: initializeReportSection,
+        updateActionState: updateAiActionState,
+        collectCustomization: collectAskCustomization,
+        openFavoriteModal: openReportFavoriteModal,
+        closeFavoriteModal: closeReportFavoriteModal,
+        saveEmail: saveReportEmail,
+        savePhone: saveReportPhone
+      });
+
+window.TableCrafterAiTab = TableCrafterAiTab;
+
 </script>

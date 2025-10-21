@@ -1,4 +1,7 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Templates Tab State                                         */
+/* -------------------------------------------------------------------------- */
 let templateEntries = [];
 let activeTemplateId = '';
 
@@ -200,4 +203,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   loadTemplates();
 });
+const TableCrafterTemplatesTab = Object.freeze({
+        loadTemplates: loadTemplates,
+        setActiveTemplate: setActiveTemplate,
+        duplicateTemplate: handleTemplateDuplicate,
+        applyTemplate: handleTemplateApply
+      });
+
+window.TableCrafterTemplatesTab = TableCrafterTemplatesTab;
+
 </script>

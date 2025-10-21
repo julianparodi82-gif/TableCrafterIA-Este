@@ -1,4 +1,7 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Triggers Tab State                                          */
+/* -------------------------------------------------------------------------- */
 let triggerEntries = [];
 let triggerIdCounter = 0;
 
@@ -277,4 +280,13 @@ document.addEventListener('DOMContentLoaded', function() {
   updateTriggerFormState();
   renderTriggerList();
 });
+const TableCrafterTriggersTab = Object.freeze({
+        renderList: renderTriggerList,
+        updateFormState: updateTriggerFormState,
+        previewTrigger: handleTriggerPreview,
+        createTrigger: handleTriggerCreate
+      });
+
+window.TableCrafterTriggersTab = TableCrafterTriggersTab;
+
 </script>

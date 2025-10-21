@@ -1,4 +1,7 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Actions Tab State                                            */
+/* -------------------------------------------------------------------------- */
 const ACTION_CHANNEL_LABELS = Object.freeze({
   download: 'Descargar',
   email: 'Correo electrónico',
@@ -1252,4 +1255,14 @@ if (typeof window !== 'undefined') {
   window.requestSavedActionsRefresh = requestSavedActionsRefresh;
   window.notifySavedActionMutation = notifySavedActionMutation;
 }
+const TableCrafterActionsTab = Object.freeze({
+        initialize: initSavedActionsPanel,
+        mountEditor: mountReportEditorInActions,
+        exitEditor: exitReportFavoriteEditor,
+        notifyTabChanged: notifyActionsTabChanged,
+        refreshSavedActions: requestSavedActionsRefresh
+      });
+
+window.TableCrafterActionsTab = TableCrafterActionsTab;
+
 </script>
