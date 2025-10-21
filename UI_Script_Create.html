@@ -7,6 +7,7 @@ const WORD_TITLE_AUTO_PLACEHOLDER = 'Título generado automáticamente';
 const WORD_WEB_SOURCE_LIMIT = 10;
 const WORD_AUTO_COMMENT_KEYS = ['insights', 'risks', 'followUp', 'custom'];
 let wordContextWebSources = [];
+let wordContextWebCollapsed = false;
 const WORD_LANGUAGE_DEFAULT = 'auto';
 const WORD_TONE_DEFAULT = 'neutral';
 const WORD_PROFILE_DEFAULT = 'auto';
@@ -187,6 +188,7 @@ function resetWordTextOptions() {
           }
         });
         wordContextWebSources = [];
+        wordContextWebCollapsed = false;
         renderWordContextWebSources();
         const webToggle = document.getElementById('wordContextWebToggle');
         if (webToggle) {
@@ -406,19 +408,27 @@ function renderWordContextWebSources(options) {
             }, 0);
           }
         });
+        updateWordContextWebVisibility();
       }
 
 function updateWordContextWebVisibility() {
         const toggle = document.getElementById('wordContextWebToggle');
         const list = document.getElementById('wordContextWebList');
+        const collapseBtn = document.getElementById('wordContextWebCollapse');
         const addBtn = document.getElementById('wordContextWebAdd');
         const enabled = !!(toggle && toggle.checked);
+        const collapsed = !!wordContextWebCollapsed && enabled;
         if (list) {
-          list.classList.toggle('is-visible', enabled);
+          list.classList.toggle('is-visible', enabled && !collapsed);
+        }
+        if (collapseBtn) {
+          collapseBtn.disabled = !enabled;
+          collapseBtn.textContent = collapsed ? '▸' : '▾';
+          collapseBtn.setAttribute('aria-expanded', enabled && !collapsed ? 'true' : 'false');
         }
         if (addBtn) {
           const sources = ensureWordContextWebSources();
-          addBtn.disabled = !enabled || sources.length >= WORD_WEB_SOURCE_LIMIT;
+          addBtn.disabled = !enabled || collapsed || sources.length >= WORD_WEB_SOURCE_LIMIT;
         }
       }
 
@@ -458,6 +468,9 @@ function bindWordContextWebSources() {
               wordContextWebSources.push(createEmptyWordWebSourceEntry());
               renderWordContextWebSources({ focusNew: true });
             }
+            if (!this.checked) {
+              wordContextWebCollapsed = false;
+            }
             updateWordContextWebVisibility();
           });
           toggle.dataset.webBound = 'true';
@@ -473,6 +486,17 @@ function bindWordContextWebSources() {
             updateWordContextWebVisibility();
           });
           addBtn.dataset.webBound = 'true';
+        }
+        const collapseBtn = document.getElementById('wordContextWebCollapse');
+        if (collapseBtn && collapseBtn.dataset.webBound !== 'true') {
+          collapseBtn.addEventListener('click', function() {
+            if (collapseBtn.disabled) {
+              return;
+            }
+            wordContextWebCollapsed = !wordContextWebCollapsed;
+            updateWordContextWebVisibility();
+          });
+          collapseBtn.dataset.webBound = 'true';
         }
         renderWordContextWebSources();
         updateWordContextWebVisibility();

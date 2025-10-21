@@ -3201,6 +3201,19 @@ document.addEventListener('DOMContentLoaded', function() {
             if (listLabel) {
               list.setAttribute('aria-label', listLabel);
             }
+            const locateLabel = isWord
+              ? (list.dataset && list.dataset.wordLocate) || 'Ubicar texto'
+              : (list.dataset && list.dataset.tableLocate) || 'Ir a la tabla';
+            list.querySelectorAll('.edit-saved-locate').forEach(function(button) {
+              if (!button) {
+                return;
+              }
+              button.title = locateLabel;
+              const sr = button.querySelector('.visually-hidden');
+              if (sr) {
+                sr.textContent = locateLabel;
+              }
+            });
           }
           const select = document.getElementById('editSavedTables');
           if (select) {

@@ -214,6 +214,50 @@
       }, {});
       const REPORT_FEATURE_MAX_QUANTITY = 3;
       const REPORT_FEATURE_WEB_SOURCE_LIMIT = 3;
+      const AI_TEXT_ACTION_CONFIG = Object.freeze({
+        'text-summarize': {
+          title: 'Resumir texto',
+          description: 'Condensa los puntos clave del texto seleccionado en un resumen claro.',
+          showLength: true,
+          lengthLabel: 'Extensión del resumen',
+          lengthOptions: [
+            { value: 'concise', label: 'Breve (3-4 oraciones)' },
+            { value: 'balanced', label: 'Equilibrado (5-6 oraciones)' },
+            { value: 'detailed', label: 'Detallado (8-10 oraciones)' }
+          ],
+          showHighlights: true,
+          highlightLabel: 'Agregar comentarios en puntos clave'
+        },
+        'text-extend': {
+          title: 'Extender texto',
+          description: 'Amplía el texto con contexto adicional, ejemplos y recomendaciones.',
+          showLength: true,
+          lengthLabel: 'Profundidad adicional',
+          lengthOptions: [
+            { value: 'slight', label: 'Leve (1-2 párrafos extra)' },
+            { value: 'expanded', label: 'Extendido (3-4 párrafos extra)' },
+            { value: 'inDepth', label: 'Profundo (5+ párrafos extra)' }
+          ],
+          showHighlights: false
+        },
+        'text-commentary': {
+          title: 'Comentarios automáticos',
+          description: 'Genera anotaciones para destacar hallazgos, riesgos y próximos pasos.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Detallar los puntos donde querés comentarios',
+          highlightsDefault: true,
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        },
+        'text-polish': {
+          title: 'Refinar estilo y tono',
+          description: 'Mejora la redacción manteniendo el mensaje pero ajustando claridad, tono y coherencia.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Indicar qué tipo de mejoras esperás',
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        }
+      });
 
       let savedReportEmails = [];
       let savedReportPhones = [];
@@ -5577,10 +5621,198 @@ function initializeReportSection() {
         reportSectionInitialized = true;
       }
 
+function isTextAction(action) {
+        return typeof action === 'string' && action.indexOf('text-') === 0;
+      }
+
+function getAiTextConfig(action) {
+        const baseConfig = {
+          title: 'Acción con texto',
+          description: 'Configura la automatización para el texto seleccionado.',
+          showLength: false,
+          showHighlights: true,
+          highlightLabel: 'Agregar comentarios en puntos clave',
+          highlightsDefault: false,
+          lengthLabel: 'Extensión deseada',
+          lengthOptions: [{ value: 'balanced', label: 'Equilibrado' }]
+        };
+        if (!action || !Object.prototype.hasOwnProperty.call(AI_TEXT_ACTION_CONFIG, action)) {
+          return baseConfig;
+        }
+        return Object.assign({}, baseConfig, AI_TEXT_ACTION_CONFIG[action]);
+      }
+
+function resetAiTextSection() {
+        const lengthSelect = document.getElementById('aiTextLength');
+        if (lengthSelect) {
+          lengthSelect.value = 'balanced';
+        }
+        const guidance = document.getElementById('aiTextGuidance');
+        if (guidance) {
+          guidance.value = '';
+        }
+        const highlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        if (highlightsToggle) {
+          highlightsToggle.checked = false;
+        }
+        const highlightsDetail = document.getElementById('aiTextHighlightsDetail');
+        if (highlightsDetail) {
+          highlightsDetail.value = '';
+        }
+        syncAiTextHighlightsState();
+      }
+
+function syncAiTextHighlightsState() {
+        const row = document.getElementById('aiTextHighlightsRow');
+        const toggle = document.getElementById('aiTextHighlightsToggle');
+        const active = !!(toggle && toggle.checked);
+        if (row) {
+          row.classList.toggle('ai-text-highlights--active', active);
+        }
+      }
+
+function applyAiTextHighlightsDefault(config) {
+        const toggle = document.getElementById('aiTextHighlightsToggle');
+        if (!toggle) {
+          return;
+        }
+        if (config && config.showHighlights) {
+          toggle.checked = !!config.highlightsDefault;
+        } else {
+          toggle.checked = false;
+        }
+      }
+
+function updateAiTextSection(action) {
+        const section = document.getElementById('aiTextSection');
+        if (!section) {
+          return;
+        }
+        const config = getAiTextConfig(action);
+        const title = document.getElementById('aiTextTitle');
+        const description = document.getElementById('aiTextDescription');
+        const lengthGroup = document.getElementById('aiTextLengthGroup');
+        const lengthLabel = document.getElementById('aiTextLengthLabel');
+        const lengthSelect = document.getElementById('aiTextLength');
+        const highlightsRow = document.getElementById('aiTextHighlightsRow');
+        const highlightsLabel = document.getElementById('aiTextHighlightsLabel');
+        resetAiTextSection();
+        if (title) {
+          title.textContent = config.title;
+        }
+        if (description) {
+          description.textContent = config.description;
+        }
+        if (lengthGroup && lengthSelect && lengthLabel) {
+          if (config.showLength) {
+            lengthGroup.style.display = 'flex';
+            lengthLabel.textContent = config.lengthLabel || 'Extensión deseada';
+            lengthSelect.innerHTML = '';
+            const options = Array.isArray(config.lengthOptions) && config.lengthOptions.length
+              ? config.lengthOptions
+              : [{ value: 'balanced', label: 'Equilibrado' }];
+            options.forEach(function(option, index) {
+              const opt = document.createElement('option');
+              opt.value = option.value || 'balanced';
+              opt.textContent = option.label || 'Equilibrado';
+              if (index === 0) {
+                opt.selected = true;
+              }
+              lengthSelect.appendChild(opt);
+            });
+          } else {
+            lengthGroup.style.display = 'none';
+          }
+        }
+        if (highlightsRow && highlightsLabel) {
+          if (config.showHighlights) {
+            highlightsRow.style.display = 'flex';
+            const baseText = ' ' + (config.highlightLabel || 'Agregar comentarios en puntos clave');
+            const labelChildren = Array.from(highlightsLabel.childNodes);
+            labelChildren.forEach(function(node) {
+              if (node.nodeType === Node.TEXT_NODE) {
+                highlightsLabel.removeChild(node);
+              }
+            });
+            highlightsLabel.appendChild(document.createTextNode(baseText));
+          } else {
+            highlightsRow.style.display = 'none';
+          }
+        }
+        applyAiTextHighlightsDefault(config);
+        syncAiTextHighlightsState();
+      }
+
+function getSelectedAiTextValues() {
+        const select = document.getElementById('aiSavedTexts');
+        if (!select || !select.options) {
+          return [];
+        }
+        const values = [];
+        Array.prototype.forEach.call(select.options, function(option) {
+          if (option && option.value && option.selected && !option.disabled) {
+            values.push(option.value);
+          }
+        });
+        return values;
+      }
+
+function handleAiTextAction() {
+        const actionSelect = document.getElementById('aiActionSelect');
+        const action = actionSelect ? actionSelect.value : '';
+        if (!isTextAction(action)) {
+          showMessageModal('Elegí una acción de texto para continuar.', {
+            title: 'Acción no disponible',
+            variant: 'error'
+          });
+          return;
+        }
+        const selectedTexts = getSelectedAiTextValues();
+        if (selectedTexts.length === 0) {
+          showMessageModal('Seleccioná al menos un texto guardado en la lista para aplicar la acción.', {
+            title: 'Seleccioná un texto',
+            variant: 'error'
+          });
+          return;
+        }
+        const guidance = document.getElementById('aiTextGuidance');
+        const highlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        const highlightsDetail = document.getElementById('aiTextHighlightsDetail');
+        const lengthSelect = document.getElementById('aiTextLength');
+        const config = getAiTextConfig(action);
+        const summaryParts = [];
+        if (lengthSelect && config.showLength) {
+          const selectedOption = lengthSelect.options[lengthSelect.selectedIndex];
+          if (selectedOption) {
+            summaryParts.push('Extensión: ' + selectedOption.textContent.trim());
+          }
+        }
+        if (guidance && guidance.value.trim()) {
+          summaryParts.push('Indicaciones: ' + guidance.value.trim());
+        }
+        if (highlightsToggle && highlightsToggle.checked) {
+          const detail = highlightsDetail && highlightsDetail.value.trim()
+            ? highlightsDetail.value.trim()
+            : 'Sin detalle específico';
+          summaryParts.push('Comentarios en puntos clave: ' + detail);
+        }
+        const message =
+          'Acción "' +
+          config.title.toLowerCase() +
+          '" lista para ejecutarse sobre ' +
+          (selectedTexts.length === 1 ? '1 texto' : selectedTexts.length + ' textos') +
+          (summaryParts.length ? '.\n\n' + summaryParts.join('\n') : '.');
+        showMessageModal(message, {
+          title: 'Configuración de texto preparada',
+          variant: 'success'
+        });
+      }
+
 function updateAiActionState() {
         const select = document.getElementById('aiActionSelect');
         const askSection = document.getElementById('aiAskSection');
         const reportSection = document.getElementById('aiReportSection');
+        const textSection = document.getElementById('aiTextSection');
         const questionInput = document.getElementById('questionInput');
         const askBtn = document.getElementById('askBtn');
         const answerBox = document.getElementById('answerBox');
@@ -5593,6 +5825,9 @@ function updateAiActionState() {
           if (reportSection) {
             reportSection.style.display = 'none';
           }
+          if (textSection) {
+            textSection.style.display = 'none';
+          }
           if (questionInput) {
             questionInput.disabled = false;
           }
@@ -5602,8 +5837,31 @@ function updateAiActionState() {
         } else if (action === 'report') {
           initializeReportSection();
           askSection.style.display = 'none';
+          if (textSection) {
+            textSection.style.display = 'none';
+          }
           if (reportSection) {
             reportSection.style.display = 'block';
+          }
+          if (questionInput) {
+            questionInput.value = '';
+            questionInput.disabled = true;
+          }
+          if (askBtn) {
+            askBtn.disabled = true;
+          }
+          if (answerBox) {
+            answerBox.value = '';
+          }
+        } else if (isTextAction(action)) {
+          askSection.style.display = 'none';
+          if (reportSection) {
+            reportSection.style.display = 'none';
+            resetReportSection();
+          }
+          if (textSection) {
+            textSection.style.display = 'block';
+            updateAiTextSection(action);
           }
           if (questionInput) {
             questionInput.value = '';
@@ -5619,6 +5877,9 @@ function updateAiActionState() {
           askSection.style.display = 'none';
           if (reportSection) {
             reportSection.style.display = 'none';
+          }
+          if (textSection) {
+            textSection.style.display = 'none';
           }
           resetReportSection();
           if (questionInput) {
@@ -5991,6 +6252,19 @@ function collectAskCustomization() {
         if (aiActionSelect) {
           aiActionSelect.addEventListener('change', updateAiActionState);
           updateAiActionState();
+        }
+        const aiTextHighlightsToggle = document.getElementById('aiTextHighlightsToggle');
+        if (aiTextHighlightsToggle) {
+          aiTextHighlightsToggle.addEventListener('change', function() {
+            syncAiTextHighlightsState();
+          });
+          syncAiTextHighlightsState();
+        }
+        const aiTextApplyBtn = document.getElementById('aiTextApplyBtn');
+        if (aiTextApplyBtn) {
+          aiTextApplyBtn.addEventListener('click', function() {
+            handleAiTextAction();
+          });
         }
         const askToneSelect = document.getElementById('aiAskTone');
         if (askToneSelect) {

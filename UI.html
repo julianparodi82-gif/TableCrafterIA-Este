@@ -880,6 +880,36 @@
       .edit-saved-locate:active {
         transform: scale(0.95);
       }
+      body.theme-wordcrafter #editSavedTablesList {
+        border-color: rgba(28, 141, 212, 0.28);
+        background-color: rgba(229, 246, 255, 0.72);
+      }
+      body.theme-wordcrafter .edit-saved-group-label {
+        color: #0B5CA8;
+      }
+      body.theme-wordcrafter .edit-saved-item {
+        background-image: linear-gradient(
+          90deg,
+          rgba(28, 141, 212, 0.42) 0 14px,
+          rgba(255, 255, 255, 0) 14px 100%
+        );
+      }
+      body.theme-wordcrafter .edit-saved-item:hover {
+        background-color: rgba(28, 141, 212, 0.12);
+      }
+      body.theme-wordcrafter .edit-saved-item.selected {
+        box-shadow: 0 0 0 2px rgba(28, 141, 212, 0.45);
+      }
+      body.theme-wordcrafter .edit-saved-locate {
+        background-color: rgba(28, 141, 212, 0.1);
+        color: #0B5CA8;
+      }
+      body.theme-wordcrafter .edit-saved-locate:hover {
+        background-color: rgba(28, 141, 212, 0.18);
+      }
+      body.theme-wordcrafter .edit-saved-empty {
+        color: #0B5CA8;
+      }
       .edit-saved-empty {
         padding: 16px 12px;
         color: #000000;
@@ -928,6 +958,39 @@
       .ai-action-section {
         margin-top: 16px;
         display: none;
+      }
+      .ai-text-section {
+        display: none;
+      }
+      .ai-text-config {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .ai-text-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-text-row label {
+        font-weight: 600;
+        color: var(--tc-primary-dark);
+      }
+      .ai-text-row textarea {
+        min-height: 72px;
+      }
+      .ai-text-highlights {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ai-text-highlights-detail {
+        display: none;
+        min-height: 60px;
+      }
+      .ai-text-highlights--active .ai-text-highlights-detail {
+        display: block;
       }
       .ai-report-options {
         display: flex;
@@ -3469,12 +3532,38 @@
         flex-direction: column;
         gap: 10px;
       }
+      .word-context-web-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
       .word-context-web-toggle {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         font-weight: 600;
         color: var(--tc-primary-dark);
+      }
+      .word-context-web-collapse {
+        border: none;
+        background: rgba(28, 141, 212, 0.12);
+        color: var(--tc-primary-dark);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+      .word-context-web-collapse:hover:not(:disabled) {
+        background: rgba(28, 141, 212, 0.2);
+      }
+      .word-context-web-collapse:disabled {
+        opacity: 0.4;
+        cursor: default;
       }
       .word-context-web-list {
         display: none;
@@ -4085,22 +4174,6 @@
                   </div>
                 </div>
               </div>
-              <div class="word-context-web">
-                <label
-                  for="wordContextWebToggle"
-                  class="word-context-web-toggle tc-tooltip-target"
-                  data-tooltip="Añade fuentes externas para que la IA consulte hasta 10 enlaces verificados."
-                >
-                  <input type="checkbox" id="wordContextWebToggle" />
-                  Utilizar informacion de pagunas web
-                </label>
-                <div class="word-context-web-list" id="wordContextWebList">
-                  <div class="word-context-web-items" id="wordContextWebItems"></div>
-                  <button type="button" class="word-context-web-add" id="wordContextWebAdd">
-                    Agregar página
-                  </button>
-                </div>
-              </div>
               <div class="word-context-columns">
                 <div class="word-format-group word-context-select">
                   <label for="wordBodyLanguage">Idioma de salida</label>
@@ -4206,6 +4279,33 @@
                     id="wordAutoCommentsCustom"
                     placeholder="Ej: Destacar métricas fuera de objetivo y responsables involucrados"
                   ></textarea>
+                </div>
+              </div>
+              <div class="word-context-web">
+                <div class="word-context-web-header">
+                  <label
+                    for="wordContextWebToggle"
+                    class="word-context-web-toggle tc-tooltip-target"
+                    data-tooltip="Añade fuentes externas para que la IA consulte hasta 10 enlaces verificados."
+                  >
+                    <input type="checkbox" id="wordContextWebToggle" />
+                    Utilizar información de páginas web
+                  </label>
+                  <button
+                    type="button"
+                    id="wordContextWebCollapse"
+                    class="word-context-web-collapse"
+                    aria-expanded="false"
+                    aria-label="Mostrar u ocultar páginas web"
+                  >
+                    ▾
+                  </button>
+                </div>
+                <div class="word-context-web-list" id="wordContextWebList">
+                  <div class="word-context-web-items" id="wordContextWebItems"></div>
+                  <button type="button" class="word-context-web-add" id="wordContextWebAdd">
+                    Agregar página
+                  </button>
                 </div>
               </div>
             </div>
@@ -4392,6 +4492,10 @@
               aria-label="Tablas guardadas"
               data-table-label="Tablas guardadas"
               data-word-label="Textos guardados"
+              data-table-empty="No hay tablas guardadas"
+              data-word-empty="No hay textos guardados"
+              data-table-locate="Ir a la tabla"
+              data-word-locate="Ubicar texto"
             ></div>
             <select
               id="editSavedTables"
@@ -4505,6 +4609,12 @@
             <option value="">Seleccionar</option>
             <option value="report">Reporte</option>
             <option value="ask">Pregunta IA</option>
+            <optgroup label="Acciones con texto">
+              <option value="text-summarize">Resumir texto</option>
+              <option value="text-extend">Extender texto</option>
+              <option value="text-commentary">Comentarios automáticos</option>
+              <option value="text-polish">Refinar estilo y tono</option>
+            </optgroup>
           </select>
           <div id="aiAskSection" class="ai-action-section">
             <h3 class="ai-action-title">Pregunta a la IA</h3>
@@ -6945,6 +7055,43 @@
                 Generar y enviar reporte
               </button>
             </div>
+          </div>
+          <div id="aiTextSection" class="ai-action-section ai-text-section">
+            <h3 id="aiTextTitle" class="ai-action-title">Acción con texto</h3>
+            <p id="aiTextDescription" class="ai-action-description">
+              Selecciona un texto guardado y elige la automatización que necesitás.
+            </p>
+            <div class="ai-text-config">
+              <div id="aiTextLengthGroup" class="ai-text-row">
+                <label for="aiTextLength" id="aiTextLengthLabel">Extensión deseada</label>
+                <select id="aiTextLength">
+                  <option value="concise">Breve y directo</option>
+                  <option value="balanced" selected>Equilibrado</option>
+                  <option value="detailed">Detallado</option>
+                </select>
+              </div>
+              <div class="ai-text-row">
+                <label for="aiTextGuidance">Indicaciones adicionales para la IA</label>
+                <textarea
+                  id="aiTextGuidance"
+                  rows="3"
+                  placeholder="Ej.: Priorizar hallazgos financieros y mantener tono ejecutivo."
+                ></textarea>
+              </div>
+              <div class="ai-text-row ai-text-highlights" id="aiTextHighlightsRow">
+                <label class="checkbox-subtle" id="aiTextHighlightsLabel">
+                  <input type="checkbox" id="aiTextHighlightsToggle" />
+                  Agregar comentarios en puntos clave
+                </label>
+                <textarea
+                  id="aiTextHighlightsDetail"
+                  class="ai-text-highlights-detail"
+                  rows="2"
+                  placeholder="Detalla qué métricas o ideas necesitan comentarios automáticos."
+                ></textarea>
+              </div>
+            </div>
+            <button type="button" id="aiTextApplyBtn" class="btn-primary">Aplicar acción de texto</button>
           </div>
         </div>
       </div>
