@@ -3132,6 +3132,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tabButtonsList = Array.from(document.querySelectorAll('.tab-btn'));
         tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
+        const tabButtonRefs = {
+          ai: document.querySelector(".tab-btn[data-tab='aiTab']"),
+          edit: document.querySelector(".tab-btn[data-tab='editTab']"),
+          create: document.querySelector(".tab-btn[data-tab='createTab']"),
+          triggers: document.querySelector(".tab-btn[data-tab='triggersTab']"),
+          actions: document.querySelector(".tab-btn[data-tab='actionsTab']"),
+        };
         let themeAnimationTimeout = null;
 
         const tableMessage =
@@ -3273,6 +3280,38 @@ function playSidebarAnimation() {
           }
         }
 
+        function updateTabLabelsForTheme(theme) {
+          const normalizedTheme = theme === 'word' ? 'word' : 'table';
+          const isWord = normalizedTheme === 'word';
+          if (tabButtonRefs.edit) {
+            tabButtonRefs.edit.textContent = isWord ? 'Editar Texto' : 'Editar tabla';
+            tabButtonRefs.edit.dataset.tooltip = isWord
+              ? 'Modifica textos guardados y ajusta su estilo.'
+              : 'Modifica tablas guardadas y ajusta sus estilos.';
+          }
+          if (tabButtonRefs.create) {
+            tabButtonRefs.create.textContent = isWord ? 'Crear Texto' : 'Crear tabla';
+            tabButtonRefs.create.dataset.tooltip = isWord
+              ? 'Genera nuevos textos con apoyo de IA y plantillas personalizadas.'
+              : 'Crea nuevas tablas con ayuda de IA y formatos personalizados.';
+          }
+          if (tabButtonRefs.triggers) {
+            tabButtonRefs.triggers.dataset.tooltip = isWord
+              ? 'Configura automatizaciones que mantengan tus contenidos al día.'
+              : 'Configura automatizaciones que mantengan tus datos al día.';
+          }
+          if (tabButtonRefs.actions) {
+            tabButtonRefs.actions.dataset.tooltip = isWord
+              ? 'Accede y edita reportes y textos guardados.'
+              : 'Accede y edita reportes, tablas y preguntas guardadas.';
+          }
+          if (tabButtonRefs.ai) {
+            tabButtonRefs.ai.dataset.tooltip = isWord
+              ? 'Gestiona consultas, resúmenes y ediciones asistidas por IA.'
+              : 'Gestiona consultas, reportes y contactos asistidos por IA.';
+          }
+        }
+
         function applyTheme(isWordcrafter, options) {
           const settings = options || {};
           const animate = Boolean(settings.animate);
@@ -3293,6 +3332,14 @@ function playSidebarAnimation() {
             body.classList.remove('theme-wordcrafter');
             appTitle.textContent = 'TableCrafterAI';
             themeMessageContent.innerHTML = tableMessage;
+          }
+          updateTabLabelsForTheme(nextTheme);
+          if (typeof notifyCreateThemeChanged === 'function') {
+            try {
+              notifyCreateThemeChanged(nextTheme);
+            } catch (err) {
+              console.log('No se pudo sincronizar la vista de creación con el cambio de tema.', err);
+            }
           }
           updateTabVisibilityForTheme(nextTheme);
           syncMessageVisibility();
