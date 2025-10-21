@@ -83,16 +83,6 @@ function syncCreateRangeModeUI() {
         if (headerOptions) {
           headerOptions.style.display = isWordTheme ? 'none' : '';
         }
-        const saveBtn = document.getElementById('saveTableBtn');
-        if (saveBtn) {
-          const shouldDisableSave = Boolean(isWordTheme && !useRange);
-          saveBtn.disabled = shouldDisableSave;
-          if (shouldDisableSave) {
-            saveBtn.setAttribute('aria-disabled', 'true');
-          } else {
-            saveBtn.removeAttribute('aria-disabled');
-          }
-        }
       }
 
 function resetWordFormatInputs(containerId) {

@@ -236,6 +236,117 @@ let activeReportFavoriteTrigger = null;
       let reportDeliveryOutsideListenerAttached = false;
       let reportFileDateEnabled = false;
       let favoriteModalEscapeListenerAttached = false;
+      let activeFavoriteContext = null;
+
+      function resolveFavoriteContextFromTrigger(trigger) {
+        const contextAttr = trigger && trigger.dataset ? trigger.dataset.favoriteContext : '';
+        const theme = typeof currentTheme === 'string' ? currentTheme : document.body && document.body.classList.contains('theme-wordcrafter') ? 'word' : 'table';
+        if (contextAttr === 'create') {
+          return {
+            type: theme === 'word' ? 'createTextFavorite' : 'createTableFavorite',
+            scope: 'create',
+            theme: theme,
+            containerId: 'createTab'
+          };
+        }
+        if (contextAttr === 'edit') {
+          return {
+            type: theme === 'word' ? 'editTextFavorite' : 'editTableFavorite',
+            scope: 'edit',
+            theme: theme,
+            containerId: 'editTab'
+          };
+        }
+        return {
+          type: 'reportFavorite',
+          scope: 'report',
+          theme: theme,
+          containerId: null
+        };
+      }
+
+      function collectFavoriteContextFields(container) {
+        const result = [];
+        if (!container) {
+          return result;
+        }
+        const seen = Object.create(null);
+        const controls = container.querySelectorAll('input, select, textarea');
+        controls.forEach(function(control) {
+          if (!control) {
+            return;
+          }
+          const identifier = control.id || control.name;
+          if (!identifier) {
+            return;
+          }
+          const tagName = control.tagName ? control.tagName.toLowerCase() : '';
+          if (control.type === 'radio') {
+            const radioKey = 'radio:' + control.name;
+            if (seen[radioKey]) {
+              return;
+            }
+            seen[radioKey] = true;
+            const selected = container.querySelector("input[type='radio'][name='" + control.name + "']:checked");
+            result.push({
+              id: control.name,
+              kind: 'radio',
+              value: selected ? selected.value : ''
+            });
+            return;
+          }
+          if (seen[identifier]) {
+            return;
+          }
+          seen[identifier] = true;
+          let value;
+          if (control.type === 'checkbox') {
+            value = !!control.checked;
+          } else if (tagName === 'select' && control.multiple) {
+            value = Array.prototype.filter
+              .call(control.options, function(option) {
+                return option && option.selected && !option.disabled;
+              })
+              .map(function(option) {
+                return option.value;
+              });
+          } else {
+            value = control.value;
+          }
+          result.push({
+            id: identifier,
+            kind: control.type || tagName,
+            value: value
+          });
+        });
+        return result;
+      }
+
+      function buildGeneralFavoritePayload(name, context) {
+        const trimmedName = name ? String(name).trim() : '';
+        if (!trimmedName) {
+          return { error: 'Ingresá un nombre para el favorito.' };
+        }
+        if (!context || !context.containerId) {
+          return { error: 'No se pudo determinar la pestaña a guardar.' };
+        }
+        const container = document.getElementById(context.containerId);
+        if (!container) {
+          return { error: 'No se encontró la sección seleccionada.' };
+        }
+        const fields = collectFavoriteContextFields(container);
+        return {
+          payload: {
+            name: trimmedName,
+            context: {
+              type: context.type,
+              scope: context.scope,
+              theme: context.theme
+            },
+            fields: fields
+          }
+        };
+      }
 
 
       
@@ -4390,6 +4501,49 @@ async function loadReportFavoriteIntoPanel(action, options) {
         if (descField) {
           descField.value = action.descriptionEnabled ? action.descriptionText || '' : '';
         }
+        let context = activeFavoriteContext;
+        if (!context) {
+          context = resolveFavoriteContextFromTrigger(activeReportFavoriteTrigger);
+        }
+        const isReportContext = !context || context.type === 'reportFavorite';
+        if (!isReportContext) {
+          const generalResult = buildGeneralFavoritePayload(favoriteName, context);
+          if (generalResult && generalResult.error) {
+            await showMessageModal(generalResult.error, {
+              title: 'Información requerida',
+              variant: 'warning'
+            });
+            return;
+          }
+          const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
+          try {
+            savingReportFavorite = true;
+            if (saveBtn) {
+              saveBtn.disabled = true;
+            }
+            const result = await callServerFunction('saveGeneralFavorite', generalResult.payload);
+            if (result && result.error) {
+              throw new Error(result.error);
+            }
+            closeReportFavoriteModal({ resetName: true, focusTrigger: true });
+            await showMessageModal('Configuración guardada en favoritos.', {
+              title: 'Favorito guardado',
+              variant: 'success'
+            });
+          } catch (error) {
+            await showMessageModal(error && error.message ? error.message : 'No se pudo guardar el favorito.', {
+              title: 'Error al guardar',
+              variant: 'error'
+            });
+          } finally {
+            savingReportFavorite = false;
+            const saveControl = document.getElementById('aiReportFavoriteSaveBtn');
+            if (saveControl) {
+              saveControl.disabled = false;
+            }
+          }
+          return;
+        }
         const fileNameInput = document.getElementById('aiReportFileName');
         if (fileNameInput) {
           fileNameInput.value = action.fileName || '';
@@ -4450,9 +4604,10 @@ function openReportFavoriteModal(triggerButton) {
         if (savingReportFavorite) {
           return;
         }
-        const editing = !!activeReportFavoriteId;
-        const overlay = document.getElementById('aiFavoriteModalOverlay');
         const trigger = triggerButton || document.getElementById('aiReportFavoriteBtn');
+        activeFavoriteContext = resolveFavoriteContextFromTrigger(trigger);
+        const editing = activeFavoriteContext && activeFavoriteContext.type === 'reportFavorite' && !!activeReportFavoriteId;
+        const overlay = document.getElementById('aiFavoriteModalOverlay');
         activeReportFavoriteTrigger = trigger || null;
         reportFavoriteModalVisible = true;
         if (overlay) {
@@ -4464,13 +4619,21 @@ function openReportFavoriteModal(triggerButton) {
         }
         const title = document.getElementById('aiFavoriteModalTitle');
         if (title) {
-          title.textContent = editing ? 'Actualizar favorito' : 'Guardar en favoritos';
+          if (activeFavoriteContext && activeFavoriteContext.type !== 'reportFavorite') {
+            title.textContent = 'Guardar configuración en favoritos';
+          } else {
+            title.textContent = editing ? 'Actualizar favorito' : 'Guardar en favoritos';
+          }
         }
         const description = document.getElementById('aiFavoriteModalDescription');
         if (description) {
-          description.textContent = editing
-            ? 'Actualiza el nombre para identificar este reporte favorito.'
-            : 'Asigna un nombre para identificar este reporte más adelante.';
+          if (activeFavoriteContext && activeFavoriteContext.type !== 'reportFavorite') {
+            description.textContent = 'Asigná un nombre para reutilizar esta configuración rápidamente.';
+          } else {
+            description.textContent = editing
+              ? 'Actualiza el nombre para identificar este reporte favorito.'
+              : 'Asigna un nombre para identificar este reporte más adelante.';
+          }
         }
         const saveBtn = document.getElementById('aiReportFavoriteSaveBtn');
         if (saveBtn) {
@@ -4514,6 +4677,9 @@ function closeReportFavoriteModal(options) {
         }
         if (!reportFavoriteModalVisible) {
           activeReportFavoriteTrigger = null;
+        }
+        if (!reportFavoriteModalVisible) {
+          activeFavoriteContext = null;
         }
       }
 

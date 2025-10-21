@@ -380,6 +380,34 @@ function normalizeMetaRecordType(value) {
     return 'table';
   }
   if (
+    text === 'createtextfavorite' ||
+    text === 'create_text_favorite' ||
+    text === 'create-text-favorite'
+  ) {
+    return 'createTextFavorite';
+  }
+  if (
+    text === 'createtablefavorite' ||
+    text === 'create_table_favorite' ||
+    text === 'create-table-favorite'
+  ) {
+    return 'createTableFavorite';
+  }
+  if (
+    text === 'edittextfavorite' ||
+    text === 'edit_text_favorite' ||
+    text === 'edit-text-favorite'
+  ) {
+    return 'editTextFavorite';
+  }
+  if (
+    text === 'edittablefavorite' ||
+    text === 'edit_table_favorite' ||
+    text === 'edit-table-favorite'
+  ) {
+    return 'editTableFavorite';
+  }
+  if (
     text === 'reportfavorite' ||
     text === 'report_favorite' ||
     text === 'report-favorite' ||
@@ -3266,6 +3294,118 @@ function saveReportFavorite(payload) {
     '',
     'reportFavorite',
     stringifyJsonValue(prepared.config)
+  ]);
+  SpreadsheetApp.flush();
+  return { ok: true, id: favoriteId };
+}
+
+function normalizeGeneralFavoriteType(type) {
+  var text = type === null || type === undefined ? '' : String(type).trim().toLowerCase();
+  if (!text) {
+    return 'generalFavorite';
+  }
+  if (text === 'createtextfavorite' || text === 'create_text_favorite' || text === 'create-text-favorite') {
+    return 'createTextFavorite';
+  }
+  if (text === 'createtablefavorite' || text === 'create_table_favorite' || text === 'create-table-favorite') {
+    return 'createTableFavorite';
+  }
+  if (text === 'edittextfavorite' || text === 'edit_text_favorite' || text === 'edit-text-favorite') {
+    return 'editTextFavorite';
+  }
+  if (text === 'edittablefavorite' || text === 'edit_table_favorite' || text === 'edit-table-favorite') {
+    return 'editTableFavorite';
+  }
+  return 'generalFavorite';
+}
+
+function resolveGeneralFavoriteIdPrefix(type) {
+  if (type === 'createTextFavorite') {
+    return 'createTextFavorite';
+  }
+  if (type === 'createTableFavorite') {
+    return 'createTableFavorite';
+  }
+  if (type === 'editTextFavorite') {
+    return 'editTextFavorite';
+  }
+  if (type === 'editTableFavorite') {
+    return 'editTableFavorite';
+  }
+  return 'generalFavorite';
+}
+
+function normalizeGeneralFavoriteField(field) {
+  if (!field || typeof field !== 'object') {
+    return null;
+  }
+  var id = field.id === null || field.id === undefined ? '' : String(field.id).trim();
+  if (!id) {
+    return null;
+  }
+  var kind = field.kind === null || field.kind === undefined ? '' : String(field.kind).trim();
+  var value = field.value;
+  if (value && typeof value === 'object') {
+    try {
+      value = JSON.parse(JSON.stringify(value));
+    } catch (err) {
+      value = '';
+    }
+  }
+  return {
+    id: id,
+    kind: kind,
+    value: value
+  };
+}
+
+function saveGeneralFavorite(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('No se recibió información para guardar.');
+  }
+  var name = payload.name === null || payload.name === undefined ? '' : String(payload.name).trim();
+  if (!name) {
+    throw new Error('Ingresá un nombre para el favorito.');
+  }
+  var context = payload.context && typeof payload.context === 'object' ? payload.context : {};
+  var normalizedType = normalizeGeneralFavoriteType(context.type);
+  var scope = context.scope === null || context.scope === undefined ? '' : String(context.scope).trim();
+  var theme = context.theme === null || context.theme === undefined ? '' : String(context.theme).trim();
+  var rawFields = Array.isArray(payload.fields) ? payload.fields : [];
+  var fields = rawFields
+    .map(function(entry) {
+      return normalizeGeneralFavoriteField(entry);
+    })
+    .filter(function(entry) {
+      return !!entry;
+    });
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var config = {
+    context: {
+      type: normalizedType,
+      scope: scope,
+      theme: theme
+    },
+    fields: fields,
+    savedAt: now
+  };
+  var sheet = getMetaSheet();
+  var favoriteId = resolveGeneralFavoriteIdPrefix(normalizedType) + ':' + Utilities.getUuid();
+  sheet.appendRow([
+    favoriteId,
+    name,
+    '',
+    '',
+    '',
+    '',
+    '',
+    now,
+    now,
+    '',
+    '',
+    '',
+    normalizedType,
+    stringifyJsonValue(config)
   ]);
   SpreadsheetApp.flush();
   return { ok: true, id: favoriteId };

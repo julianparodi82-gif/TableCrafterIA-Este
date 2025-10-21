@@ -857,12 +857,12 @@ async function handleEditApplyFormat() {
         });
         return true;
       }
-
-
-
-      document.getElementById('saveTableBtn').addEventListener('click', function() {
-        handleSaveAction();
-      });
+      const createSaveButton = document.getElementById('saveTableBtn');
+      if (createSaveButton) {
+        createSaveButton.addEventListener('click', function() {
+          handleSaveAction();
+        });
+      }
 
       document.getElementById('editSaveTableBtn').addEventListener('click', function() {
         handleEditSaveAction();
