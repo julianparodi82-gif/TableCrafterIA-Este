@@ -170,6 +170,27 @@
       .tab-nav-primary {
         margin-bottom: 20px;
       }
+      body.theme-wordcrafter .tab-nav-primary {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-areas:
+          'tab-ai tab-ai tab-edit tab-edit tab-create tab-create'
+          '. tab-triggers tab-triggers tab-actions tab-actions .';
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='aiTab'] {
+        grid-area: tab-ai;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='editTab'] {
+        grid-area: tab-edit;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='createTab'] {
+        grid-area: tab-create;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='triggersTab'] {
+        grid-area: tab-triggers;
+      }
+      body.theme-wordcrafter .tab-nav-primary .tab-btn[data-tab='actionsTab'] {
+        grid-area: tab-actions;
+      }
       @media (min-width: 641px) {
         .tab-nav-primary {
           grid-template-areas:
@@ -3198,7 +3219,7 @@
         <button
           class="tab-btn tab-btn--tooltip-below"
           data-tab="editTab"
-          data-themes="table"
+          data-themes="table word"
           data-tooltip="Modifica tablas guardadas y ajusta sus estilos."
         >
           Editar tabla
@@ -3206,7 +3227,7 @@
         <button
           class="tab-btn tab-btn--tooltip-below"
           data-tab="createTab"
-          data-themes="table"
+          data-themes="table word"
           data-tooltip="Crea nuevas tablas con ayuda de IA y formatos personalizados."
         >
           Crear tabla
@@ -3237,7 +3258,7 @@
         </button>
       </div>
 
-      <div id="createTab" class="tab-content" data-themes="table">
+      <div id="createTab" class="tab-content" data-themes="table word">
         <div class="section">
           <div class="range-row">
             <div>
@@ -3285,7 +3306,7 @@
         </div>
       </div>
 
-      <div id="editTab" class="tab-content" data-themes="table">
+      <div id="editTab" class="tab-content" data-themes="table word">
         <div class="section">
           <label for="editSavedTables">Tablas guardadas</label>
           <div class="edit-saved-container">
