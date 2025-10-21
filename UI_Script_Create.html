@@ -12,6 +12,7 @@ const WORD_LANGUAGE_DEFAULT = 'auto';
 const WORD_TONE_DEFAULT = 'neutral';
 const WORD_PROFILE_DEFAULT = 'auto';
 const WORD_LENGTH_DEFAULT = 'auto';
+const WORD_STRUCTURE_KEYS = ['wordIntro', 'wordConclusion'];
 
 function isWordThemeActiveForCreate() {
         return document.body && document.body.classList.contains('theme-wordcrafter');
@@ -176,6 +177,20 @@ function resetWordTextOptions() {
         if (lengthSelect) {
           lengthSelect.value = WORD_LENGTH_DEFAULT;
         }
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          const toggle = document.getElementById(key + 'Toggle');
+          if (toggle) {
+            toggle.checked = false;
+          }
+          const descToggle = document.getElementById(key + 'DescriptionToggle');
+          if (descToggle) {
+            descToggle.checked = false;
+          }
+          const descField = document.getElementById(key + 'Description');
+          if (descField) {
+            descField.value = '';
+          }
+        });
         wordContextWebSources = [];
         renderWordContextWebSources();
         const webToggle = document.getElementById('wordContextWebToggle');
@@ -190,6 +205,7 @@ function resetWordTextOptions() {
           commentsToggle.checked = false;
         }
         updateWordHighlightedVisibility();
+        syncWordStructureSections();
         syncWordLanguageControls();
         syncWordToneControls();
         syncWordProfileControls();
@@ -417,6 +433,34 @@ function updateWordContextWebVisibility() {
         }
       }
 
+function syncWordStructureSection(key) {
+        const toggle = document.getElementById(key + 'Toggle');
+        const details = document.getElementById(key + 'Details');
+        const descToggle = document.getElementById(key + 'DescriptionToggle');
+        const descWrapper = document.getElementById(key + 'DescriptionWrapper');
+        const descInput = document.getElementById(key + 'Description');
+        const active = Boolean(toggle && toggle.checked);
+        if (details) {
+          details.classList.toggle('is-visible', active);
+        }
+        if (!active && descToggle) {
+          descToggle.checked = false;
+        }
+        const showDescription = Boolean(active && descToggle && descToggle.checked);
+        if (descWrapper) {
+          descWrapper.classList.toggle('is-visible', showDescription);
+        }
+        if (!showDescription && descInput) {
+          descInput.value = '';
+        }
+      }
+
+function syncWordStructureSections() {
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          syncWordStructureSection(key);
+        });
+      }
+
 function bindWordContextWebSources() {
         const toggle = document.getElementById('wordContextWebToggle');
         if (toggle && toggle.dataset.webBound !== 'true') {
@@ -443,6 +487,30 @@ function bindWordContextWebSources() {
         }
         renderWordContextWebSources();
         updateWordContextWebVisibility();
+      }
+
+function bindWordStructureToggle(key) {
+        const toggle = document.getElementById(key + 'Toggle');
+        if (toggle && toggle.dataset.wordStructureBound !== 'true') {
+          toggle.addEventListener('change', function() {
+            syncWordStructureSection(key);
+          });
+          toggle.dataset.wordStructureBound = 'true';
+        }
+        const descToggle = document.getElementById(key + 'DescriptionToggle');
+        if (descToggle && descToggle.dataset.wordStructureBound !== 'true') {
+          descToggle.addEventListener('change', function() {
+            syncWordStructureSection(key);
+          });
+          descToggle.dataset.wordStructureBound = 'true';
+        }
+      }
+
+function bindWordStructureToggles() {
+        WORD_STRUCTURE_KEYS.forEach(function(key) {
+          bindWordStructureToggle(key);
+        });
+        syncWordStructureSections();
       }
 
 function createEmptyWordHighlightedComment() {
@@ -726,6 +794,7 @@ function syncWordContextCard() {
         syncWordLanguageControls();
         syncWordToneControls();
         syncWordProfileControls();
+        syncWordStructureSections();
         updateWordContextWebVisibility();
         updateWordHighlightedVisibility();
       }
@@ -1303,6 +1372,7 @@ function initializeWordRangeMode() {
         bindWordFormatInputs();
         bindWordContextWebSources();
         bindWordContextSelects();
+        bindWordStructureToggles();
         bindWordHighlightedComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
@@ -1321,6 +1391,7 @@ function notifyCreateThemeChanged() {
         bindWordFormatInputs();
         bindWordContextWebSources();
         bindWordContextSelects();
+        bindWordStructureToggles();
         bindWordHighlightedComments();
         syncCreateRangeModeUI();
         syncWordCreateOptions();
