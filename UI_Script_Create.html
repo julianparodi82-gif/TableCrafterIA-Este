@@ -4,6 +4,82 @@ let rangeInfo = null;
 let createFormatDirty = false;
 let pendingFormatState = { applied: false, range: null };
 
+function isWordThemeActiveForCreate() {
+        return document.body && document.body.classList.contains('theme-wordcrafter');
+      }
+
+function isWordRangeSelectionEnabled() {
+        if (!isWordThemeActiveForCreate()) {
+          return true;
+        }
+        const toggle = document.getElementById('wordUseRangeToggle');
+        return !toggle || toggle.checked;
+      }
+
+function syncCreateRangeModeUI() {
+        const isWordTheme = isWordThemeActiveForCreate();
+        const useRange = isWordRangeSelectionEnabled();
+        const toggleRow = document.getElementById('wordRangeToggleRow');
+        const rangeFields = document.getElementById('wordRangeFields');
+        const legend = document.getElementById('wordRangeLegend');
+        const cursorNotice = document.getElementById('wordCursorNotice');
+        const refreshBtn = document.getElementById('refreshRangeBtn');
+        const rangeInput = document.getElementById('rangeInput');
+        const applyBtn = document.getElementById('applyFormatBtn');
+        const headerOptions = document.getElementById('tableHeaderOptions');
+        if (toggleRow) {
+          toggleRow.style.display = isWordTheme ? 'flex' : 'none';
+        }
+        if (rangeFields) {
+          rangeFields.style.display = !isWordTheme || useRange ? '' : 'none';
+        }
+        if (legend) {
+          legend.style.display = isWordTheme && useRange ? 'block' : 'none';
+        }
+        if (cursorNotice) {
+          cursorNotice.style.display = isWordTheme && !useRange ? 'block' : 'none';
+        }
+        if (refreshBtn) {
+          refreshBtn.disabled = Boolean(isWordTheme && !useRange);
+          if (refreshBtn.disabled) {
+            refreshBtn.setAttribute('aria-disabled', 'true');
+          } else {
+            refreshBtn.removeAttribute('aria-disabled');
+          }
+        }
+        if (rangeInput) {
+          const shouldDisable = Boolean(isWordTheme && !useRange);
+          rangeInput.disabled = shouldDisable;
+          if (shouldDisable) {
+            rangeInput.setAttribute('aria-disabled', 'true');
+          } else {
+            rangeInput.removeAttribute('aria-disabled');
+          }
+        }
+        if (applyBtn) {
+          const shouldDisableApply = Boolean(isWordTheme && !useRange);
+          applyBtn.disabled = shouldDisableApply;
+          if (shouldDisableApply) {
+            applyBtn.setAttribute('aria-disabled', 'true');
+          } else {
+            applyBtn.removeAttribute('aria-disabled');
+          }
+        }
+        if (headerOptions) {
+          headerOptions.style.display = isWordTheme ? 'none' : '';
+        }
+        const saveBtn = document.getElementById('saveTableBtn');
+        if (saveBtn) {
+          const shouldDisableSave = Boolean(isWordTheme && !useRange);
+          saveBtn.disabled = shouldDisableSave;
+          if (shouldDisableSave) {
+            saveBtn.setAttribute('aria-disabled', 'true');
+          } else {
+            saveBtn.removeAttribute('aria-disabled');
+          }
+        }
+      }
+
 function resetPendingFormatState() {
         pendingFormatState = { applied: false, range: null };
       }
@@ -60,6 +136,7 @@ function resetCreateTabView(options) {
           renderCreateHeaders();
         }
         clearCreateFormatDirty();
+        syncCreateRangeModeUI();
       }
 
 function clearRangeUI() {
@@ -138,6 +215,9 @@ function setDefaultStyles() {
       }
 
 function loadActiveRange(updateHeaders = true) {
+        if (isWordThemeActiveForCreate() && !isWordRangeSelectionEnabled()) {
+          return;
+        }
         google.script.run.withSuccessHandler(function(info) {
           const label = document.getElementById('rangeLabel');
           if (info.error) {
@@ -166,6 +246,13 @@ function loadActiveRange(updateHeaders = true) {
       }
 
 async function handleApplyFormat() {
+        if (isWordThemeActiveForCreate() && !isWordRangeSelectionEnabled()) {
+          await showMessageModal('Activa "Seleccionar un rango antes de pegar" para aplicar y preparar el formato.', {
+            title: 'Selecciona un rango',
+            variant: 'info'
+          });
+          return false;
+        }
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
           await showMessageModal('Indique un rango válido antes de aplicar el formato.', {
@@ -259,6 +346,13 @@ async function handleApplyFormat() {
 
 async function handleSaveAction(options) {
         options = options || {};
+        if (isWordThemeActiveForCreate() && !isWordRangeSelectionEnabled()) {
+          await showMessageModal('El guardado requiere seleccionar un rango. Activa la opción para definir dónde pegar el texto.', {
+            title: 'Selecciona un rango',
+            variant: 'info'
+          });
+          return false;
+        }
         const rangeA1 = getRangeInputValue();
         if (!rangeA1) {
           await showMessageModal('Indique un rango válido antes de guardar la tabla.', {
@@ -473,4 +567,32 @@ async function resolvePendingFormatting() {
         }
         return 'blocked';
       }
+
+      function bindWordRangeToggle() {
+        const rangeToggle = document.getElementById('wordUseRangeToggle');
+        if (rangeToggle && rangeToggle.dataset.toggleBound !== 'true') {
+          rangeToggle.addEventListener('change', function() {
+            syncCreateRangeModeUI();
+          });
+          rangeToggle.dataset.toggleBound = 'true';
+        }
+      }
+
+      function initializeWordRangeMode() {
+        bindWordRangeToggle();
+        syncCreateRangeModeUI();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeWordRangeMode);
+      } else {
+        initializeWordRangeMode();
+      }
+
+      function notifyCreateThemeChanged() {
+        bindWordRangeToggle();
+        syncCreateRangeModeUI();
+      }
+
+      window.notifyCreateThemeChanged = notifyCreateThemeChanged;
 </script>
