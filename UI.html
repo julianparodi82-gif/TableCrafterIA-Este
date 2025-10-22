@@ -3147,6 +3147,14 @@
         font-size: 13px;
         color: var(--tc-muted);
       }
+      .word-format-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .word-format-body .word-format-preview {
+        align-self: center;
+      }
       .word-format-preview {
         min-width: 96px;
         max-width: 132px;
@@ -3359,9 +3367,16 @@
       .word-context-header {
         display: flex;
         align-items: flex-start;
+        justify-content: space-between;
         gap: 14px;
         flex-wrap: wrap;
         margin-bottom: 16px;
+        width: 100%;
+      }
+      .word-context-header-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
       .word-context-heading {
         display: flex;
@@ -3421,6 +3436,13 @@
         min-height: 96px;
         resize: vertical;
       }
+      .word-context-content,
+      .word-personalization-content,
+      .word-structure-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
       #wordWebSourcesCard .word-context-header {
         align-items: center;
       }
@@ -3432,6 +3454,7 @@
         align-items: center;
         gap: 8px;
       }
+      .word-collapse-toggle,
       .word-web-collapse {
         width: 28px;
         height: 28px;
@@ -3444,14 +3467,17 @@
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease;
       }
+      .word-collapse-toggle:disabled,
       .word-web-collapse:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
+      .word-collapse-toggle:not(:disabled):hover,
       .word-web-collapse:not(:disabled):hover {
         background: rgba(42, 176, 255, 0.12);
         border-color: rgba(28, 141, 212, 0.32);
       }
+      .word-collapse-toggle-icon,
       .word-web-collapse-icon {
         width: 0;
         height: 0;
@@ -3461,8 +3487,12 @@
         transition: transform 0.2s ease;
         transform: rotate(90deg);
       }
+      .word-collapse-toggle.is-collapsed .word-collapse-toggle-icon,
       .word-web-collapse.is-collapsed .word-web-collapse-icon {
         transform: rotate(0deg);
+      }
+      .word-collapse-body.is-collapsed {
+        display: none !important;
       }
       .word-context-helper {
         margin-top: 10px;
@@ -3494,13 +3524,18 @@
       }
       .word-web-row {
         display: flex;
-        align-items: center;
-        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(28, 141, 212, 0.2);
         border-radius: 14px;
-        padding: 10px 12px;
-        flex-wrap: nowrap;
+        padding: 12px 14px;
+      }
+      .word-web-row-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
       .word-web-input {
         flex: 1 1 160px;
@@ -3524,6 +3559,37 @@
         line-height: 1;
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      }
+      .word-web-desc-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #000000;
+      }
+      .word-web-desc-toggle input {
+        transform: translateY(0);
+      }
+      .word-web-desc-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .word-web-desc-body.is-hidden {
+        display: none;
+      }
+      .word-web-description-input {
+        border: 1px solid rgba(28, 141, 212, 0.24);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+        resize: vertical;
+        min-height: 64px;
+      }
+      .word-web-desc-helper {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.7);
       }
       .word-web-remove:hover:not(:disabled) {
         background: rgba(0, 0, 0, 0.08);
@@ -3550,6 +3616,12 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+      }
+      .word-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
       }
       .word-context-section-title {
         font-size: 14px;
@@ -3888,6 +3960,19 @@
                   <h4>Formato del título</h4>
                   <p>Ajusta estilo, tamaño y peso para presentar el título con presencia.</p>
                 </div>
+                <button
+                  type="button"
+                  class="word-collapse-toggle"
+                  data-word-collapse-target="wordTitleFormatBody"
+                  data-word-collapse-default="false"
+                  aria-label="Mostrar u ocultar opciones de formato del título"
+                  aria-controls="wordTitleFormatBody"
+                  aria-expanded="true"
+                >
+                  <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div id="wordTitleFormatBody" class="word-format-body word-collapse-body">
                 <div
                   id="wordTitlePreview"
                   class="word-format-preview"
@@ -3896,13 +3981,12 @@
                 >
                   Ejemplo
                 </div>
-              </div>
-              <div class="word-format-grid">
-                <div class="word-format-group">
-                  <label for="wordTitleFontFamily">Fuente</label>
-                  <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
-                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
-                    <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
+                <div class="word-format-grid">
+                  <div class="word-format-group">
+                    <label for="wordTitleFontFamily">Fuente</label>
+                    <select id="wordTitleFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                      <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                      <option value="'Playfair Display', 'Times New Roman', serif">Playfair Display</option>
                     <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
                     <option value="'Raleway', Arial, sans-serif">Raleway</option>
                     <option value="'Merriweather', 'Times New Roman', serif">Merriweather</option>
@@ -3942,20 +4026,20 @@
                     <option value="justify">Justificada</option>
                   </select>
                 </div>
-              </div>
-              <div class="word-format-flags">
-                <label for="wordTitleBold" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleBold" /> Negrita</label
-                >
-                <label for="wordTitleUnderline" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
-                >
-                <label for="wordTitleItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleItalics" /> Italic</label
-                >
-                <label for="wordTitleUppercase" class="word-format-flag"
-                  ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
-                >
+                <div class="word-format-flags">
+                  <label for="wordTitleBold" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleBold" /> Negrita</label
+                  >
+                  <label for="wordTitleUnderline" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUnderline" /> Subrayado</label
+                  >
+                  <label for="wordTitleItalics" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleItalics" /> Italic</label
+                  >
+                  <label for="wordTitleUppercase" class="word-format-flag"
+                    ><input type="checkbox" id="wordTitleUppercase" /> Mayúsculas</label
+                  >
+                </div>
               </div>
             </div>
           </div>
@@ -3974,23 +4058,50 @@
                 </h3>
                 <p>Define cómo quieres complementar el texto con secciones extra y fuentes destacadas.</p>
               </div>
-            </div>
-            <div class="word-structure-columns">
-              <div id="wordIntroSection" class="word-context-section">
-                <label
-                  for="wordIntroToggle"
-                  class="checkbox-subtle word-context-toggle tc-tooltip-target"
-                  data-tooltip="Activa una introducción personalizada para contextualizar desde el inicio."
+              <div class="word-context-header-controls">
+                <button
+                  type="button"
+                  class="word-collapse-toggle"
+                  data-word-collapse-target="wordStructureBody"
+                  data-word-collapse-default="false"
+                  aria-label="Mostrar u ocultar los componentes opcionales"
+                  aria-controls="wordStructureBody"
+                  aria-expanded="true"
                 >
-                  <input type="checkbox" id="wordIntroToggle" />
-                  Agregar introducción
-                </label>
-                <div id="wordIntroFields" class="word-context-fields is-hidden" aria-hidden="true">
-                  <div class="word-format-group">
+                  <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div id="wordStructureBody" class="word-structure-content word-collapse-body">
+              <div class="word-structure-columns">
+                <div id="wordIntroSection" class="word-context-section">
+                  <div class="word-section-header">
                     <label
-                      for="wordIntroFocus"
-                      class="tc-tooltip-target"
-                      data-tooltip="Indica el enfoque que debe cubrir la introducción."
+                      for="wordIntroToggle"
+                      class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                      data-tooltip="Activa una introducción personalizada para contextualizar desde el inicio."
+                    >
+                      <input type="checkbox" id="wordIntroToggle" />
+                      Agregar introducción
+                    </label>
+                    <button
+                      type="button"
+                      class="word-collapse-toggle"
+                      data-word-collapse-target="wordIntroFields"
+                      data-word-collapse-default="false"
+                      aria-label="Mostrar u ocultar la configuración de introducción"
+                      aria-controls="wordIntroFields"
+                      aria-expanded="true"
+                    >
+                      <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                  <div id="wordIntroFields" class="word-context-fields word-collapse-body is-hidden" aria-hidden="true">
+                    <div class="word-format-group">
+                      <label
+                        for="wordIntroFocus"
+                        class="tc-tooltip-target"
+                        data-tooltip="Indica el enfoque que debe cubrir la introducción."
                     >
                       Enfoque de la introducción
                     </label>
@@ -4019,22 +4130,34 @@
                     </div>
                   </div>
                 </div>
-              </div>
-              <div id="wordConclusionSection" class="word-context-section">
-                <label
-                  for="wordConclusionToggle"
-                  class="checkbox-subtle word-context-toggle tc-tooltip-target"
-                  data-tooltip="Añade una conclusión guiada para cerrar con mensajes claros."
-                >
-                  <input type="checkbox" id="wordConclusionToggle" />
-                  Agregar conclusión
-                </label>
-                <div id="wordConclusionFields" class="word-context-fields is-hidden" aria-hidden="true">
-                  <div class="word-format-group">
+                <div id="wordConclusionSection" class="word-context-section">
+                  <div class="word-section-header">
                     <label
-                      for="wordConclusionFocus"
-                      class="tc-tooltip-target"
-                      data-tooltip="Describe los puntos que deben reforzarse al finalizar."
+                      for="wordConclusionToggle"
+                      class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                      data-tooltip="Añade una conclusión guiada para cerrar con mensajes claros."
+                    >
+                      <input type="checkbox" id="wordConclusionToggle" />
+                      Agregar conclusión
+                    </label>
+                    <button
+                      type="button"
+                      class="word-collapse-toggle"
+                      data-word-collapse-target="wordConclusionFields"
+                      data-word-collapse-default="false"
+                      aria-label="Mostrar u ocultar la configuración de conclusión"
+                      aria-controls="wordConclusionFields"
+                      aria-expanded="true"
+                    >
+                      <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                  <div id="wordConclusionFields" class="word-context-fields word-collapse-body is-hidden" aria-hidden="true">
+                    <div class="word-format-group">
+                      <label
+                        for="wordConclusionFocus"
+                        class="tc-tooltip-target"
+                        data-tooltip="Describe los puntos que deben reforzarse al finalizar."
                     >
                       Enfoque de la conclusión
                     </label>
@@ -4077,45 +4200,60 @@
                 </h3>
                 <p>Brinda pistas para adaptar el contenido a tu audiencia y objetivos.</p>
               </div>
+              <div class="word-context-header-controls">
+                <button
+                  type="button"
+                  class="word-collapse-toggle"
+                  data-word-collapse-target="wordContextBody"
+                  data-word-collapse-default="false"
+                  aria-label="Mostrar u ocultar las indicaciones clave"
+                  aria-controls="wordContextBody"
+                  aria-expanded="true"
+                >
+                  <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
-            <div class="word-context-body">
-              <div id="wordContextDetailsWrapper" class="word-context-section">
-                <div class="word-context-section-head">
-                  <span
-                    class="word-context-section-title tc-tooltip-target"
-                    data-tooltip="Describe la situación, audiencia y objetivos principales."
-                  >
-                    Indicaciones clave
-                  </span>
-                  <p class="word-context-description">
-                    Describe la situación, audiencia y objetivos principales. Esta información es obligatoria para personalizar la respuesta.
-                  </p>
-                </div>
-                <div id="wordContextDetailsFields" class="word-context-fields">
-                  <div class="word-format-group">
-                    <label
-                      for="wordBodyContext"
-                      class="tc-tooltip-target"
-                      data-tooltip="Detalla datos imprescindibles para orientar el texto."
+            <div id="wordContextBody" class="word-context-content word-collapse-body">
+              <div class="word-context-body">
+                <div id="wordContextDetailsWrapper" class="word-context-section">
+                  <div class="word-context-section-head">
+                    <span
+                      class="word-context-section-title tc-tooltip-target"
+                      data-tooltip="Describe la situación, audiencia y objetivos principales."
                     >
                       Indicaciones clave
-                    </label>
-                    <textarea
-                      id="wordBodyContext"
-                      rows="3"
-                      placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
-                      required
-                    ></textarea>
+                    </span>
                     <p class="word-context-description">
-                      Ej.: Informe trimestral para el comité directivo con enfoque en resultados de ventas B2B.
+                      Describe la situación, audiencia y objetivos principales. Esta información es obligatoria para personalizar la respuesta.
                     </p>
+                  </div>
+                  <div id="wordContextDetailsFields" class="word-context-fields">
+                    <div class="word-format-group">
+                      <label
+                        for="wordBodyContext"
+                        class="tc-tooltip-target"
+                        data-tooltip="Detalla datos imprescindibles para orientar el texto."
+                      >
+                        Indicaciones clave
+                      </label>
+                      <textarea
+                        id="wordBodyContext"
+                        rows="3"
+                        placeholder="Describe el contexto, audiencia o personalizaciones necesarias..."
+                        required
+                      ></textarea>
+                      <p class="word-context-description">
+                        Ej.: Informe trimestral para el comité directivo con enfoque en resultados de ventas B2B.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
+              <p class="word-context-helper">
+                Estas indicaciones ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
+              </p>
             </div>
-            <p class="word-context-helper">
-              Estas indicaciones ayudan a la IA a reflejar terminología, tono y profundidad alineados a tu audiencia.
-            </p>
           </div>
           <div id="wordPersonalizationCard" class="word-personalization-card" style="display:none;">
             <div class="word-context-header">
@@ -4128,13 +4266,27 @@
                 </h3>
                 <p>Elige cómo debe entregarse el texto para mantenerse alineado con tu marca.</p>
               </div>
+              <div class="word-context-header-controls">
+                <button
+                  type="button"
+                  class="word-collapse-toggle"
+                  data-word-collapse-target="wordPersonalizationBody"
+                  data-word-collapse-default="false"
+                  aria-label="Mostrar u ocultar las opciones de personalización"
+                  aria-controls="wordPersonalizationBody"
+                  aria-expanded="true"
+                >
+                  <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
-            <div class="word-personalization-grid">
-              <div id="wordLanguageSection" class="word-context-section">
-                <div class="word-context-section-head">
-                  <span
-                    class="word-context-section-title tc-tooltip-target"
-                    data-tooltip="Escoge el idioma final del contenido generado."
+            <div id="wordPersonalizationBody" class="word-personalization-content word-collapse-body">
+              <div class="word-personalization-grid">
+                <div id="wordLanguageSection" class="word-context-section">
+                  <div class="word-context-section-head">
+                    <span
+                      class="word-context-section-title tc-tooltip-target"
+                      data-tooltip="Escoge el idioma final del contenido generado."
                   >
                     Idioma de salida
                   </span>
@@ -4235,10 +4387,11 @@
                   </div>
                 </div>
               </div>
+              </div>
+              <p class="word-context-helper">
+                Ajusta estos campos para que la IA combine el estilo adecuado con tus indicaciones clave.
+              </p>
             </div>
-            <p class="word-context-helper">
-              Ajusta estos campos para que la IA combine el estilo adecuado con tus indicaciones clave.
-            </p>
           </div>
           <div id="wordWebSourcesCard" class="word-web-card" style="display:none;">
             <div class="word-context-header">
@@ -4251,25 +4404,27 @@
                 </h3>
                 <p>Incluye enlaces relevantes para enriquecer el texto generado.</p>
               </div>
-              <div class="word-web-toggle-row">
-                <label
-                  for="wordWebSourcesToggle"
-                  class="checkbox-subtle word-context-toggle tc-tooltip-target"
-                  data-tooltip="Activa el uso de páginas externas y administra hasta 10 enlaces."
-                >
-                  <input type="checkbox" id="wordWebSourcesToggle" />
-                  Usar información de páginas web
-                </label>
-                <button
-                  type="button"
-                  id="wordWebSourcesCollapse"
-                  class="word-web-collapse"
-                  aria-label="Mostrar u ocultar las fuentes de apoyo"
-                  aria-expanded="false"
-                  aria-controls="wordWebSourcesBody"
-                >
-                  <span class="word-web-collapse-icon" aria-hidden="true"></span>
-                </button>
+              <div class="word-context-header-controls">
+                <div class="word-web-toggle-row">
+                  <label
+                    for="wordWebSourcesToggle"
+                    class="checkbox-subtle word-context-toggle tc-tooltip-target"
+                    data-tooltip="Activa el uso de páginas externas y administra hasta 10 enlaces."
+                  >
+                    <input type="checkbox" id="wordWebSourcesToggle" />
+                    Usar información de páginas web
+                  </label>
+                  <button
+                    type="button"
+                    id="wordWebSourcesCollapse"
+                    class="word-web-collapse"
+                    aria-label="Mostrar u ocultar las fuentes de apoyo"
+                    aria-expanded="false"
+                    aria-controls="wordWebSourcesBody"
+                  >
+                    <span class="word-web-collapse-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </div>
             <div id="wordWebSourcesBody" class="word-web-body is-hidden" aria-hidden="true">
@@ -4295,6 +4450,19 @@
                   <h4>Formato del cuerpo</h4>
                   <p>Define el aspecto general del contenido generado para mantener coherencia.</p>
                 </div>
+                <button
+                  type="button"
+                  class="word-collapse-toggle"
+                  data-word-collapse-target="wordBodyFormatBody"
+                  data-word-collapse-default="false"
+                  aria-label="Mostrar u ocultar opciones de formato del cuerpo"
+                  aria-controls="wordBodyFormatBody"
+                  aria-expanded="true"
+                >
+                  <span class="word-collapse-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div id="wordBodyFormatBody" class="word-format-body word-collapse-body">
                 <div
                   id="wordBodyPreview"
                   class="word-format-preview word-format-preview-body"
@@ -4303,13 +4471,12 @@
                 >
                   Ejemplo
                 </div>
-              </div>
-              <div class="word-format-grid">
-                <div class="word-format-group">
-                  <label for="wordBodyFontFamily">Fuente</label>
-                  <select id="wordBodyFontFamily" data-default-value="'Inter', Arial, sans-serif">
-                    <option value="'Inter', Arial, sans-serif" selected>Inter</option>
-                    <option value="'Roboto', Arial, sans-serif">Roboto</option>
+                <div class="word-format-grid">
+                  <div class="word-format-group">
+                    <label for="wordBodyFontFamily">Fuente</label>
+                    <select id="wordBodyFontFamily" data-default-value="'Inter', Arial, sans-serif">
+                      <option value="'Inter', Arial, sans-serif" selected>Inter</option>
+                      <option value="'Roboto', Arial, sans-serif">Roboto</option>
                     <option value="'Open Sans', Arial, sans-serif">Open Sans</option>
                     <option value="'Lora', 'Times New Roman', serif">Lora</option>
                     <option value="'Source Serif Pro', 'Times New Roman', serif">Source Serif Pro</option>
@@ -4359,20 +4526,20 @@
                     <option value="2">2.0</option>
                   </select>
                 </div>
-              </div>
-              <div class="word-format-flags">
-                <label for="wordBodyBold" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyBold" /> Negrita</label
-                >
-                <label for="wordBodyUnderline" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
-                >
-                <label for="wordBodyItalics" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyItalics" /> Italic</label
-                >
-                <label for="wordBodyHighlight" class="word-format-flag"
-                  ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
-                >
+                <div class="word-format-flags">
+                  <label for="wordBodyBold" class="word-format-flag"
+                    ><input type="checkbox" id="wordBodyBold" /> Negrita</label
+                  >
+                  <label for="wordBodyUnderline" class="word-format-flag"
+                    ><input type="checkbox" id="wordBodyUnderline" /> Subrayado</label
+                  >
+                  <label for="wordBodyItalics" class="word-format-flag"
+                    ><input type="checkbox" id="wordBodyItalics" /> Italic</label
+                  >
+                  <label for="wordBodyHighlight" class="word-format-flag"
+                    ><input type="checkbox" id="wordBodyHighlight" /> Resaltar palabras clave</label
+                  >
+                </div>
               </div>
             </div>
           </div>
