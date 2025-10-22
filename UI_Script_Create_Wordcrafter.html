@@ -60,6 +60,7 @@ const WORD_STRUCTURE_SECTION_CONFIG = [
     ];
 
 let wordWebSourcesState = [];
+let wordWebSourcesCollapsed = false;
 let wordStructureSectionLinksState = { intro: [], conclusion: [] };
 
 function isWordThemeActiveForCreate() {
@@ -139,7 +140,7 @@ function resetWordTextOptions() {
         const toneSelect = document.getElementById('wordBodyTone');
         if (toneSelect) {
           const fallback = toneSelect.dataset && toneSelect.dataset.defaultValue !== undefined ? toneSelect.dataset.defaultValue : toneSelect.defaultValue;
-          toneSelect.value = fallback !== undefined ? fallback : 'profesional';
+          toneSelect.value = fallback !== undefined ? fallback : '';
         }
         WORD_CONTEXT_SECTION_CONFIG.forEach(function(section) {
           const toggle = section.toggleId ? document.getElementById(section.toggleId) : null;
@@ -168,6 +169,7 @@ function resetWordTextOptions() {
           webToggle.checked = webToggle.defaultChecked;
         }
         wordWebSourcesState = [];
+        wordWebSourcesCollapsed = false;
         renderWordWebSourcesList();
         refreshWordPreviews();
         syncWordWebSourcesCard();
@@ -669,6 +671,7 @@ function syncWordStructureCard() {
         const isWordTheme = isWordThemeActiveForCreate();
         card.style.display = isWordTheme ? 'block' : 'none';
         if (!isWordTheme) {
+          wordWebSourcesCollapsed = false;
           return;
         }
         syncWordStructureSections();
@@ -722,9 +725,21 @@ function bindWordWebSourcesControls() {
               wordWebSourcesState.push('');
               renderWordWebSourcesList();
             }
+            wordWebSourcesCollapsed = false;
             syncWordWebSourcesCard();
           });
           toggle.dataset.wordWebBound = 'true';
+        }
+        const collapseBtn = document.getElementById('wordWebSourcesCollapse');
+        if (collapseBtn && collapseBtn.dataset.wordWebBound !== 'true') {
+          collapseBtn.addEventListener('click', function() {
+            if (collapseBtn.disabled) {
+              return;
+            }
+            wordWebSourcesCollapsed = !wordWebSourcesCollapsed;
+            syncWordWebSourcesCard();
+          });
+          collapseBtn.dataset.wordWebBound = 'true';
         }
         const addBtn = document.getElementById('wordWebSourcesAdd');
         if (addBtn && addBtn.dataset.wordWebBound !== 'true') {
@@ -784,20 +799,26 @@ function syncWordWebSourcesCard() {
         const isWordTheme = isWordThemeActiveForCreate();
         card.style.display = isWordTheme ? 'block' : 'none';
         if (!isWordTheme) {
+          wordWebSourcesCollapsed = false;
           return;
         }
         const toggle = document.getElementById('wordWebSourcesToggle');
         const body = document.getElementById('wordWebSourcesBody');
         const list = document.getElementById('wordWebSourcesList');
         const addBtn = document.getElementById('wordWebSourcesAdd');
+        const collapseBtn = document.getElementById('wordWebSourcesCollapse');
         const isActive = Boolean(toggle && toggle.checked);
         if (isActive && wordWebSourcesState.length === 0) {
           wordWebSourcesState.push('');
           renderWordWebSourcesList();
         }
+        if (!isActive) {
+          wordWebSourcesCollapsed = false;
+        }
+        const shouldShowBody = Boolean(isActive && !wordWebSourcesCollapsed);
         if (body) {
-          body.classList.toggle('is-hidden', !isActive);
-          body.setAttribute('aria-hidden', String(!isActive));
+          body.classList.toggle('is-hidden', !shouldShowBody);
+          body.setAttribute('aria-hidden', String(!shouldShowBody));
         }
         if (list) {
           const inputs = list.querySelectorAll('.word-web-input');
@@ -821,6 +842,11 @@ function syncWordWebSourcesCard() {
         }
         if (addBtn) {
           addBtn.disabled = !isActive || wordWebSourcesState.length >= WORD_WEB_SOURCE_LIMIT;
+        }
+        if (collapseBtn) {
+          collapseBtn.disabled = !isActive;
+          collapseBtn.classList.toggle('is-collapsed', !shouldShowBody);
+          collapseBtn.setAttribute('aria-expanded', String(shouldShowBody));
         }
       }
 
