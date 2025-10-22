@@ -1,4 +1,7 @@
 <script>
+/* -------------------------------------------------------------------------- */
+/*  TableCrafter Core State                                                   */
+/* -------------------------------------------------------------------------- */
 const DEFAULT_STYLE = Object.freeze({
   headerColor: '#66D68E',
   altColor1: '#FFFFFF',
@@ -3373,5 +3376,15 @@ function playSidebarAnimation() {
         fetchWelcomePreference();
         applyTheme(themeToggle.checked, { forceSync: true });
       });
+
+const TableCrafterCore = Object.freeze({
+        setActiveTab: setActiveTab,
+        findFirstTabForTheme: findFirstTabForTheme,
+        updateTabVisibilityForTheme: updateTabVisibilityForTheme,
+        showMessageModal: showMessageModal,
+        showConfirmModal: showConfirmModal
+      });
+
+window.TableCrafterCore = TableCrafterCore;
 
 </script>
