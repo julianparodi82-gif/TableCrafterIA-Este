@@ -121,7 +121,16 @@ function createEditSavedItem(entry, selected, disabled) {
         btn.type = 'button';
         btn.className = 'edit-saved-locate';
         btn.dataset.value = entry.id;
-        btn.title = 'Ir a la tabla';
+        const listContainer = document.getElementById('editSavedTablesList');
+        const isWordTheme = document.body && document.body.classList.contains('theme-wordcrafter');
+        const locateLabel = listContainer && listContainer.dataset
+          ? isWordTheme
+            ? listContainer.dataset.wordLocate || 'Ubicar texto'
+            : listContainer.dataset.tableLocate || 'Ir a la tabla'
+          : isWordTheme
+          ? 'Ubicar texto'
+          : 'Ir a la tabla';
+        btn.title = locateLabel;
         if (disabled) {
           btn.disabled = true;
           btn.tabIndex = -1;
@@ -132,7 +141,7 @@ function createEditSavedItem(entry, selected, disabled) {
         btn.appendChild(icon);
         const sr = document.createElement('span');
         sr.className = 'visually-hidden';
-        sr.textContent = 'Ir a la tabla';
+        sr.textContent = locateLabel;
         btn.appendChild(sr);
         item.appendChild(btn);
         return item;
@@ -149,6 +158,11 @@ function renderEditSavedTablesList(entries, config) {
         const disabled = !!options.disabled;
         const groupBySheet = !!options.groupBySheet;
         const selectedValue = options.selectedValue ? String(options.selectedValue) : '';
+        const dataset = listEl.dataset || {};
+        const isWordTheme = document.body && document.body.classList.contains('theme-wordcrafter');
+        const emptyLabel = isWordTheme
+          ? dataset.wordEmpty || 'No hay textos guardados'
+          : dataset.tableEmpty || 'No hay tablas guardadas';
         listEl.innerHTML = '';
         listEl.setAttribute('role', 'listbox');
         listEl.setAttribute('aria-multiselectable', 'false');
@@ -159,7 +173,7 @@ function renderEditSavedTablesList(entries, config) {
           setEditSavedListCollapsed(false);
           const empty = document.createElement('div');
           empty.className = 'edit-saved-empty';
-          empty.textContent = 'No hay tablas guardadas';
+          empty.textContent = emptyLabel;
           listEl.appendChild(empty);
           syncEditSavedListCollapseClass();
           return;
@@ -857,12 +871,13 @@ async function handleEditApplyFormat() {
         });
         return true;
       }
-
-
-
-      document.getElementById('saveTableBtn').addEventListener('click', function() {
-        handleSaveAction();
-      });
+      const createSaveButton = document.getElementById('saveTableBtn');
+      if (createSaveButton && createSaveButton.dataset.saveBound !== 'true') {
+        createSaveButton.addEventListener('click', function() {
+          handleSaveAction();
+        });
+        createSaveButton.dataset.saveBound = 'true';
+      }
 
       document.getElementById('editSaveTableBtn').addEventListener('click', function() {
         handleEditSaveAction();

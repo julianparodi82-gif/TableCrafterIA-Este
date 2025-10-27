@@ -663,6 +663,62 @@ function getSavedTableFromCache(id) {
 
       
 
+function getActiveTheme() {
+        if (typeof currentTheme === 'string' && currentTheme) {
+          return currentTheme === 'word' ? 'word' : 'table';
+        }
+        const body = document.body;
+        if (body && body.classList.contains('theme-wordcrafter')) {
+          return 'word';
+        }
+        return 'table';
+      }
+
+function filterSavedEntriesByTheme(entries, theme) {
+        const normalizedTheme = theme === 'word' ? 'word' : 'table';
+        const list = Array.isArray(entries) ? entries : [];
+        return list.filter(function(entry) {
+          if (!entry || !entry.id) {
+            return false;
+          }
+          const rawTheme = (entry.theme || entry.type || entry.kind || entry.category || '').toString().toLowerCase();
+          if (rawTheme) {
+            if (normalizedTheme === 'word') {
+              if (rawTheme.indexOf('word') === 0 || rawTheme.indexOf('text') === 0 || rawTheme.indexOf('texto') === 0) {
+                return true;
+              }
+              if (rawTheme.indexOf('table') === 0 || rawTheme.indexOf('tabla') === 0) {
+                return false;
+              }
+            } else if (rawTheme.indexOf('word') === 0 || rawTheme.indexOf('text') === 0 || rawTheme.indexOf('texto') === 0) {
+              return false;
+            }
+          }
+          const id = String(entry.id).toLowerCase();
+          if (normalizedTheme === 'word') {
+            if (
+              id.indexOf('text:') === 0 ||
+              id.indexOf('texto:') === 0 ||
+              id.indexOf('word:') === 0 ||
+              id.indexOf('wordtext:') === 0
+            ) {
+              return true;
+            }
+            if (!entry.rangeA1 && !entry.fullRangeA1 && !entry.sheetName) {
+              return true;
+            }
+            return false;
+          }
+          if (id.indexOf('text:') === 0 || id.indexOf('texto:') === 0 || id.indexOf('word:') === 0) {
+            return false;
+          }
+          if (!entry.rangeA1 && !entry.fullRangeA1) {
+            return false;
+          }
+          return true;
+        });
+      }
+
 function resolveSelectOption(options, id, key, fallback) {
         if (!options || typeof options !== 'object') {
           return fallback;
@@ -689,6 +745,7 @@ function updateSavedTableSelects(targetIds, list, config) {
         const entries = Array.isArray(list) ? list : [];
         const options = config || {};
         const activeEditingId = typeof editingId !== 'undefined' ? editingId : '';
+        const activeTheme = getActiveTheme();
 
         ids.forEach(function(id) {
           const select = document.getElementById(id);
@@ -706,6 +763,10 @@ function updateSavedTableSelects(targetIds, list, config) {
             }
           }
 
+          const targetEntries = id === 'editSavedTables'
+            ? filterSavedEntriesByTheme(entries, activeTheme)
+            : entries.slice();
+
           let defaultSettings = {
             placeholder: '-- Seleccione --',
             multi: false,
@@ -716,7 +777,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           };
 
           if (id === 'aiSavedTables') {
-            const totalOptions = entries.length + 1;
+            const totalOptions = targetEntries.length + 1;
             defaultSettings = {
               placeholder: '-- Seleccione una o más tablas --',
               multi: true,
@@ -738,7 +799,7 @@ function updateSavedTableSelects(targetIds, list, config) {
 
           select.multiple = isMulti;
           if (isMulti) {
-            const total = entries.length + (includeAll ? 1 : 0);
+            const total = targetEntries.length + (includeAll ? 1 : 0);
             const computedSize = customSize || Math.min(Math.max(total, 4), 12);
             select.size = computedSize;
           } else {
@@ -761,7 +822,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
 
           const validValues = {};
-          entries.forEach(function(entry) {
+          targetEntries.forEach(function(entry) {
             if (entry && entry.id) {
               validValues[entry.id] = true;
             }
@@ -778,7 +839,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           if (groupBySheet) {
             const grouped = Object.create(null);
             const order = [];
-            entries.forEach(function(entry) {
+            targetEntries.forEach(function(entry) {
               if (!entry || !entry.id) {
                 return;
               }
@@ -802,7 +863,7 @@ function updateSavedTableSelects(targetIds, list, config) {
               select.appendChild(optgroup);
             });
           } else {
-            entries.forEach(function(entry) {
+            targetEntries.forEach(function(entry) {
               if (!entry || !entry.id) {
                 return;
               }
@@ -889,11 +950,11 @@ function updateSavedTableSelects(targetIds, list, config) {
             });
           }
 
-          if (entries.length === 0) {
+          if (targetEntries.length === 0) {
             if (isMulti) {
               const emptyOption = document.createElement('option');
               emptyOption.value = '';
-              emptyOption.textContent = 'No hay tablas guardadas';
+              emptyOption.textContent = activeTheme === 'word' ? 'No hay textos guardados' : 'No hay tablas guardadas';
               emptyOption.disabled = true;
               emptyOption.selected = true;
               select.appendChild(emptyOption);
@@ -904,7 +965,7 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
 
           if (id === 'editSavedTables') {
-            renderEditSavedTablesList(entries, {
+            renderEditSavedTablesList(targetEntries, {
               groupBySheet: groupBySheet,
               disabled: select.disabled,
               selectedValue: !select.disabled ? select.value : ''
@@ -925,10 +986,6 @@ function updateSavedTableSelects(targetIds, list, config) {
           }
         });
       }
-
-
-
-      
 
 function applySavedTablesFromCache(targetIds, config) {
         updateSavedTableSelects(targetIds, savedTablesCache, config || {});
@@ -1164,15 +1221,16 @@ function validateTableDetails(config) {
         const descInput = document.getElementById(options.descInputId || 'tableDesc');
         const name = nameInput ? nameInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
+        const isWordTheme = document.body && document.body.classList.contains('theme-wordcrafter');
         const headerSource = Array.isArray(options.headers) ? options.headers : currentHeaders;
         const headers = cloneHeaderModels(headerSource);
         const missingMessages = [];
         const missingHeaderIndexes = [];
 
-        if (!name) {
+        if (!isWordTheme && nameInput && !name) {
           missingMessages.push('Nombre de la tabla');
         }
-        if (!description) {
+        if (!isWordTheme && descInput && !description) {
           missingMessages.push('Descripción');
         }
 
@@ -1184,6 +1242,33 @@ function validateTableDetails(config) {
               missingHeaderIndexes.push(index + 1);
             }
           });
+        }
+
+        if (isWordTheme) {
+          const languageSelect = document.getElementById('wordBodyLanguage');
+          const languageCustom = document.getElementById('wordBodyLanguageCustom');
+          if (languageSelect && languageSelect.value === 'other') {
+            const customValue = languageCustom ? languageCustom.value.trim() : '';
+            if (!customValue) {
+              missingMessages.push('Idioma personalizado en Contexto y personalización');
+            }
+          }
+          const toneSelect = document.getElementById('wordBodyTone');
+          const toneCustom = document.getElementById('wordBodyToneCustom');
+          if (toneSelect && toneSelect.value === 'custom') {
+            const toneDetail = toneCustom ? toneCustom.value.trim() : '';
+            if (!toneDetail) {
+              missingMessages.push('Detalle del tono personalizado en Contexto y personalización');
+            }
+          }
+          const profileSelect = document.getElementById('wordBodyProfile');
+          const profileNote = document.getElementById('wordBodyProfileNote');
+          if (profileSelect && profileSelect.value === 'custom') {
+            const profileDetail = profileNote ? profileNote.value.trim() : '';
+            if (!profileDetail) {
+              missingMessages.push('Descripción del perfil profesional en Contexto y personalización');
+            }
+          }
         }
 
         if (missingHeaderIndexes.length > 0) {
@@ -3021,9 +3106,20 @@ async function attemptTabChange(tabId, options) {
 
 
 
-      document.getElementById('applyFormatBtn').addEventListener('click', function() {
-        handleApplyFormat();
-      });
+      const applyFormatBtn = document.getElementById('applyFormatBtn');
+      if (applyFormatBtn && applyFormatBtn.dataset.applyBound !== 'true') {
+        applyFormatBtn.addEventListener('click', function() {
+          handleApplyFormat();
+        });
+        applyFormatBtn.dataset.applyBound = 'true';
+      }
+      const saveTableBtn = document.getElementById('saveTableBtn');
+      if (saveTableBtn && saveTableBtn.dataset.saveBound !== 'true') {
+        saveTableBtn.addEventListener('click', function() {
+          handleSaveAction();
+        });
+        saveTableBtn.dataset.saveBound = 'true';
+      }
 
       
 
@@ -3097,7 +3193,7 @@ document.addEventListener('DOMContentLoaded', function() {
           window.clearTimeout(sidebarEntryCleanupTimeout);
           sidebarEntryCleanupTimeout = null;
         }
-        if (!themeToggle || !appTitle || !themeMessage || !themeMessageContent || !body) {
+        if (!themeToggle || !appTitle || !body) {
           return;
         }
 
@@ -3132,6 +3228,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tabButtonsList = Array.from(document.querySelectorAll('.tab-btn'));
         tabContentsList = Array.from(document.querySelectorAll('.tab-content'));
+        tabButtonsList.forEach(function(btn) {
+          if (!btn || btn.dataset.tabBound === 'true') {
+            return;
+          }
+          btn.addEventListener('click', function(event) {
+            event.preventDefault();
+            const targetTab = btn.dataset ? btn.dataset.tab : '';
+            if (targetTab) {
+              attemptTabChange(targetTab);
+            }
+          });
+          btn.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') {
+              return;
+            }
+            event.preventDefault();
+            const targetTab = btn.dataset ? btn.dataset.tab : '';
+            if (targetTab) {
+              attemptTabChange(targetTab);
+            }
+          });
+          btn.dataset.tabBound = 'true';
+        });
         const tabButtonRefs = {
           ai: document.querySelector(".tab-btn[data-tab='aiTab']"),
           edit: document.querySelector(".tab-btn[data-tab='editTab']"),
@@ -3140,6 +3259,61 @@ document.addEventListener('DOMContentLoaded', function() {
           actions: document.querySelector(".tab-btn[data-tab='actionsTab']"),
         };
         let themeAnimationTimeout = null;
+
+        function bindFavoriteShortcuts() {
+          const favoriteButtons = [
+            document.getElementById('createFavoriteBtn'),
+            document.getElementById('editFavoriteBtn')
+          ];
+          favoriteButtons.forEach(function(button) {
+            if (button && button.dataset.favoriteBound !== 'true') {
+              button.addEventListener('click', function() {
+                if (typeof openReportFavoriteModal === 'function') {
+                  openReportFavoriteModal(button);
+                }
+              });
+              button.dataset.favoriteBound = 'true';
+            }
+          });
+        }
+
+        function syncSavedContentLabels(theme) {
+          const isWord = theme === 'word';
+          const label = document.getElementById('editSavedLabel');
+          if (label) {
+            const targetText = isWord ? label.dataset.wordLabel : label.dataset.tableLabel;
+            if (targetText) {
+              label.textContent = targetText;
+            }
+          }
+          const list = document.getElementById('editSavedTablesList');
+          if (list) {
+            const listLabel = isWord ? list.dataset.wordLabel : list.dataset.tableLabel;
+            if (listLabel) {
+              list.setAttribute('aria-label', listLabel);
+            }
+            const locateLabel = isWord
+              ? (list.dataset && list.dataset.wordLocate) || 'Ubicar texto'
+              : (list.dataset && list.dataset.tableLocate) || 'Ir a la tabla';
+            list.querySelectorAll('.edit-saved-locate').forEach(function(button) {
+              if (!button) {
+                return;
+              }
+              button.title = locateLabel;
+              const sr = button.querySelector('.visually-hidden');
+              if (sr) {
+                sr.textContent = locateLabel;
+              }
+            });
+          }
+          const select = document.getElementById('editSavedTables');
+          if (select) {
+            const selectLabel = isWord ? select.dataset.wordLabel : select.dataset.tableLabel;
+            if (selectLabel) {
+              select.setAttribute('aria-label', selectLabel);
+            }
+          }
+        }
 
         const tableMessage =
           '<p><strong>¡Bienvenido a TableCrafterAI!</strong> Crea y organiza tablas listas para compartir en minutos.</p>' +
@@ -3156,6 +3330,9 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>Activa el modo celeste cuando quieras conocer sus avances.</p>';
 
         function syncMessageVisibility() {
+          if (!themeMessage) {
+            return;
+          }
           const themeKey = currentTheme === 'word' ? 'word' : 'table';
           const resolved = welcomePreferenceResolved;
           const themePreference = hideWelcomePreference[themeKey];
@@ -3284,13 +3461,13 @@ function playSidebarAnimation() {
           const normalizedTheme = theme === 'word' ? 'word' : 'table';
           const isWord = normalizedTheme === 'word';
           if (tabButtonRefs.edit) {
-            tabButtonRefs.edit.textContent = isWord ? 'Editar Texto' : 'Editar tabla';
+            tabButtonRefs.edit.textContent = isWord ? 'Editar Texto' : 'Editar Tabla';
             tabButtonRefs.edit.dataset.tooltip = isWord
               ? 'Modifica textos guardados y ajusta su estilo.'
               : 'Modifica tablas guardadas y ajusta sus estilos.';
           }
           if (tabButtonRefs.create) {
-            tabButtonRefs.create.textContent = isWord ? 'Crear Texto' : 'Crear tabla';
+            tabButtonRefs.create.textContent = isWord ? 'Crear Texto' : 'Crear Tabla';
             tabButtonRefs.create.dataset.tooltip = isWord
               ? 'Genera nuevos textos con apoyo de IA y plantillas personalizadas.'
               : 'Crea nuevas tablas con ayuda de IA y formatos personalizados.';
@@ -3326,19 +3503,31 @@ function playSidebarAnimation() {
             body.classList.add('theme-wordcrafter');
             body.classList.remove('theme-tablecrafter');
             appTitle.textContent = 'WordCrafterAI';
-            themeMessageContent.innerHTML = wordMessage;
+            if (themeMessageContent) {
+              themeMessageContent.innerHTML = wordMessage;
+            }
           } else {
             body.classList.add('theme-tablecrafter');
             body.classList.remove('theme-wordcrafter');
             appTitle.textContent = 'TableCrafterAI';
-            themeMessageContent.innerHTML = tableMessage;
+            if (themeMessageContent) {
+              themeMessageContent.innerHTML = tableMessage;
+            }
           }
           updateTabLabelsForTheme(nextTheme);
+          syncSavedContentLabels(nextTheme);
           if (typeof notifyCreateThemeChanged === 'function') {
             try {
               notifyCreateThemeChanged(nextTheme);
             } catch (err) {
               console.log('No se pudo sincronizar la vista de creación con el cambio de tema.', err);
+            }
+          }
+          if (typeof notifyAiThemeChanged === 'function') {
+            try {
+              notifyAiThemeChanged(nextTheme);
+            } catch (err) {
+              console.log('No se pudo sincronizar el panel IA con el cambio de tema.', err);
             }
           }
           updateTabVisibilityForTheme(nextTheme);
@@ -3352,7 +3541,9 @@ function playSidebarAnimation() {
           themeMessageClose.addEventListener('click', function() {
             const hideForFuture = Boolean(themeMessageDismiss && themeMessageDismiss.checked);
             persistWelcomePreference(hideForFuture, { sync: false });
-            themeMessage.classList.add('is-hidden');
+            if (themeMessage) {
+              themeMessage.classList.add('is-hidden');
+            }
           });
         }
 
@@ -3361,7 +3552,9 @@ function playSidebarAnimation() {
             const shouldHide = this.checked;
             persistWelcomePreference(shouldHide);
             if (!shouldHide) {
-              themeMessage.classList.remove('is-hidden');
+              if (themeMessage) {
+                themeMessage.classList.remove('is-hidden');
+              }
             }
           });
         }
@@ -3372,6 +3565,7 @@ function playSidebarAnimation() {
 
         fetchWelcomePreference();
         applyTheme(themeToggle.checked, { forceSync: true });
+        bindFavoriteShortcuts();
       });
 
 </script>
